@@ -1,14 +1,14 @@
-# Chrysalis
+# chrysalis
 
 > [!WARNING]
 > **Project Status: Early Alpha**  
-> Chrysalis is currently in active personal development and is not yet ready for general use. Formats and features may change frequently.
+> chrysalis is currently in active personal development and is not yet ready for general use. Formats and features may change frequently.
 
 ---
 
-## How Chrysalis Works
+## How chrysalis Works
 
-Chrysalis coordinates daily task scheduling, milestone tracking, and AI assistant interactions using Markdown files stored locally in an Obsidian vault.
+chrysalis coordinates daily task scheduling, milestone tracking, and AI assistant interactions using Markdown files stored locally in an Obsidian vault.
 
 ---
 
@@ -87,8 +87,8 @@ The system is structured across three primary file layers:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/tama-gucci/chrysalis.git ~/Chrysalis
-   cd ~/Chrysalis
+   git clone https://github.com/tama-gucci/chrysalis.git ~/chrysalis
+   cd ~/chrysalis
    ```
 
 2. **Run the bootstrap script:**
@@ -98,27 +98,27 @@ The system is structured across three primary file layers:
    * Detects the host system's timezone offset, verifies required directories, and copies initial template files if active files are not present.
 
 3. **Open in Obsidian:**
-   * Open [Obsidian](https://obsidian.md) and select **Open folder as vault** pointing to `~/Chrysalis`.
+   * Open [Obsidian](https://obsidian.md) and select **Open folder as vault** pointing to `~/chrysalis`.
    * Enable community plugins when prompted (TaskNotes, Dataview, Nexus).
 
 ---
 
 ### Step 2: Orchestrator Configuration
 
-Chrysalis can be orchestrated using several AI runtime environments:
+chrysalis can be orchestrated using several AI runtime environments:
 
 #### Option A: Google Gemini (Google Spark & Google Workspace)
-1. Place the vault directory inside **Google Drive** so files are accessible to Google Workspace extensions.
+1. Place the vault directory inside **Google Drive** (e.g. `~/GoogleDrive/chrysalis`) so files are accessible to Google Workspace extensions.
 2. Configure scheduled prompts in Google Spark / Gemini:
    * **Morning Prompt (08:30):**
      ```text
-     You are the Chrysalis orchestrator. Execute skill /morning:
+     You are the chrysalis orchestrator. Execute skill /morning:
      Read System/Scheduling-Memory.md, prompt for wake telemetry, and calibrate today's schedule.
      Follow all rules in System/SYSTEM-PROMPT.md.
      ```
    * **Evening Prompt (21:00):**
      ```text
-     You are the Chrysalis orchestrator. Execute skill /evening:
+     You are the chrysalis orchestrator. Execute skill /evening:
      Run the nightly audit, ingest tomorrow's Google Calendar events, and stage tomorrow's schedule.
      Follow all rules in System/SYSTEM-PROMPT.md.
      ```
@@ -165,7 +165,7 @@ Run the onboarding command with your AI assistant:
 ### Step 4: External Calendar Sync (Optional)
 
 1. Enable Google Calendar synchronization within the **TaskNotes** plugin settings.
-2. Chrysalis will read cached events from `Scheduling-Memory.md` and avoid scheduling focus blocks during external commitments.
+2. chrysalis will read cached events from `Scheduling-Memory.md` and avoid scheduling focus blocks during external commitments.
 
 ---
 
@@ -188,10 +188,10 @@ Run the onboarding command with your AI assistant:
 
 ## Acknowledgements & Core Dependencies
 
-Chrysalis is built on top of [Obsidian](https://obsidian.md) and depends on community plugins that are integral to the system's daily operation:
+chrysalis is built on top of [Obsidian](https://obsidian.md) and depends on community plugins that are integral to the system's daily operation:
 
-* **[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes):** Integral to Chrysalis. Provides task note rendering, frontmatter property management, time tracking, the local REST API bridge, and external Google Calendar synchronization.
-* **[Nexus](https://github.com/nexus-plugin/nexus):** Integral to Chrysalis. Provides in-vault AI model connectivity, local tool calling, and embedded workspace context.
+* **[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes):** Integral to chrysalis. Provides task note rendering, frontmatter property management, time tracking, the local REST API bridge, and external Google Calendar synchronization.
+* **[Nexus](https://github.com/nexus-plugin/nexus):** Integral to chrysalis. Provides in-vault AI model connectivity, local tool calling, and embedded workspace context.
 * **[Dataview](https://github.com/blacksmithgu/obsidian-dataview):** Provides dynamic task querying and dashboard aggregation across the vault substrate.
 
 ---
