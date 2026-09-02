@@ -1,4 +1,4 @@
-# 🦋 Chrysalis OS
+# Chrysalis OS
 
 > **The Autonomous Bio-Cognitive Operating System for Obsidian & AI Agent Orchestrators.**
 
@@ -10,24 +10,24 @@ Chrysalis is an open-source, platform-agnostic personal operating system built o
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-* **🧠 Bio-Cognitive Ultradian Scheduling:** Aligns your daily focus blocks to your natural circadian and ultradian rhythms. Stack high-focus work into 75–90m sprints with 15m decompression buffers, paired by cognitive modality (Analytical $\to$ Peak Sprints, Kinetic $\to$ Slump/Defrost, Synthesis $\to$ Recovery).
-* **📐 Two-Stage Focus Planning Lifecycle:**
+* **Bio-Cognitive Ultradian Scheduling:** Aligns your daily focus blocks to your natural circadian and ultradian rhythms. Stack high-focus work into 75–90m sprints with 15m decompression buffers, paired by cognitive modality (Analytical $\to$ Peak Sprints, Kinetic $\to$ Slump/Defrost, Synthesis $\to$ Recovery).
+* **Two-Stage Focus Planning Lifecycle:**
   * **Evening Staging (`/plan --stage` / `/evening`):** Ingests tomorrow's external calendar events, queries for additions, arbitrates priorities against your strategic roadmap, and stages a prototype schedule.
   * **Morning Calibration (`/plan --calibrate` / `/morning`):** Ingests actual wake time ($T_{\text{wake}}$) and subjective energy score ($1–5$), dynamically shifts diurnal sprint blocks, and locks ISO timestamps to task frontmatter on disk.
-* **🔌 Modular Orchestrator Architecture:** Compatible with multiple AI platforms through standardized capability tiers (`operational_tier` vs `deep_reasoning_tier`):
+* **Modular Orchestrator Architecture:** Compatible with multiple AI platforms through standardized capability tiers (`operational_tier` vs `deep_reasoning_tier`):
   * **Google Gemini:** Cloud Spark scheduled cron prompts, Google Workspace tools, Nexus integration.
   * **Google Antigravity:** Native IDE agent skills, subagent task delegation.
   * **Anthropic Claude:** Claude Code CLI and Desktop MCP tools.
   * **Local LLMs:** Ollama, LM Studio, and Obsidian Nexus provider.
-* **📈 Adaptive Multiplier Learning:** Automatically learns dynamic time multipliers for your task categories based on actual completion deltas ($T_{\text{actual}} / T_{\text{estimated}}$), bounded in $[0.20, 2.00]$.
-* **🩺 Automated Diagnostic Gate (`/doctor`):** Built-in 6-point integrity suite validating frontmatter schemas, explicit local timezone serialization (`-05:00`), strategic tag registries, wikilinks, and skill dependencies.
-* **⏸️ Semantic Pause Lifecycle (`/pause` & `/resume`):** Freeze schedule decay curves across 4 semantic modes (`maintenance`, `rest`, `flow`, `vacation`) with frictionless re-entry.
+* **Adaptive Multiplier Learning:** Automatically learns dynamic time multipliers for your task categories based on actual completion deltas ($T_{\text{actual}} / T_{\text{estimated}}$), bounded in $[0.20, 2.00]$.
+* **Automated Diagnostic Gate (`/doctor`):** Built-in 6-point integrity suite validating frontmatter schemas, explicit local timezone serialization (`-05:00`), strategic tag registries, wikilinks, and skill dependencies.
+* **Semantic Pause Lifecycle (`/pause` & `/resume`):** Freeze schedule decay curves across 4 semantic modes (`maintenance`, `rest`, `flow`, `vacation`) with frictionless re-entry.
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 ```mermaid
 graph TD
@@ -59,7 +59,7 @@ graph TD
 
 ---
 
-## 🚀 Quick Start (3-Minute Setup)
+## Quick Start (3-Minute Setup)
 
 ### 1. Clone & Bootstrap
 ```bash
@@ -85,7 +85,7 @@ The agent will guide you through a 4-step intake interview or let you pick from 
 
 ---
 
-## 🧭 Interactive Skills & Slash Commands
+## Interactive Skills & Slash Commands
 
 All Chrysalis protocols are implemented as self-contained executable runbooks in `.agent/skills/`:
 
@@ -103,7 +103,7 @@ All Chrysalis protocols are implemented as self-contained executable runbooks in
 
 ---
 
-## 🛡️ The Anti-Simulation Law
+## The Anti-Simulation Law
 
 Chrysalis enforces a strict constitutional invariant across all AI orchestrators:
 > **Chat text output alone NEVER mutates system state.**  
@@ -111,5 +111,5 @@ Chrysalis enforces a strict constitutional invariant across all AI orchestrators
 
 ---
 
-## 📄 License
+## License
 This project is open-source under the [MIT License](LICENSE).
