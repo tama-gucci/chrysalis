@@ -99,7 +99,7 @@ The system is structured across three primary file layers:
 
 3. **Open in Obsidian:**
    * Open [Obsidian](https://obsidian.md) and select **Open folder as vault** pointing to `~/Chrysalis`.
-   * Enable community plugins when prompted (TaskNotes, Dataview, Obsidian Git).
+   * Enable community plugins when prompted (TaskNotes, Dataview, Nexus).
 
 ---
 
@@ -193,7 +193,6 @@ Chrysalis is built on top of [Obsidian](https://obsidian.md) and depends on comm
 * **[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes):** Integral to Chrysalis. Provides task note rendering, frontmatter property management, time tracking, the local REST API bridge, and external Google Calendar synchronization.
 * **[Nexus](https://github.com/nexus-plugin/nexus):** Integral to Chrysalis. Provides in-vault AI model connectivity, local tool calling, and embedded workspace context.
 * **[Dataview](https://github.com/blacksmithgu/obsidian-dataview):** Provides dynamic task querying and dashboard aggregation across the vault substrate.
-* **[Obsidian Git](https://github.com/denolehov/obsidian-git):** Provides background version control and multi-device vault synchronization.
 
 ---
 
