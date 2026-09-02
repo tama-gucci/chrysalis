@@ -3,9 +3,9 @@ type: orchestrator_entry_point
 id: chrysalis-claude-orchestrator-entry
 orchestrator_platform: "anthropic_claude"
 adapter_spec: "[[System/Orchestrators/Claude/Adapter-Spec|Claude Adapter Spec]]"
-constitution: "[[System/SYSTEM-PROMPT|Chrysalis Constitution v4.15.0]]"
-version: 4.15.0
-last_updated: "2026-09-02T16:55:00-05:00"
+constitution: "[[System/SYSTEM-PROMPT|Chrysalis Constitution v4.16.0]]"
+version: 4.16.0
+last_updated: "2026-09-02T18:05:00-05:00"
 ---
 
 # 🎭 Anthropic Claude Orchestrator Entry Point

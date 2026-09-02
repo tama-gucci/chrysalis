@@ -4,8 +4,8 @@ id: chrysalis-orchestrator-claude
 name: "Anthropic Claude Orchestrator Adapter"
 orchestrator_platform: "anthropic_claude"
 status: reference
-version: 1.1.0
-last_updated: "2026-09-02T13:42:00-05:00"
+version: 1.2.0
+last_updated: "2026-09-02T18:05:00-05:00"
 
 capability_tiers:
   operational_tier:
@@ -15,7 +15,7 @@ capability_tiers:
   deep_reasoning_tier:
     alias: "claude-thought-latest"
     pinned_tested: "claude-3-7-sonnet-thought"
-    role: "RSI audits, skill mutation verification, diagnostic auto-heals"
+    role: "System audits, capability evolution (/evolve), skill mutations, and diagnostic auto-heals"
 ---
 
 # 🎭 Anthropic Claude Orchestrator Adapter (Reference Spec)
@@ -27,7 +27,7 @@ This document specifies the integration configuration, capability tier routing, 
 ## 🎯 Capability Tier Architecture
 
 * **Operational Tier (`claude-sonnet-latest`):** Standard daily interactions, calendar reconciliation, and task capture.
-* **Deep Reasoning Tier (`claude-thought-latest`):** Extended thinking budget enabled for complex multi-project audits, integrity debugging, and skill mutations.
+* **Deep Reasoning Tier (`claude-thought-latest`):** Extended thinking budget enabled for complex multi-project audits, capability evolution (`/evolve`), integrity debugging, and skill mutations.
 
 ---
 

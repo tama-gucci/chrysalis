@@ -3,9 +3,9 @@ type: orchestrator_entry_point
 id: chrysalis-gemini-orchestrator-entry
 orchestrator_platform: "google_gemini"
 adapter_spec: "[[System/Orchestrators/Gemini/Adapter-Spec|Gemini Adapter Spec]]"
-constitution: "[[System/SYSTEM-PROMPT|Chrysalis Constitution v4.15.0]]"
-version: 4.15.0
-last_updated: "2026-09-02T13:35:00-05:00"
+constitution: "[[System/SYSTEM-PROMPT|Chrysalis Constitution v4.16.0]]"
+version: 4.16.0
+last_updated: "2026-09-02T18:05:00-05:00"
 ---
 
 # ♊ Google Gemini Orchestrator Entry Point

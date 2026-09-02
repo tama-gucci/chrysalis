@@ -4,8 +4,8 @@ id: chrysalis-orchestrator-antigravity
 name: "Google Antigravity Orchestrator Adapter"
 orchestrator_platform: "google_antigravity"
 status: active
-version: 1.1.0
-last_updated: "2026-09-02T13:42:00-05:00"
+version: 1.2.0
+last_updated: "2026-09-02T18:05:00-05:00"
 
 capability_tiers:
   operational_tier:
@@ -15,7 +15,7 @@ capability_tiers:
   deep_reasoning_tier:
     alias: "pro"
     model_family: "pro"
-    role: "Multi-agent research, codebase refactors, and diagnostic integrity verification"
+    role: "Multi-agent research, capability evolution (/evolve), codebase refactors, and diagnostic integrity verification"
 ---
 
 # 🛸 Google Antigravity Orchestrator Adapter
@@ -29,7 +29,7 @@ This document specifies the integration configuration, capability tier routing, 
 Antigravity leverages native model parameter inheritance and subagent delegation:
 
 * **Operational Tier (`Model: inherit` or `flash`):** Used for standard turn-by-turn interactions and quick slash command invocations (`/morning`, `/evening`, `/task`).
-* **Deep Reasoning Tier (`Model: pro`):** Invoked when spawning specialized research or diagnostic subagents (`invoke_subagent` with `Model: pro`) during `/audit` and `/doctor`.
+* **Deep Reasoning Tier (`Model: pro`):** Invoked when spawning specialized research or diagnostic subagents (`invoke_subagent` with `Model: pro`) during `/audit`, `/evolve`, and `/doctor`.
 
 ---
 
@@ -51,10 +51,12 @@ Antigravity executes Chrysalis file operations using its built-in native tools:
 
 All skills defined in `.agent/skills/` are exposed as interactive slash commands:
 * `/doctor` — Run 6-point pre-flight system integrity diagnostics.
-* `/audit` — Execute unified nightly reconciliation, multiplier bounds clamping, and RSI analysis.
+* `/audit` — Execute unified nightly reconciliation, multiplier bounds clamping, and candidate task pool maintenance.
+* `/evolve` — Proactive capability expansion, architectural spec synthesis, and closed-loop RSI.
 * `/plan` — Master bio-cognitive focus scheduling (`--stage` / `--calibrate`).
 * `/morning` — 08:30 morning telemetry check-in and calibration.
 * `/evening` — 21:00 evening review and prototype schedule staging.
 * `/pause` & `/resume` — Manual system suspension across 4 semantic archetypes.
 * `/task` — Shorthand task ingestion and frontmatter generation.
 * `/zettel` — Atomic slipbox and `#chrysalis` capability ideation capture.
+* `/onboard` — Autonomous onboarding intake and roadmap compilation.

@@ -4,8 +4,8 @@ id: chrysalis-orchestrator-gemini
 name: "Google Gemini Orchestrator Adapter"
 orchestrator_platform: "google_gemini"
 status: active
-version: 1.1.0
-last_updated: "2026-09-02T13:42:00-05:00"
+version: 1.2.0
+last_updated: "2026-09-02T18:05:00-05:00"
 
 capability_tiers:
   operational_tier:
@@ -16,7 +16,7 @@ capability_tiers:
   deep_reasoning_tier:
     alias: "gemini-pro-latest"
     pinned_tested: "gemini-3-pro"
-    role: "RSI audits, skill mutation verification, diagnostic auto-heals (/audit, /doctor)"
+    role: "System audits, capability evolution, RSI, and diagnostic auto-heals (/audit, /evolve, /doctor)"
     characteristics: "Extended thinking effort, multi-file synthesis, complex reasoning"
 ---
 
@@ -35,26 +35,26 @@ graph TD
     User["User / Daily Loop"] --> OpTier["Operational Tier<br/>(Floating: gemini-flash-latest / Fallback: gemini-3.7-flash)"]
     OpTier --> DailySkills["/morning • /evening • /calibrate • /plan • /task"]
     
-    System["Nightly Audit / Maintenance"] --> DeepTier["Deep Reasoning Tier<br/>(Floating: gemini-pro-latest / Fallback: gemini-3-pro)"]
-    DeepTier --> DeepSkills["/audit • /doctor • RSI Friction Analysis"]
+    System["Nightly Audit / Evolution"] --> DeepTier["Deep Reasoning Tier<br/>(Floating: gemini-pro-latest / Fallback: gemini-3-pro)"]
+    DeepTier --> DeepSkills["/audit • /evolve • /doctor • RSI Friction Analysis"]
 ```
 
 * **Operational Tier (`gemini-flash-latest`):** 
   * Primary engine for rapid daily check-ins, bio-cognitive scheduling, and shorthand task capture.
   * Ensures zero-friction responsiveness during real-time human interaction.
 * **Deep Reasoning Tier (`gemini-pro-latest`):**
-  * Invoked during nightly reconciliation, recursive self-improvement (RSI), and multi-project horizon crawls.
+  * Invoked during nightly reconciliation (`/audit`), capability evolution (`/evolve`), recursive self-improvement (RSI), and multi-project horizon crawls.
   * Utilizes extended thinking effort to formulate optimization hypotheses and verify code/frontmatter invariants.
 
 ---
 
-## 🔄 Autonomous Terminology & Model Evolution via `/audit`
+## 🔄 Autonomous Terminology & Model Evolution via `/evolve`
 
 This adapter evolves dynamically alongside Google Gemini model releases without manual code rewrites:
 
 1. **Floating Aliases:** By targeting `gemini-flash-latest` and `gemini-pro-latest`, new architecture improvements are automatically inherited on backend rollout.
-2. **Environment Telemetry Detection:** The nightly `/audit` scans system package manifests (`System/Environment/obelisk.md`) and Nexus configurations (`.obsidian/plugins/nexus/data.json`). If a new CLI version or model identifier is detected, `/audit` autonomously updates `pinned_tested` in frontmatter.
-3. **Slipbox Capability Ingestion:** When notes tagged `#chrysalis` mentioning new Gemini capabilities are captured in the Slipbox, Step 5 of `/audit` generates an adapter upgrade proposal for evening staging.
+2. **Environment Telemetry Detection:** The `/evolve` skill scans system package manifests (`System/Environment/obelisk.md`) and Nexus configurations (`.obsidian/plugins/nexus/data.json`). If a new CLI version or model identifier is detected, `/evolve` autonomously formulates `pinned_tested` updates.
+3. **Slipbox Capability Ingestion:** When notes tagged `#chrysalis` mentioning new Gemini capabilities are captured in the Slipbox, `/evolve` generates an adapter upgrade proposal for evening staging.
 
 ---
 
@@ -79,14 +79,15 @@ Chrysalis uses two daily scheduled prompts to maintain biological rhythm synchro
 ### 2. Evening Staging & Nightly Audit Prompt (Scheduled: Daily at `21:00 CDT`)
 * **Cron Target:** `0 21 * * *`
 * **Execution Mode:** Headless / Interactive Notification
-* **Target Tier:** `deep_reasoning_tier` (`gemini-pro-latest`) for audit, switching to `operational_tier` for staging
+* **Target Tier:** `deep_reasoning_tier` (`gemini-pro-latest`) for audit/evolution, switching to `operational_tier` for staging
 * **Prompt Payload:**
   ```text
   You are the Chrysalis Operating System orchestrator.
   Execute skill /evening:
   1. Run the unified nightly audit (/audit): reconcile completed tasks, update bounded tag multipliers in [0.20, 2.00], ingest upcoming 14-day roadmap horizons, inject starter wedges into stalled tasks, and maintain inferred task pool.
-  2. Ingest external Google Calendar events for tomorrow via System/Environment/scripts/sync_calendar.py --tomorrow.
-  3. Query the user for any schedule additions, arbitrate priority with Life-Roadmap.md, assemble the prototype focus schedule with ultradian sprints, and serialize to prototype_schedule in Scheduling-Memory.md.
+  2. If /evolve is present, execute capability expansion pass for pending feature proposals.
+  3. Ingest external Google Calendar events for tomorrow via System/Environment/scripts/sync_calendar.py --tomorrow.
+  4. Query the user for any schedule additions, arbitrate priority with Life-Roadmap.md, assemble the prototype focus schedule with ultradian sprints, and serialize to prototype_schedule in Scheduling-Memory.md.
   Follow all constitutional invariants in System/SYSTEM-PROMPT.md.
   ```
 

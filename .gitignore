@@ -43,8 +43,9 @@ System/Environment/scripts/*.token.json
 Nexus/data/
 *.db
 
-# 6. Agent Backups & Scratchpads
+# 6. Agent Backups, Local Extensions & Scratchpads
 .agent/skills/.backup/
+.agent/skills/evolve/
 System/Environment/temp/
 .conversations/
 .workspaces/
