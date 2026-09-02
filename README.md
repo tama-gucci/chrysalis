@@ -1,12 +1,23 @@
 # Chrysalis
 
-> A structured, Markdown-based task management and daily focus framework for Obsidian, designed to work seamlessly with AI assistants.
+> A transparent, Markdown-based task management and daily scheduling framework for Obsidian, designed to work alongside AI assistants.
 
 > [!WARNING]
 > **Project Status: Early Alpha**  
 > Chrysalis is currently in active personal development and is not yet ready for general use. Formats and features may change frequently.
 
-Chrysalis is a personal productivity setup built entirely with plain Markdown files in Obsidian. It helps you manage long-term goals, schedule daily focus blocks around your natural energy levels, and collaborate with AI assistants (like Gemini, Claude, or local LLMs) to keep your schedule organized without proprietary task apps or cloud databases.
+Chrysalis is an open-source task management and daily scheduling framework built with plain Markdown files in Obsidian. It was created out of frustration with subscription-based productivity apps that hide their mechanics behind closed software and lock your task history behind ongoing monthly payments.
+
+With Chrysalis, your tasks, roadmaps, and scheduling logic exist as standard text files you control. It is designed to work with everyday tools like Google Calendar and Google Drive, while giving AI assistants (such as Gemini, Claude, or local models) structured instructions to help organize and calibrate your daily routine.
+
+---
+
+## Why Chrysalis
+
+* **Transparent and Inspectable:** Every rule, schedule calculation, and task state is stored in readable Markdown files. You can see exactly how your schedule is built and modify the system rules at any time.
+* **No Subscription Lock-In:** You own your data completely. You will never lose access to your tasks, historical logs, or roadmap if you stop paying for a service.
+* **Practical Cloud and Calendar Integration:** Integrates with Google Calendar to prevent scheduling over existing events and syncs across devices using Google Drive or Git.
+* **AI-Assisted Planning:** Provides AI assistants with clear instructions to draft realistic schedules based on your priorities and when you actually wake up.
 
 ---
 
@@ -16,26 +27,16 @@ Chrysalis is organized around a simple daily workflow:
 
 1. **Evening Review (`/evening`):**
    * Review what you finished today.
-   * Check tomorrow's calendar events.
-   * Pick 2–3 priority tasks from your roadmap to build a realistic draft schedule for tomorrow.
+   * Check tomorrow's calendar commitments to avoid conflicts.
+   * Pick 2–3 priority items from your roadmap to stage a draft schedule for tomorrow.
 
 2. **Morning Check-In (`/morning`):**
-   * Log when you woke up and your current energy level (1–5).
-   * The system automatically shifts your focus blocks to match your actual wake time.
+   * Log when you woke up and your energy level (1–5).
+   * The system shifts your planned focus blocks to match your actual wake time.
 
 3. **Daily Focus Blocks (`/plan`):**
-   * Tasks are grouped into 75–90 minute sprint blocks separated by short breaks.
+   * Work is grouped into 75–90 minute blocks separated by short rest breaks.
    * Demanding analytical work is placed in morning focus windows, while administrative or lighter tasks are placed in afternoon recovery periods.
-
----
-
-## Key Features
-
-* **Plain Markdown Substrate:** All tasks, roadmaps, and settings live as standard Markdown files in your vault. Your data stays yours, with no third-party task apps or lock-in.
-* **AI Assistant Ready:** Includes pre-written prompt guides and slash commands so assistants (Gemini, Claude, Antigravity, or local LLMs) can read your tasks and update your daily schedule directly on disk.
-* **Realistic Time Estimates:** Tracks how long tasks actually take versus your estimates, gradually learning personal time multipliers so you don't overschedule your day.
-* **Calendar Integration:** Pulls in external Google Calendar events to ensure focus blocks are never scheduled over meetings or classes.
-* **System Health Check (`/doctor`):** Built-in diagnostic check to verify that tags, dates, and file formats are valid and consistent.
 
 ---
 
@@ -60,7 +61,7 @@ Open your AI assistant in the vault folder and run:
 ```text
 /onboard
 ```
-The assistant will guide you through setting up your initial life roadmap, priority pillars, and first tasks.
+The assistant will guide you through setting up your initial roadmap, priority pillars, and first tasks.
 
 ---
 
@@ -71,9 +72,9 @@ The assistant will guide you through setting up your initial life roadmap, prior
 | **`/onboard`** | Walk through initial setup of your goals, roadmap, and daily routine. |
 | **`/morning`** | Log morning wake time and energy to adjust today's schedule. |
 | **`/evening`** | Review completed tasks and prepare tomorrow's schedule. |
-| **`/plan`** | Generate or adjust focus sprint blocks for the day. |
-| **`/task`** | Add a new task with automatic category tagging and time estimates. |
-| **`/doctor`** | Run a quick health check to verify note formatting and tags. |
+| **`/plan`** | Generate or adjust focus blocks for the day. |
+| **`/task`** | Add a new task with category tagging and time estimates. |
+| **`/doctor`** | Run a health check to verify note formatting and tags. |
 | **`/zettel`** | Capture a quick note or thought in your knowledge base. |
 | **`/pause`** | Pause automatic daily scheduling while traveling or taking time off. |
 
