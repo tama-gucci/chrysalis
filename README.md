@@ -186,5 +186,16 @@ Run the onboarding command with your AI assistant:
 
 ---
 
+## Acknowledgements & Core Dependencies
+
+Chrysalis is built on top of [Obsidian](https://obsidian.md) and depends on community plugins that are integral to the system's daily operation:
+
+* **[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes):** Integral to Chrysalis. Provides task note rendering, frontmatter property management, time tracking, the local REST API bridge, and external Google Calendar synchronization.
+* **[Nexus](https://github.com/nexus-plugin/nexus):** Integral to Chrysalis. Provides in-vault AI model connectivity, local tool calling, and embedded workspace context.
+* **[Dataview](https://github.com/blacksmithgu/obsidian-dataview):** Provides dynamic task querying and dashboard aggregation across the vault substrate.
+* **[Obsidian Git](https://github.com/denolehov/obsidian-git):** Provides background version control and multi-device vault synchronization.
+
+---
+
 ## License
 This project is open-source under the [MIT License](LICENSE).
