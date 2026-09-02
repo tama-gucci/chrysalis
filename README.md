@@ -2,6 +2,10 @@
 
 > **The Autonomous Bio-Cognitive Operating System for Obsidian & AI Agent Orchestrators.**
 
+> [!WARNING]
+> **Project Status: Early Alpha (Active Development)**  
+> Chrysalis OS is currently in an experimental alpha state and is **not yet ready for general public use**. Schemas, autonomous skill protocols, and orchestrator contracts are undergoing rapid architectural evolution. Early adopters should expect frequent updates and breaking changes.
+
 Chrysalis is an open-source, platform-agnostic personal operating system built on a **100% plain Markdown file substrate**. It bridges biological chronobiology, strategic life roadmaps, and autonomous AI agents (Google Gemini, Google Antigravity, Anthropic Claude, and Local LLMs) into a unified, self-calibrating daily focus loop.
 
 ---
