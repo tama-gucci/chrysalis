@@ -13,8 +13,9 @@ energy: medium # Allowed values: high, medium, low
 friction: medium # Allowed values: high, medium, low
 micro_chunked: false # Boolean: true if a 3-step Starter Wedge has been injected
 tags:
-  - task
-  - pillar-1/setup # Must reference a tag defined in Life-Roadmap.md
+  - template
+  # - task (injected when materialized)
+  # - pillar-X/subtag
 ---
 
 # Imperative Task Title
