@@ -8,7 +8,7 @@
   "hideIdentifyingTagsMode": "exact-only",
   "taskPropertyName": "",
   "taskPropertyValue": "",
-  "excludedFolders": ".agent, .gemini, .obsidian, System, Projects/_templates",
+  "excludedFolders": ".agent, .gemini, .obsidian, System, Projects/_templates, TaskNotes/_templates, _templates",
   "defaultTaskPriority": "normal",
   "defaultTaskStatus": "todo",
   "taskOrgFiltersCollapsed": false,
@@ -634,13 +634,5 @@
       "updatedAt": 1788386741031
     }
   ],
-  "googleCalendarSyncQueue": [
-    {
-      "taskPath": "TaskNotes/_templates/Task-Template.md",
-      "requestedAt": 1788386223090,
-      "attempts": 10,
-      "lastAttemptAt": 1788386733153,
-      "lastError": "Failed to replay queued Google Calendar sync"
-    }
-  ]
+  "googleCalendarSyncQueue": []
 }
