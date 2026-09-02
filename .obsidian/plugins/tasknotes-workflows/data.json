@@ -1,0 +1,15 @@
+{
+  "workflowFolder": "TaskNotes/Workflows",
+  "workflowViewPath": "TaskNotes/Views/workflows.base",
+  "autoCreateDefaultWorkflows": true,
+  "autoCreateWorkflowView": true,
+  "enableScheduledTriggers": false,
+  "enableTaskEventTriggers": true,
+  "enableObsidianTriggers": false,
+  "runLogRoot": "",
+  "runLogLevel": "summary",
+  "maxRunsPerWorkflow": 100,
+  "maxHistoryEntries": 1000,
+  "minIntervalMs": 60000,
+  "uiLanguage": "system"
+}

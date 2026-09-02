@@ -1,0 +1,56 @@
+# =======================================================
+# Chrysalis Public Open-Source Distribution .gitignore
+# =======================================================
+
+# 1. Personal Dynamic System State (Local / Drive Only)
+System/Life-Roadmap.md
+System/Scheduling-Memory.md
+System/System-Health.md
+System/Changelog.md
+System/Environment/*.md
+!System/Environment/Environment-Index.md
+!System/Environment/_templates/
+
+# 2. Personal TaskNotes & Daily Notes (Local / Drive Only)
+TaskNotes/Tasks/*
+!TaskNotes/Tasks/example-task.md
+TaskNotes/Archive/*
+[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md
+
+# 3. Personal Projects & Slipbox Knowledge (Local / Drive Only)
+Projects/*
+!Projects/_templates/
+!Projects/README.md
+Slipbox/*
+!Slipbox/README.md
+
+# 4. API Keys, OAuth Credentials & Tokens
+.env
+*.token.json
+credentials.json
+token.json
+System/Environment/scripts/*.token.json
+.obsidian/plugins/nexus/data.json
+.obsidian/plugins/text-generator/data.json
+
+# 5. Obsidian Local UI Cache & Plugin Run Data
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+.trash/
+.obsidian/plugins/tasknotes-workflows/runs/
+.obsidian/plugins/nexus/data/
+Nexus/data/
+*.db
+
+# 6. Agent Backups & Scratchpads
+.agent/skills/.backup/
+System/Environment/temp/
+.conversations/
+.workspaces/
+
+# 7. OS & Sync Conflict Files
+.DS_Store
+Thumbs.db
+*(conflict*
+* (conflict*
