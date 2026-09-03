@@ -4,57 +4,33 @@ id: chrysalis-orchestrator-gemini
 name: "Google Gemini Orchestrator Adapter"
 orchestrator_platform: "google_gemini"
 status: active
-version: 1.3.0
-last_updated: "2026-09-02T20:55:00-05:00"
-
-capability_tiers:
-  operational_tier:
-    alias: "gemini-flash-latest"
-    pinned_tested: "gemini-3.7-flash"
-    role: "Daily operational loops (/morning, /evening, /calibrate, /plan, /task)"
-    characteristics: "Low latency, high throughput, robust function calling, 1M+ context"
-  deep_reasoning_tier:
-    alias: "gemini-pro-latest"
-    pinned_tested: "gemini-3-pro"
-    role: "System audits, capability evolution, RSI, and diagnostic auto-heals (/audit, /evolve, /doctor)"
-    characteristics: "Extended thinking effort, multi-file synthesis, complex reasoning"
+version: 2.1.0
+last_updated: "2026-09-02T21:12:00-05:00"
 ---
 
 # ♊ Google Gemini Orchestrator Adapter
 
-This document specifies the integration configuration, capability tier routing, scheduled automation hooks, and tool bindings when using **Google Gemini Spark** as the **Autonomous Production Orchestrator** running Chrysalis daily life operations over the Google Drive central substrate.
+This document specifies the scheduled automation hooks, cloud-native calendar ingestion, and tool bindings when using **Google Gemini Spark** as the **Autonomous Production Orchestrator** running Chrysalis daily life operations over the Google Drive central substrate.
 
 ---
 
-## 🎯 Capability Tier Architecture & Model Routing
+## 🌐 Autonomous Production Lifecycle
 
-Chrysalis decouples from hardcoded model names by using **Semantic Capability Tiers** paired with **floating provider aliases**.
+Google Gemini Spark operates as the autonomous production runtime for Chrysalis, executing scheduled daily life loops and real-time operational commands directly over Google Drive:
 
 ```mermaid
 graph TD
-    User["User / Daily Loop"] --> OpTier["Operational Tier<br/>(Floating: gemini-flash-latest / Fallback: gemini-3.7-flash)"]
-    OpTier --> DailySkills["/morning • /evening • /calibrate • /plan • /task"]
+    User["User Interaction / On-Demand"] --> Spark["♊ Google Gemini Spark (Production Orchestrator)"]
+    CronMorn["08:30 Morning Check-in Cron"] --> Spark
+    CronEve["21:00 Evening Staging Cron"] --> Spark
     
-    System["Nightly Audit / Evolution"] --> DeepTier["Deep Reasoning Tier<br/>(Floating: gemini-pro-latest / Fallback: gemini-3-pro)"]
-    DeepTier --> DeepSkills["/audit • /evolve • /doctor • RSI Friction Analysis"]
+    Spark --> DailyOps["Daily Focus Operations:<br/>• /morning (Wake Telemetry & Diurnal Shift)<br/>• /evening (Task Reconciliation & Focus Staging)<br/>• /calibrate • /plan • /task • /audit • /doctor"]
+    
+    DailyOps --> Substrate["☁️ Google Drive Central Substrate<br/>(Markdown Files & YAML Frontmatter)"]
 ```
 
-* **Operational Tier (`gemini-flash-latest`):** 
-  * Primary engine for rapid daily check-ins, bio-cognitive scheduling, and shorthand task capture.
-  * Ensures zero-friction responsiveness during real-time human interaction.
-* **Deep Reasoning Tier (`gemini-pro-latest`):**
-  * Invoked during nightly reconciliation (`/audit`), capability evolution (`/evolve`), recursive self-improvement (RSI), and multi-project horizon crawls.
-  * Utilizes extended thinking effort to formulate optimization hypotheses and verify code/frontmatter invariants.
-
----
-
-## 🔄 Autonomous Terminology & Model Evolution via `/evolve`
-
-This adapter evolves dynamically alongside Google Gemini model releases without manual code rewrites:
-
-1. **Floating Aliases:** By targeting `gemini-flash-latest` and `gemini-pro-latest`, new architecture improvements are automatically inherited on backend rollout.
-2. **Model Identifier Detection:** During development evolution passes, `/evolve` checks active tool configs and model releases to formulate `pinned_tested` updates.
-3. **Slipbox Capability Ingestion:** When notes tagged `#chrysalis` mentioning new Gemini capabilities are captured in the Slipbox, `/evolve` generates an adapter upgrade proposal for evening staging.
+* **Interactive / On-Demand Loops:** Real-time check-ins, bio-cognitive scheduling, shorthand task creation, and emergency pause/resumption (`/morning`, `/plan`, `/task`, `/pause`, `/resume`).
+* **Scheduled Lifecycles:** Nightly task audit and roadmap horizon reconciliation (`/evening`, `/audit`) and morning wake calibration (`/morning`, `/calibrate`).
 
 ---
 
@@ -63,32 +39,69 @@ This adapter evolves dynamically alongside Google Gemini model releases without 
 Chrysalis uses two daily scheduled prompts to maintain biological rhythm synchronization:
 
 ### 1. Morning Calibration Prompt (Scheduled: Daily at `08:30 CDT`)
+* **Schedule Name:** `Chrysalis Morning Orchestrator`
 * **Cron Target:** `30 8 * * *`
-* **Execution Mode:** Headless / Interactive Notification
-* **Target Tier:** `operational_tier` (`gemini-flash-latest`)
+* **Execution Mode:** Interactive Notification / Daily Trigger
 * **Prompt Payload:**
   ```text
-  You are the Chrysalis Operating System orchestrator.
+  [CONTEXT & IDENTITY]
+  You are the autonomous orchestrator for Chrysalis, a Markdown-based focus planning, task management, and knowledge system stored in Google Drive in the "chrysalis/" folder.
+  All state, roadmaps, task lifecycles, and operational skills exist as plain Markdown files with YAML frontmatter in the "chrysalis/" directory.
+
+  [GROUNDING & BOOTSTRAP]
+  Upon execution, read the following core files in Google Drive:
+  1. "chrysalis/GEMINI.md" and "chrysalis/System/SYSTEM-PROMPT.md" — Constitutional laws, schemas, and invariants.
+  2. "chrysalis/System/Scheduling-Memory.md" — Dynamic operational state, timezone offset ("-05:00"), pause flags, wake rhythms, and pre-approved prototype schedule.
+  3. "chrysalis/.agent/skills/morning/SKILL.md" — Executable morning runbook.
+
+  [TASK EXECUTION]
   Execute skill /morning:
-  1. Read System/Scheduling-Memory.md to inspect current pause state and pre-approved prototype schedule.
-  2. If active, prompt the user for morning wake telemetry (energy score 1-5 and wake notes).
-  3. When telemetry is received, calculate rolling rhythms, shift diurnal focus blocks relative to Twake, execute tool calls to serialize scheduled timestamps to TaskNotes/Tasks/*.md, and write today's YYYY-MM-DD.md note.
-  Follow all constitutional invariants in System/SYSTEM-PROMPT.md.
+  1. Inspect pause state in "chrysalis/System/Scheduling-Memory.md". If paused, respect the pause policy.
+  2. If active, prompt the user in natural language for morning wake telemetry (energy score 1-5 and wake notes / actual wake time).
+  3. Once telemetry is received:
+     - Ingest today's external events from Google Calendar (via Google Workspace tools) or "calendar_sync.cached_events" in "chrysalis/System/Scheduling-Memory.md" to guarantee zero schedule collisions.
+     - Shift diurnal focus sprint blocks (75-90m ultradian focus sprints with 15m decompression buffers) anchored to actual wake time (Twake).
+     - Execute file tool calls (replace_file_content / write_to_file) to write locked timestamps ("scheduled: YYYY-MM-DDTHH:mm:ss-05:00") into "chrysalis/TaskNotes/Tasks/*.md".
+     - Create today's daily note at "chrysalis/YYYY-MM-DD.md".
+     - Update "morning_checkin" in "chrysalis/System/Scheduling-Memory.md".
+
+  [CONSTITUTIONAL INVARIANTS]
+  - Anti-Simulation Law: You MUST execute file tool calls (replace_file_content / write_to_file) on Google Drive files. Chat text alone never modifies system state.
+  - Explicit Timezone: All timestamps must include the explicit local offset from Scheduling-Memory.md (e.g., "-05:00"). Never write raw UTC "Z" strings.
   ```
 
 ### 2. Evening Staging & Nightly Audit Prompt (Scheduled: Daily at `21:00 CDT`)
+* **Schedule Name:** `Chrysalis Evening Orchestrator`
 * **Cron Target:** `0 21 * * *`
-* **Execution Mode:** Headless / Interactive Notification
-* **Target Tier:** `deep_reasoning_tier` (`gemini-pro-latest`) for audit/evolution, switching to `operational_tier` for staging
+* **Execution Mode:** Interactive Notification / Nightly Trigger
 * **Prompt Payload:**
   ```text
-  You are the Chrysalis Operating System orchestrator.
+  [CONTEXT & IDENTITY]
+  You are the autonomous orchestrator for Chrysalis, a Markdown-based focus planning, task management, and knowledge system stored in Google Drive in the "chrysalis/" folder.
+  All state, roadmaps, task lifecycles, and operational skills exist as plain Markdown files with YAML frontmatter in the "chrysalis/" directory.
+
+  [GROUNDING & BOOTSTRAP]
+  Upon execution, read the following core files in Google Drive:
+  1. "chrysalis/GEMINI.md" and "chrysalis/System/SYSTEM-PROMPT.md" — Constitutional laws, schemas, and invariants.
+  2. "chrysalis/System/Scheduling-Memory.md" — Dynamic operational state, timezone offset ("-05:00"), bounded multipliers, pause state, and candidate task pools.
+  3. "chrysalis/System/Life-Roadmap.md" & "chrysalis/Projects/*/Roadmap.md" — Primary strategic priority arbiter and active deliverables.
+  4. "chrysalis/.agent/skills/evening/SKILL.md" — Executable evening runbook.
+
+  [TASK EXECUTION]
   Execute skill /evening:
-  1. Run the unified nightly audit (/audit): reconcile completed tasks, update bounded tag multipliers in [0.20, 2.00], ingest upcoming 14-day roadmap horizons, inject starter wedges into stalled tasks, and maintain inferred task pool.
-  2. If /evolve is present, execute capability expansion pass for pending feature proposals.
-  3. Ingest external Google Calendar events for tomorrow via Google Workspace tool extension or cached events in Scheduling-Memory.md.
-  4. Query the user for any schedule additions, arbitrate priority with Life-Roadmap.md, assemble the prototype focus schedule with ultradian sprints, and serialize to prototype_schedule in Scheduling-Memory.md.
-  Follow all constitutional invariants in System/SYSTEM-PROMPT.md.
+  1. Run Unified Nightly Audit (/audit):
+     - Reconcile completed tasks in "chrysalis/TaskNotes/Tasks/*.md" against completed session deltas and update bounded multipliers within [0.20, 2.00] in "chrysalis/System/Scheduling-Memory.md".
+     - Ingest upcoming 14-day roadmap milestones from "chrysalis/System/Life-Roadmap.md" and create new task notes if needed.
+     - Inject Starter Wedges (micro_chunked: true) into stalled tasks (>72h).
+     - Maintain the candidate task pool in "chrysalis/System/Scheduling-Memory.md".
+  2. Ingest external Google Calendar events for tomorrow via Google Workspace tools or cached_events in "chrysalis/System/Scheduling-Memory.md".
+  3. Prompt the user in natural language for any schedule additions, errands, or context for tomorrow.
+  4. Arbitrate daily priority against "chrysalis/System/Life-Roadmap.md" (active roadmap milestones take Peak Focus slots; user additions fill downtime/slump windows).
+  5. Assemble tomorrow's prototype focus schedule (75-90m ultradian sprints, 15m decompression buffers) and execute file tool calls to serialize "prototype_schedule" into "chrysalis/System/Scheduling-Memory.md".
+
+  [CONSTITUTIONAL INVARIANTS]
+  - Anti-Simulation Law: You MUST execute file tool calls (replace_file_content / write_to_file) on Google Drive files. Chat text alone never modifies system state.
+  - Explicit Timezone: All timestamps must include the explicit local offset from Scheduling-Memory.md (e.g., "-05:00"). Never write raw UTC "Z" strings.
   ```
 
 ---

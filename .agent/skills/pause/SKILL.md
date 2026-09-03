@@ -48,7 +48,7 @@ system_state:
     freeze_multiplier_decay: true
 ```
 
-* **If `mode == "maintenance"`:** Wipe `prototype_schedule` (`staged_user_intent: null`, `pending_feature_proposals: []`, `target_date: null`, `feedback_status: "pending"`, `staged_anchor_task: null`, `staged_support_tasks: []`).
+* **If `mode == "maintenance"`:** Wipe `prototype_schedule` (`staged_user_intent: null`, `target_date: null`, `feedback_status: "pending"`, `staged_anchor_task: null`, `staged_support_tasks: []`).
 * **If `mode == "rest"`:** Preserve rolling wake rhythms; mark `rest_day: true` in context notes to prevent negative efficiency scoring.
 
 ### Step 3: Task Frontmatter Sanitation (Tool Calls)

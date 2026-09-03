@@ -8,7 +8,7 @@
 
 ## 🏛️ System Architecture & Division of Labor
 
-Chrysalis operates with a strict, principled division of labor between **Production Runtime** (running daily life operations) and the **Development Pipeline** (engineering and evolving the OS):
+Chrysalis operates with a strict, principled division of labor between **Production Runtime** (running daily life operations) and the **Development Pipeline** (engineering and evolving the system):
 
 ```mermaid
 graph TD
@@ -104,21 +104,59 @@ graph TD
 1. Open **Google Gemini / Spark** and configure scheduled prompts for your vault located on Google Drive:
    * **Morning Prompt (Scheduled Daily: 08:30 Local Time):**
      ```text
-     You are the Chrysalis Operating System orchestrator.
+     [CONTEXT & IDENTITY]
+     You are the autonomous orchestrator for Chrysalis, a Markdown-based focus planning, task management, and knowledge system stored in Google Drive in the "chrysalis/" folder.
+     All state, roadmaps, task lifecycles, and operational skills exist as plain Markdown files with YAML frontmatter in the "chrysalis/" directory.
+
+     [GROUNDING & BOOTSTRAP]
+     Upon execution, read the following core files in Google Drive:
+     1. "chrysalis/GEMINI.md" and "chrysalis/System/SYSTEM-PROMPT.md" — Constitutional laws, schemas, and invariants.
+     2. "chrysalis/System/Scheduling-Memory.md" — Dynamic operational state, timezone offset ("-05:00"), pause flags, wake rhythms, and pre-approved prototype schedule.
+     3. "chrysalis/.agent/skills/morning/SKILL.md" — Executable morning runbook.
+
+     [TASK EXECUTION]
      Execute skill /morning:
-     1. Read System/Scheduling-Memory.md to inspect current pause state and pre-approved prototype schedule.
-     2. Prompt the user for morning wake telemetry (energy score 1-5 and wake notes).
-     3. When telemetry is received, calculate rolling rhythms, shift diurnal focus blocks relative to Twake, execute tool calls to serialize scheduled timestamps to TaskNotes/Tasks/*.md, and write today's YYYY-MM-DD.md note.
-     Follow all constitutional invariants in System/SYSTEM-PROMPT.md.
+     1. Inspect pause state in "chrysalis/System/Scheduling-Memory.md". If paused, respect the pause policy.
+     2. If active, prompt the user in natural language for morning wake telemetry (energy score 1-5 and wake notes / actual wake time).
+     3. Once telemetry is received:
+        - Ingest today's external events from Google Calendar (via Google Workspace tools) or "calendar_sync.cached_events" in "chrysalis/System/Scheduling-Memory.md" to guarantee zero schedule collisions.
+        - Shift diurnal focus sprint blocks (75-90m ultradian focus sprints with 15m decompression buffers) anchored to actual wake time (Twake).
+        - Execute file tool calls (replace_file_content / write_to_file) to write locked timestamps ("scheduled: YYYY-MM-DDTHH:mm:ss-05:00") into "chrysalis/TaskNotes/Tasks/*.md".
+        - Create today's daily note at "chrysalis/YYYY-MM-DD.md".
+        - Update "morning_checkin" in "chrysalis/System/Scheduling-Memory.md".
+
+     [CONSTITUTIONAL INVARIANTS]
+     - Anti-Simulation Law: You MUST execute file tool calls (replace_file_content / write_to_file) on Google Drive files. Chat text alone never modifies system state.
+     - Explicit Timezone: All timestamps must include the explicit local offset from Scheduling-Memory.md (e.g., "-05:00"). Never write raw UTC "Z" strings.
      ```
    * **Evening Prompt (Scheduled Daily: 21:00 Local Time):**
      ```text
-     You are the Chrysalis Operating System orchestrator.
+     [CONTEXT & IDENTITY]
+     You are the autonomous orchestrator for Chrysalis, a Markdown-based focus planning, task management, and knowledge system stored in Google Drive in the "chrysalis/" folder.
+     All state, roadmaps, task lifecycles, and operational skills exist as plain Markdown files with YAML frontmatter in the "chrysalis/" directory.
+
+     [GROUNDING & BOOTSTRAP]
+     Upon execution, read the following core files in Google Drive:
+     1. "chrysalis/GEMINI.md" and "chrysalis/System/SYSTEM-PROMPT.md" — Constitutional laws, schemas, and invariants.
+     2. "chrysalis/System/Scheduling-Memory.md" — Dynamic operational state, timezone offset ("-05:00"), bounded multipliers, pause state, and candidate task pools.
+     3. "chrysalis/System/Life-Roadmap.md" & "chrysalis/Projects/*/Roadmap.md" — Primary strategic priority arbiter and active deliverables.
+     4. "chrysalis/.agent/skills/evening/SKILL.md" — Executable evening runbook.
+
+     [TASK EXECUTION]
      Execute skill /evening:
-     1. Run the unified nightly audit (/audit): reconcile completed tasks, update bounded tag multipliers in [0.20, 2.00], ingest upcoming 14-day roadmap horizons, inject starter wedges into stalled tasks, and maintain inferred task pool.
-     2. Ingest external Google Calendar events for tomorrow via Google Workspace or cached events in Scheduling-Memory.md.
-     3. Query the user for schedule additions, arbitrate priority with Life-Roadmap.md, assemble prototype focus schedule with ultradian sprints, and serialize to prototype_schedule in Scheduling-Memory.md.
-     Follow all constitutional invariants in System/SYSTEM-PROMPT.md.
+     1. Run Unified Nightly Audit (/audit):
+        - Reconcile completed tasks in "chrysalis/TaskNotes/Tasks/*.md" against completed session deltas and update bounded multipliers within [0.20, 2.00] in "chrysalis/System/Scheduling-Memory.md".
+        - Ingest upcoming 14-day roadmap milestones from "chrysalis/System/Life-Roadmap.md" and create new task notes if needed.
+        - Inject Starter Wedges (micro_chunked: true) into stalled tasks (>72h).
+        - Maintain the candidate task pool in "chrysalis/System/Scheduling-Memory.md".
+     2. Ingest external Google Calendar events for tomorrow via Google Workspace tools or cached_events in "chrysalis/System/Scheduling-Memory.md".
+     3. Prompt the user in natural language for any schedule additions, errands, or context for tomorrow.
+     4. Arbitrate daily priority against "chrysalis/System/Life-Roadmap.md" (active roadmap milestones take Peak Focus slots; user additions fill downtime/slump windows).
+     5. Assemble tomorrow's prototype focus schedule (75-90m ultradian sprints, 15m decompression buffers) and execute file tool calls to serialize "prototype_schedule" into "chrysalis/System/Scheduling-Memory.md".
+
+     [CONSTITUTIONAL INVARIANTS]
+     - Anti-Simulation Law: You MUST execute file tool calls (replace_file_content / write_to_file) on Google Drive files. Chat text alone never modifies system state.
+     - Explicit Timezone: All timestamps must include the explicit local offset from Scheduling-Memory.md (e.g., "-05:00"). Never write raw UTC "Z" strings.
      ```
 2. Runtime instructions and adapter specifications are defined in [GEMINI.md](file:///home/sin/GoogleDrive/chrysalis/GEMINI.md) and `System/Orchestrators/Gemini/Adapter-Spec.md`.
 
@@ -148,6 +186,7 @@ Run the onboarding command with your AI orchestrator:
 
 ## 🛠️ Command Reference
 
+### Daily Production Commands (Google Gemini Spark)
 | Command | Skill Runbook | Description |
 | :--- | :--- | :--- |
 | **`/onboard`** | `.agent/skills/onboard/SKILL.md` | Interactive intake interview: compiles strategic roadmap and seeds operational memory. |
@@ -160,6 +199,12 @@ Run the onboarding command with your AI orchestrator:
 | **`/zettel`** | `.agent/skills/zettel/SKILL.md` | Creates an atomic slipbox knowledge note with bidirectional links. |
 | **`/pause`** | `.agent/skills/pause/SKILL.md` | Suspends active timeblocks and freezes multiplier decay across 4 semantic modes. |
 | **`/resume`** | `.agent/skills/pause/SKILL.md` | Resumes daily planning cycles smoothly following a pause. |
+
+### Development & Architecture Commands (Google Antigravity IDE)
+| Command | Skill Runbook | Description |
+| :--- | :--- | :--- |
+| **`/evolve`** | `.agent/skills/evolve/SKILL.md` | On-demand capability expansion, 5-vector feature synthesis, and RSI friction analysis. |
+| **`/doctor`** | `.agent/skills/doctor/SKILL.md` | Pre-commit and diagnostic integrity validation during codebase refactoring. |
 
 ---
 

@@ -19,37 +19,23 @@ The **Orchestrator Layer** connects autonomous AI agent runtimes to the Chrysali
 ```mermaid
 graph TD
     subgraph Substrate ["Chrysalis Core Substrate (100% Platform-Agnostic)"]
-        Constitution["SYSTEM-PROMPT.md / AGENTS.md<br/>(Universal OS Invariants)"]
+        Constitution["SYSTEM-PROMPT.md / AGENTS.md<br/>(Universal System Invariants)"]
         Memory["System/Scheduling-Memory.md<br/>(Dynamic Multipliers & State)"]
         Skills[".agent/skills/<br/>(Universal Executable Runbooks)"]
         Tasks["TaskNotes/Tasks/*.md<br/>(Frontmatter Backlog)"]
     end
 
-    subgraph Contract ["Universal Orchestrator Contract & Capability Tiers"]
-        ContractSpec["Standard Tool Capabilities:<br/>• File Read (view_file)<br/>• File Edit (replace_file_content / write_to_file)<br/>• Shell Execution (run_command)<br/>• Local Timezone (-05:00)<br/>• Anti-Simulation Invariant"]
-        Tiers["Capability Tiers:<br/>1. Operational Tier (Fast daily loops)<br/>2. Deep Reasoning Tier (Audits, evolution & RSI)"]
+    subgraph Contract ["Universal Orchestrator Contract"]
+        ContractSpec["Standard Tool Capabilities:<br/>• File Read (view_file)<br/>• File Edit (replace_file_content / write_to_file)<br/>• Local Timezone (-05:00)<br/>• Anti-Simulation Invariant"]
     end
 
     subgraph ActiveAdapter ["Active Orchestrator Adapter"]
-        Gemini["[[Gemini/Adapter-Spec|Google Gemini Spark Adapter]]<br/>(Cloud Scheduled Cron, Workspace Tools, Floating Aliases)"]
+        Gemini["[[Gemini/Adapter-Spec|Google Gemini Spark Adapter]]<br/>(Cloud Scheduled Cron, Google Workspace Tools)"]
     end
 
     Substrate --> Contract
     Contract --> Gemini
 ```
-
----
-
-## 🎯 Semantic Capability Tiers & Model Routing
-
-Chrysalis standardizes on two functional **Capability Tiers**:
-
-1. **`operational_tier` (Daily Focus Loops):**
-   * **Role:** Real-time conversational check-ins, bio-cognitive diurnal scheduling, task creation, and calendar synchronization (`/morning`, `/evening`, `/calibrate`, `/plan`, `/task`).
-   * **Target:** `gemini-flash-latest` (Pinned Tested: `gemini-3.7-flash`).
-2. **`deep_reasoning_tier` (Audits, Capability Evolution & RSI):**
-   * **Role:** Nightly reconciliation (`/audit`), capability expansion and architectural self-improvement (`/evolve`), multi-project milestone crawling, and diagnostic auto-heals (`/doctor`).
-   * **Target:** `gemini-pro-latest` (Pinned Tested: `gemini-3-pro`).
 
 ---
 
@@ -62,7 +48,7 @@ To orchestrate Chrysalis, an AI agent platform must satisfy five basic capabilit
    * **Read:** Inspect files (`view_file`).
    * **Write/Edit:** Modify existing files with precise contiguous replacements (`replace_file_content`) or write new files (`write_to_file`).
 3. **Explicit Local Timezone Enforcement:** All generated or mutated timestamps must serialize with the explicit local offset defined in `Scheduling-Memory.md` (`-05:00`). Raw UTC (`Z`) timestamps are strictly prohibited.
-4. **Skill Discovery & State Execution:** The orchestrator discovers and executes operational protocols defined in `chrysalis/.agent/skills/<skill>/SKILL.md` (`doctor`, `audit`, `evolve`, `plan`, `morning`, `evening`, `pause`, `task`, `zettel`, `onboard`).
+4. **Skill Discovery & State Execution:** The orchestrator discovers and executes operational protocols defined in `chrysalis/.agent/skills/<skill>/SKILL.md` (`doctor`, `audit`, `plan`, `morning`, `evening`, `pause`, `task`, `zettel`, `onboard`).
 5. **Calendar Ingestion & Collision Avoidance:** The orchestrator retrieves external schedule commitments (via Google Workspace calendar tools, cached memory events in `Scheduling-Memory.md`, or Obsidian client synchronization) and wraps focus sprints around them without collisions.
 
 ---

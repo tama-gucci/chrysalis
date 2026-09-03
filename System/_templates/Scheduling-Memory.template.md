@@ -62,7 +62,6 @@ morning_checkin:
 
 prototype_schedule:
   staged_user_intent: null
-  pending_feature_proposals: []
   target_date: null
   feedback_status: "pending"
   staged_anchor_task: null

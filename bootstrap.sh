@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Chrysalis OS Root Bootstrap & Setup Launcher
+# Chrysalis Root Bootstrap & Setup Launcher
 # Detects environment timezone offset, verifies required directories,
 # seeds operational memory and roadmaps from templates if not present.
 
@@ -87,7 +87,7 @@ def seed_life_roadmap(offset, timestamp):
 
 def main():
     print("=======================================================")
-    print("  Chrysalis OS - Autonomous Bootstrap & Setup Engine  ")
+    print("    Chrysalis - Autonomous Bootstrap & Setup Engine    ")
     print("=======================================================")
     
     offset = get_local_timezone_offset()

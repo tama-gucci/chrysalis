@@ -31,7 +31,7 @@ writes:
 
 Prompt the user with the interactive onboarding intake:
 
-> *"👋 Welcome to Chrysalis OS! Let's configure your strategic roadmap and daily bio-cognitive focus rhythms.*
+> *"👋 Welcome to Chrysalis! Let's configure your strategic roadmap and daily bio-cognitive focus rhythms.*
 > 
 > *Choose a starter archetype or reply with your personal goals:*
 > 1. 🎓 **Student / Academic:** *Coursework, degree milestones, administrative appeals, exams.*

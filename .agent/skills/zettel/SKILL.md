@@ -62,7 +62,7 @@ writes:
      [Structured explanation, math, or implementation.]
 
      ## Empirical Operational Application
-     [How Chrysalis OS or human daily execution can leverage this principle.]
+     [How Chrysalis or human daily execution can leverage this principle.]
 
      ## References & Cross-Links
      - [[Related-Note]]
