@@ -7,7 +7,7 @@ status: "active" # staged, active, paused, complete, archived
 horizon_window: "YYYY-MM-DD → YYYY-MM-DD"
 last_updated: "2026-09-01T18:25:00-05:00"
 tags:
-  - {{pillar_tag}}/subtag
+  - "{{pillar_tag}}/subtag"
 ---
 
 # 🚀 {{Project Title}}

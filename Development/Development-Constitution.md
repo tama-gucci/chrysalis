@@ -2,7 +2,7 @@
 type: system_specification
 id: chrysalis-development-constitution
 status: evergreen_constitution
-version: 1.0.0
+version: 5.0.0
 domain: development
 ---
 
@@ -10,8 +10,10 @@ domain: development
 
 ## Preamble: Separation of Spheres (Runtime vs. Development)
 Chrysalis operates across two strictly segregated functional domains:
-1. **The Runtime Sphere (`chrysalis/System/`, `chrysalis/TaskNotes/`):** The private, local execution substrate of daily life focus, chronotype rhythms, task execution, and personal memory. All runtime state files containing personal data are strictly quarantined from public version control.
-2. **The Development Sphere (`chrysalis/Development/`):** The engineering and architecture substrate governing open-source framework design, skill authoring, recursive self-improvement (`/evolve`), and codebase maintenance.
+1. **The Runtime Sphere (`chrysalis/System/`, `chrysalis/TaskNotes/`):** The private, local execution substrate of daily life focus, chronotype rhythms, task execution, and personal memory. All runtime state files containing personal data are strictly quarantined from public version control. Governed by the **Runtime Constitution** ([`System/Runtime-Constitution.md`](../System/Runtime-Constitution.md)).
+2. **The Development Sphere (`chrysalis/Development/`):** The engineering and architecture substrate governing open-source framework design, skill authoring, recursive self-improvement (`/evolve`), and codebase maintenance. Governed by this Development Constitution.
+
+The root **Master Constitution** ([`AGENTS.md`](../AGENTS.md)) serves as the unified single source of truth across both spheres for autonomous AI agent platforms.
 
 The fundamental law of the Development Sphere is the preservation of privacy, architectural purity, and safe system evolution.
 
@@ -25,7 +27,7 @@ The following paths are designated as strictly private and MUST NEVER be tracked
 * **Personal Tasks & Archives:** `TaskNotes/Tasks/*.md` (except `TaskNotes/Tasks/example-task.md`) and `TaskNotes/Archive/*.md`.
 * **Live System Memory & Roadmaps:** `System/Life-Roadmap.md`, `System/Scheduling-Memory.md`, `System/System-Health.md`, and `System/Changelog.md`.
 * **Daily Focus & Journal Notes:** All root-level daily notes matching `YYYY-MM-DD*.md` (e.g. `2026-09-02.md`).
-* **Personal Projects & Slipbox Thoughts:** `Projects/*` (except `Projects/README.md` and `Projects/_templates/**`) and `Slipbox/*` (except `Slipbox/README.md`).
+* **Personal Projects & Slipbox Thoughts:** `Projects/*` (except `Projects/README.md` and `Projects/_templates/**`) and `Slipbox/*` (except `Slipbox/README.md` and `Slipbox/_templates/**`).
 * **Personal Workstation Telemetry:** `System/Environment/*.md` manifests (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`) and private workstation configurations.
 * **Local Databases & State Caches:** `Nexus/` SQLite databases, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, and `.obsidian/plugins/*/runs/`.
 * **Secrets & Credentials:** `*.token.json`, `*credentials*.json`, `*.env`, `*.db`, `*.sqlite*`, and private keys.
@@ -39,6 +41,7 @@ Every file type that contains personal runtime information MUST provide an exact
 * `Daily Notes (YYYY-MM-DD.md)` $\to$ `System/_templates/Daily-Note.template.md`
 * `TaskNotes/Tasks/*.md` $\to$ `TaskNotes/_templates/Task-Template.md` & `TaskNotes/Tasks/example-task.md`
 * `Projects/*/Roadmap.md` $\to$ `Projects/_templates/Project-Template.md`
+* `Slipbox/*.md` $\to$ `Slipbox/_templates/Slipbox-Template.md`
 * `System/Environment/*.md` $\to$ `System/Environment/_templates/System-Manifest-Template.md`
 
 ### 3. Synthetic Placeholder Standard
@@ -54,9 +57,11 @@ All public code, documentation, examples, and skill runbooks must strictly use s
 ---
 
 ## Article II: Development Organization & Directory Structure
-All development-specific assets reside exclusively within `chrysalis/Development/`:
+All development-specific assets reside exclusively within `chrysalis/Development/` (aligned with `AGENTS.md` at root):
 
+* **`AGENTS.md`:** Root Master Constitution unifying Runtime and Development Spheres for autonomous AI agents.
 * **`Development/Development-Constitution.md` (This File):** Constitutional laws of engineering, PII hygiene, and RSI.
+* **`Development/ROADMAP.md`:** Strategic capability roadmap and architectural horizon tracking.
 * **`Development/README.md`:** Developer guide, architecture orientation, and git workflow.
 * **`Development/scripts/`:** Developer utility scripts, PII linters, git boundary verifiers, and setup helpers.
 * **`Development/skills/`:** Modular development-only agent skills (`audit-dev`, `evolve`), registered into Antigravity via `.agent/skills.json`.

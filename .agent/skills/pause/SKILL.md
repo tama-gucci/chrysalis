@@ -2,6 +2,7 @@
 name: pause
 description: "Handles manual system suspension and resumption: de-schedules active timeblocks, freezes multiplier decay, sets semantic pause mode (maintenance, rest, flow, vacation), and orchestrates frictionless lifecycle re-entry."
 trigger: "/pause"
+domain: runtime
 reads:
   - "chrysalis/System/Scheduling-Memory.md"
   - "chrysalis/TaskNotes/Tasks/*.md"

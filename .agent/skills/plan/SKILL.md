@@ -2,6 +2,7 @@
 name: plan
 description: "Master two-stage focus scheduling engine: Protocol 1 (Staging Mode) queries for additions, applies cognitive modality pairing and ultradian sprint stacking; Protocol 2 (Calibration Mode) ingests wake telemetry, shifts sprint/defrost windows, and locks ISO scheduled timestamps."
 trigger: "/plan"
+domain: runtime
 reads:
   - "chrysalis/System/Scheduling-Memory.md"
   - "chrysalis/System/Life-Roadmap.md"

@@ -1,9 +1,9 @@
 ---
 title: Initialize Chrysalis Workspace & Obsidian Plugins
 status: todo
-dateCreated: 2026-09-01T09:00:00-05:00
-created: 2026-09-01T09:00:00-05:00
-due: 2026-09-07
+dateCreated: "2026-09-01T09:00:00-05:00"
+created: "2026-09-01T09:00:00-05:00"
+due: "2026-09-07"
 scheduled: null
 priority: normal
 urgency_tier: 2
@@ -15,7 +15,7 @@ micro_chunked: false
 tags:
   - task
   - pillar-1/setup
-googleCalendarEventId: s4heelmnodj4ajh8cmqqe9qh3k
+googleCalendarEventId: null
 ---
 
 # Initialize Chrysalis Workspace & Obsidian Plugins

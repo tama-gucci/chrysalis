@@ -2,6 +2,7 @@
 name: project
 description: "Project staging and lifecycle integration engine: guides conversational intake for new emergent projects, synthesizes standardized project roadmaps in Projects/, and orchestrates promotion into Life-Roadmap.md and Scheduling-Memory.md."
 trigger: "/project"
+domain: runtime
 reads:
   - "chrysalis/Projects/*/Roadmap.md"
   - "chrysalis/Projects/_templates/Project-Template.md"

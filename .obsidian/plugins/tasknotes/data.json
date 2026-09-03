@@ -557,7 +557,7 @@
   "microsoftCalendarSyncTokens": {},
   "googleCalendarExport": {
     "enabled": true,
-    "targetCalendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
+    "targetCalendarId": "",
     "syncOnTaskCreate": true,
     "syncOnTaskUpdate": true,
     "syncOnTaskComplete": true,
@@ -576,113 +576,7 @@
   "googleCalendarTaskFingerprints": {
     "TaskNotes/Tasks/example-task.md": "{\"title\":\"Initialize Chrysalis Workspace & Obsidian Plugins\",\"status\":\"todo\",\"priority\":\"normal\",\"archived\":false,\"scheduled\":null,\"due\":\"2026-09-07\",\"timeEstimate\":20,\"recurrence\":null,\"recurrence_anchor\":null,\"complete_instances\":[],\"skipped_instances\":[],\"reminders\":[],\"tags\":[\"task\",\"pillar-1/setup\"],\"contexts\":[],\"projects\":[]}"
   },
-  "googleCalendarEventIndex": [
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-audit-hcc-account-holds.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "qlgr4i1g91m59smg7s09eum95c",
-      "updatedAt": 1788364317292
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-audit-uh-transcript-status.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "36g4i2bg9hcast98qe13isgkjg",
-      "updatedAt": 1788364318789
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-compile-registrar-bursar-contacts.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "50qa41h317n99fueai75349mgg",
-      "updatedAt": 1788364326882
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-stage-sap-appeal-letter.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "06r0p1o43km7d5tn0c70g1m9mk",
-      "updatedAt": 1788385713057
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-list-table-facebook-marketplace.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "4vhr7lfdfd1lcjv7pc3mahqqt0",
-      "updatedAt": 1788385713057
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-ebike-maintenance-and-assembly.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "6f2ohoqa29bek6p0j93j4iilqs",
-      "updatedAt": 1788385713057
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-create-academic-recovery-folder.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "4uil4bpirrq6g70fg0ompv389g",
-      "updatedAt": 1788385713057
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/example-task.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "s4heelmnodj4ajh8cmqqe9qh3k",
-      "updatedAt": 1788386741031
-    }
-  ],
+  "googleCalendarEventIndex": [],
   "googleCalendarSyncQueue": [],
-  "googleCalendarDeletionQueue": [
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-audit-hcc-account-holds.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "qlgr4i1g91m59smg7s09eum95c",
-      "createdAt": 1788458296284,
-      "attempts": 0,
-      "lastError": "Indexed task file no longer exists"
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-audit-uh-transcript-status.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "36g4i2bg9hcast98qe13isgkjg",
-      "createdAt": 1788458296303,
-      "attempts": 0,
-      "lastError": "Indexed task file no longer exists"
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-compile-registrar-bursar-contacts.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "50qa41h317n99fueai75349mgg",
-      "createdAt": 1788458296317,
-      "attempts": 0,
-      "lastError": "Indexed task file no longer exists"
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-stage-sap-appeal-letter.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "06r0p1o43km7d5tn0c70g1m9mk",
-      "createdAt": 1788458296320,
-      "attempts": 0,
-      "lastError": "Indexed task file no longer exists"
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-list-table-facebook-marketplace.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "4vhr7lfdfd1lcjv7pc3mahqqt0",
-      "createdAt": 1788458296323,
-      "attempts": 0,
-      "lastError": "Indexed task file no longer exists"
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-ebike-maintenance-and-assembly.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "6f2ohoqa29bek6p0j93j4iilqs",
-      "createdAt": 1788458296326,
-      "attempts": 0,
-      "lastError": "Indexed task file no longer exists"
-    },
-    {
-      "taskPath": "TaskNotes/Tasks/20260902-create-academic-recovery-folder.md",
-      "calendarId": "f06bb5bfd42813aaf60a56ad3bdb8ff613e1d43ca2ae76600d2aafb5e1bb687c@group.calendar.google.com",
-      "eventId": "4uil4bpirrq6g70fg0ompv389g",
-      "createdAt": 1788458296329,
-      "attempts": 0,
-      "lastError": "Indexed task file no longer exists"
-    }
-  ]
+  "googleCalendarDeletionQueue": []
 }

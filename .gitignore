@@ -23,8 +23,9 @@
 # 4. Whitelist System Architecture, Public Templates & Environment Tools ONLY
 !/System/
 /System/*
-!/System/SYSTEM-PROMPT.md
 !/System/Runtime-Constitution.md
+!/System/scripts/
+!/System/scripts/**
 !/System/Orchestrators/
 !/System/Orchestrators/**
 !/System/_templates/
@@ -44,12 +45,18 @@
 !/.agent/skills/
 !/.agent/skills/**
 .agent/skills/.backup/
+/.agent/skills/.backup/
+.agent/backup/
+/.agent/backup/
 
 # 6. Whitelist Development Sphere & Engineering Tooling
 !/Development/
 /Development/*
 !/Development/Development-Constitution.md
 !/Development/README.md
+!/Development/ROADMAP.md
+!/Development/_templates/
+!/Development/_templates/**
 !/Development/scripts/
 !/Development/scripts/**
 !/Development/skills/
@@ -67,6 +74,8 @@
 !/TaskNotes/Tasks/
 /TaskNotes/Tasks/*
 !/TaskNotes/Tasks/example-task.md
+/TaskNotes/Archive/
+/TaskNotes/Archive/**
 
 # 8. Whitelist Public Project & Slipbox Templates/READMEs ONLY
 !/Projects/
@@ -78,6 +87,8 @@
 !/Slipbox/
 /Slipbox/*
 !/Slipbox/README.md
+!/Slipbox/_templates/
+!/Slipbox/_templates/**
 
 # 9. Whitelist Obsidian Plugins Core & Assets ONLY (Deny all caches, runtimes, tokens)
 !/.obsidian/
@@ -92,6 +103,10 @@
 /.obsidian/plugins/**/data.json
 /.obsidian/plugins/**/data/
 /.obsidian/plugins/**/runs/
+/.obsidian/plugins/**/cache.db
+/.obsidian/plugins/**/storage/
+/.obsidian/workspace*.json
+/.obsidian/plugins/obsidian-git/obsidian_askpass.sh
 !/.obsidian/plugins/obsidian-git/data.json
 !/.obsidian/plugins/tasknotes/data.json
 !/.obsidian/plugins/tasknotes-workflows/data.json
@@ -118,6 +133,14 @@ Thumbs.db
 *(conflict*
 * (conflict*
 .trash/
+Nexus/
+/Nexus/
 .conversations/
+/.conversations/
 .workspaces/
-
+/.workspaces/
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo

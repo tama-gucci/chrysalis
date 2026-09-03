@@ -6,7 +6,7 @@ type: dashboard
 # 🛸 Chrysalis Command Center
 
 > [!abstract] System State & Energy Profile
-> **Phase:** Pillar 1 (Administrative Reset & Technical Launch)  
+> **Phase:** Pillar 1 (Core Foundation & Systems Setup)  
 > **Diurnal Rhythm:** Diurnally calibrated focus blocks relative to $T_{\text{wake}}$ (Peak Sprints • Slump/Defrost • Recovery)  
 > **Vault Path:** `chrysalis/`
 

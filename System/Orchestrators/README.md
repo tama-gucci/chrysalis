@@ -19,7 +19,7 @@ The **Orchestrator Layer** connects autonomous AI agent runtimes to the Chrysali
 ```mermaid
 graph TD
     subgraph Substrate ["Chrysalis Core Substrate (100% Platform-Agnostic)"]
-        Constitution["SYSTEM-PROMPT.md / AGENTS.md<br/>(Universal System Invariants)"]
+        Constitution["AGENTS.md<br/>(Universal Master Constitution)"]
         Memory["System/Scheduling-Memory.md<br/>(Dynamic Multipliers & State)"]
         Skills[".agent/skills/<br/>(Universal Executable Runbooks)"]
         Tasks["TaskNotes/Tasks/*.md<br/>(Frontmatter Backlog)"]

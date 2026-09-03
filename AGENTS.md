@@ -46,7 +46,7 @@ dateCreated: "YYYY-MM-DDTHH:mm:ss-05:00"
 created: "YYYY-MM-DDTHH:mm:ss-05:00" # Backward-compatible alias
 due: "YYYY-MM-DD"
 scheduled: null # Format: "YYYY-MM-DDTHH:mm:ss-05:00" or null
-priority: normal # Allowed values: urgent, high, normal, low
+priority: normal # Allowed values: urgent, high, normal, low, none
 urgency_tier: 2 # Scale: 1 (Lowest) to 4 (Highest)
 modality: analytical # Allowed values: analytical, kinetic, synthesis, administrative
 timeEstimate: 45 # In minutes (baseline duration * active tag multiplier)
@@ -62,12 +62,13 @@ tags:
 ### Runtime Behavioral Invariants
 * **System Integrity Diagnostic Gate (`/doctor`):** Nightly audits and maintenance passes execute the 6-point integrity suite before scheduling or mutating skills. Critical corruption halts operations and records findings in `System/System-Health.md`.
 * **Two-Stage Planning Lifecycle (`/plan`):**
-  1. *Staging Mode (`/plan --stage`):* Queries the user in natural language. `Life-Roadmap.md` remains primary priority arbiter (active deliverables take Peak Focus anchor slots).
+  1. *Staging Mode (`/plan --stage`):* The agent queries the user for schedule additions or context in natural language. `Life-Roadmap.md` remains primary priority arbiter: active roadmap deliverables take Peak Focus anchor slots unless no imminent deadlines exist. User additions are integrated into downtime, slump, or recovery windows.
   2. *Calibration Mode (`/plan --calibrate`):* Ingests morning wake and energy telemetry, shifts diurnal windows, and serializes ISO timestamps.
-* **Active Tool-Gated Serialization:** During morning calibration, the agent MUST execute tool calls to serialize `scheduled` timestamps into `TaskNotes/Tasks/*.md`, update `morning_checkin` in `Scheduling-Memory.md`, and write `YYYY-MM-DD.md`. During evening staging, the agent MUST execute tool calls to serialize `prototype_schedule`.
+* **Active Tool-Gated Serialization:** During morning calibration, the agent MUST execute tool calls to serialize `scheduled` timestamps into `TaskNotes/Tasks/*.md`, update `morning_checkin` in `Scheduling-Memory.md`, and write `YYYY-MM-DD.md`. During evening staging, the agent MUST execute tool calls to create new task notes in `TaskNotes/Tasks/` if requested, update `System/Life-Roadmap.md` if roadmap priorities changed, and serialize `prototype_schedule` in `System/Scheduling-Memory.md`.
 * **Bio-Cognitive Modality & Ultradian Alignment:** Work is stacked into 75–90m ultradian sprints separated by a 15m decompression buffer (Analytical $\to$ Peak Sprints, Kinetic $\to$ Slump/Defrost, Synthesis $\to$ Recovery).
 * **Feedback-Gated Execution:** Prototype schedules require user review. If omitted, the system auto-pauses to prevent schedule drift.
 * **Semantic Pause Lifecycle (`/pause [mode]`):** Supports 4 semantic pause modes (`maintenance`, `rest`, `flow`, `vacation`), freezing multiplier decay and de-scheduling active blocks (`scheduled: null`).
+* **Institutional Buffering:** Never schedule official administrative or institutional actions on weekends. Multi-day institutional workflows require a mandatory buffer of 3–5 business days between submission and verification.
 * **Cloud-Native Calendar Ingestion:** Ingests calendar commitments before scheduling; focus sprints wrap around commitments with zero collisions.
 * **Telemetry Multipliers & Chronotype Learning:** Session durations ($T_{\text{actual}} = \text{completedAt} - \text{startedAt}$) adjust multipliers bounded in $[0.20, 2.00]$.
 * **Unified Nightly Life Audit (`/audit`):** Reconciles task lifecycles, learns multipliers, ingests 14-day roadmap milestones, injects starter wedges, and tunes candidate task pools.
@@ -83,7 +84,7 @@ Chrysalis is distributed publicly on GitHub (`tama-gucci/chrysalis`). Under NO c
    * Personal task notes (`TaskNotes/Tasks/*.md` except `example-task.md`) and task archive (`TaskNotes/Archive/*.md`).
    * Live runtime state: `System/Life-Roadmap.md`, `System/Scheduling-Memory.md`, `System/System-Health.md`, `System/Changelog.md`.
    * Daily focus notes matching `YYYY-MM-DD*.md`.
-   * Personal projects (`Projects/*` except `README.md` and `_templates/`) and personal slipbox notes (`Slipbox/*` except `README.md`).
+   * Personal projects (`Projects/*` except `README.md` and `_templates/`) and personal slipbox notes (`Slipbox/*` except `README.md` and `_templates/`).
    * Workstation manifests: `System/Environment/*.md` (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`).
    * Databases & caches: `Nexus/`, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, `*.token.json`, `*.env`.
 
@@ -96,6 +97,7 @@ Chrysalis is distributed publicly on GitHub (`tama-gucci/chrysalis`). Under NO c
    * `Daily Notes (YYYY-MM-DD.md)` $\to$ `System/_templates/Daily-Note.template.md`
    * `TaskNotes/Tasks/*.md` $\to$ `TaskNotes/_templates/Task-Template.md` & `TaskNotes/Tasks/example-task.md`
    * `Projects/*/Roadmap.md` $\to$ `Projects/_templates/Project-Template.md`
+   * `Slipbox/*.md` $\to$ `Slipbox/_templates/Slipbox-Template.md`
    * `System/Environment/*.md` $\to$ `System/Environment/_templates/System-Manifest-Template.md`
 
 3. **Synthetic Placeholder Standard:**

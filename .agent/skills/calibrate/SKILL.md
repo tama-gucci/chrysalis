@@ -2,6 +2,7 @@
 name: calibrate
 description: "Handles morning check-in telemetry: unpauses system if paused, captures exact wake timestamp from user response, parses energy score (1-5), updates rolling baseline rhythms, and routes to plan under Calibration & Timeblocking Mode."
 trigger: "/calibrate"
+domain: runtime
 reads:
   - "chrysalis/System/Scheduling-Memory.md"
   - "chrysalis/.agent/skills/plan/SKILL.md"

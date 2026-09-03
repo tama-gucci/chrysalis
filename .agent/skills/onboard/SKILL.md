@@ -2,6 +2,7 @@
 name: onboard
 description: "Interactive autonomous onboarding engine: detects environment telemetry and timezone, guides the user through a 4-step intake interview or archetype preset, compiles Life-Roadmap.md and tag_registry, seeds Scheduling-Memory.md multipliers and candidate pools, and runs pre-flight /doctor validation."
 trigger: "/onboard"
+domain: runtime
 reads:
   - "chrysalis/System/Life-Roadmap.md"
   - "chrysalis/System/Scheduling-Memory.md"

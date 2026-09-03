@@ -35,7 +35,7 @@ SORT system_name ASC
 ```
 
 ### Active System Nodes
-* **[[obelisk]]** — Primary Workstation (`Arch Linux`, `x86_64`, `pacman`, 218 packages)
+* **[[station-node]]** — Primary Workstation (`Arch Linux`, `x86_64`, `pacman`, 218 packages)
 
 ---
 

@@ -1,8 +1,8 @@
 ---
 type: daily_note
-date: {{date}}
+date: "{{date}}"
 wake_time: "{{wake_time}}"
-energy_level: {{energy_level}}
+energy_level: "{{energy_level}}"
 energy_mode: "{{energy_mode}}"
 tags:
   - daily-note

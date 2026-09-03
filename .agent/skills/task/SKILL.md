@@ -2,6 +2,7 @@
 name: task
 description: "Parses shorthand task input, extracts project tags and cognitive modalities, applies adaptive multipliers with a 1.00 fallback rule to baseline estimates, and creates TaskNotes markdown files."
 trigger: "/task"
+domain: runtime
 reads:
   - "chrysalis/System/Scheduling-Memory.md"
 writes:

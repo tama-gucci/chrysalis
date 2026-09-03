@@ -61,8 +61,8 @@ Execute `git ls-files` and verify that **ZERO** tracked files match any quaranti
 * **Personal System State:** `System/Life-Roadmap.md`, `System/Scheduling-Memory.md`, `System/System-Health.md`, `System/Changelog.md`.
 * **Daily Notes:** Any file matching `^[0-9]{4}-[0-9]{2}-[0-9]{2}.*\.md$`.
 * **Personal Projects:** Any file in `Projects/` except `Projects/README.md` and `Projects/_templates/**`.
-* **Personal Slipbox Notes:** Any file in `Slipbox/` except `Slipbox/README.md`.
-* **Personal Workstation Telemetry:** Any file in `Development/Environment/` except `Development/Environment/_templates/**`, `Development/Environment/scripts/**`, and `Development/Environment/Environment-Index.md`.
+* **Personal Slipbox Notes:** Any file in `Slipbox/` except `Slipbox/README.md` and `Slipbox/_templates/**`.
+* **Personal Workstation Telemetry:** Any file in `System/Environment/` except `System/Environment/_templates/**`, `System/Environment/scripts/**`, and `System/Environment/Environment-Index.md`.
 * **Databases & Local Caches:** `Nexus/`, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, `.obsidian/plugins/*/runs/`.
 * **Secrets & Conflicts:** `*.token.json`, `*credentials*.json`, `*.env`, `*(conflict*`.
 

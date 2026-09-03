@@ -1,5 +1,6 @@
 ---
 name: task
+version: 0.2.0
 description: A task managed by the TaskNotes plugin for Obsidian.
 display_name_key: title
 strict: false
@@ -19,7 +20,7 @@ fields:
   status:
     type: enum
     required: true
-    values: [todo, in-progress, done]
+    values: [todo, in-progress, done, archived]
     tn_completed_values: [done]
     default: todo
     tn_role: status
@@ -197,6 +198,12 @@ fields:
     type: boolean
   modality:
     type: string
+  startedAt:
+    type: datetime
+    description: "ISO 8601 timestamp with explicit local timezone offset when task execution commenced."
+  completedAt:
+    type: datetime
+    description: "ISO 8601 timestamp with explicit local timezone offset when task execution concluded."
 
 x-tasknotes:
   nlp:

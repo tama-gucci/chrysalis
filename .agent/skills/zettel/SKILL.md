@@ -2,6 +2,7 @@
 name: zettel
 description: "Captures atomic literature, technical insights, or Chrysalis system evolution ideas (#chrysalis), generates unique timestamp IDs, and links concepts bidirectionally."
 trigger: "/zettel"
+domain: runtime
 reads:
   - "chrysalis/Slipbox/*.md"
 writes:

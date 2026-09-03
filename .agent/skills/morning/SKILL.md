@@ -2,6 +2,7 @@
 name: morning
 description: "Orchestrates the morning workflow: executes /calibrate to unpause system, capture exact wake time and energy telemetry (1-5), then delegates to /plan under Calibration Mode to shift timeblocks and lock scheduled timestamps."
 trigger: "/morning"
+domain: runtime
 reads:
   - "chrysalis/System/Scheduling-Memory.md"
   - "chrysalis/.agent/skills/calibrate/SKILL.md"

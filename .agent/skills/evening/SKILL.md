@@ -2,6 +2,7 @@
 name: evening
 description: "Orchestrates the nightly workflow: executes the unified nightly /audit (task reconciliation, roadmap sync, starter wedges, candidate pool), then hands off to /plan in Staging Mode to query for schedule additions, arbitrate priority with Life-Roadmap.md, and assemble tomorrow's prototype schedule."
 trigger: "/evening"
+domain: runtime
 reads:
   - "chrysalis/System/Scheduling-Memory.md"
   - "chrysalis/System/Life-Roadmap.md"

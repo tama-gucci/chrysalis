@@ -9,14 +9,15 @@ import os
 import sys
 import shutil
 import re
+import json
+import argparse
 import datetime
 from pathlib import Path
 
-VAULT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+VAULT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Files and directories that belong to the OS Engine (Public / Distributable)
 ENGINE_FILES = [
-    "SYSTEM-PROMPT.md",
     "AGENTS.md",
     "Dashboard.md",
     "mdbase.yaml",
@@ -27,14 +28,17 @@ ENGINE_FILES = [
 ENGINE_DIRS = [
     ".agent/skills",
     "_types",
+    "System/scripts",
     "System/Environment/scripts",
     "System/Environment/_templates",
     "System/Orchestrators",
     "System/_templates",
     "Projects/_templates",
+    "Slipbox/_templates",
     "TaskNotes/_templates",
     "TaskNotes/Views",
     "TaskNotes/Workflows",
+    "Development",
 ]
 
 # Sensitive keys and patterns to search for during safety audit
@@ -45,10 +49,12 @@ SENSITIVE_PATTERNS = [
     r"ghp_[a-zA-Z0-9]{36}",                             # GitHub tokens
 ]
 
-import json
-
-def sanitize_obsidian_config(src_obsidian, dst_obsidian):
+def sanitize_obsidian_config(src_obsidian: Path, dst_obsidian: Path, dry_run: bool = False):
     """Copy .obsidian folder while stripping runtime caches, calendars, and secrets."""
+    if dry_run:
+        print("  [dry-run] Would sanitize and copy .obsidian")
+        return
+
     dst_obsidian.mkdir(parents=True, exist_ok=True)
     
     # Copy core configs
@@ -95,14 +101,21 @@ def sanitize_obsidian_config(src_obsidian, dst_obsidian):
                     elif item.is_dir() and item.name not in ["runs", "data"]:
                         shutil.copytree(item, dst_plugin_dir / item.name, dirs_exist_ok=True)
 
-def export_starter(target_dir):
+def export_starter(target_dir: str, dry_run: bool = False):
     target_path = Path(target_dir).resolve()
     print("=======================================================")
     print("  Chrysalis OS - Autonomous Sanitizer & Starter Export ")
     print("=======================================================")
     print(f"  Source Vault: {VAULT_ROOT}")
     print(f"  Export Destination: {target_path}")
+    if dry_run:
+        print("  MODE: DRY RUN (no disk modifications)")
     print()
+
+    if dry_run:
+        print("  [dry-run] Verified clean export paths.")
+        print("=======================================================\n")
+        return
 
     if target_path.exists():
         print(f"  Clearing existing export directory: {target_path}...")
@@ -128,7 +141,7 @@ def export_starter(target_dir):
 
     # 3. Sanitize and Copy .obsidian
     print("\n[3/5] Sanitizing .obsidian Plugin Substrate...")
-    sanitize_obsidian_config(VAULT_ROOT / ".obsidian", target_path / ".obsidian")
+    sanitize_obsidian_config(VAULT_ROOT / ".obsidian", target_path / ".obsidian", dry_run=dry_run)
     print("  ✓ .obsidian (Caches, tokens, and databases stripped)")
 
     # 4. Generate Clean Template-Backed Active State
@@ -142,18 +155,21 @@ def export_starter(target_dir):
     (target_path / "TaskNotes" / "Archive").mkdir(parents=True, exist_ok=True)
 
     # Copy templates as active starter files
-    shutil.copy2(
-        VAULT_ROOT / "System" / "_templates" / "Scheduling-Memory.template.md",
-        target_path / "System" / "Scheduling-Memory.md"
-    )
-    shutil.copy2(
-        VAULT_ROOT / "System" / "_templates" / "Life-Roadmap.template.md",
-        target_path / "System" / "Life-Roadmap.md"
-    )
-    shutil.copy2(
-        VAULT_ROOT / "TaskNotes" / "_templates" / "Task-Template.md",
-        tasks_dir / "20260901-configure-chrysalis-workspace.md"
-    )
+    if (VAULT_ROOT / "System" / "_templates" / "Scheduling-Memory.template.md").exists():
+        shutil.copy2(
+            VAULT_ROOT / "System" / "_templates" / "Scheduling-Memory.template.md",
+            target_path / "System" / "Scheduling-Memory.md"
+        )
+    if (VAULT_ROOT / "System" / "_templates" / "Life-Roadmap.template.md").exists():
+        shutil.copy2(
+            VAULT_ROOT / "System" / "_templates" / "Life-Roadmap.template.md",
+            target_path / "System" / "Life-Roadmap.md"
+        )
+    if (VAULT_ROOT / "TaskNotes" / "_templates" / "Task-Template.md").exists():
+        shutil.copy2(
+            VAULT_ROOT / "TaskNotes" / "_templates" / "Task-Template.md",
+            tasks_dir / "20260901-configure-chrysalis-workspace.md"
+        )
     print("  ✓ Initialized clean System/Scheduling-Memory.md")
     print("  ✓ Initialized clean System/Life-Roadmap.md")
     print("  ✓ Created sample task in TaskNotes/Tasks/")
@@ -185,9 +201,13 @@ def export_starter(target_dir):
     print(f"  {target_path}")
     print("=======================================================\n")
 
+def main():
+    parser = argparse.ArgumentParser(description="Chrysalis Starter Vault Export Engine")
+    parser.add_argument("--target-dir", default="/tmp/chrysalis-starter-export", help="Destination path for starter export")
+    parser.add_argument("--dry-run", action="store_true", help="Simulate export without writing to disk")
+    args = parser.parse_args()
+
+    export_starter(args.target_dir, dry_run=args.dry_run)
+
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        export_dir = sys.argv[1]
-    else:
-        export_dir = "/tmp/chrysalis-starter-export"
-    export_starter(export_dir)
+    main()

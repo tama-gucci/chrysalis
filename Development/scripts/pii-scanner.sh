@@ -63,8 +63,8 @@ while IFS= read -r FILE; do
         ERRORS=$((ERRORS + 1))
     fi
 
-    # Check personal slipbox notes
-    if [[ "$FILE" =~ ^Slipbox/ ]] && [ "$FILE" != "Slipbox/README.md" ]; then
+    # Check personal slipbox notes (allow README and templates)
+    if [[ "$FILE" =~ ^Slipbox/ ]] && [[ ! "$FILE" =~ ^Slipbox/_templates/ ]] && [ "$FILE" != "Slipbox/README.md" ]; then
         echo -e "${RED}  ❌ [LEAK] Personal slipbox note tracked in git: $FILE${NC}"
         ERRORS=$((ERRORS + 1))
     fi
@@ -72,6 +72,12 @@ while IFS= read -r FILE; do
     # Check personal workstation manifests in System/Environment/
     if [[ "$FILE" =~ ^System/Environment/ ]] && [[ ! "$FILE" =~ ^System/Environment/_templates/ ]] && [[ ! "$FILE" =~ ^System/Environment/scripts/ ]] && [ "$FILE" != "System/Environment/Environment-Index.md" ]; then
         echo -e "${RED}  ❌ [LEAK] Personal workstation manifest tracked in git: $FILE${NC}"
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    # Check untracked database/cache directories
+    if [[ "$FILE" =~ ^(Nexus/|\.conversations/|\.workspaces/|\.obsidian/workspace.*\.json|\.obsidian/plugins/obsidian-git/obsidian_askpass\.sh) ]]; then
+        echo -e "${RED}  ❌ [LEAK] Ephemeral cache or workspace database tracked in git: $FILE${NC}"
         ERRORS=$((ERRORS + 1))
     fi
 
@@ -94,7 +100,7 @@ echo -e "\n${YELLOW}[2/4] Scanning tracked text files for personal paths and PII
 # Filter out binary, minified JS, CSS, and WASM files
 TEXT_FILES=$(git ls-files | grep -vE '\.(js|wasm|css|png|jpg|jpeg|gif|ico|sqlite|db)$' || true)
 
-PATH_LEAKS=0
+CONTENT_LEAKS=0
 while IFS= read -r FILE; do
     [ -z "$FILE" ] && continue
     [ ! -f "$FILE" ] && continue
@@ -106,7 +112,7 @@ while IFS= read -r FILE; do
         echo "$MATCHES" | while IFS= read -r LINE; do
             echo -e "     ${RED}$LINE${NC}"
         done
-        PATH_LEAKS=$((PATH_LEAKS + 1))
+        CONTENT_LEAKS=$((CONTENT_LEAKS + 1))
         ERRORS=$((ERRORS + 1))
     fi
 
@@ -114,6 +120,7 @@ while IFS= read -r FILE; do
     TOKEN_MATCHES=$(grep -nE 'ghp_[a-zA-Z0-9]{36}' "$FILE" 2>/dev/null || true)
     if [ -n "$TOKEN_MATCHES" ]; then
         echo -e "${RED}  ❌ [TOKEN LEAK] GitHub PAT detected in $FILE!${NC}"
+        CONTENT_LEAKS=$((CONTENT_LEAKS + 1))
         ERRORS=$((ERRORS + 1))
     fi
 
@@ -121,6 +128,7 @@ while IFS= read -r FILE; do
     KEY_MATCHES=$(grep -nE 'AIza[0-9A-Za-z_-]{35}' "$FILE" 2>/dev/null || true)
     if [ -n "$KEY_MATCHES" ]; then
         echo -e "${RED}  ❌ [KEY LEAK] Google API key detected in $FILE!${NC}"
+        CONTENT_LEAKS=$((CONTENT_LEAKS + 1))
         ERRORS=$((ERRORS + 1))
     fi
 
@@ -128,12 +136,35 @@ while IFS= read -r FILE; do
     PRIV_KEY_MATCHES=$(grep -nE '-----BEGIN [A-Z ]*PRIVATE KEY-----' "$FILE" 2>/dev/null || true)
     if [ -n "$PRIV_KEY_MATCHES" ]; then
         echo -e "${RED}  ❌ [KEY LEAK] Private cryptographic key detected in $FILE!${NC}"
+        CONTENT_LEAKS=$((CONTENT_LEAKS + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    # Check for Google Calendar IDs
+    CAL_MATCHES=$(grep -nE '[a-zA-Z0-9._%+-]+@group\.calendar\.google\.com' "$FILE" 2>/dev/null || true)
+    if [ -n "$CAL_MATCHES" ]; then
+        echo -e "${RED}  ❌ [CALENDAR LEAK] Google Calendar ID detected in $FILE:${NC}"
+        echo "$CAL_MATCHES" | while IFS= read -r LINE; do
+            echo -e "     ${RED}$LINE${NC}"
+        done
+        CONTENT_LEAKS=$((CONTENT_LEAKS + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    # Check for Quarantined TaskNote filenames / dated paths
+    TASK_MATCHES=$(grep -nE 'TaskNotes/Tasks/202[0-9]{5}-[a-zA-Z0-9_-]+\.md' "$FILE" 2>/dev/null || true)
+    if [ -n "$TASK_MATCHES" ]; then
+        echo -e "${RED}  ❌ [TASK LEAK] Quarantined task note path detected in $FILE:${NC}"
+        echo "$TASK_MATCHES" | while IFS= read -r LINE; do
+            echo -e "     ${RED}$LINE${NC}"
+        done
+        CONTENT_LEAKS=$((CONTENT_LEAKS + 1))
         ERRORS=$((ERRORS + 1))
     fi
 done <<< "$TEXT_FILES"
 
-if [ "$PATH_LEAKS" -eq 0 ]; then
-    echo -e "${GREEN}  ✓ Zero machine-specific user paths (/home/*) found in tracked files.${NC}"
+if [ "$CONTENT_LEAKS" -eq 0 ]; then
+    echo -e "${GREEN}  ✓ Zero machine paths, API keys, calendar IDs, or task paths found in tracked files.${NC}"
 fi
 
 # ------------------------------------------------------------------------------
@@ -143,14 +174,46 @@ echo -e "\n${YELLOW}[3/4] Inspecting staged changes in git index...${NC}"
 
 CACHED_DIFF=$(git diff --cached 2>/dev/null || true)
 if [ -n "$CACHED_DIFF" ]; then
+    STAGED_LEAKS=0
+
     # Check for personal path additions in staged diff
     STAGED_PATH_ADDITIONS=$(echo "$CACHED_DIFF" | grep -E '^\+[^+]' | grep -E '(/home/[a-zA-Z0-9_-]+|/Users/[a-zA-Z0-9_-]+)' 2>/dev/null || true)
     if [ -n "$STAGED_PATH_ADDITIONS" ]; then
         echo -e "${RED}  ❌ [STAGED LEAK] Machine path staged in git diff:${NC}"
         echo -e "     $STAGED_PATH_ADDITIONS"
+        STAGED_LEAKS=$((STAGED_LEAKS + 1))
         ERRORS=$((ERRORS + 1))
-    else
-        echo -e "${GREEN}  ✓ Staged diff contains no machine path additions.${NC}"
+    fi
+
+    # Check for Google Calendar ID additions in staged diff
+    STAGED_CAL_ADDITIONS=$(echo "$CACHED_DIFF" | grep -E '^\+[^+]' | grep -E '@group\.calendar\.google\.com' 2>/dev/null || true)
+    if [ -n "$STAGED_CAL_ADDITIONS" ]; then
+        echo -e "${RED}  ❌ [STAGED LEAK] Google Calendar ID staged in git diff:${NC}"
+        echo -e "     $STAGED_CAL_ADDITIONS"
+        STAGED_LEAKS=$((STAGED_LEAKS + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    # Check for Quarantined TaskNote additions in staged diff
+    STAGED_TASK_ADDITIONS=$(echo "$CACHED_DIFF" | grep -E '^\+[^+]' | grep -E 'TaskNotes/Tasks/202[0-9]' 2>/dev/null || true)
+    if [ -n "$STAGED_TASK_ADDITIONS" ]; then
+        echo -e "${RED}  ❌ [STAGED LEAK] Quarantined task note path staged in git diff:${NC}"
+        echo -e "     $STAGED_TASK_ADDITIONS"
+        STAGED_LEAKS=$((STAGED_LEAKS + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    # Check for API Keys / Secrets additions in staged diff
+    STAGED_SECRET_ADDITIONS=$(echo "$CACHED_DIFF" | grep -E '^\+[^+]' | grep -E '(ghp_[a-zA-Z0-9]{36}|AIza[0-9A-Za-z_-]{35}|-----BEGIN [A-Z ]*PRIVATE KEY-----)' 2>/dev/null || true)
+    if [ -n "$STAGED_SECRET_ADDITIONS" ]; then
+        echo -e "${RED}  ❌ [STAGED LEAK] Secret or credential staged in git diff:${NC}"
+        echo -e "     $STAGED_SECRET_ADDITIONS"
+        STAGED_LEAKS=$((STAGED_LEAKS + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    if [ "$STAGED_LEAKS" -eq 0 ]; then
+        echo -e "${GREEN}  ✓ Staged diff contains no machine paths, calendar IDs, task paths, or secrets.${NC}"
     fi
 else
     echo -e "${GREEN}  ✓ Git staging index is currently clean.${NC}"

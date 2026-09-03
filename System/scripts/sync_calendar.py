@@ -17,7 +17,7 @@ from pathlib import Path
 
 DEFAULT_PORT = 8080
 DEFAULT_HOST = "localhost"
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 MEMORY_PATH = os.environ.get("CHRYSALIS_MEMORY_PATH") or str(REPO_ROOT / "System" / "Scheduling-Memory.md")
 
 def get_tasknotes_events(start_date_str: str, end_date_str: str, port: int = DEFAULT_PORT, host: str = DEFAULT_HOST):

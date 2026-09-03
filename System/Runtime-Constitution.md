@@ -2,7 +2,7 @@
 type: system_specification
 id: chrysalis-runtime-constitution
 status: evergreen_constitution
-version: 4.22.0
+version: 5.0.0
 domain: runtime
 ---
 
@@ -29,7 +29,8 @@ Chrysalis operates across two strictly segregated functional domains:
 ## 2. Dynamic Memory & System Architecture Roles
 System rules and operational state are partitioned into dedicated files:
 
-* **`Runtime-Constitution.md` (This File):** Invariant architectural laws, schema typing, and runtime behavioral anti-patterns.
+* **`AGENTS.md`:** Root Master Constitution unifying Runtime and Development Spheres as the single source of truth for autonomous AI orchestrators.
+* **`Runtime-Constitution.md` (This File):** Dedicated Runtime Sphere constitution governing invariant architectural laws, schema typing, and runtime behavioral invariants.
 * **`Development/Development-Constitution.md`:** Invariant laws of open-source engineering, zero-leak GitHub PII protection, and safe recursive self-improvement.
 * **`Scheduling-Memory.md`:** Mutable operational state, dynamic tag multipliers (bounded to $[0.20, 2.00]$), learned wake rhythms, chronotype telemetry, active diurnal offsets, energy baseline logic, pause flags, and candidate task pools.
 * **`Life-Roadmap.md`:** Mutable strategic taxonomy, active/inactive Pillar definitions, milestone horizons, and primary priority arbiter.
@@ -54,7 +55,7 @@ dateCreated: "YYYY-MM-DDTHH:mm:ss-05:00"
 created: "YYYY-MM-DDTHH:mm:ss-05:00" # Backward-compatible alias
 due: "YYYY-MM-DD"
 scheduled: null # Format: "YYYY-MM-DDTHH:mm:ss-05:00" or null
-priority: normal # Allowed values: urgent, high, normal, low
+priority: normal # Allowed values: urgent, high, normal, low, none
 urgency_tier: 2 # Scale: 1 (Lowest) to 4 (Highest)
 modality: analytical # Allowed values: analytical, kinetic, synthesis, administrative
 timeEstimate: 45 # In minutes (baseline duration * active tag multiplier)
