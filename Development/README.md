@@ -21,14 +21,9 @@ chrysalis/Development/
 ├── README.md                     # This onboarding and developer orientation guide
 ├── scripts/                      # Developer utilities, PII scanner, and git boundary checkers
 │   └── pii-scanner.sh            # Automated pre-commit and CI PII validation script
-├── skills/                       # Modular development-only agent skills (registered in .agent/skills.json)
-│   ├── audit-dev/                # /audit-dev: Git boundary, zero-leak PII scanner & evolve coordinator
-│   └── evolve/                   # /evolve: Proactive capability expansion & recursive self-improvement
-└── Environment/                  # Workstation profiles, hardware manifests & telemetry (quarantined)
-    ├── Environment-Index.md      # Dataview index of registered developer machines
-    ├── Active-Profile.md         # Active development node pointer
-    ├── _templates/               # Clean public workstation manifest templates
-    └── scripts/                  # Manifest generation and environment detection utilities
+└── skills/                       # Modular development-only agent skills (registered in .agent/skills.json)
+    ├── audit-dev/                # /audit-dev: Git boundary, zero-leak PII scanner & evolve coordinator
+    └── evolve/                   # /evolve: Proactive capability expansion & recursive self-improvement
 ```
 
 ---

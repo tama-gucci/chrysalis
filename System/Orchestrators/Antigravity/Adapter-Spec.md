@@ -115,4 +115,4 @@ Execute skill /evening:
 ## 🔒 Security & Local Environment Boundary
 
 * **Universal Operating Contract:** The Antigravity adapter operates identically across Linux, macOS, and Windows.
-* **Environment Quarantine:** All host-specific hardware manifests, local paths, package telemetry, and developer profiles reside exclusively within `Development/Environment/` and are strictly excluded from public version control.
+* **Environment Quarantine:** All host-specific hardware manifests, local paths, package telemetry, and developer profiles reside exclusively within `System/Environment/` and are strictly excluded from public version control.

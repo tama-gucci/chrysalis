@@ -18,7 +18,7 @@
 !/_types/
 !/_types/**
 
-# 4. Whitelist System Architecture & Public Templates ONLY
+# 4. Whitelist System Architecture, Public Templates & Environment Tools ONLY
 !/System/
 /System/*
 !/System/SYSTEM-PROMPT.md
@@ -27,6 +27,13 @@
 !/System/Orchestrators/**
 !/System/_templates/
 !/System/_templates/**
+!/System/Environment/
+/System/Environment/*
+!/System/Environment/_templates/
+!/System/Environment/_templates/**
+!/System/Environment/scripts/
+!/System/Environment/scripts/**
+!/System/Environment/Environment-Index.md
 
 # 5. Whitelist Agent Skills Engine ONLY (Exclude backups)
 !/.agent/
@@ -36,7 +43,7 @@
 !/.agent/skills/**
 .agent/skills/.backup/
 
-# 6. Whitelist Development Sphere & Tooling (Quarantine local hardware manifests)
+# 6. Whitelist Development Sphere & Engineering Tooling
 !/Development/
 /Development/*
 !/Development/Development-Constitution.md
@@ -45,13 +52,6 @@
 !/Development/scripts/**
 !/Development/skills/
 !/Development/skills/**
-!/Development/Environment/
-/Development/Environment/*
-!/Development/Environment/_templates/
-!/Development/Environment/_templates/**
-!/Development/Environment/scripts/
-!/Development/Environment/scripts/**
-!/Development/Environment/Environment-Index.md
 
 # 7. Whitelist TaskNotes Views, Workflows, Templates & Example Task ONLY
 !/TaskNotes/

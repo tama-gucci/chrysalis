@@ -37,6 +37,7 @@ System rules and operational state are partitioned into dedicated files:
 * **`System/Orchestrators/*`:** Modular orchestrator adapter registry and production runtime specifications (e.g., Google Antigravity).
 * **`System/System-Health.md`:** Persistent diagnostic health ledger tracking integrity passes, schema validations, and auto-heal events.
 * **`System/Changelog.md`:** Persistent historical ledger tracking autonomous system evolution, capability expansions, and skill mutations.
+* **`System/Environment/*`:** Multi-node workstation telemetry manifests, hardware profiling, and manifest generation utilities assisting users across their personal projects (manifests quarantined from git, templates & scripts public).
 * **`System/_templates/`:** Public, sanitized 1:1 templates for every runtime memory and state file.
 * **`.agent/skills/`:** Modular, self-contained executable protocols: unified nightly operational audits (`/audit`), system integrity diagnostics (`/doctor`), system suspension/resumption (`/pause` & `/resume`), project staging and cross-roadmap promotion (`/project`), and two-stage focus planning (`/plan --stage` & `/plan --calibrate`).
 

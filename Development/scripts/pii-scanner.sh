@@ -69,8 +69,8 @@ while IFS= read -r FILE; do
         ERRORS=$((ERRORS + 1))
     fi
 
-    # Check personal workstation manifests in Development/Environment/
-    if [[ "$FILE" =~ ^Development/Environment/ ]] && [[ ! "$FILE" =~ ^Development/Environment/_templates/ ]] && [[ ! "$FILE" =~ ^Development/Environment/scripts/ ]] && [ "$FILE" != "Development/Environment/Environment-Index.md" ]; then
+    # Check personal workstation manifests in System/Environment/
+    if [[ "$FILE" =~ ^System/Environment/ ]] && [[ ! "$FILE" =~ ^System/Environment/_templates/ ]] && [[ ! "$FILE" =~ ^System/Environment/scripts/ ]] && [ "$FILE" != "System/Environment/Environment-Index.md" ]; then
         echo -e "${RED}  ❌ [LEAK] Personal workstation manifest tracked in git: $FILE${NC}"
         ERRORS=$((ERRORS + 1))
     fi

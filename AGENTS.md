@@ -30,6 +30,7 @@ Chrysalis operates across two strictly segregated functional domains:
 * **`Scheduling-Memory.md`:** Mutable operational state, dynamic tag multipliers bounded to $[0.20, 2.00]$, learned wake rhythms, chronotype telemetry, active diurnal offsets, energy baseline logic, pause flags, and candidate task pools.
 * **`Life-Roadmap.md`:** Mutable strategic taxonomy, active/inactive Pillar definitions, milestone horizons, and primary priority arbiter.
 * **`Projects/*/Roadmap.md`:** Project-level roadmaps and deliverable tracking.
+* **`System/Environment/*`:** Multi-node workstation telemetry manifests, hardware profiling, and manifest generation utilities assisting users across their personal projects (manifests quarantined from git, templates & scripts public).
 * **`System-Health.md`:** Persistent diagnostic health ledger tracking integrity passes, schema validations, and auto-heal events.
 * **`Changelog.md`:** Persistent historical ledger tracking autonomous system evolution and skill mutations.
 * **`System/_templates/`:** Public 1:1 sanitized templates for all runtime state files.
@@ -83,7 +84,7 @@ Chrysalis is distributed publicly on GitHub (`tama-gucci/chrysalis`). Under NO c
    * Live runtime state: `System/Life-Roadmap.md`, `System/Scheduling-Memory.md`, `System/System-Health.md`, `System/Changelog.md`.
    * Daily focus notes matching `YYYY-MM-DD*.md`.
    * Personal projects (`Projects/*` except `README.md` and `_templates/`) and personal slipbox notes (`Slipbox/*` except `README.md`).
-   * Workstation manifests: `Development/Environment/*.md` (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`).
+   * Workstation manifests: `System/Environment/*.md` (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`).
    * Databases & caches: `Nexus/`, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, `*.token.json`, `*.env`.
 
 2. **Mandatory 1-to-1 Public Template Matrix:**
@@ -95,7 +96,7 @@ Chrysalis is distributed publicly on GitHub (`tama-gucci/chrysalis`). Under NO c
    * `Daily Notes (YYYY-MM-DD.md)` $\to$ `System/_templates/Daily-Note.template.md`
    * `TaskNotes/Tasks/*.md` $\to$ `TaskNotes/_templates/Task-Template.md` & `TaskNotes/Tasks/example-task.md`
    * `Projects/*/Roadmap.md` $\to$ `Projects/_templates/Project-Template.md`
-   * `Development/Environment/*.md` $\to$ `Development/Environment/_templates/System-Manifest-Template.md`
+   * `System/Environment/*.md` $\to$ `System/Environment/_templates/System-Manifest-Template.md`
 
 3. **Synthetic Placeholder Standard:**
    All public code, documentation, examples, and skill runbooks must strictly use synthetic values:

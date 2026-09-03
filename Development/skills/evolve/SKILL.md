@@ -8,7 +8,7 @@ reads:
   - "chrysalis/System/Life-Roadmap.md"
   - "chrysalis/System/System-Health.md"
   - "chrysalis/System/Changelog.md"
-  - "chrysalis/Development/Environment/*.md"
+  - "chrysalis/System/Environment/*.md"
   - "chrysalis/System/Orchestrators/*/*.md"
   - "chrysalis/.agent/skills/*/*.md"
   - "chrysalis/Development/skills/*/*.md"
@@ -82,7 +82,7 @@ For each unintegrated note, analyze the 5 Chrysalis integration pathways:
 5. **Orchestrator Adapters:** Capability tier updates, floating alias mappings, or model release integrations in `System/Orchestrators/*`.
 
 ### Step 3: Environment & Model Telemetry Audit
-* Inspect developer workstation package manifests (`Development/Environment/*.md`) and local plugin configurations.
+* Inspect developer workstation package manifests (`System/Environment/*.md`) and local plugin configurations.
 * If new CLI tools or model releases are detected, formulate an `Adapter-Spec.md` capability tier update.
 
 ### Step 4: Formulate Feature Integration Spec

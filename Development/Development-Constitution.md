@@ -26,7 +26,7 @@ The following paths are designated as strictly private and MUST NEVER be tracked
 * **Live System Memory & Roadmaps:** `System/Life-Roadmap.md`, `System/Scheduling-Memory.md`, `System/System-Health.md`, and `System/Changelog.md`.
 * **Daily Focus & Journal Notes:** All root-level daily notes matching `YYYY-MM-DD*.md` (e.g. `2026-09-02.md`).
 * **Personal Projects & Slipbox Thoughts:** `Projects/*` (except `Projects/README.md` and `Projects/_templates/**`) and `Slipbox/*` (except `Slipbox/README.md`).
-* **Personal Workstation Telemetry:** `Development/Environment/*.md` manifests (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`) and private workstation configurations.
+* **Personal Workstation Telemetry:** `System/Environment/*.md` manifests (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`) and private workstation configurations.
 * **Local Databases & State Caches:** `Nexus/` SQLite databases, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, and `.obsidian/plugins/*/runs/`.
 * **Secrets & Credentials:** `*.token.json`, `*credentials*.json`, `*.env`, `*.db`, `*.sqlite*`, and private keys.
 
@@ -39,7 +39,7 @@ Every file type that contains personal runtime information MUST provide an exact
 * `Daily Notes (YYYY-MM-DD.md)` $\to$ `System/_templates/Daily-Note.template.md`
 * `TaskNotes/Tasks/*.md` $\to$ `TaskNotes/_templates/Task-Template.md` & `TaskNotes/Tasks/example-task.md`
 * `Projects/*/Roadmap.md` $\to$ `Projects/_templates/Project-Template.md`
-* `Development/Environment/*.md` $\to$ `Development/Environment/_templates/System-Manifest-Template.md`
+* `System/Environment/*.md` $\to$ `System/Environment/_templates/System-Manifest-Template.md`
 
 ### 3. Synthetic Placeholder Standard
 All public code, documentation, examples, and skill runbooks must strictly use synthetic/mock values:
@@ -58,7 +58,6 @@ All development-specific assets reside exclusively within `chrysalis/Development
 
 * **`Development/Development-Constitution.md` (This File):** Constitutional laws of engineering, PII hygiene, and RSI.
 * **`Development/README.md`:** Developer guide, architecture orientation, and git workflow.
-* **`Development/Environment/`:** Workstation profiling, hardware manifests, package telemetry, and developer profiles (quarantined from git except for public `_templates/`).
 * **`Development/scripts/`:** Developer utility scripts, PII linters, git boundary verifiers, and setup helpers.
 * **`Development/skills/`:** Modular development-only agent skills (`audit-dev`, `evolve`), registered into Antigravity via `.agent/skills.json`.
 

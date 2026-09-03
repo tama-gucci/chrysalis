@@ -148,7 +148,7 @@ Run the onboarding command with your AI orchestrator:
 Because Chrysalis is 100% modular Markdown, developers can author custom skills or extend system logic within the [`Development/`](Development/README.md) hub, governed by the [`Development Constitution`](Development/Development-Constitution.md):
 * **Modular Skills Engine:** Runtime skills reside in `.agent/skills/`; development skills reside in `Development/skills/` (registered via `.agent/skills.json`).
 * **System Evolution Engine (`/evolve`):** When working in a coding IDE, the `/evolve` command inspects `#chrysalis` notes, synthesizes architecture specifications, and refactors skills with automated rollback backups.
-* **Development Environment (`Development/Environment/`):** Personal workstation manifests and local developer scripts are quarantined from Git via `.gitignore`.
+* **System Workstation Telemetry (`System/Environment/`):** Multi-node workstation profiling tools and manifests to assist users across personal projects (personal manifests quarantined from Git via `.gitignore`).
 * **Zero-Leak PII Gate (`/audit-dev`):** Verifies all git-tracked files against PII, personal paths, and token leaks before pushing.
 
 ---
