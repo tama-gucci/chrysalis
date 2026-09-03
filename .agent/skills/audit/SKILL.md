@@ -1,7 +1,8 @@
 ---
 name: audit
-description: "Unified nightly system reconciliation: executes pre-flight integrity pass via /doctor, updates telemetry multiplier learning bounded in [0.20, 2.00], chronotype delta learning, multi-project and roadmap horizon ingestion, starter wedge injection, candidate task pool maintenance, and auto-pause evaluation."
+description: "Runtime Operational Audit: Unified nightly system reconciliation: executes pre-flight integrity pass via /doctor, updates telemetry multiplier learning bounded in [0.20, 2.00], chronotype delta learning, multi-project and roadmap horizon ingestion, starter wedge injection, candidate task pool maintenance, and auto-pause evaluation."
 trigger: "/audit"
+domain: runtime
 reads:
   - "chrysalis/TaskNotes/Tasks/*.md"
   - "chrysalis/TaskNotes/Archive/*.md"
@@ -16,11 +17,11 @@ writes:
   - "chrysalis/Dashboard.md"
 ---
 
-# /audit (Unified Nightly System Audit & State Reconciliation Engine)
+# /audit (Runtime Operational Audit & Nightly Reconciliation Engine)
 
 ## Supported Commands & Triggers
 * `/audit` (or `/audit --nightly`) — Executes the complete nightly operational reconciliation lifecycle.
-* `/audit --integrity` (or `/audit --health`) — Executes the 6-point pre-flight integrity suite (delegated directly to [`doctor`](file:///home/sin/GoogleDrive/chrysalis/.agent/skills/doctor/SKILL.md)).
+* `/audit --integrity` (or `/audit --health`) — Executes the 6-point pre-flight integrity suite (delegated directly to [`doctor`](../doctor/SKILL.md)).
 * `/audit --mutate` — On-demand roadmap milestone and candidate task pool mutation.
 
 ---
@@ -28,7 +29,7 @@ writes:
 ## Protocol 0: Full System Integrity & Diagnostic Suite (`/audit --integrity` or `/audit --health`)
 
 > [!NOTE]
-> Protocol 0 delegates directly to the canonical diagnostic skill [`doctor`](file:///home/sin/GoogleDrive/chrysalis/.agent/skills/doctor/SKILL.md). Calling `/audit --integrity` or `/audit --health` executes the 6-point integrity suite from `/doctor` without triggering the nightly learning lifecycle.
+> Protocol 0 delegates directly to the canonical diagnostic skill [`doctor`](../doctor/SKILL.md). Calling `/audit --integrity` or `/audit --health` executes the 6-point integrity suite from `/doctor` without triggering the nightly learning lifecycle.
 
 ---
 
@@ -37,7 +38,7 @@ writes:
 Execute the complete nightly audit and operational reconciliation sequence across the entire vault:
 
 ### Step 0: Mandatory Pre-Flight Health Pass (Delegated to `/doctor`)
-Execute the full 6-point diagnostic pass defined in [`doctor`](file:///home/sin/GoogleDrive/chrysalis/.agent/skills/doctor/SKILL.md). If critical unrecoverable corruption is found, halt execution and alert user. Otherwise, apply auto-heals and proceed to Step 1.
+Execute the full 6-point diagnostic pass defined in [`doctor`](../doctor/SKILL.md). If critical unrecoverable corruption is found, halt execution and alert user. Otherwise, apply auto-heals and proceed to Step 1.
 
 ### Step 1: Task Lifecycle, Multipliers & Chronotype Delta Learning
 1. Scan `chrysalis/TaskNotes/Tasks/*.md` (with `status: done`) and `chrysalis/TaskNotes/Archive/*.md` for tasks completed in the preceding 24 hours.

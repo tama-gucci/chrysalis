@@ -30,11 +30,11 @@ graph TD
     end
 
     subgraph ActiveAdapter ["Active Orchestrator Adapter"]
-        Gemini["[[Gemini/Adapter-Spec|Google Gemini Spark Adapter]]<br/>(Cloud Scheduled Cron, Google Workspace Tools)"]
+        Antigravity["[[Antigravity/Adapter-Spec|Google Antigravity Adapter]]<br/>(Interactive On-Demand & Optional Scheduled Cron)"]
     end
 
     Substrate --> Contract
-    Contract --> Gemini
+    Contract --> Antigravity
 ```
 
 ---
@@ -49,7 +49,7 @@ To orchestrate Chrysalis, an AI agent platform must satisfy five basic capabilit
    * **Write/Edit:** Modify existing files with precise contiguous replacements (`replace_file_content`) or write new files (`write_to_file`).
 3. **Explicit Local Timezone Enforcement:** All generated or mutated timestamps must serialize with the explicit local offset defined in `Scheduling-Memory.md` (`-05:00`). Raw UTC (`Z`) timestamps are strictly prohibited.
 4. **Skill Discovery & State Execution:** The orchestrator discovers and executes operational protocols defined in `chrysalis/.agent/skills/<skill>/SKILL.md` (`doctor`, `audit`, `plan`, `morning`, `evening`, `pause`, `task`, `zettel`, `onboard`).
-5. **Calendar Ingestion & Collision Avoidance:** The orchestrator retrieves external schedule commitments (via Google Workspace calendar tools, cached memory events in `Scheduling-Memory.md`, or Obsidian client synchronization) and wraps focus sprints around them without collisions.
+5. **Calendar Ingestion & Collision Avoidance:** The orchestrator retrieves external schedule commitments (via TaskNotes MCP, cached memory events in `Scheduling-Memory.md`, or client synchronization) and wraps focus sprints around them without collisions.
 
 ---
 
@@ -57,10 +57,10 @@ To orchestrate Chrysalis, an AI agent platform must satisfy five basic capabilit
 
 | Adapter | Primary Runtime / Environment | Integration Type | Documentation | Status |
 | :--- | :--- | :--- | :--- | :---: |
-| **Google Gemini Spark** | Google Spark Scheduled Prompts, Google Workspace, Gemini CLI | Cloud Scheduled Cron / Workspace | `[[Gemini/Adapter-Spec\|Gemini Adapter]]` | 🟢 Active Module |
+| **Google Antigravity** | Antigravity IDE, Antigravity 2.0, `agy` CLI | Interactive / Scheduled Native Tool Adapter | `[[Antigravity/Adapter-Spec\|Antigravity Adapter]]` | 🟢 Active Module |
 
 ---
 
-## 🔄 Operating with Google Gemini Spark
+## 🔄 Operating with Google Antigravity
 
-Ensure your root `GEMINI.md` points to `System/SYSTEM-PROMPT.md` and review the cron schedules and tool mappings in `[[Gemini/Adapter-Spec|System/Orchestrators/Gemini/Adapter-Spec.md]]`.
+Ensure your workspace root contains `AGENTS.md` and review the operational runbooks and tool contracts in `[[Antigravity/Adapter-Spec|System/Orchestrators/Antigravity/Adapter-Spec.md]]`.

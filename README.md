@@ -8,22 +8,22 @@
 
 ## 🏛️ System Architecture
 
-Chrysalis is built on an open Markdown substrate synchronized via cloud storage (**Google Drive**) and accessed concurrently through **Obsidian** and an autonomous AI orchestrator (**Google Gemini**):
+Chrysalis is built on an open Markdown substrate synchronized via cloud storage (**Google Drive**) and accessed concurrently through **Obsidian** and an autonomous AI orchestrator (**Google Antigravity**):
 
 ```mermaid
 graph TD
     GDrive["☁️ Google Drive<br/>(Central Cloud Host & Synced Substrate)"]
-    GeminiSpark["♊ Google Gemini Spark<br/>(Autonomous Daily Orchestrator)<br/>• Morning Calibration<br/>• Evening Staging & Audit<br/>• Cloud Calendar Ingestion & Timeblocking"]
+    Antigravity["🛸 Google Antigravity<br/>(Autonomous Daily Orchestrator)<br/>• Morning Calibration<br/>• Evening Staging & Audit<br/>• Calendar Ingestion & Timeblocking"]
     Clients["📱💻 Concurrent Obsidian Clients<br/>(Mobile, Tablet, Desktop)"]
     
-    GeminiSpark -->|Mutates State & Focus Blocks| GDrive
+    Antigravity -->|Mutates State & Focus Blocks| GDrive
     Clients <-->|Direct Cloud Synchronization| GDrive
 ```
 
 ### Core Components
 * **Cloud Substrate (Google Drive):** The single source of truth. All notes, task frontmatter, strategic roadmaps, and modular skills live as plain Markdown files.
 * **Client Interface (Obsidian):** Access your schedule, task boards, dashboards, and notes across desktop, tablet, and mobile devices.
-* **Autonomous Orchestrator (Google Gemini Spark):** Executes daily scheduled focus planning, morning wake calibration, evening staging, and calendar collision avoidance.
+* **Autonomous Orchestrator (Google Antigravity):** Executes daily scheduled focus planning, morning wake calibration, evening staging, and calendar collision avoidance with guaranteed tool-gated physical disk mutations.
 
 ---
 
@@ -83,66 +83,17 @@ graph TD
 
 ---
 
-### Step 2: Google Gemini Spark Orchestrator Setup
+### Step 2: Google Antigravity Orchestrator Setup
 
-1. Open **Google Gemini / Spark** and configure scheduled prompts for your vault located on Google Drive:
-   * **Morning Prompt (Scheduled Daily in the morning):**
-     ```text
-     [CONTEXT & IDENTITY]
-     You are the autonomous orchestrator for Chrysalis, a Markdown-based focus planning, task management, and knowledge system stored in Google Drive in the "chrysalis/" folder.
-     All state, roadmaps, task lifecycles, and operational skills exist as plain Markdown files with YAML frontmatter in the "chrysalis/" directory.
+1. **Open the Vault in Google Antigravity:**
+   * Open [Google Antigravity](https://antigravity.google) (IDE or Desktop Application) and select **Open Folder** pointing to `~/GoogleDrive/chrysalis`.
+   * Antigravity automatically discovers [`AGENTS.md`](AGENTS.md) and all native modular skills in [`.agent/skills/`](.agent/skills/).
 
-     [GROUNDING & BOOTSTRAP]
-     Upon execution, read the following core files in Google Drive:
-     1. "chrysalis/GEMINI.md" and "chrysalis/System/SYSTEM-PROMPT.md" — Constitutional laws, schemas, and invariants.
-     2. "chrysalis/System/Scheduling-Memory.md" — Dynamic operational state, timezone offset ("-05:00"), pause flags, wake rhythms, and pre-approved prototype schedule.
-     3. "chrysalis/.agent/skills/morning/SKILL.md" — Executable morning runbook.
+2. **Choose Your Execution Topology:**
+   * **Interactive Mode (Default):** Run daily workflows directly on-demand via the chat canvas (`/morning`, `/evening`, `/plan`, `/doctor`).
+   * **Automated Scheduled Mode (Optional):** Use Antigravity's native scheduled timers or background cron to fire morning wake calibration (`08:30`) and nightly staging (`21:30`) automatically on a continuous workstation, server, or VM.
 
-     [TASK EXECUTION]
-     Execute skill /morning:
-     1. Inspect pause state in "chrysalis/System/Scheduling-Memory.md". If paused, respect the pause policy.
-     2. If active, prompt the user in natural language for morning wake telemetry (energy score 1-5 and wake notes / actual wake time).
-     3. Once telemetry is received:
-        - Ingest today's external events from Google Calendar (via Google Workspace tools) or "calendar_sync.cached_events" in "chrysalis/System/Scheduling-Memory.md" to guarantee zero schedule collisions.
-        - Shift diurnal focus sprint blocks (75-90m ultradian focus sprints with 15m decompression buffers) anchored to actual wake time (Twake).
-        - Execute file tool calls (replace_file_content / write_to_file) to write locked timestamps ("scheduled: YYYY-MM-DDTHH:mm:ss-05:00") into "chrysalis/TaskNotes/Tasks/*.md".
-        - Create today's daily note at "chrysalis/YYYY-MM-DD.md".
-        - Update "morning_checkin" in "chrysalis/System/Scheduling-Memory.md".
-
-     [CONSTITUTIONAL INVARIANTS]
-     - Anti-Simulation Law: You MUST execute file tool calls (replace_file_content / write_to_file) on Google Drive files. Chat text alone never modifies system state.
-     - Explicit Timezone: All timestamps must include the explicit local offset from Scheduling-Memory.md (e.g., "-05:00"). Never write raw UTC "Z" strings.
-     ```
-   * **Evening Prompt (Scheduled Daily in the evening):**
-     ```text
-     [CONTEXT & IDENTITY]
-     You are the autonomous orchestrator for Chrysalis, a Markdown-based focus planning, task management, and knowledge system stored in Google Drive in the "chrysalis/" folder.
-     All state, roadmaps, task lifecycles, and operational skills exist as plain Markdown files with YAML frontmatter in the "chrysalis/" directory.
-
-     [GROUNDING & BOOTSTRAP]
-     Upon execution, read the following core files in Google Drive:
-     1. "chrysalis/GEMINI.md" and "chrysalis/System/SYSTEM-PROMPT.md" — Constitutional laws, schemas, and invariants.
-     2. "chrysalis/System/Scheduling-Memory.md" — Dynamic operational state, timezone offset ("-05:00"), bounded multipliers, pause state, and candidate task pools.
-     3. "chrysalis/System/Life-Roadmap.md" & "chrysalis/Projects/*/Roadmap.md" — Primary strategic priority arbiter and active deliverables.
-     4. "chrysalis/.agent/skills/evening/SKILL.md" — Executable evening runbook.
-
-     [TASK EXECUTION]
-     Execute skill /evening:
-     1. Run Unified Nightly Audit (/audit):
-        - Reconcile completed tasks in "chrysalis/TaskNotes/Tasks/*.md" against completed session deltas and update bounded multipliers within [0.20, 2.00] in "chrysalis/System/Scheduling-Memory.md".
-        - Ingest upcoming 14-day roadmap milestones from "chrysalis/System/Life-Roadmap.md" and create new task notes if needed.
-        - Inject Starter Wedges (micro_chunked: true) into stalled tasks (>72h).
-        - Maintain the candidate task pool in "chrysalis/System/Scheduling-Memory.md".
-     2. Ingest external Google Calendar events for tomorrow via Google Workspace tools or cached_events in "chrysalis/System/Scheduling-Memory.md".
-     3. Prompt the user in natural language for any schedule additions, errands, or context for tomorrow.
-     4. Arbitrate daily priority against "chrysalis/System/Life-Roadmap.md" (active roadmap milestones take Peak Focus slots; user additions fill downtime/slump windows).
-     5. Assemble tomorrow's prototype focus schedule (75-90m ultradian sprints, 15m decompression buffers) and execute file tool calls to serialize "prototype_schedule" into "chrysalis/System/Scheduling-Memory.md".
-
-     [CONSTITUTIONAL INVARIANTS]
-     - Anti-Simulation Law: You MUST execute file tool calls (replace_file_content / write_to_file) on Google Drive files. Chat text alone never modifies system state.
-     - Explicit Timezone: All timestamps must include the explicit local offset from Scheduling-Memory.md (e.g., "-05:00"). Never write raw UTC "Z" strings.
-     ```
-2. Runtime instructions and adapter specifications are defined in [GEMINI.md](file:///home/sin/GoogleDrive/chrysalis/GEMINI.md) and `System/Orchestrators/Gemini/Adapter-Spec.md`.
+3. Detailed runtime contracts and tool bindings are defined in [`System/Orchestrators/Antigravity/Adapter-Spec.md`](System/Orchestrators/Antigravity/Adapter-Spec.md).
 
 ---
 
@@ -170,7 +121,7 @@ Run the onboarding command with your AI orchestrator:
 
 ## 🛠️ Command Reference
 
-### Daily Focus & Task Commands
+### Daily Focus & Task Commands (Runtime Sphere)
 | Command | Skill Runbook | Description |
 | :--- | :--- | :--- |
 | **`/onboard`** | `.agent/skills/onboard/SKILL.md` | Interactive intake interview: compiles strategic roadmap and seeds operational memory. |
@@ -179,19 +130,26 @@ Run the onboarding command with your AI orchestrator:
 | **`/plan`** | `.agent/skills/plan/SKILL.md` | Master bio-cognitive focus scheduling engine with ultradian sprints. |
 | **`/task`** | `.agent/skills/task/SKILL.md` | Creates a new task note with category tags, time estimates, and modality. |
 | **`/doctor`** | `.agent/skills/doctor/SKILL.md` | 6-point integrity diagnostic suite: validates schemas, tags, timezones, and links. |
-| **`/audit`** | `.agent/skills/audit/SKILL.md` | Unified nightly reconciliation: updates multipliers, chronotype learning, and horizons. |
+| **`/audit`** | `.agent/skills/audit/SKILL.md` | Runtime Nightly Audit: updates multipliers, chronotype learning, and 14-day horizons. |
 | **`/zettel`** | `.agent/skills/zettel/SKILL.md` | Creates an atomic slipbox knowledge note with bidirectional links. |
 | **`/pause`** | `.agent/skills/pause/SKILL.md` | Suspends active timeblocks and freezes multiplier decay across 4 semantic modes. |
 | **`/resume`** | `.agent/skills/pause/SKILL.md` | Resumes daily planning cycles smoothly following a pause. |
+
+### Development & Engineering Commands (Development Sphere)
+| Command | Skill Runbook | Description |
+| :--- | :--- | :--- |
+| **`/audit-dev`** | `Development/skills/audit-dev/SKILL.md` | Development & Codebase Audit: Zero-Leak PII scanning, git boundary check, and RSI coordination. |
+| **`/evolve`** | `Development/skills/evolve/SKILL.md` | System Evolution Engine: scans `#chrysalis` notes, synthesizes architecture specs, and refactors skills with rollback snapshots. |
 
 ---
 
 ## 🔧 Customizing & Extending Chrysalis (Developer Guide)
 
-Because Chrysalis is 100% modular Markdown, developers can author custom skills or extend system logic:
-* **Modular Skills (`.agent/skills/`):** Each skill is an isolated folder containing a `SKILL.md` runbook defining triggers, read dependencies, write targets, and execution protocols.
+Because Chrysalis is 100% modular Markdown, developers can author custom skills or extend system logic within the [`Development/`](Development/README.md) hub, governed by the [`Development Constitution`](Development/Development-Constitution.md):
+* **Modular Skills Engine:** Runtime skills reside in `.agent/skills/`; development skills reside in `Development/skills/` (registered via `.agent/skills.json`).
 * **System Evolution Engine (`/evolve`):** When working in a coding IDE, the `/evolve` command inspects `#chrysalis` notes, synthesizes architecture specifications, and refactors skills with automated rollback backups.
-* **Local Machine Environment (`System/Environment/`):** Personal workstation manifests and local developer scripts are quarantined from Git via `.gitignore`.
+* **Development Environment (`Development/Environment/`):** Personal workstation manifests and local developer scripts are quarantined from Git via `.gitignore`.
+* **Zero-Leak PII Gate (`/audit-dev`):** Verifies all git-tracked files against PII, personal paths, and token leaks before pushing.
 
 ---
 

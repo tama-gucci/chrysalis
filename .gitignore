@@ -11,7 +11,6 @@
 !/LICENSE
 !/Dashboard.md
 !/AGENTS.md
-!/GEMINI.md
 !/bootstrap.sh
 !/mdbase.yaml
 
@@ -23,20 +22,38 @@
 !/System/
 /System/*
 !/System/SYSTEM-PROMPT.md
+!/System/Runtime-Constitution.md
 !/System/Orchestrators/
 !/System/Orchestrators/**
 !/System/_templates/
 !/System/_templates/**
 
-# 5. Whitelist Agent Skills Engine ONLY (Exclude backups and dev scratchpads)
+# 5. Whitelist Agent Skills Engine ONLY (Exclude backups)
 !/.agent/
 /.agent/*
+!/.agent/skills.json
 !/.agent/skills/
 !/.agent/skills/**
 .agent/skills/.backup/
-.agent/skills/evolve/
 
-# 6. Whitelist TaskNotes Views, Workflows, Templates & Example Task ONLY
+# 6. Whitelist Development Sphere & Tooling (Quarantine local hardware manifests)
+!/Development/
+/Development/*
+!/Development/Development-Constitution.md
+!/Development/README.md
+!/Development/scripts/
+!/Development/scripts/**
+!/Development/skills/
+!/Development/skills/**
+!/Development/Environment/
+/Development/Environment/*
+!/Development/Environment/_templates/
+!/Development/Environment/_templates/**
+!/Development/Environment/scripts/
+!/Development/Environment/scripts/**
+!/Development/Environment/Environment-Index.md
+
+# 7. Whitelist TaskNotes Views, Workflows, Templates & Example Task ONLY
 !/TaskNotes/
 /TaskNotes/*
 !/TaskNotes/Views/
@@ -49,7 +66,7 @@
 /TaskNotes/Tasks/*
 !/TaskNotes/Tasks/example-task.md
 
-# 7. Whitelist Public Project & Slipbox Templates/READMEs ONLY
+# 8. Whitelist Public Project & Slipbox Templates/READMEs ONLY
 !/Projects/
 /Projects/*
 !/Projects/README.md
@@ -60,7 +77,7 @@
 /Slipbox/*
 !/Slipbox/README.md
 
-# 8. Whitelist Obsidian Plugins Core & Assets ONLY (Deny all caches, runtimes, tokens)
+# 9. Whitelist Obsidian Plugins Core & Assets ONLY (Deny all caches, runtimes, tokens)
 !/.obsidian/
 /.obsidian/*
 !/.obsidian/app.json
@@ -84,7 +101,7 @@
 !/.obsidian/plugins/**/connector.js
 !/.obsidian/plugins/**/sqlite3.wasm
 
-# 9. Catch-all: Explicitly Deny Secrets, OS Cruft, and Sync Conflicts Everywhere
+# 10. Catch-all: Explicitly Deny Secrets, OS Cruft, and Sync Conflicts Everywhere
 *.env
 *.token.json
 *credentials*.json
@@ -92,6 +109,8 @@
 *.db
 *.sqlite
 *.sqlite3
+*.pyc
+__pycache__/
 .DS_Store
 Thumbs.db
 *(conflict*

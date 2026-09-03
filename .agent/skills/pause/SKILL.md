@@ -102,7 +102,7 @@ Determine appropriate next steps based on local time ($T_{\text{now}}$):
   > *"▶️ Chrysalis has been RESUMED. System is ready for tonight's `/evening` staging pass."*
 
 > [!TIP]
-> **Maintenance Verification:** If resuming from `mode: "maintenance"`, run [`/doctor`](file:///home/sin/GoogleDrive/chrysalis/.agent/skills/doctor/SKILL.md) to ensure all vault schemas, timezones, and skill dependencies remain in strict constitutional compliance.
+> **Maintenance Verification:** If resuming from `mode: "maintenance"`, run [`/doctor`](../doctor/SKILL.md) to ensure all vault schemas, timezones, and skill dependencies remain in strict constitutional compliance.
 
 ---
 

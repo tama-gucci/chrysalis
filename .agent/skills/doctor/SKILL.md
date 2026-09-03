@@ -2,6 +2,7 @@
 name: doctor
 description: "Comprehensive 6-point system integrity and diagnostic suite: validates TaskNotes frontmatter schemas, explicit local timezones (-05:00), Life-Roadmap tag registries, graph/wikilink integrity, skill runbooks/dependencies, and dynamic state multiplier bounds ([0.20, 2.00]), outputting live diagnostic reports and auto-heals to System/System-Health.md."
 trigger: "/doctor"
+domain: runtime
 reads:
   - "chrysalis/TaskNotes/Tasks/*.md"
   - "chrysalis/TaskNotes/Archive/*.md"
@@ -11,6 +12,7 @@ reads:
   - "chrysalis/System/Life-Roadmap.md"
   - "chrysalis/Dashboard.md"
   - "chrysalis/.agent/skills/*/*.md"
+  - "chrysalis/Development/skills/*/*.md"
 writes:
   - "chrysalis/System/System-Health.md"
   - "chrysalis/TaskNotes/Tasks/*.md"
@@ -65,8 +67,8 @@ graph TD
 * Verify that project wikilinks on tasks point to existing `Projects/*/Roadmap.md` files.
 
 ### 5. Skill Protocol & Dependency Linter
-* Validate that all files in `chrysalis/.agent/skills/*/SKILL.md` contain valid YAML frontmatter (`name`, `description`, `trigger`, `reads`, `writes`).
-* Verify that all internal inter-skill execution references point to existing `.agent/skills/` paths.
+* Validate that all files in `chrysalis/.agent/skills/*/SKILL.md` and `chrysalis/Development/skills/*/SKILL.md` contain valid YAML frontmatter (`name`, `description`, `trigger`, `reads`, `writes`).
+* Verify that all internal inter-skill execution references point to existing skill paths.
 
 ### 6. Dynamic State & Multiplier Sanity Check
 * Verify YAML syntax in `chrysalis/System/Scheduling-Memory.md`.
