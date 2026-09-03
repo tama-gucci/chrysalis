@@ -2,7 +2,7 @@
 type: system_specification
 id: chrysalis-core-system-prompt
 status: evergreen_constitution
-version: 4.19.0
+version: 4.20.0
 ---
 
 # Chrysalis Constitution
@@ -29,7 +29,7 @@ System rules and operational state are partitioned into dedicated files to maint
 * **`System/Environment/*`:** Personal workstation manifests, package telemetry, and developer utility scripts (quarantined and excluded from public repository).
 * **`System/System-Health.md`:** Persistent diagnostic health ledger tracking integrity passes, schema validations, and auto-heal events.
 * **`System/Changelog.md`:** Persistent historical ledger tracking autonomous system evolution, capability expansions, and skill mutations.
-* **`.agent/skills/`:** Modular, self-contained executable protocols with snapshot rollback (`.backup/`), unified operational audits (`/audit`), system integrity diagnostics (`/doctor`), system suspension/resumption (`/pause` & `/resume`), development capability expansion & RSI (`/evolve`), and two-stage focus planning (`/plan --stage` & `/plan --calibrate`).
+* **`.agent/skills/`:** Modular, self-contained executable protocols with snapshot rollback (`.backup/`), unified operational audits (`/audit`), system integrity diagnostics (`/doctor`), system suspension/resumption (`/pause` & `/resume`), development capability expansion & RSI (`/evolve`), project staging and cross-roadmap promotion (`/project`), and two-stage focus planning (`/plan --stage` & `/plan --calibrate`).
 
 ---
 

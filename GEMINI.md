@@ -3,10 +3,10 @@ type: orchestrator_entry_point
 id: chrysalis-gemini-orchestrator-entry
 orchestrator_platform: "google_gemini"
 adapter_spec: "[[System/Orchestrators/Gemini/Adapter-Spec|Gemini Adapter Spec]]"
-constitution: "[[System/SYSTEM-PROMPT|Chrysalis Constitution v4.19.0]]"
+constitution: "[[System/SYSTEM-PROMPT|Chrysalis Constitution v4.20.0]]"
 runtime_substrate: "google_drive"
-version: 4.19.0
-last_updated: "2026-09-02T20:55:00-05:00"
+version: 4.20.0
+last_updated: "2026-09-02T23:22:00-05:00"
 ---
 
 # ♊ Google Gemini Orchestrator Entry Point

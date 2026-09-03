@@ -2,8 +2,8 @@
 type: project_roadmap
 project_id: "{{project_slug}}"
 title: "{{Project Title}}"
-pillar: "{{pillar_tag}}" # e.g. pillar-1
-status: "active" # active, paused, complete, archived
+pillar: "{{pillar_tag}}" # e.g. pillar-1, unassigned, staged
+status: "active" # staged, active, paused, complete, archived
 horizon_window: "YYYY-MM-DD → YYYY-MM-DD"
 last_updated: "2026-09-01T18:25:00-05:00"
 tags:

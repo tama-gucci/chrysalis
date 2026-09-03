@@ -7,7 +7,7 @@
   "autoPushInterval": 0,
   "autoPullInterval": 10,
   "autoPullOnBoot": true,
-  "autoCommitOnlyStaged": false,
+  "autoCommitOnlyStaged": true,
   "disablePush": false,
   "pullBeforePush": true,
   "squashCommitsBeforePush": false,

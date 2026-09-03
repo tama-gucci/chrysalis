@@ -1,57 +1,102 @@
 # =======================================================
-# Chrysalis Public Open-Source Distribution .gitignore
+# Chrysalis Zero-Leak Whitelist (Default-Deny) .gitignore
 # =======================================================
 
-# 1. Personal Dynamic System State (Local / Drive Only)
-System/Life-Roadmap.md
-System/Scheduling-Memory.md
-System/System-Health.md
-System/Changelog.md
+# 1. DEFAULT-DENY: Ignore everything by default
+/*
 
-# 1b. Development Pipeline & Workstation Manifests (Local Dev Only)
-System/Environment/
+# 2. Root Open-Source Framework Files
+!/.gitignore
+!/README.md
+!/LICENSE
+!/Dashboard.md
+!/AGENTS.md
+!/GEMINI.md
+!/bootstrap.sh
+!/mdbase.yaml
 
-# 2. Personal TaskNotes & Daily Notes (Local / Drive Only)
-TaskNotes/Tasks/*
-!TaskNotes/Tasks/example-task.md
-TaskNotes/Archive/*
-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md
+# 3. Whitelist _types Directory
+!/_types/
+!/_types/**
 
-# 3. Personal Projects & Slipbox Knowledge (Local / Drive Only)
-Projects/*
-!Projects/_templates/
-!Projects/README.md
-Slipbox/*
-!Slipbox/README.md
+# 4. Whitelist System Architecture & Public Templates ONLY
+!/System/
+/System/*
+!/System/SYSTEM-PROMPT.md
+!/System/Orchestrators/
+!/System/Orchestrators/**
+!/System/_templates/
+!/System/_templates/**
 
-# 4. API Keys, OAuth Credentials & Tokens
-.env
-*.token.json
-credentials.json
-token.json
-System/Environment/scripts/*.token.json
-.obsidian/plugins/nexus/data.json
-.obsidian/plugins/text-generator/data.json
-
-# 5. Obsidian Local UI Cache & Plugin Run Data
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
-.obsidian/cache/
-.trash/
-.obsidian/plugins/tasknotes-workflows/runs/
-.obsidian/plugins/nexus/data/
-Nexus/data/
-*.db
-
-# 6. Agent Backups, Local Extensions & Scratchpads
+# 5. Whitelist Agent Skills Engine ONLY (Exclude backups and dev scratchpads)
+!/.agent/
+/.agent/*
+!/.agent/skills/
+!/.agent/skills/**
 .agent/skills/.backup/
 .agent/skills/evolve/
-System/Environment/temp/
-.conversations/
-.workspaces/
 
-# 7. OS & Sync Conflict Files
+# 6. Whitelist TaskNotes Views, Workflows, Templates & Example Task ONLY
+!/TaskNotes/
+/TaskNotes/*
+!/TaskNotes/Views/
+!/TaskNotes/Views/**
+!/TaskNotes/Workflows/
+!/TaskNotes/Workflows/**
+!/TaskNotes/_templates/
+!/TaskNotes/_templates/**
+!/TaskNotes/Tasks/
+/TaskNotes/Tasks/*
+!/TaskNotes/Tasks/example-task.md
+
+# 7. Whitelist Public Project & Slipbox Templates/READMEs ONLY
+!/Projects/
+/Projects/*
+!/Projects/README.md
+!/Projects/_templates/
+!/Projects/_templates/**
+
+!/Slipbox/
+/Slipbox/*
+!/Slipbox/README.md
+
+# 8. Whitelist Obsidian Plugins Core & Assets ONLY (Deny all caches, runtimes, tokens)
+!/.obsidian/
+/.obsidian/*
+!/.obsidian/app.json
+!/.obsidian/appearance.json
+!/.obsidian/community-plugins.json
+!/.obsidian/core-plugins.json
+!/.obsidian/plugins/
+/.obsidian/plugins/*
+!/.obsidian/plugins/*/
+/.obsidian/plugins/**/data.json
+/.obsidian/plugins/**/data/
+/.obsidian/plugins/**/runs/
+!/.obsidian/plugins/obsidian-git/data.json
+!/.obsidian/plugins/tasknotes/data.json
+!/.obsidian/plugins/tasknotes-workflows/data.json
+!/.obsidian/plugins/various-complements/data.json
+!/.obsidian/plugins/dataview/data.json
+!/.obsidian/plugins/**/main.js
+!/.obsidian/plugins/**/manifest.json
+!/.obsidian/plugins/**/styles.css
+!/.obsidian/plugins/**/connector.js
+!/.obsidian/plugins/**/sqlite3.wasm
+
+# 9. Catch-all: Explicitly Deny Secrets, OS Cruft, and Sync Conflicts Everywhere
+*.env
+*.token.json
+*credentials*.json
+*token*.json
+*.db
+*.sqlite
+*.sqlite3
 .DS_Store
 Thumbs.db
 *(conflict*
 * (conflict*
+.trash/
+.conversations/
+.workspaces/
+
