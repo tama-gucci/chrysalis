@@ -2,14 +2,17 @@
 type: system_specification
 id: chrysalis-core-system-prompt
 status: evergreen_constitution
-version: 4.16.0
+version: 4.19.0
 ---
 
 # Chrysalis Operating System Constitution
 
-## 1. Vault Substrate & Single Source of Truth
-* **Markdown File Substrate:** The local vault filesystem and synced cloud storage substrate is the absolute single source of truth (`chrysalis/`). All state, roadmaps, task lifecycles, and agent skills exist as plain Markdown files with YAML frontmatter.
-* **Dynamic Environment & Substrate Registry:** Active host profiles, cloud storage providers, and orchestrator bindings are dynamically defined in `System/Environment/Active-Profile.md` and `System/Scheduling-Memory.md`, never hardcoded into this invariant constitution.
+## 1. Vault Substrate & Architectural Division of Labor
+* **Markdown File Substrate:** The vault filesystem and synced cloud storage substrate (`Google Drive`) is the absolute single source of truth (`chrysalis/`). All state, roadmaps, task lifecycles, and agent skills exist as plain Markdown files with YAML frontmatter.
+* **Strict Division of Labor (Production Runtime vs. Development Pipeline):**
+  * **Production Runtime (Public / Execution):** **Google Gemini Spark** serves as the autonomous production orchestrator executing daily life operations over the **Google Drive** central substrate with **Obsidian** clients.
+  * **Development Pipeline (Private / Engineering):** **Google Antigravity** serves strictly as the development and architecture IDE agent for pair-programming, codebase engineering, and skill refactoring on local development workstations. Antigravity has zero operational involvement in running daily Chrysalis routines.
+* **Development Environment Quarantine:** The entire `System/Environment/` directory (workstation manifests, package telemetry, local development scripts) is quarantined to the development pipeline and excluded from the public repository.
 * **No External Task Managers:** Never use proprietary cloud task managers, external databases, or third-party APIs for task management. All task mutations must occur directly on TaskNotes files in `chrysalis/TaskNotes/`.
 * **Native Modular Skill Engine:** Autonomous AI agents and orchestrators discover and execute native modular skills defined in `chrysalis/.agent/skills/<skill-name>/SKILL.md`.
 * **Explicit Local Timezone:** All frontmatter ISO timestamps must strictly serialize with the explicit local timezone offset defined in `Scheduling-Memory.md` (e.g., `"-05:00"`). Never write raw UTC `"Z"` strings.
@@ -24,8 +27,8 @@ System rules and operational state are partitioned into dedicated files to maint
 * **`Scheduling-Memory.md`:** Mutable operational state, dynamic tag multipliers (bounded to $[0.20, 2.00]$), learned wake rhythms, chronotype telemetry, active diurnal offsets, energy baseline logic, pause flags, and candidate task pools.
 * **`Life-Roadmap.md`:** Mutable strategic taxonomy, active/inactive Pillar definitions, milestone horizons, and primary priority arbiter.
 * **`Projects/*/Roadmap.md`:** Project-level roadmaps and deliverable tracking.
-* **`System/Environment/*`:** Dynamic environment profile (`Active-Profile.md`), multi-system hardware manifests (e.g. `obelisk.md`), package telemetry, and environment registries.
-* **`System/Orchestrators/*`:** Modular orchestrator adapter registry and runtime specifications (e.g. Gemini, Antigravity, Claude, Local LLMs).
+* **`System/Orchestrators/*`:** Modular orchestrator adapter registry and production runtime specifications (e.g., Google Gemini Spark).
+* **`System/Environment/*`:** (Development Pipeline) Workstation manifests, package telemetry, and developer utility scripts (excluded from public repository).
 * **`System/System-Health.md`:** Persistent diagnostic health ledger tracking integrity passes, schema validations, and auto-heal events.
 * **`System/Changelog.md`:** Persistent historical ledger tracking autonomous system evolution, capability expansions, and skill mutations.
 * **`.agent/skills/`:** Modular, self-contained executable protocols with snapshot rollback (`.backup/`), unified operational audits (`/audit`), system integrity diagnostics (`/doctor`), system suspension/resumption (`/pause` & `/resume`), proactive capability expansion & RSI (`/evolve`), and two-stage focus planning (`/plan --stage` & `/plan --calibrate`).
@@ -64,11 +67,12 @@ tags:
   1. *Staging Mode (`/plan --stage`):* The agent queries the user for schedule additions or context in natural language. `Life-Roadmap.md` remains the primary arbiter of daily priority: active roadmap deliverables take Peak Focus anchor slots unless no imminent deadlines exist. User additions are integrated into downtime, slump, or recovery windows.
   2. *Calibration Mode (`/plan --calibrate`):* Ingests actual morning wake and energy telemetry, shifts diurnal windows, and serializes ISO timestamps.
 * **Active Tool-Gated Serialization:** During morning calibration, the agent MUST execute tool calls to serialize `scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"` into `chrysalis/TaskNotes/Tasks/*.md`, update `morning_checkin` in `chrysalis/System/Scheduling-Memory.md`, and write `chrysalis/YYYY-MM-DD.md`. During evening staging, the agent MUST execute tool calls to create new task notes in `chrysalis/TaskNotes/Tasks/` if requested, update `chrysalis/System/Life-Roadmap.md` if roadmap priorities changed, and serialize `prototype_schedule` in `chrysalis/System/Scheduling-Memory.md`.
-* **Proactive Capability Expansion & System Evolution:** Chrysalis supports autonomous capability growth through the dedicated `/evolve` engine. It scans notes tagged `#chrysalis`, autonomously synthesizes integration specs across workflows, skills, dashboard views, and memory schemas, and presents interactive feature upgrade proposals.
+* **Proactive Capability Expansion & System Evolution:** Chrysalis supports capability growth through the dedicated `/evolve` engine. It scans notes tagged `#chrysalis`, autonomously synthesizes integration specs across workflows, skills, dashboard views, and memory schemas, and presents interactive feature upgrade proposals.
 * **Bio-Cognitive Modality & Ultradian Alignment:** Focus schedules must stack work into 75–90m ultradian sprints separated by a 15m decompression buffer. Work is paired by cognitive modality (Analytical $\to$ Peak Sprints, Kinetic $\to$ Slump/Defrost, Synthesis $\to$ Recovery).
 * **Feedback-Gated Execution:** Autonomous prototype schedules and capability proposals require user approval or feedback before timestamps/features are locked to disk. If feedback is omitted, the system auto-pauses to prevent schedule drift.
 * **Semantic Pause Lifecycle & Manual Suspension:** The system supports intentional manual pausing (`/pause [mode]`) across 4 semantic archetypes (`maintenance`, `rest`, `flow`, `vacation`). Manual pauses freeze multiplier decay, de-schedule active daily task blocks (`scheduled: null`), and orchestrate frictionless lifecycle re-entry without unresponsiveness warning gates.
 * **Institutional Buffering:** Never schedule official administrative or institutional actions on weekends. Multi-day institutional workflows require a mandatory buffer of 3–5 business days between submission and verification.
-* **Dual-Layer Calendar Ingestion & Collision Avoidance:** Planning agents (`/plan`, `/evening`, `/morning`) must always ingest external calendar commitments before building daily focus blocks. When executing locally, query the local TaskNotes API/MCP (`localhost:8080` or `System/Environment/scripts/sync_calendar.py`) and serialize the 7-day snapshot to `System/Scheduling-Memory.md`. When executing in cloud or cron-scheduled orchestrator environments, read `calendar_sync.cached_events` from `Scheduling-Memory.md` as the primary truth, or use host-native calendar integration tools if available, serializing any newly detected events back to disk.
+* **Cloud-Native Calendar Ingestion & Collision Avoidance:** Planning agents (`/plan`, `/evening`, `/morning`) must always ingest external calendar commitments before building daily focus blocks. In production, calendar events are synchronized via Google Gemini Spark using Google Workspace tools or read from `calendar_sync.cached_events` in `Scheduling-Memory.md` (populated by Obsidian client TaskNotes calendar synchronization). Focus sprints wrap around external commitments with zero collisions, without requiring local Python bridging scripts or dev machine background processes.
 * **Telemetry-Driven Multipliers & Chronotype Learning:** Task durations must always be calculated from actual session deltas ($T_{\text{actual}} = \text{completedAt} - \text{startedAt}$) and adjusted via experiential learning rates bounded in $[0.20, 2.00]$ rather than static estimates.
 * **Safe Recursive Self-Improvement:** All autonomous skill mutations (via `/evolve`) must pass constitutional invariant checks, create timestamped backups in `.agent/skills/.backup/`, and record structured changelog entries in `System/Changelog.md`.
+

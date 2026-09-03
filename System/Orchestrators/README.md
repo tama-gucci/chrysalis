@@ -61,10 +61,9 @@ To orchestrate Chrysalis, an AI agent platform must satisfy five basic capabilit
 2. **Standard Tool Interface:**
    * **Read:** Inspect files (`view_file`).
    * **Write/Edit:** Modify existing files with precise contiguous replacements (`replace_file_content`) or write new files (`write_to_file`).
-   * **Execute:** Shell execution (`run_command` / bash) for environment scripts (e.g. `sync_calendar.py`, `generate_manifest.py`).
 3. **Explicit Local Timezone Enforcement:** All generated or mutated timestamps must serialize with the explicit local offset defined in `Scheduling-Memory.md` (`-05:00`). Raw UTC (`Z`) timestamps are strictly prohibited.
 4. **Skill Discovery & State Execution:** The orchestrator discovers and executes operational protocols defined in `chrysalis/.agent/skills/<skill>/SKILL.md` (`doctor`, `audit`, `evolve`, `plan`, `morning`, `evening`, `pause`, `task`, `zettel`, `onboard`).
-5. **Calendar Ingestion & Collision Avoidance:** The orchestrator retrieves external schedule commitments (via the local TaskNotes HTTP API bridge at `localhost:8080`, cached memory events, or host-native calendar integrations) and wraps focus sprints around them without collisions.
+5. **Calendar Ingestion & Collision Avoidance:** The orchestrator retrieves external schedule commitments (via Google Workspace calendar tools, cached memory events in `Scheduling-Memory.md`, or Obsidian client synchronization) and wraps focus sprints around them without collisions.
 
 ---
 

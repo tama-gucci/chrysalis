@@ -7,9 +7,9 @@ System/Life-Roadmap.md
 System/Scheduling-Memory.md
 System/System-Health.md
 System/Changelog.md
-System/Environment/*.md
-!System/Environment/Environment-Index.md
-!System/Environment/_templates/
+
+# 1b. Development Pipeline & Workstation Manifests (Local Dev Only)
+System/Environment/
 
 # 2. Personal TaskNotes & Daily Notes (Local / Drive Only)
 TaskNotes/Tasks/*

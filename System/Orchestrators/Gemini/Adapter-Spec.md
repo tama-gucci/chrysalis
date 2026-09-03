@@ -4,8 +4,8 @@ id: chrysalis-orchestrator-gemini
 name: "Google Gemini Orchestrator Adapter"
 orchestrator_platform: "google_gemini"
 status: active
-version: 1.2.0
-last_updated: "2026-09-02T18:05:00-05:00"
+version: 1.3.0
+last_updated: "2026-09-02T20:55:00-05:00"
 
 capability_tiers:
   operational_tier:
@@ -53,7 +53,7 @@ graph TD
 This adapter evolves dynamically alongside Google Gemini model releases without manual code rewrites:
 
 1. **Floating Aliases:** By targeting `gemini-flash-latest` and `gemini-pro-latest`, new architecture improvements are automatically inherited on backend rollout.
-2. **Environment Telemetry Detection:** The `/evolve` skill scans system package manifests (`System/Environment/obelisk.md`) and Nexus configurations (`.obsidian/plugins/nexus/data.json`). If a new CLI version or model identifier is detected, `/evolve` autonomously formulates `pinned_tested` updates.
+2. **Model Identifier Detection:** During development evolution passes, `/evolve` checks active tool configs and model releases to formulate `pinned_tested` updates.
 3. **Slipbox Capability Ingestion:** When notes tagged `#chrysalis` mentioning new Gemini capabilities are captured in the Slipbox, `/evolve` generates an adapter upgrade proposal for evening staging.
 
 ---
@@ -86,7 +86,7 @@ Chrysalis uses two daily scheduled prompts to maintain biological rhythm synchro
   Execute skill /evening:
   1. Run the unified nightly audit (/audit): reconcile completed tasks, update bounded tag multipliers in [0.20, 2.00], ingest upcoming 14-day roadmap horizons, inject starter wedges into stalled tasks, and maintain inferred task pool.
   2. If /evolve is present, execute capability expansion pass for pending feature proposals.
-  3. Ingest external Google Calendar events for tomorrow via System/Environment/scripts/sync_calendar.py --tomorrow.
+  3. Ingest external Google Calendar events for tomorrow via Google Workspace tool extension or cached events in Scheduling-Memory.md.
   4. Query the user for any schedule additions, arbitrate priority with Life-Roadmap.md, assemble the prototype focus schedule with ultradian sprints, and serialize to prototype_schedule in Scheduling-Memory.md.
   Follow all constitutional invariants in System/SYSTEM-PROMPT.md.
   ```
@@ -95,28 +95,28 @@ Chrysalis uses two daily scheduled prompts to maintain biological rhythm synchro
 
 ## 📅 Calendar Ingestion & Collision Avoidance
 
-Gemini orchestrates calendar synchronization through a dual-layer strategy:
+Gemini orchestrates calendar synchronization through a cloud-native dual-layer strategy:
 
 ```mermaid
 graph TD
-    Cal[Google Calendar Events] --> Bridge[Local Bridge: sync_calendar.py / TaskNotes REST API :8080]
-    Cal --> Workspace[Gemini Google Workspace Tool Extension]
-    Bridge --> Cache["System/Scheduling-Memory.md (cached_events)"]
-    Workspace --> Cache
+    Cal["Google Calendar Events"] --> Workspace["Gemini Google Workspace Tool Extension"]
+    Cal --> ClientSync["Obsidian Client Sync (TaskNotes Plugin)"]
+    Workspace --> Cache["System/Scheduling-Memory.md (cached_events)"]
+    ClientSync --> Cache
     Cache --> Engine["/plan Bio-Cognitive Diurnal Sprints (Zero Collisions)"]
 ```
 
-1. **Local Bridge (CLI / Desktop):**
-   * Executes `python3 System/Environment/scripts/sync_calendar.py --sync` to pull external Google Calendar events from TaskNotes into `System/Scheduling-Memory.md`.
-2. **Cloud / Spark Extension:**
-   * Reads `calendar_sync.cached_events` from `Scheduling-Memory.md` as the primary ground truth.
-   * If Gemini Workspace extensions are active in the environment, queries `Google Calendar` directly and persists any newly detected events back to disk.
+1. **Cloud / Google Workspace Ingestion (Primary Production Mode):**
+   * If Gemini Workspace extensions are active in the environment, queries `Google Calendar` directly and persists any newly detected events to `Scheduling-Memory.md`.
+2. **Client-Synchronized Event Cache (Obsidian Sync):**
+   * Reads `calendar_sync.cached_events` from `Scheduling-Memory.md` as primary ground truth (populated and kept current by client-side TaskNotes calendar sync across synced devices).
+   * Focus blocks automatically wrap around scheduled meetings, classes, or external events with zero collisions.
 
 ---
 
-## 🔌 Obsidian Nexus Provider Configuration
+## 🔌 Obsidian Nexus Provider Configuration (Optional Client Integration)
 
-To run Gemini directly within Obsidian via the Nexus plugin:
+To connect Gemini directly within Obsidian via the Nexus plugin:
 
 ```json
 {
@@ -124,8 +124,7 @@ To run Gemini directly within Obsidian via the Nexus plugin:
     "google-gemini-cli": {
       "apiKey": "gemini-cli-local-auth",
       "enabled": true,
-      "providerId": "google-gemini-cli",
-      "geminiPath": "/usr/bin/agy"
+      "providerId": "google-gemini-cli"
     }
   },
   "defaultModel": {
@@ -142,3 +141,4 @@ To run Gemini directly within Obsidian via the Nexus plugin:
 When Gemini executes as the Chrysalis orchestrator:
 * **Tool-Gated Disk Mutation:** Gemini MUST execute `replace_file_content` or `write_to_file` on disk files. Merely emitting text tables in chat is a fatal anti-simulation breach.
 * **Explicit Timezone Offset:** All generated timestamps must strictly include the explicit local timezone offset (`"-05:00"`).
+

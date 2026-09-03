@@ -40,8 +40,8 @@ Upon receiving the user's natural language response:
    * **Case A (Active Roadmap Milestone Present):** The analytical roadmap deliverable is assigned as the **Anchor Task (Peak Focus Sprints)**. The user's requested item is paired to its natural cognitive window: kinetic items into **Slump / Kinetic Defrost** ($+06:30 \to +08:15$), synthesis items into **Recovery Focus** ($+08:30 \to +10:30$).
    * **Case B (No Imminent Roadmap Deadlines):** If there are no urgent roadmap deadlines, the user's requested item *can* be elevated to the **Anchor Task**.
     * **Case C (No Additions Specified):** Assemble the prototype entirely from the active roadmap milestone tasks and `inferred_task_pool`.
-4. **Dynamic Calendar Synchronization (TaskNotes Bridge):**
-   * Execute `python3 System/Environment/scripts/sync_calendar.py --tomorrow` (or GET `http://localhost:8080/api/calendars/events`).
+4. **Dynamic Calendar Synchronization (Cloud & Cache Ingestion):**
+   * Ingest external calendar commitments for tomorrow via Google Workspace tool integrations (if active) or read `calendar_sync.cached_events` from `chrysalis/System/Scheduling-Memory.md` (populated by Obsidian client synchronization).
    * Parse all external calendar commitments (e.g., CAD certification studio/online classes).
    * For events with physical locations (e.g., studio classrooms), allocate an automatic 30-minute transition/travel buffer before and after.
    * Save parsed events to `calendar_sync.staged_events_tomorrow` in `chrysalis/System/Scheduling-Memory.md`.
@@ -110,7 +110,7 @@ Triggered during the morning workflow (`/morning`) to calibrate the pre-approved
 1. Ingest actual $T_{\text{wake}}$ timestamp (e.g., `09:18:00-05:00`) and reported `energy_level` ($1–5$).
 2. Unpause system if paused (`system_state.pause_state.is_paused: false`).
 3. Update rolling baseline wake averages in `Scheduling-Memory.md`.
-4. **Dynamic Calendar Refresh:** Execute `python3 System/Environment/scripts/sync_calendar.py <today>` to pull today's latest Google Calendar events from TaskNotes, updating `calendar_sync.active_events_today`.
+4. **Dynamic Calendar Refresh:** Ingest today's latest Google Calendar events via Google Workspace tool integrations or read from `calendar_sync.cached_events` in `Scheduling-Memory.md`, updating `calendar_sync.active_events_today`.
 
 ### Step 2: Diurnal Shift, Energy Gating & Calendar Collision Avoidance
 1. **Dynamic Shift:** Shift all sprint and defrost timeblocks relative to actual $T_{\text{wake}}$ using `diurnal_baselines.relative_offsets`.

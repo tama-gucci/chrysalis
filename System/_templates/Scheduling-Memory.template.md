@@ -32,8 +32,7 @@ diurnal_baselines:
 
 calendar_sync:
   enabled: true
-  provider: "tasknotes_api"
-  port: 8080
+  provider: "google_calendar"
   last_sync: null
   horizon_start: null
   horizon_end: null
