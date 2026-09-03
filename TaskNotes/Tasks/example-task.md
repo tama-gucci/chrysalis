@@ -4,7 +4,7 @@ status: todo
 dateCreated: 2026-09-01T09:00:00-05:00
 created: 2026-09-01T09:00:00-05:00
 due: 2026-09-07
-scheduled:
+scheduled: null
 priority: normal
 urgency_tier: 2
 modality: administrative
