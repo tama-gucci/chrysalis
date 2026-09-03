@@ -1,6 +1,6 @@
 ---
 name: morning
-description: "Orchestrates the 08:30 AM morning workflow: executes /calibrate to unpause system, capture exact wake time and energy telemetry (1-5), then delegates to /plan under Calibration Mode to shift timeblocks and lock scheduled timestamps."
+description: "Orchestrates the morning workflow: executes /calibrate to unpause system, capture exact wake time and energy telemetry (1-5), then delegates to /plan under Calibration Mode to shift timeblocks and lock scheduled timestamps."
 trigger: "/morning"
 reads:
   - "chrysalis/System/Scheduling-Memory.md"

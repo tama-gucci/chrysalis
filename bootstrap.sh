@@ -113,12 +113,11 @@ def main():
     print("       /onboard")
     print("     • Answer 4 quick questions to customize your pillars and goals.")
     print("  3. Daily Production Operation:")
-    print("     • Morning (08:30): /morning")
-    print("     • Evening (21:00): /evening")
-    print("     • Health Check:   /doctor")
+    print("     • Morning check-in: /morning")
+    print("     • Evening staging:  /evening")
+    print("     • Health Check:     /doctor")
     print("=======================================================\n")
 
 if __name__ == "__main__":
     main()
 EOF
-

@@ -14,7 +14,7 @@ Chrysalis operates with a strict, principled division of labor between **Product
 graph TD
     subgraph Production ["🏃 PRODUCTION RUNTIME (Running Chrysalis)"]
         GDrive["☁️ Google Drive<br/>(Central Cloud Host & Synced Substrate)"]
-        GeminiSpark["♊ Google Gemini Spark<br/>(Autonomous Daily Orchestrator)<br/>• 08:30 Morning Calibration<br/>• 21:00 Evening Staging & Audit<br/>• Cloud Calendar Ingestion & Timeblocking"]
+        GeminiSpark["♊ Google Gemini Spark<br/>(Autonomous Daily Orchestrator)<br/>• Morning Calibration<br/>• Evening Staging & Audit<br/>• Cloud Calendar Ingestion & Timeblocking"]
         Clients["📱💻 Concurrent Obsidian Clients<br/>(Mobile, Tablet, Desktop)"]
         
         GeminiSpark -->|Mutates State & Focus Blocks| GDrive
@@ -33,8 +33,8 @@ graph TD
 ### 1. 🏃 Production Runtime (Running Chrysalis)
 * **Central Host Substrate:** **Google Drive** is the single central host substrate. No single personal machine is required to act as an active server—multiple client devices run Obsidian concurrently, syncing with Google Drive.
 * **Autonomous Orchestrator:** **Google Gemini Spark** executes daily operational lifecycles:
-  * **08:30 CDT Morning Calibration (`/morning`, `/calibrate`):** Prompts for wake telemetry ($T_{\text{wake}}$, energy $1–5$), calculates diurnal focus blocks, and writes locked ISO timestamps to task frontmatter on disk.
-  * **21:00 CDT Evening Staging (`/evening`, `/audit`, `/plan`):** Reconciles completed tasks, updates bounded tag multipliers, ingests 14-day upcoming horizons, injects starter wedges, and stages tomorrow's focus agenda.
+  * **Morning Calibration (`/morning`, `/calibrate`):** Prompts for wake telemetry ($T_{\text{wake}}$, energy $1–5$), calculates diurnal focus blocks, and writes locked ISO timestamps to task frontmatter on disk.
+  * **Evening Staging (`/evening`, `/audit`, `/plan`):** Reconciles completed tasks, updates bounded tag multipliers, ingests 14-day upcoming horizons, injects starter wedges, and stages tomorrow's focus agenda.
   * **Calendar Ingestion:** Automatically wraps focus sprints around external Google Calendar commitments with zero collisions.
 
 ### 2. 🛠️ Development Pipeline (Engineering Chrysalis)
@@ -102,7 +102,7 @@ graph TD
 ### Step 2: Google Gemini Spark Orchestrator Setup
 
 1. Open **Google Gemini / Spark** and configure scheduled prompts for your vault located on Google Drive:
-   * **Morning Prompt (Scheduled Daily: 08:30 Local Time):**
+   * **Morning Prompt (Scheduled Daily in the morning):**
      ```text
      [CONTEXT & IDENTITY]
      You are the autonomous orchestrator for Chrysalis, a Markdown-based focus planning, task management, and knowledge system stored in Google Drive in the "chrysalis/" folder.
@@ -129,7 +129,7 @@ graph TD
      - Anti-Simulation Law: You MUST execute file tool calls (replace_file_content / write_to_file) on Google Drive files. Chat text alone never modifies system state.
      - Explicit Timezone: All timestamps must include the explicit local offset from Scheduling-Memory.md (e.g., "-05:00"). Never write raw UTC "Z" strings.
      ```
-   * **Evening Prompt (Scheduled Daily: 21:00 Local Time):**
+   * **Evening Prompt (Scheduled Daily in the evening):**
      ```text
      [CONTEXT & IDENTITY]
      You are the autonomous orchestrator for Chrysalis, a Markdown-based focus planning, task management, and knowledge system stored in Google Drive in the "chrysalis/" folder.

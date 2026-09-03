@@ -97,7 +97,7 @@ Determine appropriate next steps based on local time ($T_{\text{now}}$):
 * **Morning Window ($< 12:00\text{ CDT}$):**
   > *"▶️ Chrysalis has been RESUMED. Would you like to run `/calibrate` to ingest morning telemetry and schedule today's focus sprints?"*
 * **Afternoon Window ($12:00 – 18:00\text{ CDT}$):**
-  > *"▶️ Chrysalis has been RESUMED. System is active in flex mode. Remaining backlog items are available in `TaskNotes/Tasks/`. Evening staging will run at standard time (21:00 CDT)."*
+  > *"▶️ Chrysalis has been RESUMED. System is active in flex mode. Remaining backlog items are available in `TaskNotes/Tasks/`. Evening staging will run at your configured evening time."*
 * **Evening Window ($> 18:00\text{ CDT}$):**
   > *"▶️ Chrysalis has been RESUMED. System is ready for tonight's `/evening` staging pass."*
 

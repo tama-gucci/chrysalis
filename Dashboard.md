@@ -7,7 +7,7 @@ type: dashboard
 
 > [!abstract] System State & Energy Profile
 > **Phase:** Pillar 1 (Administrative Reset & Technical Launch)  
-> **Diurnal Windows:** Peak (`08:30–11:30`) • Slump (`13:30–15:15`) • Recovery (`15:30–17:30`)  
+> **Diurnal Rhythm:** Diurnally calibrated focus blocks relative to $T_{\text{wake}}$ (Peak Sprints • Slump/Defrost • Recovery)  
 > **Vault Path:** `chrysalis/`
 
 ---

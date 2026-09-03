@@ -21,8 +21,8 @@ Google Gemini Spark operates as the autonomous production runtime for Chrysalis,
 ```mermaid
 graph TD
     User["User Interaction / On-Demand"] --> Spark["♊ Google Gemini Spark (Production Orchestrator)"]
-    CronMorn["08:30 Morning Check-in Cron"] --> Spark
-    CronEve["21:00 Evening Staging Cron"] --> Spark
+    CronMorn["Morning Check-in Cron"] --> Spark
+    CronEve["Evening Staging Cron"] --> Spark
     
     Spark --> DailyOps["Daily Focus Operations:<br/>• /morning (Wake Telemetry & Diurnal Shift)<br/>• /evening (Task Reconciliation & Focus Staging)<br/>• /calibrate • /plan • /task • /audit • /doctor"]
     
@@ -34,13 +34,13 @@ graph TD
 
 ---
 
-## ⏰ Google Spark Autonomous Cron Prompts
+## ⏰ Google Spark Autonomous Scheduled Prompts
 
-Chrysalis uses two daily scheduled prompts to maintain biological rhythm synchronization:
+Chrysalis uses two daily scheduled prompts to maintain biological rhythm synchronization. The exact trigger times are configured according to user preferences in `System/Environment/Active-Profile.md`:
 
-### 1. Morning Calibration Prompt (Scheduled: Daily at `08:30 CDT`)
+### 1. Morning Calibration Prompt
 * **Schedule Name:** `Chrysalis Morning Orchestrator`
-* **Cron Target:** `30 8 * * *`
+* **Schedule Timing:** Morning check-in (configured in `Active-Profile.md`)
 * **Execution Mode:** Interactive Notification / Daily Trigger
 * **Prompt Payload:**
   ```text
@@ -70,9 +70,9 @@ Chrysalis uses two daily scheduled prompts to maintain biological rhythm synchro
   - Explicit Timezone: All timestamps must include the explicit local offset from Scheduling-Memory.md (e.g., "-05:00"). Never write raw UTC "Z" strings.
   ```
 
-### 2. Evening Staging & Nightly Audit Prompt (Scheduled: Daily at `21:00 CDT`)
+### 2. Evening Staging & Nightly Audit Prompt
 * **Schedule Name:** `Chrysalis Evening Orchestrator`
-* **Cron Target:** `0 21 * * *`
+* **Schedule Timing:** Evening review & audit (configured in `Active-Profile.md`)
 * **Execution Mode:** Interactive Notification / Nightly Trigger
 * **Prompt Payload:**
   ```text

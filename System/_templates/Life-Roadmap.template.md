@@ -38,7 +38,7 @@ tag_registry:
 * **Key Results:**
   - [ ] Configure Obsidian plugins, mobile sync, and local task views (`#pillar-1/setup`).
   - [ ] Initialize active project directories in `Projects/` (`#pillar-1/setup`).
-  - [ ] Establish daily morning calibration (08:30) and evening staging (21:00) rhythms (`#pillar-1/core`).
+  - [ ] Establish daily morning calibration and evening staging rhythms (`#pillar-1/core`).
   - [ ] Audit operational subscriptions and recurring financial accounts (`#pillar-1/finance`).
 
 ### Milestone M1.2: Core Competencies & Pipeline Staging (Week 3–6)
