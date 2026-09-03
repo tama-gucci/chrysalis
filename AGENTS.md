@@ -8,7 +8,8 @@ version: 4.16.0
 # Chrysalis Operating System Constitution
 
 ## 1. Vault Substrate & Single Source of Truth
-* **Markdown File Substrate:** Google Drive (or local filesystem) is the absolute single source of truth (`chrysalis/`). All state, roadmaps, task lifecycles, and agent skills exist as plain Markdown files with YAML frontmatter.
+* **Markdown File Substrate:** The local vault filesystem and synced cloud storage substrate is the absolute single source of truth (`chrysalis/`). All state, roadmaps, task lifecycles, and agent skills exist as plain Markdown files with YAML frontmatter.
+* **Dynamic Environment & Substrate Registry:** Active host profiles, cloud storage providers, and orchestrator bindings are dynamically defined in `System/Environment/Active-Profile.md` and `System/Scheduling-Memory.md`, never hardcoded into this invariant constitution.
 * **No External Task Managers:** Never use proprietary cloud task managers, external databases, or third-party APIs for task management. All task mutations must occur directly on TaskNotes files in `chrysalis/TaskNotes/`.
 * **Native Modular Skill Engine:** Autonomous AI agents and orchestrators discover and execute native modular skills defined in `chrysalis/.agent/skills/<skill-name>/SKILL.md`.
 * **Explicit Local Timezone:** All frontmatter ISO timestamps must strictly serialize with the explicit local timezone offset defined in `Scheduling-Memory.md` (e.g., `"-05:00"`). Never write raw UTC `"Z"` strings.
@@ -23,7 +24,7 @@ System rules and operational state are partitioned into dedicated files to maint
 * **`Scheduling-Memory.md`:** Mutable operational state, dynamic tag multipliers (bounded to $[0.20, 2.00]$), learned wake rhythms, chronotype telemetry, active diurnal offsets, energy baseline logic, pause flags, and candidate task pools.
 * **`Life-Roadmap.md`:** Mutable strategic taxonomy, active/inactive Pillar definitions, milestone horizons, and primary priority arbiter.
 * **`Projects/*/Roadmap.md`:** Project-level roadmaps and deliverable tracking.
-* **`System/Environment/*`:** Multi-system hardware profiles, operating system specifications, package telemetry manifests (e.g. `obelisk`), and environment registries.
+* **`System/Environment/*`:** Dynamic environment profile (`Active-Profile.md`), multi-system hardware manifests (e.g. `obelisk.md`), package telemetry, and environment registries.
 * **`System/Orchestrators/*`:** Modular orchestrator adapter registry and runtime specifications (e.g. Gemini, Antigravity, Claude, Local LLMs).
 * **`System/System-Health.md`:** Persistent diagnostic health ledger tracking integrity passes, schema validations, and auto-heal events.
 * **`System/Changelog.md`:** Persistent historical ledger tracking autonomous system evolution, capability expansions, and skill mutations.

@@ -22,7 +22,7 @@ capability_tiers:
 
 # ♊ Google Gemini Orchestrator Adapter
 
-This document specifies the integration configuration, capability tier routing, scheduled automation hooks, and tool bindings when using **Google Gemini** as the primary orchestrator for Chrysalis OS.
+This document specifies the integration configuration, capability tier routing, scheduled automation hooks, and tool bindings when using **Google Gemini Spark** as the **Autonomous Production Orchestrator** running Chrysalis daily life operations over the Google Drive central substrate.
 
 ---
 
