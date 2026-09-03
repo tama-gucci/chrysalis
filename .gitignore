@@ -12,6 +12,8 @@
 !/Dashboard.md
 !/AGENTS.md
 !/bootstrap.sh
+!/update.sh
+!/update.py
 !/mdbase.yaml
 
 # 3. Whitelist _types Directory
