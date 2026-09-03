@@ -6,40 +6,24 @@
 
 ---
 
-## 🏛️ System Architecture & Division of Labor
+## 🏛️ System Architecture
 
-Chrysalis operates with a strict, principled division of labor between **Production Runtime** (running daily life operations) and the **Development Pipeline** (engineering and evolving the system):
+Chrysalis is built on an open Markdown substrate synchronized via cloud storage (**Google Drive**) and accessed concurrently through **Obsidian** and an autonomous AI orchestrator (**Google Gemini**):
 
 ```mermaid
 graph TD
-    subgraph Production ["🏃 PRODUCTION RUNTIME (Running Chrysalis)"]
-        GDrive["☁️ Google Drive<br/>(Central Cloud Host & Synced Substrate)"]
-        GeminiSpark["♊ Google Gemini Spark<br/>(Autonomous Daily Orchestrator)<br/>• Morning Calibration<br/>• Evening Staging & Audit<br/>• Cloud Calendar Ingestion & Timeblocking"]
-        Clients["📱💻 Concurrent Obsidian Clients<br/>(Mobile, Tablet, Desktop)"]
-        
-        GeminiSpark -->|Mutates State & Focus Blocks| GDrive
-        Clients <-->|Direct Cloud Synchronization| GDrive
-    end
-
-    subgraph Development ["🛠️ DEVELOPMENT PIPELINE (Engineering Chrysalis)"]
-        Workstation["🖥️ Local Development Workstation<br/>(System/Environment/ • Workstation Manifests)"]
-        Antigravity["🛸 Google Antigravity<br/>(Development & Architecture IDE Agent)<br/>• Codebase Engineering & Pair-Programming<br/>• Skill & Protocol Authoring<br/>• /evolve RSI Synthesis & Code Refactoring"]
-        
-        Antigravity <-->|Engineers & Refactors Codebase| Workstation
-        Workstation -->|Syncs Code Changes| GDrive
-    end
+    GDrive["☁️ Google Drive<br/>(Central Cloud Host & Synced Substrate)"]
+    GeminiSpark["♊ Google Gemini Spark<br/>(Autonomous Daily Orchestrator)<br/>• Morning Calibration<br/>• Evening Staging & Audit<br/>• Cloud Calendar Ingestion & Timeblocking"]
+    Clients["📱💻 Concurrent Obsidian Clients<br/>(Mobile, Tablet, Desktop)"]
+    
+    GeminiSpark -->|Mutates State & Focus Blocks| GDrive
+    Clients <-->|Direct Cloud Synchronization| GDrive
 ```
 
-### 1. 🏃 Production Runtime (Running Chrysalis)
-* **Central Host Substrate:** **Google Drive** is the single central host substrate. No single personal machine is required to act as an active server—multiple client devices run Obsidian concurrently, syncing with Google Drive.
-* **Autonomous Orchestrator:** **Google Gemini Spark** executes daily operational lifecycles:
-  * **Morning Calibration (`/morning`, `/calibrate`):** Prompts for wake telemetry ($T_{\text{wake}}$, energy $1–5$), calculates diurnal focus blocks, and writes locked ISO timestamps to task frontmatter on disk.
-  * **Evening Staging (`/evening`, `/audit`, `/plan`):** Reconciles completed tasks, updates bounded tag multipliers, ingests 14-day upcoming horizons, injects starter wedges, and stages tomorrow's focus agenda.
-  * **Calendar Ingestion:** Automatically wraps focus sprints around external Google Calendar commitments with zero collisions.
-
-### 2. 🛠️ Development Pipeline (Engineering Chrysalis)
-* **Development Agent:** **Google Antigravity** is used strictly as the development and architecture IDE agent for pair-programming, codebase engineering, and skill refactoring. Antigravity has zero operational involvement in running daily Chrysalis routines.
-* **Quarantined Environment:** The entire `System/Environment/` directory (workstation manifests, package telemetry, and local development scripts) belongs to the development pipeline and is kept out of the public repository.
+### Core Components
+* **Cloud Substrate (Google Drive):** The single source of truth. All notes, task frontmatter, strategic roadmaps, and modular skills live as plain Markdown files.
+* **Client Interface (Obsidian):** Access your schedule, task boards, dashboards, and notes across desktop, tablet, and mobile devices.
+* **Autonomous Orchestrator (Google Gemini Spark):** Executes daily scheduled focus planning, morning wake calibration, evening staging, and calendar collision avoidance.
 
 ---
 
@@ -186,7 +170,7 @@ Run the onboarding command with your AI orchestrator:
 
 ## 🛠️ Command Reference
 
-### Daily Production Commands (Google Gemini Spark)
+### Daily Focus & Task Commands
 | Command | Skill Runbook | Description |
 | :--- | :--- | :--- |
 | **`/onboard`** | `.agent/skills/onboard/SKILL.md` | Interactive intake interview: compiles strategic roadmap and seeds operational memory. |
@@ -200,11 +184,14 @@ Run the onboarding command with your AI orchestrator:
 | **`/pause`** | `.agent/skills/pause/SKILL.md` | Suspends active timeblocks and freezes multiplier decay across 4 semantic modes. |
 | **`/resume`** | `.agent/skills/pause/SKILL.md` | Resumes daily planning cycles smoothly following a pause. |
 
-### Development & Architecture Commands (Google Antigravity IDE)
-| Command | Skill Runbook | Description |
-| :--- | :--- | :--- |
-| **`/evolve`** | `.agent/skills/evolve/SKILL.md` | On-demand capability expansion, 5-vector feature synthesis, and RSI friction analysis. |
-| **`/doctor`** | `.agent/skills/doctor/SKILL.md` | Pre-commit and diagnostic integrity validation during codebase refactoring. |
+---
+
+## 🔧 Customizing & Extending Chrysalis (Developer Guide)
+
+Because Chrysalis is 100% modular Markdown, developers can author custom skills or extend system logic:
+* **Modular Skills (`.agent/skills/`):** Each skill is an isolated folder containing a `SKILL.md` runbook defining triggers, read dependencies, write targets, and execution protocols.
+* **System Evolution Engine (`/evolve`):** When working in a coding IDE, the `/evolve` command inspects `#chrysalis` notes, synthesizes architecture specifications, and refactors skills with automated rollback backups.
+* **Local Machine Environment (`System/Environment/`):** Personal workstation manifests and local developer scripts are quarantined from Git via `.gitignore`.
 
 ---
 
