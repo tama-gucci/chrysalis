@@ -1,175 +1,150 @@
 # Chrysalis
 
-A calm, flexible daily planner and notebook that adapts when life happens.
+Chrysalis is an AI planning backend for the [TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes) plugin in [Obsidian](https://obsidian.md).
 
-> **Project status:** Chrysalis is an early-stage personal project in active development. Things are still evolving as it's tested and refined in daily use.
-
----
-
-## What is Chrysalis?
-
-Most calendar apps and to-do lists treat you like a machine. They assume you'll wake up at the exact same minute every day, work through tasks in neat little boxes, and never get tired, distracted, or interrupted.
-
-When real life gets in the way—you wake up late, a meeting runs long, or you're just having a slow day—rigid schedules fall apart. You end up with a wall of red overdue badges, a sense of guilt, and a plan you don't even want to look at anymore.
-
-**Chrysalis is designed to be forgiving.** It's a personal planning notebook that lives on your computer, paired with an AI assistant that helps you organize your days. Instead of forcing you to stick to an unrealistic schedule, it reshapes your day around what actually happens, helping you focus on what matters most without the stress.
-
-Best of all, your notes and to-do lists are saved as simple, readable text files right on your own machine. There's no vendor lock-in, no hidden database, and no paid monthly subscription required.
+> **Project status:** Early-stage personal project in active development. Formats and functionality may change as it is tested and updated.
 
 ---
 
-## How It Helps: Real-World Examples
+## Overview
 
-The easiest way to understand Chrysalis is to look at how it handles common everyday situations:
+[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes) is an Obsidian plugin that manages tasks as individual Markdown notes, providing task cards, Kanban boards, calendar views, and time tracking.
 
-### 1. Waking up late without wrecking your day
-> **The scenario:** You planned to start work at 8:00 AM. Instead, you overslept, woke up groggy at 9:15 AM, and by the time you made coffee it was 9:45 AM.
+Chrysalis acts as an AI companion backend for TaskNotes. It reads your task files and planning history, organizes them into daily schedules, adjusts timeblocks when your day changes, and updates task estimates based on how long past tasks took to complete.
 
-With a standard calendar, half your morning is already "lost" and you're playing catch-up before you even begin. 
+```mermaid
+flowchart LR
+    subgraph UI["Obsidian (Interface)"]
+        TN["TaskNotes Plugin<br/>• Task cards & boards<br/>• Calendar views<br/>• Time tracking"]
+    end
 
-With Chrysalis, you just do a quick morning check-in: *"I woke up at 9:15 and I'm moving a little slowly today."*
+    subgraph Storage["File Storage (Markdown)"]
+        Tasks["Task Notes (`TaskNotes/Tasks/*.md`)<br/>• Status & Due dates<br/>• Scheduled timestamps<br/>• Time estimates"]
+        Memory["Planning State (`System/*.md`)<br/>• Daily check-in history<br/>• Multipliers & estimates"]
+    end
 
-Chrysalis takes that in stride. It slides your schedule forward to start when your day actually began, trims off low-priority clutter, and makes sure your top 1–2 important items still have room to breathe. No frantic dragging of calendar blocks, and no guilt.
+    subgraph Backend["Chrysalis (AI Backend)"]
+        AI["AI Assistant Engine<br/>• Morning schedule calibration<br/>• Evening review & staging<br/>• Task estimate learning"]
+    end
 
----
-
-### 2. Protecting time for big goals before chores take over
-> **The scenario:** You want to write a book, learn a new language, or fix up the back patio. But every day, answering messages, running errands, and doing laundry end up swallowing all your free hours.
-
-When you're juggling a dozen small chores, the big personal projects always get pushed to "someday."
-
-Chrysalis helps you keep your long-term goals in sight. When it plans your day, it prioritizes carving out a dedicated window of high-energy focus for your main project first thing, before routine chores and administrative tasks fill up the afternoon.
-
----
-
-### 3. Learning how long things actually take
-> **The scenario:** You tell yourself that cleaning the kitchen will take "just twenty minutes," but whenever you actually do it, an hour has gone by.
-
-Most of us consistently underestimate how long everyday tasks take. Over time, that optimism leads to cramming seven hours of work into a four-hour afternoon, leaving us feeling exhausted and unproductive.
-
-Whenever you finish a task in Chrysalis, it takes note of how long it actually took compared to what you estimated. Over time, it gently adjusts future estimates so your schedules become realistic and sustainable.
-
----
-
-### 4. Winding down at night with a clear head
-> **The scenario:** It's 10:30 PM. You're trying to relax, but your mind is racing with everything you didn't finish today and wondering what you have to do tomorrow morning.
-
-Before you log off for the evening, Chrysalis invites you to do a two-minute evening check-in. It reviews what you got done, checks your calendar for tomorrow's commitments (like a doctor's appointment or a parent-teacher conference), and drafts a clean, realistic plan for the next morning. 
-
-You can close your laptop knowing that tomorrow is already organized, giving you a chance to actually relax and get a good night's sleep.
-
----
-
-### 5. Taking time off without returning to a mess
-> **The scenario:** You caught a bad cold, or you're heading out for a long weekend trip.
-
-On traditional task apps, taking three days off means coming back to thirty overdue notifications in bright red. 
-
-With Chrysalis, you can simply say you're taking a break. Chrysalis pauses your planning cycle and clears your active schedule. When you return, you simply check in, and it helps you start fresh without a mountain of backlog guilt.
-
----
-
-## How the Pieces Fit Together
-
-You don't need any technical background to understand how Chrysalis works. It brings together three simple tools:
-
-```
-+-------------------------------------------------------------+
-|                                                             |
-|   1. Obsidian (Your Notebook)                               |
-|      A clean, distraction-free app where you write notes,   |
-|      keep checklists, and view your schedule.               |
-|                                                             |
-|                              ▲                              |
-|                              │                              |
-|                              ▼                              |
-|                                                             |
-|   2. Plain Text Files (Your Data)                           |
-|      All your notes and tasks are saved as simple text      |
-|      files on your computer. You own your data forever.     |
-|                                                             |
-|                              ▲                              |
-|                              │                              |
-|                              ▼                              |
-|                                                             |
-|   3. An AI Assistant (Your Planning Partner)                |
-|      A friendly helper you can chat with to organize tasks, |
-|      draft schedules, and adjust plans when things change.  |
-|                                                             |
-+-------------------------------------------------------------+
+    TN <-->|Displays & edits| Tasks
+    AI <-->|Reads & updates| Tasks
+    AI <-->|Maintains| Memory
 ```
 
-### What About Syncing to Your Phone?
-**Cloud storage is completely optional, but very helpful.**
+---
 
-Chrysalis works 100% locally on a single laptop or desktop computer with zero cloud setup needed. 
+## What It Does (Real-World Examples)
 
-However, if you put your Chrysalis folder inside a cloud storage provider of your choice (such as iCloud, Dropbox, OneDrive, Syncthing, or Google Drive), your notes will sync automatically between your devices. That means you can:
-* Check off tasks from your phone while running errands.
-* View your daily schedule on a tablet while working at your desk.
-* Add a quick thought or to-do item on the go, knowing it will be waiting on your computer when you sit down.
+Chrysalis automates scheduling and time recalculations inside TaskNotes:
+
+### 1. Rescheduling When You Start Late
+* **The situation:** You had scheduled tasks to start at 8:00 AM, but you wake up or get to your desk at 9:30 AM.
+* **What Chrysalis does:** When you run `/morning`, you provide your wake time and current energy. Chrysalis recalculates your day, shifts the `scheduled` timestamps forward on your TaskNotes files to start when you actually begin, and keeps your primary priorities intact. You do not need to manually drag tasks around in the calendar view.
+
+### 2. Prioritizing Key Projects Over Routine Chores
+* **The situation:** You have long-term projects (like coursework, writing, or home repairs) alongside everyday chores and administrative work (like email or filing receipts).
+* **What Chrysalis does:** When assembling a daily schedule with `/plan`, Chrysalis places focused work on primary project deliverables into earlier high-energy focus blocks, scheduling routine and administrative tasks into afternoon or recovery windows.
+
+### 3. Adjusting Time Estimates Based on Actual Duration
+* **The situation:** A task is estimated at 30 minutes, but repeatedly takes 60 minutes in practice.
+* **What Chrysalis does:** TaskNotes records when you start and complete a task. During the nightly `/audit`, Chrysalis compares your estimated durations against actual logged completion times and updates category multipliers so future schedules allocate realistic time.
+
+### 4. Preparing Tomorrow's Schedule in Advance
+* **The situation:** You want tomorrow morning's schedule set up before you finish work for the day.
+* **What Chrysalis does:** During the `/evening` review, Chrysalis inspects your completed tasks from today, checks upcoming calendar events for tomorrow, selects candidate tasks, and drafts a proposed schedule for the next day.
+
+### 5. Pausing Active Schedules for Time Off
+* **The situation:** You are taking a weekend off, going on vacation, or out sick.
+* **What Chrysalis does:** Running `/pause` de-schedules active timeblocks and stops schedule recalculations until you resume, preventing tasks from accumulating overdue notices while you are away.
 
 ---
 
-## Everyday Commands
+## The Daily Planning Cycle
 
-When you want to plan your day or update your tasks, you can talk to the assistant naturally or use simple shortcuts:
+```mermaid
+flowchart TD
+    A["1. Morning Check-In (/morning)<br/>Provide wake time and energy score"] --> B["2. Schedule Calibration<br/>Chrysalis shifts task start times to fit the day"]
+    B --> C["3. Focus & Execution<br/>TaskNotes displays scheduled blocks in Obsidian calendar"]
+    C --> D["4. Task Tracking<br/>Complete tasks and log time inside TaskNotes"]
+    D --> E["5. Evening Review (/evening)<br/>Check completed items and inspect tomorrow's calendar"]
+    E --> F["6. Next-Day Staging<br/>Chrysalis updates duration estimates and drafts tomorrow's plan"]
+```
 
-| Command | What it does in plain English |
+---
+
+## Data Storage & Cross-Device Sync
+
+### Local File Storage
+All tasks, notes, and planning memory are plain Markdown files with YAML frontmatter stored on your local disk. Chrysalis does not use external databases or proprietary servers to store your tasks.
+
+### Optional Cloud Sync
+**Cloud storage is not required for Chrysalis to function.** Chrysalis can run entirely on a single desktop or laptop computer.
+
+However, using a cloud storage provider (such as iCloud, Dropbox, OneDrive, Syncthing, or Google Drive) to sync the vault directory substantially increases utility:
+* **Mobile & Tablet Access:** You can view your schedule, read notes, and check off tasks on your phone or tablet via the mobile Obsidian app while away from your desk.
+* **Continuous Updates:** Changes made in TaskNotes on mobile sync back to your computer for Chrysalis to read during your next check-in.
+
+```mermaid
+flowchart LR
+    subgraph Desktop["Workstation / Laptop"]
+        ObsidianD["Obsidian + TaskNotes"]
+        BackendD["Chrysalis AI Backend"]
+    end
+
+    subgraph Sync["Optional Cloud Sync Provider<br/>(iCloud, Dropbox, OneDrive, Syncthing, Google Drive)"]
+        VaultFiles["Vault Directory<br/>(Markdown Files)"]
+    end
+
+    subgraph Mobile["Mobile / Tablet"]
+        ObsidianM["Obsidian Mobile + TaskNotes"]
+    end
+
+    Desktop <-->|Local read/write| Sync
+    Sync <-->|Remote file sync| Mobile
+```
+
+---
+
+## Command Reference
+
+| Command | Function |
 | :--- | :--- |
-| **`/morning`** | **Morning Check-In:** Tell the assistant what time you woke up and how energetic you feel. It adjusts your schedule for the day accordingly. |
-| **`/evening`** | **Evening Review:** Look over what you finished today, see what's on your calendar tomorrow, and draft tomorrow's plan so you can rest easy. |
-| **`/plan`** | **Daily Planner:** Organize your to-do list into realistic focus blocks that fit comfortably around your meetings and personal appointments. |
-| **`/task`** | **Quick Add:** Add a new task with an estimated time and category (e.g. *Finish quarterly invoice, 45m, work*). |
-| **`/pause`** | **Take a Break:** Pause your daily schedules for vacations, sick days, or weekends so tasks don't pile up while you're away. |
-| **`/doctor`** | **Quick Checkup:** Runs a quick health check on your notes to make sure files and links are tidy and working properly. |
+| **`/morning`** | Records wake time and energy rating, shifting the day's scheduled blocks in TaskNotes. |
+| **`/evening`** | Reviews today's completed tasks, checks tomorrow's calendar, and stages a draft schedule. |
+| **`/plan`** | Generates focus blocks for active tasks around external calendar commitments. |
+| **`/task`** | Creates a new TaskNotes note with estimated duration, modality, and category tags. |
+| **`/pause`** | Suspends active planning and clears scheduled timestamps during vacations or sick leave. |
+| **`/resume`** | Resumes daily planning cycles following a pause. |
+| **`/doctor`** | Checks vault files for missing tags, broken links, or frontmatter formatting issues. |
+| **`/audit`** | Reconciles task completion logs, updates duration multipliers, and reviews upcoming milestones. |
 
 ---
 
-## Getting Started
+## Setup
 
-Setting up Chrysalis takes just a few steps:
+### Prerequisites
+1. **[Obsidian](https://obsidian.md):** Installed on your computer.
+2. **Community Plugins:**
+   * **[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes):** Required. Provides the user interface for tasks, frontmatter management, and calendar views.
+   * **[Dataview](https://github.com/blacksmithgu/obsidian-dataview):** Recommended for custom task dashboards and queries.
+3. **AI Environment:** An environment that can interact with the vault folder (such as Google Antigravity).
 
-### 1. Download Obsidian
-Install [Obsidian](https://obsidian.md) (it's free for personal use on macOS, Windows, and Linux). Obsidian is the notebook app where your tasks and daily pages will be displayed.
-
-### 2. Get Your Chrysalis Folder
-Download or clone this repository to a convenient location on your computer (such as your documents folder, or inside a synced cloud folder if you want cross-device access):
-
-```bash
-git clone https://github.com/tama-gucci/chrysalis.git ~/chrysalis
-```
-
-### 3. Open the Folder in Obsidian
-* Open Obsidian and choose **"Open folder as vault"**.
-* Select the `chrysalis` folder you just downloaded.
-* When prompted, enable the community plugins included with the setup (these help render task lists, calendar views, and dashboards).
-
-### 4. Say Hello to Your Assistant
-Open the folder in your AI assistant workspace (like Google Antigravity) and run the intake check-in:
-
-```text
-/onboard
-```
-
-The assistant will ask a few friendly questions about what your days look like, what major projects you're working on, and how you prefer to structure your time. From there, it sets up your starter templates and you're ready to plan your first day.
+### Installation
+1. Clone or download this repository:
+   ```bash
+   git clone https://github.com/tama-gucci/chrysalis.git ~/chrysalis
+   ```
+2. Open the folder as a vault in Obsidian.
+3. Enable the TaskNotes plugin in Obsidian settings.
+4. Open the folder in your AI environment and run:
+   ```text
+   /onboard
+   ```
+   This initializes `System/Scheduling-Memory.md` and `System/Life-Roadmap.md` with your initial settings.
 
 ---
 
-## Your Data Belongs to You
+## License
 
-Most modern productivity tools lock your life behind proprietary web apps. If the service shuts down, raises its prices, or loses your data, you're stuck.
-
-With Chrysalis:
-* **No vendor lock-in:** Every task, plan, and note is a standard Markdown text file. You can open and read them with any text editor on any computer, now or twenty years from now.
-* **No required accounts:** You don't need to create a third-party account just to track your daily chores.
-* **Zero tracking:** Your personal tasks and thoughts stay on your own hardware.
-
----
-
-## Community & Contributing
-
-Chrysalis was born out of a desire for a calmer, more humane approach to personal organization. If you have ideas, feedback, or want to contribute improvements, feel free to open an issue or pull request on GitHub.
-
-### License
-This project is open source and available under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
