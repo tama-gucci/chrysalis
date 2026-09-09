@@ -21,27 +21,37 @@ graph TD
     subgraph Substrate ["Chrysalis Core Substrate (100% Platform-Agnostic)"]
         Constitution["AGENTS.md<br/>(Universal Master Constitution)"]
         Memory["System/Scheduling-Memory.md<br/>(Dynamic Multipliers & State)"]
-        Skills[".agent/skills/<br/>(Universal Executable Runbooks)"]
+        Hypergraph["Slipbox/ & Projects/<br/>(Knowledge Hypergraph)"]
         Tasks["TaskNotes/Tasks/*.md<br/>(Frontmatter Backlog)"]
+        Skills[".agent/skills/<br/>(Universal Executable Runbooks)"]
     end
 
-    subgraph Contract ["Universal Orchestrator Contract"]
-        ContractSpec["Standard Tool Capabilities:<br/>• File Read (view_file)<br/>• File Edit (replace_file_content / write_to_file)<br/>• Local Timezone (-05:00)<br/>• Anti-Simulation Invariant"]
+    subgraph ModularBridge ["Pluggable Orchestrator Bridge (apps/gateway - Port 8765)"]
+        Bridge["BaseOrchestratorBridge<br/>(FastAPI Daemon on Golem)"]
     end
 
-    subgraph ActiveAdapter ["Active Orchestrator Adapter"]
-        Antigravity["[[Antigravity/Adapter-Spec|Google Antigravity Adapter]]<br/>(Interactive On-Demand & Optional Scheduled Cron)"]
+    subgraph OrchestratorAdapters ["Pluggable Adapter Registry"]
+        Antigravity["[[Antigravity/Adapter-Spec|Google Antigravity Adapter]]<br/>(Reference Implementation)"]
+        OpenClaw["OpenClaw Bridge<br/>(Pluggable Autonomous Worker)"]
+        Hermes["Hermes OS / Local LLM Bridge<br/>(Pluggable Local Inference)"]
     end
 
-    Substrate --> Contract
-    Contract --> Antigravity
+    subgraph EdgeMode ["Option B: Mobile-Native / Serverless"]
+        EdgeAI["On-Device AI (Gemini Nano) / Direct Cloud API"]
+    end
+
+    Substrate --> Bridge
+    Bridge --> Antigravity
+    Bridge -.-> OpenClaw
+    Bridge -.-> Hermes
+    Substrate -.-> EdgeMode
 ```
 
 ---
 
 ## 📋 The Universal Orchestrator Contract
 
-To orchestrate Chrysalis, an AI agent platform must satisfy five basic capabilities:
+To orchestrate Chrysalis, an AI agent platform must satisfy six core capabilities:
 
 1. **Physical Disk Mutation (Anti-Simulation Law):** Chat text generation alone NEVER modifies Chrysalis state. The orchestrator must actively execute tool calls (`replace_file_content`, `write_to_file`) to persist schedule timestamps, check-in telemetry, and task creations directly to disk.
 2. **Standard Tool Interface:**
@@ -49,7 +59,8 @@ To orchestrate Chrysalis, an AI agent platform must satisfy five basic capabilit
    * **Write/Edit:** Modify existing files with precise contiguous replacements (`replace_file_content`) or write new files (`write_to_file`).
 3. **Explicit Local Timezone Enforcement:** All generated or mutated timestamps must serialize with the explicit local offset defined in `Scheduling-Memory.md` (`-05:00`). Raw UTC (`Z`) timestamps are strictly prohibited.
 4. **Skill Discovery & State Execution:** The orchestrator discovers and executes operational protocols defined in `chrysalis/.agent/skills/<skill>/SKILL.md` (`doctor`, `audit`, `plan`, `morning`, `evening`, `pause`, `task`, `zettel`, `onboard`).
-5. **Calendar Ingestion & Collision Avoidance:** The orchestrator retrieves external schedule commitments (via TaskNotes MCP, cached memory events in `Scheduling-Memory.md`, or client synchronization) and wraps focus sprints around them without collisions.
+5. **Knowledge Hypergraph Linking:** The orchestrator bidirectionally links atomic Zettelkasten research notes (`Slipbox/`) to strategic deliverables (`Projects/*/Roadmap.md`) and execution frontmatter (`TaskNotes/Tasks/*.md` `linked_zettels`).
+6. **Calendar Synchronization & Port Coexistence:** The orchestrator synchronizes with external calendar commitments (via Model C Mobile OS Bridge, private iCal feed `fetch_ical.py`, or TaskNotes MCP) and respects the strict port boundary: port `8080` for Obsidian TaskNotes, port `8765` for the Ambient Gateway.
 
 ---
 
@@ -57,7 +68,9 @@ To orchestrate Chrysalis, an AI agent platform must satisfy five basic capabilit
 
 | Adapter | Primary Runtime / Environment | Integration Type | Documentation | Status |
 | :--- | :--- | :--- | :--- | :---: |
-| **Google Antigravity** | Antigravity IDE, Antigravity 2.0, `agy` CLI | Interactive / Scheduled Native Tool Adapter | `[[Antigravity/Adapter-Spec\|Antigravity Adapter]]` | 🟢 Active Module |
+| **Google Antigravity** | Antigravity IDE, Antigravity 2.0, `language_server.exe` / `agentapi` | Interactive / Scheduled Native Tool Adapter (Reference) | `[[Antigravity/Adapter-Spec\|Antigravity Adapter]]` | 🟢 Active Module |
+| **OpenClaw** | OpenClaw runtime / background orchestrator | Pluggable Gateway Adapter | `System/Orchestrators/OpenClaw/` | 🟡 Specification |
+| **Hermes OS / Local LLM** | Local inference engine (GGUF/vLLM) | Pluggable Gateway Adapter | `System/Orchestrators/Hermes/` | 🟡 Specification |
 
 ---
 

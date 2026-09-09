@@ -21,7 +21,7 @@ TABLE
     energy as "Energy",
     due as "Due Date",
     file.folder as "Folder"
-FROM "TaskNotes/Tasks"
+FROM "chrysalis/Tasks" OR "TaskNotes/Tasks"
 WHERE status = "todo"
 SORT urgency_tier DESC, priority DESC, due ASC
 ```
@@ -35,7 +35,7 @@ TABLE
     scheduled as "Scheduled Block",
     priority as "Priority",
     energy as "Energy"
-FROM "TaskNotes/Tasks"
+FROM "chrysalis/Tasks" OR "TaskNotes/Tasks"
 WHERE scheduled != null
 SORT scheduled ASC
 ```
@@ -48,7 +48,7 @@ TABLE
     pillar as "Pillar",
     status as "Status",
     horizon_window as "Horizon Window"
-FROM "Projects"
+FROM "chrysalis/Projects" OR "Projects"
 WHERE type = "project_roadmap"
 SORT pillar ASC
 ```
@@ -61,7 +61,7 @@ TABLE
     dateCreated as "Created",
     tags as "Domain Tags",
     aliases as "Aliases"
-FROM "Slipbox"
+FROM "chrysalis/Slipbox" OR "Slipbox"
 WHERE type = "permanent-note" OR contains(tags, "zettel")
 SORT dateCreated DESC
 LIMIT 10
@@ -74,7 +74,7 @@ LIMIT 10
 TABLE
     title as "Completed Task",
     file.mtime as "Archived Date"
-FROM "TaskNotes/Archive"
+FROM "chrysalis/Archive" OR "TaskNotes/Archive"
 SORT file.mtime DESC
 LIMIT 10
 ```

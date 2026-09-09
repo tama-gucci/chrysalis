@@ -60,7 +60,7 @@ Execute the full 6-point diagnostic pass defined in [`doctor`](../doctor/SKILL.m
 3. **14-Day Horizon Ingestion:**
    * Scan `Life-Roadmap.md` and active project roadmaps for upcoming milestones occurring within the next 14 calendar days lacking active TaskNotes.
    * Calculate each task's `timeEstimate` using the tag's active multiplier from `Scheduling-Memory.md` (applying the `1.00` fallback rule if unlisted).
-   * Create structured `.md` files in `chrysalis/TaskNotes/Tasks/` with complete YAML frontmatter (`dateCreated`, `created`, `priority`, `urgency_tier`, `modality`, `status: todo`, `scheduled: null`).
+   * Create structured `.md` files in `chrysalis/TaskNotes/Tasks/` with complete YAML frontmatter (`dateCreated`, `created`, `priority`, `urgency_tier`, `modality`, `status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
 
 ### Step 3: Friction Reduction & Starter Wedge Injection
 Scan active tasks in `TaskNotes/Tasks/` for stalled items ($\ge 48\text{h}$ in `status: todo` with `timeEstimate >= 45m` and `micro_chunked: false`). Inject a 3-step Starter Wedge checklist ($< 15\text{m}$ each) into the note body and set `micro_chunked: true`.

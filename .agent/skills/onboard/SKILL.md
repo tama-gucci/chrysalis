@@ -72,7 +72,7 @@ When the user selects an archetype or provides their priorities:
    * Inject matching tags into `inferred_task_pool.learning_weights` initialized to `1.00`.
    * Seed the `inferred_task_pool.tasks` with 2–4 starter candidate tasks extracted from Milestone M1.1.
 3. **Generate Starter Task Notes:**
-   * If requested, generate 1–2 initial starter task notes in `TaskNotes/Tasks/*.md` adhering strictly to the Universal TaskNotes Frontmatter Schema.
+   * If requested, generate 1–2 initial starter task notes in `TaskNotes/Tasks/*.md` adhering strictly to the Universal TaskNotes Frontmatter Schema (`status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
 
 ---
 

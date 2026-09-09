@@ -96,9 +96,10 @@ tags:
 
 ---
 
-## 3. Directory Locations & Reference Files
+## 3. Reference Files, Contacts & Slipbox Notes
 - Main Directory: `chrysalis/Projects/{{Project_Folder_Name}}/`
-- [[Related-Note]]
+- Reference Research Zettels:
+  - [[Related-Note]]
 ```
 
 ### Step 3: Confirmation & Next Steps
@@ -114,7 +115,7 @@ tags:
 Promote an incubating or staged project into active strategic execution:
 
 ### Step 1: Validation & Pillar Resolution
-1. Read `chrysalis/Projects/<Project_Folder>/Roadmap.md`. Validate frontmatter and extract milestones and tags.
+1. Read `chrysalis/Projects/<Project_Folder>/Roadmap.md`. Validate frontmatter and extract milestones, reference Zettels, and tags.
 2. Read `chrysalis/System/Life-Roadmap.md`.
 3. If `pillar` is `unassigned` or `staged`, prompt the user to designate the target Strategic Pillar (e.g. `Pillar 1`, `Pillar 2`) or create a designated Parallel Project Track in `Life-Roadmap.md`.
 
@@ -134,10 +135,14 @@ Promote an incubating or staged project into active strategic execution:
    * Update `last_updated: "YYYY-MM-DDTHH:mm:ss-05:00"`.
    * Link to the milestone in `Life-Roadmap.md`.
 
-### Step 4: 14-Day Horizon Task Note Materialization
+### Step 4: 14-Day Horizon Task Note Materialization (Hypergraph Linked)
 1. Scan the project's milestones for deliverables falling within the next 14 calendar days.
 2. If any imminent deliverables do not yet have corresponding `.md` task notes in `chrysalis/TaskNotes/Tasks/`:
-   * Materialize task notes in `chrysalis/TaskNotes/Tasks/YYYYMMDD-<slug>.md` strictly conforming to the Universal TaskNotes Frontmatter Schema (`status: todo`, `scheduled: null`, explicit timezone `"-05:00"`).
+   * Materialize task notes in `chrysalis/TaskNotes/Tasks/YYYYMMDD-<slug>.md` strictly conforming to the Universal TaskNotes Frontmatter Schema:
+     - `status: todo`, `scheduled: null`, explicit local timezone `"-05:00"`
+     - `project_ref: "[[Projects/{{project_slug}}/Roadmap]]"`
+     - `linked_zettels: ["[[related-zettel-id]]"]` (extracted from Section 3 of parent project roadmap)
+     - `googleCalendarEventId: null` (ready for Model C Android calendar sync)
 
 ### Step 5: Verification & Ledger Reporting
 1. Execute `/doctor --integrity` to verify zero broken links, schema compliance, and tag registry alignment.

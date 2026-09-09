@@ -16,6 +16,14 @@ Chrysalis operates across two strictly segregated functional domains:
 
 ## 1. Vault Substrate & Core System Invariants
 * **Markdown File Substrate:** The vault filesystem and synced cloud storage substrate (`Google Drive`) is the absolute single source of truth (`chrysalis/`). All state, roadmaps, task lifecycles, and agent skills exist as plain Markdown files with YAML frontmatter.
+* **Tripartite Knowledge-Execution Continuum (The Chrysalis Hypergraph):** Unifies atomic Zettelkasten knowledge (`Slipbox/*.md`), strategic roadmaps (`Projects/*/Roadmap.md`), granular TaskNotes execution (`TaskNotes/Tasks/*.md`), and temporal calendar focus blocks into a living, bidirectional hypergraph linked via `[[WikiLinks]]`.
+* **Modular Intelligence Engine Principle:** Dual topology supporting:
+  - **Option A (Dedicated Home Hub - Golem):** Ambient Gateway daemon (`apps/gateway/`, FastAPI on port `8765`) running on the home server, connecting via a pluggable orchestrator bridge (`BaseOrchestratorBridge`) to Google Antigravity language server (reference), OpenClaw, Hermes OS, or local LLMs over a secure Cloudflare Zero-Trust Tunnel.
+  - **Option B (Mobile-Native / Serverless):** Direct edge AI transport executing on-device (e.g. Gemini Nano) or direct cloud model APIs without a home server requirement.
+* **Dedicated "Golem" Hardware Topology:** Surface Pro X with 16GB total RAM running Windows 11 on ARM64 24/7 plugged in: 4GB is dedicated to Home Assistant in Hyper-V, leaving 12GB of operational RAM dedicated to Chrysalis, the Ambient Gateway daemon, and autonomous background agents.
+* **Deep Obsidian & TaskNotes Interoperability:** Chrysalis operates natively as an Obsidian vault. All tasks use standard TaskNotes frontmatter schema for 1:1 compatibility with the Obsidian TaskNotes plugin on port `8080`, running concurrently and without port collision with the Chrysalis Gateway on port `8765`.
+* **Standalone Wear OS Smartwatch Support:** Native circular wearable client (384×384 OLED, pure black `#000000` to preserve battery), featuring rotary card stack, glanceable active sprint cockpit, and prominent voice dictation routing to tasks or Zettels.
+* **Model C (Mobile OS Bridge) Calendar Synchronization:** Direct Android `CalendarContract` platform channel that writes focus sprints directly to the device's built-in calendar database, mirroring to Google Calendar and Wear OS watch complications automatically for free with zero Google Cloud Console setup, paired with an iCal feed fallback (`fetch_ical.py`).
 * **Autonomous AI Orchestration:** Google Antigravity executes daily focus operations (Runtime) and system refactoring (Development) over the Markdown substrate.
 * **No External Task Managers:** Never use proprietary cloud task managers, external databases, or third-party APIs for task management. All task mutations must occur directly on TaskNotes files in `chrysalis/TaskNotes/`.
 * **Explicit Local Timezone:** All frontmatter ISO timestamps must strictly serialize with the explicit local timezone offset defined in `Scheduling-Memory.md` (e.g., `"-05:00"`). Never write raw UTC `"Z"` strings.
@@ -29,7 +37,8 @@ Chrysalis operates across two strictly segregated functional domains:
 ### Dynamic Memory & Operational State
 * **`Scheduling-Memory.md`:** Mutable operational state, dynamic tag multipliers bounded to $[0.20, 2.00]$, learned wake rhythms, chronotype telemetry, active diurnal offsets, energy baseline logic, pause flags, and candidate task pools.
 * **`Life-Roadmap.md`:** Mutable strategic taxonomy, active/inactive Pillar definitions, milestone horizons, and primary priority arbiter.
-* **`Projects/*/Roadmap.md`:** Project-level roadmaps and deliverable tracking.
+* **`Projects/*/Roadmap.md`:** Project-level roadmaps and deliverable tracking with bidirectional links to reference Zettels.
+* **`Slipbox/*.md`:** Atomic Zettelkasten knowledge notes, technical mental models, and system evolution hypotheses (`#chrysalis`) forming the knowledge substrate of the Chrysalis Hypergraph.
 * **`System/Environment/*`:** Multi-node workstation telemetry manifests, hardware profiling, and manifest generation utilities assisting users across their personal projects (manifests quarantined from git, templates & scripts public).
 * **`System-Health.md`:** Persistent diagnostic health ledger tracking integrity passes, schema validations, and auto-heal events.
 * **`Changelog.md`:** Persistent historical ledger tracking autonomous system evolution and skill mutations.
@@ -56,11 +65,15 @@ micro_chunked: false # Boolean: true if a 3-step Starter Wedge has been injected
 tags:
   - task
   - pillar-X/subtag # Must reference a tag defined in Life-Roadmap.md
+linked_zettels: [] # Array of wikilinks to relevant Slipbox notes, e.g. ["[[20260901-modular-engine]]"]
+project_ref: null # Wikilink to parent project roadmap, e.g. "[[Projects/chrysalis-architecture/Roadmap]]"
+googleCalendarEventId: null # Android CalendarContract event ID for Model C calendar sync
 ---
 ```
 
 ### Runtime Behavioral Invariants
 * **System Integrity Diagnostic Gate (`/doctor`):** Nightly audits and maintenance passes execute the 6-point integrity suite before scheduling or mutating skills. Critical corruption halts operations and records findings in `System/System-Health.md`.
+* **Autonomous Zettelkasten Hypergraph Linking:** Autonomous agents connect knowledge to action: scanning `Slipbox/*.md` to associate relevant research notes with active project roadmaps (`Projects/*/Roadmap.md` Section 3) and injecting them as `linked_zettels` in `TaskNotes/Tasks/*.md` frontmatter so the active sprint cockpit and Android calendar events display direct reference links.
 * **Two-Stage Planning Lifecycle (`/plan`):**
   1. *Staging Mode (`/plan --stage`):* The agent queries the user for schedule additions or context in natural language. `Life-Roadmap.md` remains primary priority arbiter: active roadmap deliverables take Peak Focus anchor slots unless no imminent deadlines exist. User additions are integrated into downtime, slump, or recovery windows.
   2. *Calibration Mode (`/plan --calibrate`):* Ingests morning wake and energy telemetry, shifts diurnal windows, and serializes ISO timestamps.
@@ -69,7 +82,7 @@ tags:
 * **Feedback-Gated Execution:** Prototype schedules require user review. If omitted, the system auto-pauses to prevent schedule drift.
 * **Semantic Pause Lifecycle (`/pause [mode]`):** Supports 4 semantic pause modes (`maintenance`, `rest`, `flow`, `vacation`), freezing multiplier decay and de-scheduling active blocks (`scheduled: null`).
 * **Institutional Buffering:** Never schedule official administrative or institutional actions on weekends. Multi-day institutional workflows require a mandatory buffer of 3–5 business days between submission and verification.
-* **Cloud-Native Calendar Ingestion:** Ingests calendar commitments before scheduling; focus sprints wrap around commitments with zero collisions.
+* **Model C Mobile OS Bridge & Calendar Ingestion:** Calendar commitments are ingested via Model C (`CalendarContract` platform channel) or private iCal feed (`fetch_ical.py`) before scheduling; focus sprints wrap around commitments with zero collisions and mirror out to Google Calendar and Wear OS watch complications with zero cloud setup.
 * **Telemetry Multipliers & Chronotype Learning:** Session durations ($T_{\text{actual}} = \text{completedAt} - \text{startedAt}$) adjust multipliers bounded in $[0.20, 2.00]$.
 * **Unified Nightly Life Audit (`/audit`):** Reconciles task lifecycles, learns multipliers, ingests 14-day roadmap milestones, injects starter wedges, and tunes candidate task pools.
 
@@ -86,7 +99,7 @@ Chrysalis is distributed publicly on GitHub (`tama-gucci/chrysalis`). Under NO c
    * Daily focus notes matching `YYYY-MM-DD*.md`.
    * Personal projects (`Projects/*` except `README.md` and `_templates/`) and personal slipbox notes (`Slipbox/*` except `README.md` and `_templates/`).
    * Workstation manifests: `System/Environment/*.md` (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`).
-   * Databases & caches: `Nexus/`, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, `*.token.json`, `*.env`.
+   * Databases, virtual environments, & caches: `Nexus/`, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, `*.token.json`, `*.env`, `apps/gateway/.venv/`, `apps/gateway/venv/`, `apps/mobile/.dart_tool/`, `apps/mobile/build/`.
 
 2. **Mandatory 1-to-1 Public Template Matrix:**
    Every personal runtime file has an exact, sanitized public `.template.md` tracked in git:

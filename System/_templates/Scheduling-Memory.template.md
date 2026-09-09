@@ -48,6 +48,10 @@ system_state:
     orchestrator: "{{production_orchestrator}}" # e.g., google_antigravity
     storage_substrate: "{{storage_provider}}" # e.g., google_drive
     central_host_type: "cloud_synced_substrate"
+    server_host: "golem" # Surface Pro X ARM64 (16GB RAM: 4GB Hyper-V HA, 12GB Chrysalis operational)
+    gateway_port: 8765
+    obsidian_port: 8080
+    intelligence_mode: "option_a_gateway" # option_a_gateway or option_b_mobile_native
   development_pipeline:
     agent_ide: "{{dev_agent_ide}}" # e.g., google_antigravity
     dev_workstation: "{{dev_hostname}}" # e.g., station-node
@@ -80,7 +84,9 @@ diurnal_baselines:
 
 calendar_sync:
   enabled: true
-  provider: "google_calendar"
+  provider: "mobile_os_bridge" # Model C (mobile_os_bridge via Android CalendarContract) or ical_feed
+  model_c_bridge_active: true
+  ical_url: ""
   last_sync: null
   horizon_start: null
   horizon_end: null

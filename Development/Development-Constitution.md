@@ -29,8 +29,7 @@ The following paths are designated as strictly private and MUST NEVER be tracked
 * **Daily Focus & Journal Notes:** All root-level daily notes matching `YYYY-MM-DD*.md` (e.g. `2026-09-02.md`).
 * **Personal Projects & Slipbox Thoughts:** `Projects/*` (except `Projects/README.md` and `Projects/_templates/**`) and `Slipbox/*` (except `Slipbox/README.md` and `Slipbox/_templates/**`).
 * **Personal Workstation Telemetry:** `System/Environment/*.md` manifests (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`) and private workstation configurations.
-* **Local Databases & State Caches:** `Nexus/` SQLite databases, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, and `.obsidian/plugins/*/runs/`.
-* **Secrets & Credentials:** `*.token.json`, `*credentials*.json`, `*.env`, `*.db`, `*.sqlite*`, and private keys.
+* **Local Databases, Virtual Environments & Build Artifacts:** `Nexus/` SQLite databases, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, `apps/gateway/.venv/`, `apps/gateway/venv/`, `apps/mobile/.dart_tool/`, `apps/mobile/build/`, `*.token.json`, `*credentials*.json`, `*.env`, `*.db`, `*.sqlite*`, and private keys.
 
 ### 2. Mandatory 1-to-1 Public Template Matrix
 Every file type that contains personal runtime information MUST provide an exact, sanitized template in public version control:
@@ -57,7 +56,7 @@ All public code, documentation, examples, and skill runbooks must strictly use s
 ---
 
 ## Article II: Development Organization & Directory Structure
-All development-specific assets reside exclusively within `chrysalis/Development/` (aligned with `AGENTS.md` at root):
+All development-specific assets reside exclusively within `chrysalis/Development/` and tracked application packages:
 
 * **`AGENTS.md`:** Root Master Constitution unifying Runtime and Development Spheres for autonomous AI agents.
 * **`Development/Development-Constitution.md` (This File):** Constitutional laws of engineering, PII hygiene, and RSI.
@@ -65,6 +64,13 @@ All development-specific assets reside exclusively within `chrysalis/Development
 * **`Development/README.md`:** Developer guide, architecture orientation, and git workflow.
 * **`Development/scripts/`:** Developer utility scripts, PII linters, git boundary verifiers, and setup helpers.
 * **`Development/skills/`:** Modular development-only agent skills (`audit-dev`, `evolve`), registered into Antigravity via `.agent/skills.json`.
+* **`apps/gateway/`:** Ambient Chrysalis Gateway daemon (Python FastAPI on port `8765`), implementing `BaseOrchestratorBridge` for pluggable agents (Antigravity reference, OpenClaw, Hermes OS, local LLMs) and Cloudflare Zero-Trust Tunnel configuration.
+* **`apps/mobile/`:** Cross-platform Flutter mobile client and standalone circular Wear OS smartwatch companion (384×384 OLED), offline-first SQLite cache (Drift), Model C Mobile OS Calendar Bridge (`CalendarContract`), and Health Connect biometric ingestion.
+
+### Architectural Invariants in Development
+1. **Port Coexistence Invariant:** Port `8080` is reserved exclusively for the Obsidian TaskNotes plugin API; Port `8765` is dedicated to the Ambient Chrysalis Gateway daemon. Port collisions between Obsidian and Chrysalis are strictly prohibited.
+2. **Hardware Topology Awareness:** Engineering assets must support the "Golem" production hardware topology (Surface Pro X on Windows 11 on ARM64, 16GB total RAM: 4GB Hyper-V Home Assistant, 12GB operational memory dedicated to Chrysalis and background agents) as well as development workstations and serverless mobile-native edge modes.
+3. **Pluggable Modular Orchestrator Interface:** The gateway and mobile clients must remain decoupled from any single LLM or agent implementation via the `IntelligenceEngine` abstract contract and `BaseOrchestratorBridge` adapter architecture.
 
 ---
 

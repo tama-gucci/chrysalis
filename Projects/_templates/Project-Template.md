@@ -29,4 +29,6 @@ Brief description of the objective, dependencies, and exit criteria.
 ---
 
 ## 3. Reference Files & Contacts
-- [[Related-Note]]
+<!-- Grounded in the Chrysalis Hypergraph: Bidirectional links to Slipbox/*.md research notes -->
+- [[Related-Zettel-Note]] # Research / mental model grounding this deliverable
+- [[Related-Resource-Note]]

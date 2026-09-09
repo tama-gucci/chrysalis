@@ -27,7 +27,7 @@ writes:
 * **Case A (User Replies):**
   1. **Unpause System & Log Telemetry:**
      * Capture reply timestamp as exact $T_{\text{wake}}$ (e.g., `09:18:00-05:00`).
-     * Parse numerical energy score (1–5).
+     * Parse numerical energy score (1–5) or ingest automated sleep duration and HRV RMSSD telemetry via Android Health Connect platform channel (`HealthConnectManager.kt`).
      * Calculate updated rolling average wake time:
        $$\text{New Rolling Wake} = \text{Current Baseline} + 0.15 \times (T_{\text{wake}} - \text{Current Baseline})$$
      * Set `applied_energy_mode: "sleep_deprived"` for 1–2, or `"optimal"` for 3–5.

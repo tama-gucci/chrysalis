@@ -12,10 +12,10 @@ writes:
 # /task (Shorthand Task Capture Engine)
 
 ## Syntax
-`/task [title] [tag] [priority] [est:Xm] [due:YYYY-MM-DD] [modality:analytical|kinetic|synthesis|administrative]`
+`/task [title] [tag] [priority] [est:Xm] [due:YYYY-MM-DD] [modality:analytical|kinetic|synthesis|administrative] [project:slug] [[[linked-zettel]]]`
 
 ## Processing Pipeline
-1. **Title & Tag Extraction:** Parse task description and assign the corresponding `#pillar-X/*` tag from `chrysalis/System/Life-Roadmap.md`.
+1. **Title, Tag & Project Extraction:** Parse task description and assign the corresponding `#pillar-X/*` tag from `chrysalis/System/Life-Roadmap.md`. If a project is specified (or inferred from matching deliverables in `chrysalis/Projects/*/Roadmap.md`), set `project_ref: "[[Projects/<slug>/Roadmap]]"`.
 2. **Cognitive Modality Inference:**
    * If explicit modality is provided (e.g. `modality:kinetic`), assign it directly.
    * If omitted, infer from nature of task:
@@ -28,7 +28,10 @@ writes:
    * Look up the active multiplier matching the assigned tag (baseline `1.00` fallback).
    * Compute effective duration:
      $$\text{timeEstimate} = \text{round}(\text{base\_estimate} \times \text{multiplier})$$
-4. **File Generation:** Create a new file in `chrysalis/TaskNotes/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
+4. **Zettelkasten Hypergraph Association:**
+   * If `project_ref` is present, scan that project's `## 3. Reference Files & Contacts` section for linked Zettels in `Slipbox/`.
+   * Inject matching Zettel references into `linked_zettels` frontmatter array.
+5. **File Generation:** Create a new file in `chrysalis/TaskNotes/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
 
 ```yaml
 ---
@@ -48,5 +51,8 @@ micro_chunked: false
 tags:
   - task
   - pillar-1/setup
+linked_zettels: []
+project_ref: null
+googleCalendarEventId: null
 ---
 ```

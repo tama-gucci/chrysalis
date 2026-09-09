@@ -68,3 +68,14 @@ writes:
      ## References & Cross-Links
      - [[Related-Note]]
      ```
+
+3. **Autonomous Hypergraph Linking (Knowledge-to-Execution Pipeline):**
+   * After writing the Zettel note to `Slipbox/`:
+     1. **Project Roadmap Linking:** Inspect all active project roadmaps in `chrysalis/Projects/*/Roadmap.md`. If the Zettel note's tags or core thesis intersect with an active project's tags or domain, append a `[[WikiLink]]` to that project roadmap under `## 3. Reference Files & Contacts`.
+     2. **Task Frontmatter Injection:** For tasks in `chrysalis/TaskNotes/Tasks/*.md` that belong to that project or share its tags, inject the Zettel note reference into the task's frontmatter:
+        ```yaml
+        linked_zettels:
+          - "[[YYYYMMDDHHmmss-slug]]"
+        ```
+     3. **Active Sprint Cockpit Integration:** During active focus sprints, the mobile client reads `linked_zettels` to render the expandable **Linked Knowledge Drawer** with one-tap access to the underlying research.
+     4. **Calendar Event Annotation:** When focus blocks are written to Android Calendar via Model C (`CalendarContract`), include linked Zettel note titles and wikilinks in the calendar event description.

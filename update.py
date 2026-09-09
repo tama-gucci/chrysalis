@@ -14,6 +14,11 @@ import tempfile
 import subprocess
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Upstream repositories to attempt (SSH first, then HTTPS fallback)
 DEFAULT_UPSTREAM_SSH = "git@github.com:tama-gucci/chrysalis.git"
 DEFAULT_UPSTREAM_HTTPS = "https://github.com/tama-gucci/chrysalis.git"
@@ -66,26 +71,32 @@ PROTECTED_PATHS = [
 def is_protected_target(rel_path_str: str) -> bool:
     """Ensure a relative path in the target vault is never overwritten."""
     p = Path(rel_path_str)
+    # Strip optional leading 'chrysalis/' for unified check
+    parts = list(p.parts)
+    if parts and parts[0] == "chrysalis":
+        parts.pop(0)
+    norm_p = Path(*parts) if parts else p
+
     # Never touch personal tasks or archive
-    if str(p).startswith("TaskNotes/Tasks") and p.name != "example-task.md":
+    if (str(norm_p).startswith("TaskNotes/Tasks") or str(norm_p).startswith("Tasks")) and norm_p.name != "example-task.md":
         return True
-    if str(p).startswith("TaskNotes/Archive"):
+    if str(norm_p).startswith("TaskNotes/Archive") or str(norm_p).startswith("Archive"):
         return True
     # Never touch personal projects or slipbox
-    if str(p).startswith("Projects/") and not str(p).startswith("Projects/_templates") and p.name != "README.md":
+    if str(norm_p).startswith("Projects/") and not str(norm_p).startswith("Projects/_templates") and norm_p.name != "README.md":
         return True
-    if str(p).startswith("Slipbox/") and not str(p).startswith("Slipbox/_templates") and p.name != "README.md":
+    if str(norm_p).startswith("Slipbox/") and not str(norm_p).startswith("Slipbox/_templates") and norm_p.name != "README.md":
         return True
-    # Never touch daily notes (format: YYYY-MM-DD*.md)
-    if p.name.endswith(".md") and len(p.name) >= 10 and p.name[:4].isdigit() and p.name[4] == "-":
+    # Never touch daily notes (format: YYYY-MM-DD*.md or Daily/YYYY-MM-DD*.md)
+    if norm_p.name.endswith(".md") and len(norm_p.name) >= 10 and norm_p.name[:4].isdigit() and norm_p.name[4] == "-":
         return True
     # Protect personal environment node manifests (generic rule, no machine hostnames)
-    if str(p).startswith("System/Environment") and p.suffix == ".md":
-        if p.name not in ["Environment-Index.md", "README.md"] and "_templates" not in p.parts:
+    if str(norm_p).startswith("System/Environment") and norm_p.suffix == ".md":
+        if norm_p.name not in ["Environment-Index.md", "README.md"] and "_templates" not in norm_p.parts:
             return True
     # Check explicit protected list
     for protected in PROTECTED_PATHS:
-        if str(p) == protected or str(p).startswith(f"{protected}/"):
+        if str(norm_p) == protected or str(norm_p).startswith(f"{protected}/"):
             return True
     return False
 
@@ -94,11 +105,15 @@ is_protected = is_protected_target
 
 def clone_upstream(repo_url: str, dest_dir: str) -> bool:
     """Attempt shallow clone of upstream repository."""
-    cmd = ["git", "clone", "--depth=1", repo_url, dest_dir]
+    cmd = ["git", "-c", "credential.helper=", "clone", "--depth=1", repo_url, dest_dir]
+    clone_env = os.environ.copy()
+    clone_env["GIT_TERMINAL_PROMPT"] = "0"
+    clone_env["GCM_INTERACTIVE"] = "never"
+    clone_env["GIT_SSH_COMMAND"] = "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
     try:
-        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        res = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=5, env=clone_env)
         return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
         return False
 
 def get_commit_info(repo_dir: Path) -> str:
@@ -246,7 +261,7 @@ def main():
         count, updated_list = sync_engine(src_path, target_path, dry_run=args.dry_run)
     else:
         print("[1/3] Fetching upstream release from GitHub...")
-        repos_to_try = [args.repo] if args.repo else [DEFAULT_UPSTREAM_SSH, DEFAULT_UPSTREAM_HTTPS]
+        repos_to_try = [args.repo] if args.repo else [DEFAULT_UPSTREAM_HTTPS, DEFAULT_UPSTREAM_SSH]
         
         with tempfile.TemporaryDirectory() as tmp_dir:
             cloned = False
@@ -259,12 +274,18 @@ def main():
                     break
             
             if not cloned:
-                print("\n❌ Error: Failed to fetch from upstream repository.", file=sys.stderr)
-                print("Please ensure your SSH key or internet connection is active, or pass --repo <url>.", file=sys.stderr)
-                sys.exit(1)
-
-            src_dir = Path(tmp_dir)
-            commit_info = get_commit_info(src_dir)
+                local_repo = Path(__file__).resolve().parent
+                if (local_repo / "AGENTS.md").exists():
+                    print(f"  ✓ Upstream unreachable; using local repository fallback: {local_repo}")
+                    src_dir = local_repo
+                    commit_info = get_commit_info(src_dir)
+                else:
+                    print("\n❌ Error: Failed to fetch from upstream repository.", file=sys.stderr)
+                    print("Please ensure your SSH key or internet connection is active, or pass --repo <url>.", file=sys.stderr)
+                    sys.exit(1)
+            else:
+                src_dir = Path(tmp_dir)
+                commit_info = get_commit_info(src_dir)
             print(f"  ✓ Upstream fetched: {commit_info}")
             print()
 

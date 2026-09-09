@@ -177,6 +177,14 @@ fields:
   googleCalendarEventId:
     type: string
     tn_role: googleCalendarEventId
+  linked_zettels:
+    type: list
+    description: "Array of wikilinks to relevant Slipbox atomic research notes."
+    items:
+      type: link
+  project_ref:
+    type: link
+    description: "Wikilink to parent project roadmap in Projects/*/Roadmap.md."
   googleCalendarExceptionEventId:
     type: string
     tn_role: googleCalendarExceptionEventId

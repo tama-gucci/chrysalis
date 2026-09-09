@@ -46,11 +46,12 @@ graph TD
 ### 1. Schema & Frontmatter Linter
 * Scan all active task files in `chrysalis/TaskNotes/Tasks/*.md` and `chrysalis/TaskNotes/Archive/*.md`.
 * Validate required fields: `title`, `status`, `dateCreated`, `priority`, `urgency_tier`, `timeEstimate`, `modality`, `tags`.
+* Validate hypergraph & sync fields: `linked_zettels` (list of wikilinks), `project_ref` (wikilink or null), `googleCalendarEventId` (string or null).
 * Validate enums:
   - `status`: `todo | in-progress | done | archived`
   - `priority`: `urgent | high | normal | low | none`
   - `modality`: `analytical | kinetic | synthesis | administrative`
-* **Auto-Heal:** If `dateCreated` is missing but `created` exists, inject `dateCreated` matching `created`. If `modality` is missing, infer and inject appropriate modality.
+* **Auto-Heal:** If `dateCreated` is missing but `created` exists, inject `dateCreated` matching `created`. If `modality` is missing, infer and inject appropriate modality. If `linked_zettels` or `project_ref` are missing, initialize to `[]` and `null`.
 
 ### 2. Timezone & Temporal Compliance Linter
 * Scan all ISO timestamps across frontmatter (`dateCreated`, `created`, `scheduled`, `startedAt`, `completedAt`).
@@ -63,8 +64,8 @@ graph TD
 * Flag unregistered, misspelled, or orphaned tags for user review.
 
 ### 4. Graph & Wikilink Resolution Linter
-* Scan `Dashboard.md`, `Projects/`, and `Slipbox/` for broken wikilinks (`[[Note-Name]]`) or invalid relative paths.
-* Verify that project wikilinks on tasks point to existing `Projects/*/Roadmap.md` files.
+* Scan `Dashboard.md`, `Projects/`, `Slipbox/`, and task `linked_zettels` for broken wikilinks (`[[Note-Name]]`) or invalid relative paths.
+* Verify that project wikilinks on tasks (`project_ref`) point to existing `Projects/*/Roadmap.md` files, and `linked_zettels` point to existing `Slipbox/*.md` notes.
 
 ### 5. Skill Protocol & Dependency Linter
 * Validate that all files in `chrysalis/.agent/skills/*/SKILL.md` and `chrysalis/Development/skills/*/SKILL.md` contain valid YAML frontmatter (`name`, `description`, `trigger`, `reads`, `writes`).

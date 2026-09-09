@@ -15,6 +15,8 @@ micro_chunked: false
 tags:
   - task
   - pillar-1/setup
+linked_zettels: []
+project_ref: null
 googleCalendarEventId: null
 ---
 

@@ -1,150 +1,256 @@
-# Chrysalis
+# 🌌 Chrysalis: Autonomous Bio-Cognitive Life Cockpit & Knowledge Hypergraph
 
-Chrysalis is an AI planning backend for the [TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes) plugin in [Obsidian](https://obsidian.md).
-
-> **Project status:** Early-stage personal project in active development. Formats and functionality may change as it is tested and updated.
+> **The Integrated Cockpit for Mind, Knowledge, and Action.**  
+> Standard productivity apps create a painful disconnect: your notes live in one app, your to-do lists in another, and your calendar in a third. You spend your day manually juggling between what you *know*, what you *plan to do*, and *when you actually do it*.  
+> **Chrysalis unifies this into a single living ecosystem:**
+> 1. **Knowledge (Zettelkasten / Slipbox):** Atomic thoughts, research, and mental models.
+> 2. **Strategy (Project Roadmaps):** Long-term outcomes, milestones, and deliverables.
+> 3. **Execution (TaskNotes):** Granular, bite-sized tasks tagged with cognitive modality and energy requirements.
+> 4. **Timeblocking (Calendar Sprints):** 75-minute ultradian focus sessions scheduled around your natural biological rhythm.
 
 ---
 
-## Overview
+## 🧭 The Knowledge-to-Execution Continuum (The Chrysalis Hypergraph)
 
-[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes) is an Obsidian plugin that manages tasks as individual Markdown notes, providing task cards, Kanban boards, calendar views, and time tracking.
+Chrysalis bridges the gap between deep thinking and daily execution. Operating natively on an open Markdown vault substrate (with deep [Obsidian](https://obsidian.md) and [TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes) interoperability), the intelligence engine maintains a living, bidirectional graph:
 
-Chrysalis acts as an AI companion backend for TaskNotes. It reads your task files and planning history, organizes them into daily schedules, adjusts timeblocks when your day changes, and updates task estimates based on how long past tasks took to complete.
-
-```mermaid
-flowchart LR
-    subgraph UI["Obsidian (Interface)"]
-        TN["TaskNotes Plugin<br/>• Task cards & boards<br/>• Calendar views<br/>• Time tracking"]
-    end
-
-    subgraph Storage["File Storage (Markdown)"]
-        Tasks["Task Notes (`TaskNotes/Tasks/*.md`)<br/>• Status & Due dates<br/>• Scheduled timestamps<br/>• Time estimates"]
-        Memory["Planning State (`System/*.md`)<br/>• Daily check-in history<br/>• Multipliers & estimates"]
-    end
-
-    subgraph Backend["Chrysalis (AI Backend)"]
-        AI["AI Assistant Engine<br/>• Morning schedule calibration<br/>• Evening review & staging<br/>• Task estimate learning"]
-    end
-
-    TN <-->|Displays & edits| Tasks
-    AI <-->|Reads & updates| Tasks
-    AI <-->|Maintains| Memory
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. KNOWLEDGE LAYER: Atomic Zettelkasten (Slipbox/*.md)                      │
+│    • Atomic permanent notes, mental models, literature insights.            │
+│    • Created manually in Obsidian or synthesized autonomously via /zettel.  │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │  Linked via Semantic [[WikiLinks]]
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. STRATEGIC LAYER: Project Roadmaps (Projects/*/Roadmap.md)                │
+│    • Milestone horizons, strategic deliverables, pillar alignment.          │
+│    • Grounded in specific Zettel research notes in "## Reference Files".    │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │  Decomposed into Atomic Deliverables
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3. EXECUTION LAYER: TaskNotes Schema (TaskNotes/Tasks/*.md)                 │
+│    • Standard TaskNotes markdown frontmatter (modality, energy, timeEstimate)│
+│    • Native 1:1 compatibility with the Obsidian TaskNotes plugin (Port 8080).│
+│    • Injects linked_zettels & project_ref for one-tap research access.      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │  Calibrated via Bio-Cognitive Clock
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4. TEMPORAL LAYER: Timeblocked Calendar Events (Android Calendar / Wear OS) │
+│    • 75m focus sprints + 15m decompression buffers (Ultradian alignment).   │
+│    • Model C Mobile OS Bridge mirrors blocks directly to Google Calendar.   │
+│    • Active sprint cockpit displays direct links back to the Zettel notes!  │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## What It Does (Real-World Examples)
+## 🏛️ System Architecture & Operational Topologies
 
-Chrysalis automates scheduling and time recalculations inside TaskNotes:
+```mermaid
+graph TD
+    subgraph "Knowledge & Markdown Substrate (Obsidian Vault)"
+        Zettel["Slipbox/*.md (Zettelkasten)"]
+        Projects["Projects/*/Roadmap.md"]
+        Tasks["TaskNotes/Tasks/*.md"]
+        SystemState["System/ (Roadmap, Scheduling-Memory)"]
+        
+        Zettel <-->|Bidirectional Links| Projects
+        Projects <-->|Task Decomposition| Tasks
+        Tasks <-->|Scheduling Telemetry| SystemState
+    end
 
-### 1. Rescheduling When You Start Late
-* **The situation:** You had scheduled tasks to start at 8:00 AM, but you wake up or get to your desk at 9:30 AM.
-* **What Chrysalis does:** When you run `/morning`, you provide your wake time and current energy. Chrysalis recalculates your day, shifts the `scheduled` timestamps forward on your TaskNotes files to start when you actually begin, and keeps your primary priorities intact. You do not need to manually drag tasks around in the calendar view.
+    subgraph "Desktop Exploration Layer"
+        Obsidian["Obsidian App (Desktop / Tablet)"]
+        TaskNotesPlugin["TaskNotes Obsidian Plugin (Port 8080)"]
+        Obsidian --- TaskNotesPlugin
+        Obsidian <-->|Live File Editing| Zettel
+        Obsidian <-->|Visual Graph & Canvas| Tasks
+    end
 
-### 2. Prioritizing Key Projects Over Routine Chores
-* **The situation:** You have long-term projects (like coursework, writing, or home repairs) alongside everyday chores and administrative work (like email or filing receipts).
-* **What Chrysalis does:** When assembling a daily schedule with `/plan`, Chrysalis places focused work on primary project deliverables into earlier high-energy focus blocks, scheduling routine and administrative tasks into afternoon or recovery windows.
+    subgraph "Modular Intelligence Engine (Strategy Abstraction)"
+        EngineContract["IntelligenceEngine Interface (Mobile / Gateway)"]
+        
+        subgraph "Option A: Dedicated Home Hub (Golem - Surface Pro X)"
+            CF["Cloudflare Zero-Trust Tunnel (Port 8765)"]
+            Gateway["Ambient Gateway Daemon (apps/gateway)"]
+            Bridge["Pluggable Orchestrator Bridge"]
+            
+            CF <--> Gateway
+            Gateway <--> Bridge
+            Bridge --> AGY["Antigravity Language Server (Reference)"]
+            Bridge -.-> OpenClaw["OpenClaw Engine (Pluggable)"]
+            Bridge -.-> Hermes["Hermes OS / Local LLM (Pluggable)"]
+        end
 
-### 3. Adjusting Time Estimates Based on Actual Duration
-* **The situation:** A task is estimated at 30 minutes, but repeatedly takes 60 minutes in practice.
-* **What Chrysalis does:** TaskNotes records when you start and complete a task. During the nightly `/audit`, Chrysalis compares your estimated durations against actual logged completion times and updates category multipliers so future schedules allocate realistic time.
+        subgraph "Option B: Mobile-Native / Serverless (Edge Mode)"
+            DirectAI["On-Device AI (Gemini Nano) / Direct Cloud API"]
+        end
 
-### 4. Preparing Tomorrow's Schedule in Advance
-* **The situation:** You want tomorrow morning's schedule set up before you finish work for the day.
-* **What Chrysalis does:** During the `/evening` review, Chrysalis inspects your completed tasks from today, checks upcoming calendar events for tomorrow, selects candidate tasks, and drafts a proposed schedule for the next day.
+        EngineContract <-->|Remote Transport| CF
+        EngineContract -.->|Direct Edge Transport| DirectAI
+    end
 
-### 5. Pausing Active Schedules for Time Off
-* **The situation:** You are taking a weekend off, going on vacation, or out sick.
-* **What Chrysalis does:** Running `/pause` de-schedules active timeblocks and stops schedule recalculations until you resume, preventing tasks from accumulating overdue notices while you are away.
+    subgraph "Ambient Mobile & Wearable Client (apps/mobile)"
+        Phone["Android Smartphone (Flutter)"]
+        Watch["Wear OS Smartwatch (Circular OLED)"]
+        HC["Health Connect (Sleep & HRV)"]
+        PhoneCal["Android Device Calendar (CalendarContract)"]
+        
+        HC --> Phone
+        Phone <--> PhoneCal
+        Phone <--> Watch
+        Phone <--> EngineContract
+    end
+
+    Tasks <-->|Model C OS Sync| PhoneCal
+    EngineContract <-->|Physical Tool Mutations & Zettel Curation| Zettel
+    EngineContract <-->|Task & Roadmap Serialization| Tasks
+```
+
+### 1. Dedicated "Golem" Hardware Topology
+* **Hardware:** Microsoft Surface Pro X running Windows 11 on ARM64 24/7 plugged in.
+* **Memory Budget:** **16GB RAM total**:
+  - **4GB RAM:** Dedicated to Home Assistant operating within Hyper-V.
+  - **12GB RAM:** Dedicated operational memory for Chrysalis, the Ambient Gateway daemon (`apps/gateway/`), background agent orchestration, and automated health/audit suites.
+
+### 2. Modular Intelligence Engine Principle
+Chrysalis enforces architectural modularity at the interface level, supporting two primary deployment topologies:
+* **Option A (Dedicated Home Hub - Golem):** The Ambient Gateway (`apps/gateway/`, FastAPI on port `8765`) runs 24/7 on Golem behind an outbound-only Cloudflare Zero-Trust Tunnel. It connects to autonomous agents via a pluggable adapter bridge (`BaseOrchestratorBridge`), with Google Antigravity as the reference implementation, and pluggable slots for OpenClaw, Hermes OS, or local LLMs.
+* **Option B (Mobile-Native / Serverless):** For edge deployments without a dedicated home server, the mobile client connects directly to on-device models (e.g. Gemini Nano via AICore) or direct cloud model endpoints.
+
+### 3. Deep Obsidian & TaskNotes Interoperability
+* Chrysalis operates natively within an Obsidian vault. All task files in `TaskNotes/Tasks/*.md` use standard TaskNotes frontmatter schema (`status`, `due`, `scheduled`, `modality`, `energy`, `priority`, `timeEstimate`).
+* **Port Separation Invariant:**
+  - **Port `8080`:** Reserved exclusively for the Obsidian TaskNotes plugin API and local server.
+  - **Port `8765`:** Dedicated to the Ambient Chrysalis Gateway daemon.
+  - Both services run simultaneously on the home node with zero port conflicts.
+
+### 4. Ambient Mobile & Standalone Wear OS Smartwatch Companion
+* **Android Smartphone (`apps/mobile/`):** Built with Flutter 3.47 / Dart 3.13 with Material 3 Dark theme. Features an offline-first SQLite cache (Drift) with a SHA-256 mutation journal, diurnal timeline visualization, active focus sprint cockpit, and rapid shorthand capture.
+* **Standalone Wear OS Smartwatch Companion:** Designed specifically for circular OLED displays (384×384 px, pure black `#000000` to turn off OLED pixels and preserve battery):
+  - Rotary card stack with glanceable active sprint card and countdown timer.
+  - Prominent circular voice dictation mic button for instant audio capture.
+  - Intelligent intent classification routing voice notes to TaskNotes or Zettelkasten.
+* **Biometric Telemetry:** Google Health Connect integration (`androidx.health.connect.client`) ingesting sleep duration, sleep stages (deep, REM, light), resting heart rate (RHR), and HRV RMSSD to dynamically calculate morning readiness ($1$ to $5$).
+
+### 5. Calendar Integration Architecture (Model C: Mobile OS Bridge)
+* **Zero Cloud Setup Required:** By using **Model C (Mobile OS Bridge)**, users do not need to register Google Cloud projects, manage OAuth secrets, or configure API quotas.
+* The Flutter mobile app writes scheduled focus blocks directly to Android's built-in calendar database via `CalendarContract`. Android automatically mirrors these events to Google Calendar and Wear OS watch complications for free.
+* **Collision Avoidance Fallback:** Standalone headless environments can ingest external calendar commitments via `fetch_ical.py`, which pulls Google Calendar's private `.ics` feed with zero setup.
 
 ---
 
-## The Daily Planning Cycle
+## ⚡ Bio-Cognitive Diurnal Planning Cycle
+
+Chrysalis organizes daily work around human biological rhythms rather than static calendars:
 
 ```mermaid
 flowchart TD
-    A["1. Morning Check-In (/morning)<br/>Provide wake time and energy score"] --> B["2. Schedule Calibration<br/>Chrysalis shifts task start times to fit the day"]
-    B --> C["3. Focus & Execution<br/>TaskNotes displays scheduled blocks in Obsidian calendar"]
-    C --> D["4. Task Tracking<br/>Complete tasks and log time inside TaskNotes"]
-    D --> E["5. Evening Review (/evening)<br/>Check completed items and inspect tomorrow's calendar"]
-    E --> F["6. Next-Day Staging<br/>Chrysalis updates duration estimates and drafts tomorrow's plan"]
+    A["1. Morning Check-In (/morning)<br/>Ingest wake time & Health Connect sleep/HRV score"] --> B["2. Diurnal Schedule Calibration<br/>Shift 75m ultradian sprints anchored to actual wake time"]
+    B --> C["3. Peak Focus Execution<br/>Anchor tasks executed during analytical morning peak"]
+    C --> D["4. Slump & Kinetic Defrost<br/>Low-mental administrative tasks & physical movement"]
+    D --> E["5. Recovery Focus<br/>Creative synthesis & Zettelkasten research notes"]
+    E --> F["6. Evening Review (/evening)<br/>Triage unfinished tasks & stage tomorrow's prototype"]
+    F --> G["7. Unified Nightly Audit (/audit)<br/>Reconcile task durations, learn multipliers, inject wedges"]
+```
+
+### Cognitive Modality Pairing & Ultradian Stacking
+Work is partitioned into **75-minute ultradian focus sprints** separated by mandatory **15-minute decompression buffers**:
+* **Analytical (`#6366F1` - Electric Indigo):** High mental load, convergent logic (coding, architecture, drafting, analytical problem solving). Scheduled during morning **Peak Focus** ($T_{\text{wake}} + 01:30 \to +04:30$).
+* **Kinetic (`#F59E0B` - Warm Amber):** Physical movement, hardware work, errands, cleaning. Scheduled during post-lunch **Slump / Kinetic Defrost** ($T_{\text{wake}} + 06:30 \to +08:15$) to exit sluggishness and elevate dopamine.
+* **Synthesis (`#10B981` - Emerald Green):** Creative pattern recognition, literature review, Zettelkasten research notes (`Slipbox/`). Scheduled during evening **Recovery Focus** ($T_{\text{wake}} + 08:30 \to +10:30$).
+* **Administrative (`#64748B` - Slate Gray):** Routine paperwork, emails, portals. Scheduled during downtime windows with a strict institutional weekend lockout.
+
+### Adaptive Multipliers & Starter Wedges
+* **Experiential Duration Multipliers:** During nightly `/audit`, Chrysalis compares estimated task durations against actual logged durations ($T_{\text{actual}} = \text{completedAt} - \text{startedAt}$) and tunes category multipliers strictly clamped to $[0.20, 2.00]$.
+* **Starter Wedges (`micro_chunked: true`):** For high-friction or high-energy tasks, Chrysalis automatically injects a 3-step Starter Wedge (low-friction 5-minute exploratory anchors) to break task paralysis.
+* **Semantic Pause Modes:** When taking time off, `/pause [mode]` supports 4 semantic archetypes:
+  - 🏖️ **`vacation`:** Pauses daily alerts, freezes target dates and multiplier decay.
+  - 🛌 **`rest`:** Clears today's scheduled blocks with zero penalties.
+  - 🌊 **`flow`:** Mutes notifications to allow uninterrupted single-project deep dive.
+  - 🛠️ **`maintenance`:** Schedules quick chores and housekeeping tasks only.
+
+---
+
+## 🎮 Command Reference
+
+| Command | Domain | Description |
+| :--- | :---: | :--- |
+| **`/morning`** | Runtime | Captures wake time and energy score (1–5) or Health Connect biometrics, unpauses system, and locks calibrated timeblocks to disk. |
+| **`/evening`** | Runtime | Reviews today's completed tasks, ingests tomorrow's calendar, and stages tomorrow's prototype focus schedule. |
+| **`/plan`** | Runtime | Master diurnal engine: Protocol 1 (Staging Mode) queries for additions; Protocol 2 (Calibration Mode) locks ISO timestamps. |
+| **`/task`** | Runtime | Parses shorthand input (`/task [title] #tag ~45m !urgent`), computes multiplier-adjusted duration, and creates TaskNotes markdown note. |
+| **`/zettel`** | Runtime | Captures atomic thoughts or system evolution ideas (`#chrysalis`), generates unique timestamp IDs (`YYYYMMDDHHmmss`), and bidirectionally links concepts. |
+| **`/pause`** | Runtime | Suspends daily focus cycles across 4 semantic modes (`vacation`, `rest`, `flow`, `maintenance`), freezing multiplier decay. |
+| **`/resume`** | Runtime | Restores active diurnal scheduling and orchestrates frictionless lifecycle re-entry. |
+| **`/doctor`** | Runtime | Executes 6-point system diagnostic suite (schemas, -05:00 timezones, tag registries, wikilinks, skills, state multipliers) and auto-heals errors. |
+| **`/audit`** | Runtime | Nightly operational reconciliation: learns duration multipliers, ingests 14-day roadmap milestones, and tunes candidate task pools. |
+| **`/onboard`** | Runtime | Interactive intake interview that compiles initial `Life-Roadmap.md`, seeds multipliers, and configures workstation telemetry. |
+| **`/evolve`** | Dev | Recursive Self-Improvement (RSI): scans unintegrated `#chrysalis` Zettel notes, synthesizes capability expansions, and tests skills safely. |
+| **`/audit-dev`** | Dev | Pre-commit security gate enforcing the Zero-Leak PII Law, git boundaries, and `.gitignore` default-deny integrity. |
+
+---
+
+## 🚀 Quickstart & Setup Guide
+
+### 1. Prerequisites
+1. **[Obsidian](https://obsidian.md):** Installed on your workstation or tablet.
+2. **Obsidian Community Plugins:**
+   * **[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes):** Required for task frontmatter management, boards, and calendar views (Port `8080`).
+   * **[Dataview](https://github.com/blacksmithgu/obsidian-dataview):** Recommended for dynamic dashboard queries.
+3. **Python 3.14+:** For running the Ambient Gateway daemon and test suite.
+4. **Flutter 3.47+ / Dart 3.13+:** (Optional) For building and running the mobile client and Wear OS companion app.
+
+### 2. Vault Installation & Initial Onboarding
+```bash
+# Clone the repository
+git clone https://github.com/tama-gucci/chrysalis.git ~/chrysalis
+
+# Open the folder as a vault in Obsidian
+# Open your AI orchestrator (Google Antigravity) pointed at the vault root
+```
+Run the interactive onboarding skill in your AI assistant:
+```text
+/onboard
+```
+This guides you through a rapid intake interview, configures your explicit local timezone (e.g. `"-05:00"`), compiles your initial `Life-Roadmap.md`, and seeds `Scheduling-Memory.md`.
+
+### 3. Ambient Gateway Setup on "Golem" (Surface Pro X)
+To run the 24/7 background gateway service on your home server:
+```powershell
+cd apps\gateway
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# Launch gateway daemon on dedicated port 8765
+$env:CHRYSALIS_GATEWAY_PORT = "8765"
+$env:CHRYSALIS_GATEWAY_TOKEN = "your-secure-token"
+python main.py
+```
+Test health endpoint in browser: `http://localhost:8765/health` (leaves port `8080` completely free for Obsidian TaskNotes!).
+
+### 4. Running the Complete E2E Test Suite
+Chrysalis includes 104 comprehensive end-to-end tests across 4 tiers:
+```powershell
+python -m pip install pyyaml
+python tests\e2e\runner.py
 ```
 
 ---
 
-## Data Storage & Cross-Device Sync
+## 🔒 Absolute Zero-Leak PII Law (GitHub Privacy Invariant)
 
-### Local File Storage
-All tasks, notes, and planning memory are plain Markdown files with YAML frontmatter stored on your local disk. Chrysalis does not use external databases or proprietary servers to store your tasks.
-
-### Optional Cloud Sync
-**Cloud storage is not required for Chrysalis to function.** Chrysalis can run entirely on a single desktop or laptop computer.
-
-However, using a cloud storage provider (such as iCloud, Dropbox, OneDrive, Syncthing, or Google Drive) to sync the vault directory substantially increases utility:
-* **Mobile & Tablet Access:** You can view your schedule, read notes, and check off tasks on your phone or tablet via the mobile Obsidian app while away from your desk.
-* **Continuous Updates:** Changes made in TaskNotes on mobile sync back to your computer for Chrysalis to read during your next check-in.
-
-```mermaid
-flowchart LR
-    subgraph Desktop["Workstation / Laptop"]
-        ObsidianD["Obsidian + TaskNotes"]
-        BackendD["Chrysalis AI Backend"]
-    end
-
-    subgraph Sync["Optional Cloud Sync Provider<br/>(iCloud, Dropbox, OneDrive, Syncthing, Google Drive)"]
-        VaultFiles["Vault Directory<br/>(Markdown Files)"]
-    end
-
-    subgraph Mobile["Mobile / Tablet"]
-        ObsidianM["Obsidian Mobile + TaskNotes"]
-    end
-
-    Desktop <-->|Local read/write| Sync
-    Sync <-->|Remote file sync| Mobile
-```
+Chrysalis is distributed publicly on GitHub (`tama-gucci/chrysalis`). To guarantee that private user data never leaks to public version control:
+1. **Default-Deny Substrate (`.gitignore`):** The repository enforces root `/*` denial. Personal tasks (`TaskNotes/Tasks/*.md`), live state (`System/*.md`), daily notes (`YYYY-MM-DD*.md`), personal slipbox notes, and device manifests are strictly ignored.
+2. **1-to-1 Public Template Matrix:** Every personal runtime file has an exact, sanitized public template tracked in git (`System/_templates/`).
+3. **Synthetic Placeholders Standard:** All public documentation, examples, and tests strictly use synthetic placeholders (`Jane Doe`, `user@example.com`, relative paths).
 
 ---
 
-## Command Reference
-
-| Command | Function |
-| :--- | :--- |
-| **`/morning`** | Records wake time and energy rating, shifting the day's scheduled blocks in TaskNotes. |
-| **`/evening`** | Reviews today's completed tasks, checks tomorrow's calendar, and stages a draft schedule. |
-| **`/plan`** | Generates focus blocks for active tasks around external calendar commitments. |
-| **`/task`** | Creates a new TaskNotes note with estimated duration, modality, and category tags. |
-| **`/pause`** | Suspends active planning and clears scheduled timestamps during vacations or sick leave. |
-| **`/resume`** | Resumes daily planning cycles following a pause. |
-| **`/doctor`** | Checks vault files for missing tags, broken links, or frontmatter formatting issues. |
-| **`/audit`** | Reconciles task completion logs, updates duration multipliers, and reviews upcoming milestones. |
-
----
-
-## Setup
-
-### Prerequisites
-1. **[Obsidian](https://obsidian.md):** Installed on your computer.
-2. **Community Plugins:**
-   * **[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes):** Required. Provides the user interface for tasks, frontmatter management, and calendar views.
-   * **[Dataview](https://github.com/blacksmithgu/obsidian-dataview):** Recommended for custom task dashboards and queries.
-3. **AI Environment:** An environment that can interact with the vault folder (such as Google Antigravity).
-
-### Installation
-1. Clone or download this repository:
-   ```bash
-   git clone https://github.com/tama-gucci/chrysalis.git ~/chrysalis
-   ```
-2. Open the folder as a vault in Obsidian.
-3. Enable the TaskNotes plugin in Obsidian settings.
-4. Open the folder in your AI environment and run:
-   ```text
-   /onboard
-   ```
-   This initializes `System/Scheduling-Memory.md` and `System/Life-Roadmap.md` with your initial settings.
-
----
-
-## License
+## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).

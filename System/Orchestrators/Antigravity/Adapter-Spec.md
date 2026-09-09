@@ -50,6 +50,11 @@ Antigravity accommodates flexible deployment models depending on user preference
   * **Evening Trigger (`21:30` local time):** Executes `/audit` to reconcile completed session deltas, checks 14-day roadmap horizons, and stages tomorrow's prototype schedule.
 * **Characteristics:** Proactive, hands-free life rhythm synchronization without manual trigger requirements.
 
+### 3. Mode 3: Ambient Gateway Service on "Golem" (Surface Pro X Production Topology)
+* **Runtime:** Ambient Chrysalis Gateway (`apps/gateway/`, FastAPI on port `8765`) running 24/7 on Golem (Surface Pro X on Windows 11 on ARM64, 16GB total RAM: 4GB Hyper-V Home Assistant, 12GB operational memory).
+* **Workflow:** The gateway wraps Antigravity's headless language server (`language_server.exe agentapi` / `agentapi.bat` on Windows, or POSIX equivalent) via `AntigravityBridge`. Mobile and Wear OS clients connect over a secure Cloudflare Zero-Trust Tunnel.
+* **Port Separation:** Operates strictly on port `8765`, coexisting peacefully with the Obsidian TaskNotes plugin on port `8080`.
+
 ---
 
 ## 🛠️ Tool Bindings & Anti-Simulation Law
@@ -58,27 +63,30 @@ Unlike consumer web LLM interfaces that lack filesystem mutation tools, Antigrav
 
 | Operation | Native Antigravity Tool | Target Files |
 | :--- | :--- | :--- |
-| **Inspect State** | `view_file` | `System/Scheduling-Memory.md`, `TaskNotes/Tasks/*.md`, `System/Life-Roadmap.md` |
+| **Inspect State** | `view_file` | `System/Scheduling-Memory.md`, `TaskNotes/Tasks/*.md`, `System/Life-Roadmap.md`, `Slipbox/*.md` |
 | **Lock Timestamps** | `replace_file_content` | `TaskNotes/Tasks/*.md` (`scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"`) |
-| **Create Notes** | `write_to_file` | `TaskNotes/Tasks/*.md`, `YYYY-MM-DD.md` (Daily Note) |
+| **Create Notes** | `write_to_file` | `TaskNotes/Tasks/*.md`, `YYYY-MM-DD.md` (Daily Note), `Slipbox/*.md` (/zettel) |
 | **Update Memory** | `replace_file_content` | `System/Scheduling-Memory.md` (`morning_checkin`, `prototype_schedule`) |
+| **Hypergraph Linking** | `replace_file_content` | `Projects/*/Roadmap.md` (Ref Files), `TaskNotes/Tasks/*.md` (`linked_zettels`) |
 | **Run Diagnostics** | `run_command`, `write_to_file` | `System/System-Health.md` (via `/doctor`) |
 | **Scheduled Automation** | `schedule`, `manage_task` | Background cron triggers (`08:30` and `21:30`) |
 
 > [!IMPORTANT]
-> **Anti-Simulation Invariant:** Chat text output alone NEVER mutates system state. Antigravity must always execute physical tool calls (`replace_file_content` / `write_to_file`) to commit schedule blocks and state transitions to disk.
+> **Anti-Simulation Invariant:** Chat text output alone NEVER mutates system state. Antigravity must always execute physical tool calls (`replace_file_content` / `write_to_file`) to commit schedule blocks, hypergraph links, and state transitions to disk.
 
 ---
 
 ## 📅 Calendar Ingestion & Collision Avoidance
 
-Antigravity ensures zero collisions with external commitments using a dual-layer strategy:
+Antigravity ensures zero collisions with external commitments using a multi-layer strategy:
 
-1. **Client-Synchronized Event Cache (Primary):**
-   * Reads `calendar_sync.cached_events` from `System/Scheduling-Memory.md` (populated and kept current by client-side calendar synchronization across synced devices).
-2. **TaskNotes MCP Integration (Direct Query):**
-   * If the TaskNotes MCP server is registered in `mcp_config.json`, Antigravity calls `tasknotes_get_calendar_events` directly to ingest real-time calendar commitments.
-3. **Bio-Cognitive Wrapping:** Focus sprint blocks (75–90m) automatically wrap around external meetings, appointments, and travel buffers without overlap.
+1. **Model C (Mobile OS Bridge) & Client-Synchronized Cache (Primary):**
+   * Reads `calendar_sync.cached_events` from `System/Scheduling-Memory.md` (populated and kept current by client-side calendar synchronization via Android `CalendarContract`, requiring zero Google Cloud Console setup).
+2. **Decoupled iCal Ingestion Fallback:**
+   * Standalone/headless environments ingest calendar feeds via `fetch_ical.py` using Google Calendar's private `.ics` URL.
+3. **TaskNotes MCP Integration (Direct Query):**
+   * If the TaskNotes MCP server is registered in `mcp_config.json`, Antigravity calls `tasknotes_get_calendar_events` directly to ingest real-time calendar commitments from port `8080`.
+4. **Bio-Cognitive Wrapping:** Focus sprint blocks (75–90m) automatically wrap around external meetings, appointments, and travel buffers without overlap.
 
 ---
 

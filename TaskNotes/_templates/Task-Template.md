@@ -16,6 +16,9 @@ tags:
   - template
   # - task (injected when materialized)
   # - pillar-X/subtag
+linked_zettels: [] # Array of wikilinks to relevant Slipbox research notes, e.g. ["[[20260901-modular-engine]]"]
+project_ref: null # Wikilink to parent project roadmap, e.g. "[[Projects/chrysalis-architecture/Roadmap]]"
+googleCalendarEventId: null # Android CalendarContract event ID for Model C calendar sync
 ---
 
 # Imperative Task Title

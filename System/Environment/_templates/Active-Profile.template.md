@@ -7,12 +7,23 @@ last_updated: "{{timestamp}}"
 production_runtime:
   role: "Chrysalis Continuous Execution (Home Server Node)"
   server_host:
-    name: "{{server_hostname}}" # e.g., station-server
+    name: "{{server_hostname}}" # e.g., golem
+    model: "{{server_model}}" # e.g., Microsoft Surface Pro X
     role: "24/7 At-Home Server"
     os: "{{server_os}}" # e.g., Windows 11 on ARM (ARM64) or Linux
-    chassis: "{{server_chassis}}" # e.g., tablet / server / headless
-    power_profile: "Low-power continuous execution node"
+    chassis: "{{server_chassis}}" # e.g., tablet / convertible / server
+    power_profile: "Plugged-in continuous execution node"
+    ram_total_gb: 16 # Golem hardware topology: 16GB total RAM
+    hyper_v_home_assistant_gb: 4 # 4GB dedicated to Home Assistant VM
+    chrysalis_operational_memory_gb: 12 # 12GB operational memory for Chrysalis & agents
     manifest: "[[System/Environment/{{server_hostname}}|{{server_hostname}}.md]]"
+  gateway:
+    daemon: "apps/gateway (FastAPI)"
+    port: 8765 # Chrysalis Ambient Gateway port
+    obsidian_tasknotes_port: 8080 # Obsidian TaskNotes port
+    tunnel: "Cloudflare Zero-Trust Tunnel"
+    bridge: "Pluggable Orchestrator Bridge (BaseOrchestratorBridge)"
+  intelligence_mode: "option_a_gateway" # option_a_gateway (Golem) or option_b_mobile_native (Edge)
   storage_substrate:
     provider: "{{storage_provider}}" # e.g., google_drive, icloud, syncthing
     central_host_type: "cloud_synced_substrate"
@@ -53,8 +64,11 @@ development_pipeline:
 
 client_topology:
   sync_model: "Multi-device concurrent sync via {{storage_provider}}"
-  client_app: "Obsidian"
-  devices: "Concurrently active mobile, tablet, and desktop clients"
+  client_apps:
+    obsidian: "Desktop and tablet Obsidian vault with TaskNotes (Port 8080)"
+    mobile: "Android smartphone Flutter client with Model C calendar sync"
+    wearable: "Standalone circular Wear OS smartwatch companion (384x384 OLED)"
+  devices: "Concurrently active mobile, wearable, tablet, and desktop clients"
 
 timezone:
   explicit_offset: "{{timezone_offset}}" # e.g., -05:00

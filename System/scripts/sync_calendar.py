@@ -12,13 +12,28 @@ import os
 import json
 import urllib.request
 import urllib.parse
+import re
 from datetime import datetime, date, timedelta
 from pathlib import Path
 
 DEFAULT_PORT = 8080
 DEFAULT_HOST = "localhost"
 REPO_ROOT = Path(__file__).resolve().parent.parent
-MEMORY_PATH = os.environ.get("CHRYSALIS_MEMORY_PATH") or str(REPO_ROOT / "System" / "Scheduling-Memory.md")
+MEMORY_PATH = os.environ.get("CHRYSALIS_MEMORY_PATH") or (
+    str(REPO_ROOT / "Scheduling-Memory.md")
+    if (REPO_ROOT / "Scheduling-Memory.md").exists()
+    else str(REPO_ROOT / "System" / "Scheduling-Memory.md")
+)
+
+def extract_timezone_from_memory(memory_content: str) -> str:
+    """Extracts timezone_offset from frontmatter, defaulting to '-05:00'."""
+    m = re.search(r'timezone_offset:\s*"([^"]+)"', memory_content)
+    if m:
+        return m.group(1)
+    m = re.search(r'timezone_offset:\s*([^\s]+)', memory_content)
+    if m:
+        return m.group(1).strip('"\'')
+    return "-05:00"
 
 def get_tasknotes_events(start_date_str: str, end_date_str: str, port: int = DEFAULT_PORT, host: str = DEFAULT_HOST):
     """
@@ -81,29 +96,47 @@ def parse_events(raw_events: list):
     parsed.sort(key=lambda x: x.get("start", ""))
     return {"error": None, "events": parsed}
 
-def sync_to_memory(port: int = DEFAULT_PORT, memory_path: str = MEMORY_PATH):
+try:
+    from fetch_ical import sync_ical
+except ImportError:
+    try:
+        from System.scripts.fetch_ical import sync_ical
+    except ImportError:
+        sync_ical = None
+
+def sync_to_memory(port: int = DEFAULT_PORT, memory_path: str = MEMORY_PATH, force_ical: bool = False):
     """
-    Fetches the 7-day calendar window and serializes it into Scheduling-Memory.md
+    Fetches the 7-day calendar window and serializes it into Scheduling-Memory.md.
+    If TaskNotes on port 8080 is unreachable, automatically falls back to fetch_ical.
     """
+    p = Path(memory_path)
+    if not p.exists():
+        print(f"Memory file not found: {memory_path}")
+        return False
+
+    content = p.read_text(encoding="utf-8")
+    is_ical_provider = 'provider: "ical_feed"' in content
+
+    if force_ical or is_ical_provider:
+        if sync_ical:
+            return sync_ical(memory_path=memory_path)
+
     today = date.today()
     start_str = today.strftime("%Y-%m-%d")
     end_str = (today + timedelta(days=7)).strftime("%Y-%m-%d")
     
     res = get_tasknotes_events(start_str, end_str, port=port)
     if res.get("error"):
-        print(f"Sync failed: {res['error']}")
+        print(f"Notice: {res['error']}")
+        if sync_ical:
+            print("[sync_calendar] TaskNotes port 8080 is offline. Seamlessly falling back to direct iCal feed...")
+            return sync_ical(memory_path=memory_path)
         return False
     
     events = res.get("events", [])
-    now_iso = datetime.now().strftime("%Y-%m-%dT%H:%M:%S-05:00")
-    
-    p = Path(memory_path)
-    if not p.exists():
-        print(f"Memory file not found: {memory_path}")
-        return False
+    tz_offset = extract_timezone_from_memory(content)
+    now_iso = datetime.now().strftime(f"%Y-%m-%dT%H:%M:%S{tz_offset}")
         
-    content = p.read_text()
-    
     lines = content.splitlines(keepends=True)
     out_lines = []
     in_cal_block = False
@@ -141,11 +174,19 @@ def sync_to_memory(port: int = DEFAULT_PORT, memory_path: str = MEMORY_PATH):
             
         out_lines.append(line)
         
-    p.write_text("".join(out_lines))
+    p.write_text("".join(out_lines), encoding="utf-8")
     print(f"Successfully synced {len(events)} calendar events to {memory_path}")
     return True
 
 def main():
+    if "--ical" in sys.argv:
+        if sync_ical:
+            success = sync_ical()
+            sys.exit(0 if success else 1)
+        else:
+            print("Error: fetch_ical module could not be imported.")
+            sys.exit(1)
+
     if "--sync-to-memory" in sys.argv or "--sync" in sys.argv:
         port = DEFAULT_PORT
         for i, arg in enumerate(sys.argv):

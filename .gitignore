@@ -118,7 +118,42 @@
 !/.obsidian/plugins/**/connector.js
 !/.obsidian/plugins/**/sqlite3.wasm
 
-# 10. Catch-all: Explicitly Deny Secrets, OS Cruft, and Sync Conflicts Everywhere
+# 10. Whitelist Mobile Client & Ambient Gateway Application Substrates
+!/apps/
+/apps/*
+!/apps/mobile/
+/apps/mobile/.dart_tool/
+/apps/mobile/.flutter-plugins
+/apps/mobile/.flutter-plugins-dependencies
+/apps/mobile/build/
+/apps/mobile/.pub-cache/
+/apps/mobile/.pub/
+/apps/mobile/.idea/
+/apps/mobile/**/*.iml
+/apps/mobile/android/.gradle/
+/apps/mobile/android/local.properties
+/apps/mobile/android/**/build/
+/apps/mobile/ios/Pods/
+/apps/mobile/ios/.symlinks/
+/apps/mobile/ios/Flutter/Flutter.framework
+/apps/mobile/ios/Flutter/Flutter.podspec
+/apps/mobile/ios/Flutter/Generated.xcconfig
+/apps/mobile/ios/Flutter/flutter_export_environment.sh
+/apps/mobile/ios/Flutter/ephemeral/
+/apps/mobile/ios/Flutter/app.framework
+/apps/mobile/linux/flutter/ephemeral/
+/apps/mobile/windows/flutter/ephemeral/
+/apps/mobile/macos/Flutter/ephemeral/
+/apps/mobile/macos/Flutter/flutter_export_environment.sh
+/apps/mobile/macos/Flutter/GeneratedPluginRegistrant.swift
+!/apps/gateway/
+/apps/gateway/.venv/
+/apps/gateway/venv/
+/apps/gateway/**/__pycache__/
+/apps/gateway/**/*.pyc
+/apps/gateway/.pytest_cache/
+
+# 11. Catch-all: Explicitly Deny Secrets, OS Cruft, and Sync Conflicts Everywhere
 *.env
 *.token.json
 *credentials*.json
@@ -144,3 +179,10 @@ Nexus/
 *.bak
 *.swp
 *.swo
+
+# 12. Whitelist Framework Automated Test Suite
+!/tests/
+!/tests/**
+tests/**/__pycache__/
+tests/**/*.pyc
+
