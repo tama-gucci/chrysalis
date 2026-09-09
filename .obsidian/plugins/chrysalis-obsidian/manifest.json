@@ -1,0 +1,10 @@
+{
+  "id": "chrysalis-obsidian",
+  "name": "Chrysalis",
+  "version": "1.0.0",
+  "minAppVersion": "1.12.2",
+  "description": "Native Chrysalis task intelligence, MCP server, and focus architecture plugin for Obsidian.",
+  "author": "Chrysalis Framework",
+  "authorUrl": "https://github.com/tama-gucci/chrysalis",
+  "isDesktopOnly": false
+}

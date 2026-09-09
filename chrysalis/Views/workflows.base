@@ -1,0 +1,12 @@
+filters:
+  and:
+    - note["type"] == "workflow" || note["type"] == "tasknotes-workflow" || note["type"] == "chrysalis-workflow"
+    - file.inFolder("chrysalis/Workflows") || file.inFolder("TaskNotes/Workflows")
+
+views:
+  - type: tasknotesWorkflows
+    name: Workflows
+    order:
+      - file.name
+      - note["enabled"]
+      - note["description"]
