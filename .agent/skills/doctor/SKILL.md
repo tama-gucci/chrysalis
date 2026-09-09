@@ -1,23 +1,23 @@
 ---
 name: doctor
-description: "Comprehensive 6-point system integrity and diagnostic suite: validates TaskNotes frontmatter schemas, explicit local timezones (-05:00), Life-Roadmap tag registries, graph/wikilink integrity, skill runbooks/dependencies, and dynamic state multiplier bounds ([0.20, 2.00]), outputting live diagnostic reports and auto-heals to System/System-Health.md."
+description: "Comprehensive 6-point system integrity and diagnostic suite: validates Chrysalis task frontmatter schemas, explicit local timezones (-05:00), Life-Roadmap tag registries, graph/wikilink integrity, skill runbooks/dependencies, and dynamic state multiplier bounds ([0.20, 2.00]), outputting live diagnostic reports and auto-heals to System/System-Health.md."
 trigger: "/doctor"
 domain: runtime
 reads:
-  - "chrysalis/TaskNotes/Tasks/*.md"
-  - "chrysalis/TaskNotes/Archive/*.md"
-  - "chrysalis/Projects/*/Roadmap.md"
-  - "chrysalis/Slipbox/*.md"
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/Dashboard.md"
-  - "chrysalis/.agent/skills/*/*.md"
-  - "chrysalis/Development/skills/*/*.md"
+  - "chrysalis/Tasks/*.md"
+  - "chrysalis/Archive/*.md"
+  - "Projects/*/Roadmap.md"
+  - "Slipbox/*.md"
+  - "System/Scheduling-Memory.md"
+  - "System/Life-Roadmap.md"
+  - "Dashboard.md"
+  - ".agent/skills/*/*.md"
+  - "Development/skills/*/*.md"
 writes:
-  - "chrysalis/System/System-Health.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
-  - "chrysalis/TaskNotes/Archive/*.md"
-  - "chrysalis/System/Scheduling-Memory.md"
+  - "System/System-Health.md"
+  - "chrysalis/Tasks/*.md"
+  - "chrysalis/Archive/*.md"
+  - "System/Scheduling-Memory.md"
 ---
 
 # /doctor (Chrysalis System Integrity & Diagnostic Suite)
@@ -36,7 +36,7 @@ graph TD
     L5["5. Skill Protocol Linter"]
     L6["6. State & Multiplier Sanity Check ([0.20, 2.00])"]
     
-    L1 & L2 & L3 & L4 & L5 & L6 --> REP["Output to chrysalis/System/System-Health.md"]
+    L1 & L2 & L3 & L4 & L5 & L6 --> REP["Output to System/System-Health.md"]
 ```
 
 ---
@@ -44,7 +44,7 @@ graph TD
 ## The 6-Point Integrity & Diagnostic Suite
 
 ### 1. Schema & Frontmatter Linter
-* Scan all active task files in `chrysalis/TaskNotes/Tasks/*.md` and `chrysalis/TaskNotes/Archive/*.md`.
+* Scan all active task files in `chrysalis/Tasks/*.md` and `chrysalis/Archive/*.md`.
 * Validate required fields: `title`, `status`, `dateCreated`, `priority`, `urgency_tier`, `timeEstimate`, `modality`, `tags`.
 * Validate hypergraph & sync fields: `linked_zettels` (list of wikilinks), `project_ref` (wikilink or null), `googleCalendarEventId` (string or null).
 * Validate enums:
@@ -60,7 +60,7 @@ graph TD
 * Flag overdue `status: todo` tasks that require rollover review.
 
 ### 3. Tag Registry & Strategic Pillar Validator
-* Cross-check all `#pillar-X/*` tags on tasks against `tag_registry` in `chrysalis/System/Life-Roadmap.md`.
+* Cross-check all `#pillar-X/*` tags on tasks against `tag_registry` in `System/Life-Roadmap.md`.
 * Flag unregistered, misspelled, or orphaned tags for user review.
 
 ### 4. Graph & Wikilink Resolution Linter
@@ -68,11 +68,11 @@ graph TD
 * Verify that project wikilinks on tasks (`project_ref`) point to existing `Projects/*/Roadmap.md` files, and `linked_zettels` point to existing `Slipbox/*.md` notes.
 
 ### 5. Skill Protocol & Dependency Linter
-* Validate that all files in `chrysalis/.agent/skills/*/SKILL.md` and `chrysalis/Development/skills/*/SKILL.md` contain valid YAML frontmatter (`name`, `description`, `trigger`, `reads`, `writes`).
+* Validate that all files in `.agent/skills/*/SKILL.md` and `Development/skills/*/SKILL.md` contain valid YAML frontmatter (`name`, `description`, `trigger`, `reads`, `writes`).
 * Verify that all internal inter-skill execution references point to existing skill paths.
 
 ### 6. Dynamic State & Multiplier Sanity Check
-* Verify YAML syntax in `chrysalis/System/Scheduling-Memory.md`.
+* Verify YAML syntax in `System/Scheduling-Memory.md`.
 * Enforce invariant bounds: clamp all `tag_multipliers` and `learning_weights` strictly within $[0.20, 2.00]$.
 * Verify that relative offsets in `diurnal_baselines` parse cleanly as valid time deltas.
 
@@ -81,7 +81,7 @@ graph TD
 ## Output & Diagnostic Ledger Generation
 
 ### Step 1: Health Ledger Update (Mandatory Tool Call)
-Format and write diagnostic results, error counts, and auto-heal actions to `chrysalis/System/System-Health.md`:
+Format and write diagnostic results, error counts, and auto-heal actions to `System/System-Health.md`:
 
 ```markdown
 ---

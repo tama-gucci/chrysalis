@@ -38,6 +38,9 @@ ENGINE_DIRS = [
     "TaskNotes/_templates",
     "TaskNotes/Views",
     "TaskNotes/Workflows",
+    "chrysalis/_templates",
+    "chrysalis/Views",
+    "chrysalis/Workflows",
     "Development",
 ]
 
@@ -76,9 +79,9 @@ def sanitize_obsidian_config(src_obsidian: Path, dst_obsidian: Path, dry_run: bo
                     # Exclude secret data, caches, databases, and workflow run logs
                     if item.name == "data.json" and plugin.name in ["nexus", "text-generator"]:
                         continue # Strip API key configs
-                    if item.name == "data.json" and plugin.name == "tasknotes":
+                    if item.name == "data.json" and plugin.name in ["tasknotes", "chrysalis-obsidian"]:
                         try:
-                            # Sanitize custom calendar IDs and event fingerprints from TaskNotes
+                            # Sanitize custom calendar IDs and event fingerprints
                             data = json.loads(item.read_text(encoding="utf-8"))
                             data["calendars"] = []
                             data["icsCalendars"] = []
@@ -147,12 +150,16 @@ def export_starter(target_dir: str, dry_run: bool = False):
     # 4. Generate Clean Template-Backed Active State
     print("\n[4/5] Initializing Clean Template-Backed Memory & Roadmap...")
     
-    # Initialize empty TaskNotes/Tasks directory with 1 sample task
+    # Initialize empty Task directories with sample task
     tasks_dir = target_path / "TaskNotes" / "Tasks"
     tasks_dir.mkdir(parents=True, exist_ok=True)
+    chrysalis_tasks_dir = target_path / "chrysalis" / "Tasks"
+    chrysalis_tasks_dir.mkdir(parents=True, exist_ok=True)
     (target_path / "Slipbox").mkdir(parents=True, exist_ok=True)
     (target_path / "Projects").mkdir(parents=True, exist_ok=True)
     (target_path / "TaskNotes" / "Archive").mkdir(parents=True, exist_ok=True)
+    (target_path / "chrysalis" / "Archive").mkdir(parents=True, exist_ok=True)
+    (target_path / "chrysalis" / "Daily").mkdir(parents=True, exist_ok=True)
 
     # Copy templates as active starter files
     if (VAULT_ROOT / "System" / "_templates" / "Scheduling-Memory.template.md").exists():
@@ -165,14 +172,18 @@ def export_starter(target_dir: str, dry_run: bool = False):
             VAULT_ROOT / "System" / "_templates" / "Life-Roadmap.template.md",
             target_path / "System" / "Life-Roadmap.md"
         )
-    if (VAULT_ROOT / "TaskNotes" / "_templates" / "Task-Template.md").exists():
-        shutil.copy2(
-            VAULT_ROOT / "TaskNotes" / "_templates" / "Task-Template.md",
-            tasks_dir / "20260901-configure-chrysalis-workspace.md"
-        )
+    sample_template = None
+    if (VAULT_ROOT / "chrysalis" / "_templates" / "Task-Template.md").exists():
+        sample_template = VAULT_ROOT / "chrysalis" / "_templates" / "Task-Template.md"
+    elif (VAULT_ROOT / "TaskNotes" / "_templates" / "Task-Template.md").exists():
+        sample_template = VAULT_ROOT / "TaskNotes" / "_templates" / "Task-Template.md"
+        
+    if sample_template:
+        shutil.copy2(sample_template, tasks_dir / "20260901-configure-chrysalis-workspace.md")
+        shutil.copy2(sample_template, chrysalis_tasks_dir / "20260901-configure-chrysalis-workspace.md")
     print("  ✓ Initialized clean System/Scheduling-Memory.md")
     print("  ✓ Initialized clean System/Life-Roadmap.md")
-    print("  ✓ Created sample task in TaskNotes/Tasks/")
+    print("  ✓ Created sample task in chrysalis/Tasks/ and TaskNotes/Tasks/")
 
     # 5. Security & Privacy Audit
     print("\n[5/5] Executing Safety & Privacy Leak Audit...")

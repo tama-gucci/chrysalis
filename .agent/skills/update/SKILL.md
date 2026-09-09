@@ -61,7 +61,7 @@ python3 update.py
 
 ### Step 4: Automated Integrity Gate (`/doctor`)
 Immediately trigger `/doctor` to run the 6-point integrity audit:
-1. Universal TaskNotes Frontmatter Linter
+1. Universal Chrysalis Task Frontmatter Linter
 2. Timezone & Temporal Compliance Linter
 3. Tag Registry & Strategic Pillar Validator
 4. Graph & Wikilink Resolution Linter

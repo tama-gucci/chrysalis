@@ -4,17 +4,17 @@ description: "Runtime Operational Audit: Unified nightly system reconciliation: 
 trigger: "/audit"
 domain: runtime
 reads:
-  - "chrysalis/TaskNotes/Tasks/*.md"
-  - "chrysalis/TaskNotes/Archive/*.md"
-  - "chrysalis/Projects/*/Roadmap.md"
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/System/System-Health.md"
+  - "chrysalis/Tasks/*.md"
+  - "chrysalis/Archive/*.md"
+  - "Projects/*/Roadmap.md"
+  - "System/Scheduling-Memory.md"
+  - "System/Life-Roadmap.md"
+  - "System/System-Health.md"
 writes:
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
-  - "chrysalis/Dashboard.md"
+  - "System/Scheduling-Memory.md"
+  - "System/Life-Roadmap.md"
+  - "chrysalis/Tasks/*.md"
+  - "Dashboard.md"
 ---
 
 # /audit (Runtime Operational Audit & Nightly Reconciliation Engine)
@@ -41,7 +41,7 @@ Execute the complete nightly audit and operational reconciliation sequence acros
 Execute the full 6-point diagnostic pass defined in [`doctor`](../doctor/SKILL.md). If critical unrecoverable corruption is found, halt execution and alert user. Otherwise, apply auto-heals and proceed to Step 1.
 
 ### Step 1: Task Lifecycle, Multipliers & Chronotype Delta Learning
-1. Scan `chrysalis/TaskNotes/Tasks/*.md` (with `status: done`) and `chrysalis/TaskNotes/Archive/*.md` for tasks completed in the preceding 24 hours.
+1. Scan `chrysalis/Tasks/*.md` (with `status: done`) and `chrysalis/Archive/*.md` for tasks completed in the preceding 24 hours.
 2. Extract exact session durations: $T_{\text{actual}} = \text{completedAt} - \text{startedAt}$ (in minutes).
 3. **Multiplier Resolution & Bounds Clamping:**
    * If a tag has no existing entry in `tag_multipliers`, initialize baseline multiplier at `1.00`.
@@ -52,18 +52,18 @@ Execute the full 6-point diagnostic pass defined in [`doctor`](../doctor/SKILL.m
 5. **Chronotype Delta Learning:**
    * Record session start hour and efficiency ratio ($T_{\text{actual}} / T_{\text{estimated}}$) into `chronotype_telemetry.hourly_efficiency_history`.
    * If analytical tasks completed between $+02:30$ and $+05:30$ show $> 25\%$ higher efficiency than morning sprints, adjust `diurnal_baselines.relative_offsets.peak_sprint_1_start` by $0.10 \times \Delta$ toward the learned peak.
-6. Persist updated multipliers, chronotype records, and `last_audit` timestamp to `chrysalis/System/Scheduling-Memory.md`.
+6. Persist updated multipliers, chronotype records, and `last_audit` timestamp to `System/Scheduling-Memory.md`.
 
 ### Step 2: Multi-Project & Roadmap Horizon Ingestion
-1. **Project Roadmap Synchronization:** Crawl `chrysalis/Projects/*/Roadmap.md`. Sync completed deliverables and status back into `chrysalis/System/Life-Roadmap.md`.
-2. **Milestone Progress Reconciliation:** Cross-reference completed tasks in `TaskNotes/Archive/` with active milestones. Mark corresponding key results (`- [x]`) as complete.
+1. **Project Roadmap Synchronization:** Crawl `Projects/*/Roadmap.md`. Sync completed deliverables and status back into `System/Life-Roadmap.md`.
+2. **Milestone Progress Reconciliation:** Cross-reference completed tasks in `chrysalis/Archive/` with active milestones. Mark corresponding key results (`- [x]`) as complete.
 3. **14-Day Horizon Ingestion:**
-   * Scan `Life-Roadmap.md` and active project roadmaps for upcoming milestones occurring within the next 14 calendar days lacking active TaskNotes.
+   * Scan `Life-Roadmap.md` and active project roadmaps for upcoming milestones occurring within the next 14 calendar days lacking active task notes.
    * Calculate each task's `timeEstimate` using the tag's active multiplier from `Scheduling-Memory.md` (applying the `1.00` fallback rule if unlisted).
-   * Create structured `.md` files in `chrysalis/TaskNotes/Tasks/` with complete YAML frontmatter (`dateCreated`, `created`, `priority`, `urgency_tier`, `modality`, `status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
+   * Create structured `.md` files in `chrysalis/Tasks/` with complete YAML frontmatter (`dateCreated`, `created`, `priority`, `urgency_tier`, `modality`, `status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
 
 ### Step 3: Friction Reduction & Starter Wedge Injection
-Scan active tasks in `TaskNotes/Tasks/` for stalled items ($\ge 48\text{h}$ in `status: todo` with `timeEstimate >= 45m` and `micro_chunked: false`). Inject a 3-step Starter Wedge checklist ($< 15\text{m}$ each) into the note body and set `micro_chunked: true`.
+Scan active tasks in `chrysalis/Tasks/` for stalled items ($\ge 48\text{h}$ in `status: todo` with `timeEstimate >= 45m` and `micro_chunked: false`). Inject a 3-step Starter Wedge checklist ($< 15\text{m}$ each) into the note body and set `micro_chunked: true`.
 
 ### Step 4: Inferred Task Pool Maintenance & Preference Tuning
 1. Read `inferred_task_pool.interaction_history` from recent cycles in `Scheduling-Memory.md`:
@@ -81,5 +81,5 @@ If `prototype_schedule.feedback_status == "pending"` from the previous cycle wit
 
 ## Protocol 2: Roadmap & Inferred Pool Mutation (`/audit --mutate`)
 Triggered on-demand when `/plan` receives user feedback requiring structural system changes:
-1. **Roadmap Mutations:** Append, modify, or re-scope milestones and horizons directly in `chrysalis/System/Life-Roadmap.md` and relevant `Projects/*/Roadmap.md`.
+1. **Roadmap Mutations:** Append, modify, or re-scope milestones and horizons directly in `System/Life-Roadmap.md` and relevant `Projects/*/Roadmap.md`.
 2. **Inferred Pool Overhauls:** Refresh, prune, or re-generate `inferred_task_pool` candidates matching specific user requests.

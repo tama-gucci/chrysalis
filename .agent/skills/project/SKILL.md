@@ -4,16 +4,16 @@ description: "Project staging and lifecycle integration engine: guides conversat
 trigger: "/project"
 domain: runtime
 reads:
-  - "chrysalis/Projects/*/Roadmap.md"
-  - "chrysalis/Projects/_templates/Project-Template.md"
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/Dashboard.md"
+  - "Projects/*/Roadmap.md"
+  - "Projects/_templates/Project-Template.md"
+  - "System/Life-Roadmap.md"
+  - "System/Scheduling-Memory.md"
+  - "Dashboard.md"
 writes:
-  - "chrysalis/Projects/*/Roadmap.md"
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "Projects/*/Roadmap.md"
+  - "System/Life-Roadmap.md"
+  - "System/Scheduling-Memory.md"
+  - "chrysalis/Tasks/*.md"
 ---
 
 # /project (Chrysalis Project Staging & Strategic Integration Engine)
@@ -36,7 +36,7 @@ graph TD
     P2 --> PillarSelect{"Pillar or Track Selection"}
     PillarSelect --> PillarInject["Inject Milestone into Life-Roadmap.md"]
     PillarInject --> TagSync["Register Tags in tag_registry & Scheduling-Memory.md"]
-    TagSync --> HorizonIngest["Materialize 14-Day Horizon TaskNotes"]
+    TagSync --> HorizonIngest["Materialize 14-Day Horizon Chrysalis Tasks"]
     HorizonIngest --> MarkActive["Update Project status: active"]
 ```
 
@@ -129,7 +129,7 @@ Promote an incubating or staged project into active strategic execution:
    * Initialize `inferred_task_pool.learning_weights` at baseline `1.00`.
 
 ### Step 3: Project Roadmap State Mutation
-1. In `chrysalis/Projects/<Project_Folder>/Roadmap.md`:
+1. In `Projects/<Project_Folder>/Roadmap.md`:
    * Update `status: "active"`.
    * Update `pillar: "pillar-X"` (or designated track).
    * Update `last_updated: "YYYY-MM-DDTHH:mm:ss-05:00"`.
@@ -137,8 +137,8 @@ Promote an incubating or staged project into active strategic execution:
 
 ### Step 4: 14-Day Horizon Task Note Materialization (Hypergraph Linked)
 1. Scan the project's milestones for deliverables falling within the next 14 calendar days.
-2. If any imminent deliverables do not yet have corresponding `.md` task notes in `chrysalis/TaskNotes/Tasks/`:
-   * Materialize task notes in `chrysalis/TaskNotes/Tasks/YYYYMMDD-<slug>.md` strictly conforming to the Universal TaskNotes Frontmatter Schema:
+2. If any imminent deliverables do not yet have corresponding `.md` task notes in `chrysalis/Tasks/` (or `TaskNotes/Tasks/`):
+   * Materialize task notes in `chrysalis/Tasks/YYYYMMDD-<slug>.md` (or `TaskNotes/Tasks/YYYYMMDD-<slug>.md`) strictly conforming to the Universal Chrysalis Task Frontmatter Schema:
      - `status: todo`, `scheduled: null`, explicit local timezone `"-05:00"`
      - `project_ref: "[[Projects/{{project_slug}}/Roadmap]]"`
      - `linked_zettels: ["[[related-zettel-id]]"]` (extracted from Section 3 of parent project roadmap)
@@ -152,7 +152,7 @@ Promote an incubating or staged project into active strategic execution:
 
 ## Protocol 3: Project Catalog & Status (`/project --status` or `/project --list`)
 
-1. Scan all files matching `chrysalis/Projects/*/Roadmap.md`.
+1. Scan all files matching `Projects/*/Roadmap.md`.
 2. Extract `project_id`, `title`, `pillar`, `status`, `horizon_window`, and deliverable completion ratios (`[x]` vs `[ ]`).
 3. Render a structured Markdown table:
 

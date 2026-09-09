@@ -162,7 +162,7 @@ class TestTier4RealWorldScenarios(unittest.TestCase):
             self.assertTrue(len(violations) > 0, f"PII scanner failed to catch {desc}")
 
         # Step 4: Verify default-deny prevents untracked private files
-        ret, stdout, _ = run_cmd(["git", "check-ignore", "private_notes.md", "TaskNotes/Tasks/private.md"])
+        ret, stdout, _ = run_cmd(["git", "check-ignore", "private_notes.md", "chrysalis/Tasks/private.md", "TaskNotes/Tasks/private.md"])
         self.assertEqual(ret, 0, "Default deny must ignore arbitrary unwhitelisted files")
 
     def test_scenario_4_task_lifecycle_staging_calibration_and_telemetry(self):

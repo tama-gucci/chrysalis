@@ -22,7 +22,7 @@ CHOOSE STRUCTURE BASED ON NOTE TYPE:
 [Detailed description of the tool, habit tracker, or workflow concept and why it helps.]
 
 ## Proposed Mechanics & Vault Integration
-[Initial ideas on how this could fit into TaskNotes workflows, agent skills, or Dashboard tables.]
+[Initial ideas on how this could fit into Chrysalis workflows, agent skills, or Dashboard tables.]
 
 ## References & Source Inspiration
 - [[Source-or-Link]]

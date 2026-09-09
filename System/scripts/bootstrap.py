@@ -50,6 +50,12 @@ def ensure_directories(vault_root: Path, folder_name: str = None, dry_run: bool 
         ]
     else:
         dirs = [
+            vault_root / "chrysalis" / "Tasks",
+            vault_root / "chrysalis" / "Archive",
+            vault_root / "chrysalis" / "Daily",
+            vault_root / "chrysalis" / "Views",
+            vault_root / "chrysalis" / "Workflows",
+            vault_root / "chrysalis" / "_templates",
             vault_root / "TaskNotes" / "Tasks",
             vault_root / "TaskNotes" / "Archive",
             vault_root / "TaskNotes" / "Views",

@@ -1,12 +1,12 @@
 ---
 name: task
-description: "Parses shorthand task input, extracts project tags and cognitive modalities, applies adaptive multipliers with a 1.00 fallback rule to baseline estimates, and creates TaskNotes markdown files."
+description: "Parses shorthand task input, extracts project tags and cognitive modalities, applies adaptive multipliers with a 1.00 fallback rule to baseline estimates, and creates Chrysalis task markdown files."
 trigger: "/task"
 domain: runtime
 reads:
-  - "chrysalis/System/Scheduling-Memory.md"
+  - "System/Scheduling-Memory.md"
 writes:
-  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "chrysalis/Tasks/*.md"
 ---
 
 # /task (Shorthand Task Capture Engine)
@@ -15,7 +15,7 @@ writes:
 `/task [title] [tag] [priority] [est:Xm] [due:YYYY-MM-DD] [modality:analytical|kinetic|synthesis|administrative] [project:slug] [[[linked-zettel]]]`
 
 ## Processing Pipeline
-1. **Title, Tag & Project Extraction:** Parse task description and assign the corresponding `#pillar-X/*` tag from `chrysalis/System/Life-Roadmap.md`. If a project is specified (or inferred from matching deliverables in `chrysalis/Projects/*/Roadmap.md`), set `project_ref: "[[Projects/<slug>/Roadmap]]"`.
+1. **Title, Tag & Project Extraction:** Parse task description and assign the corresponding `#pillar-X/*` tag from `System/Life-Roadmap.md`. If a project is specified (or inferred from matching deliverables in `Projects/*/Roadmap.md`), set `project_ref: "[[Projects/<slug>/Roadmap]]"`.
 2. **Cognitive Modality Inference:**
    * If explicit modality is provided (e.g. `modality:kinetic`), assign it directly.
    * If omitted, infer from nature of task:
@@ -24,14 +24,14 @@ writes:
      - `synthesis`: Zettelkasten notes, reading, portfolio review.
      - `administrative`: student portals, emails, forms, payments.
 3. **Multiplier Resolution & Fallback Rule:**
-   * Read `tag_multipliers` from `chrysalis/System/Scheduling-Memory.md`.
+   * Read `tag_multipliers` from `System/Scheduling-Memory.md`.
    * Look up the active multiplier matching the assigned tag (baseline `1.00` fallback).
    * Compute effective duration:
      $$\text{timeEstimate} = \text{round}(\text{base\_estimate} \times \text{multiplier})$$
 4. **Zettelkasten Hypergraph Association:**
    * If `project_ref` is present, scan that project's `## 3. Reference Files & Contacts` section for linked Zettels in `Slipbox/`.
    * Inject matching Zettel references into `linked_zettels` frontmatter array.
-5. **File Generation:** Create a new file in `chrysalis/TaskNotes/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
+5. **File Generation:** Create a new file in `chrysalis/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
 
 ```yaml
 ---

@@ -4,13 +4,13 @@ description: "Handles manual system suspension and resumption: de-schedules acti
 trigger: "/pause"
 domain: runtime
 reads:
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
-  - "chrysalis/YYYY-MM-DD.md"
+  - "System/Scheduling-Memory.md"
+  - "chrysalis/Tasks/*.md"
+  - "Daily/YYYY-MM-DD.md"
 writes:
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
-  - "chrysalis/YYYY-MM-DD.md"
+  - "System/Scheduling-Memory.md"
+  - "chrysalis/Tasks/*.md"
+  - "Daily/YYYY-MM-DD.md"
 ---
 
 # /pause & /resume (System Suspension & Re-Entry Orchestrator)
@@ -36,7 +36,7 @@ writes:
    * **Unspecified (`/pause`):** If no mode is specified in command arguments, prompt the user or default to `maintenance` for today if immediate pause is requested.
 
 ### Step 2: Operational State Mutation (Tool Call)
-Execute `replace_file_content` on `chrysalis/System/Scheduling-Memory.md` to update `system_state.pause_state`:
+Execute `replace_file_content` on `System/Scheduling-Memory.md` to update `system_state.pause_state`:
 ```yaml
 system_state:
   pause_state:
@@ -54,7 +54,7 @@ system_state:
 
 ### Step 3: Task Frontmatter Sanitation (Tool Calls)
 For modes requiring focus de-scheduling (`maintenance`, `rest`, `vacation`):
-1. Scan `chrysalis/TaskNotes/Tasks/*.md` for tasks with `scheduled != null` on today's date.
+1. Scan `chrysalis/Tasks/*.md` (or `TaskNotes/Tasks/*.md`) for tasks with `scheduled != null` on today's date.
 2. **MANDATORY TOOL CALL:** Execute `replace_file_content` on each scheduled task file to set:
    ```yaml
    scheduled: null
@@ -62,7 +62,7 @@ For modes requiring focus de-scheduling (`maintenance`, `rest`, `vacation`):
    *(Tasks remain safely in `status: todo` in the daily backlog without phantom timeblock locks).*
 
 ### Step 4: Daily Note Status Annotation (Tool Call)
-If `chrysalis/YYYY-MM-DD.md` exists for today:
+If `Daily/YYYY-MM-DD.md` (or `YYYY-MM-DD.md`) exists for today:
 1. **MANDATORY TOOL CALL:** Execute `replace_file_content` to inject a status callout into the Daily Focus Note:
    ```markdown
    > [!WARNING]
@@ -80,7 +80,7 @@ Output a concise confirmation message in chat:
 ## Protocol 2: System Resume (`/resume` or `/unpause`)
 
 ### Step 1: State Restoration (Tool Call)
-1. Execute `replace_file_content` on `chrysalis/System/Scheduling-Memory.md` to restore active state:
+1. Execute `replace_file_content` on `System/Scheduling-Memory.md` to restore active state:
    ```yaml
    system_state:
      pause_state:
@@ -98,7 +98,7 @@ Determine appropriate next steps based on local time ($T_{\text{now}}$):
 * **Morning Window ($< 12:00\text{ CDT}$):**
   > *"▶️ Chrysalis has been RESUMED. Would you like to run `/calibrate` to ingest morning telemetry and schedule today's focus sprints?"*
 * **Afternoon Window ($12:00 – 18:00\text{ CDT}$):**
-  > *"▶️ Chrysalis has been RESUMED. System is active in flex mode. Remaining backlog items are available in `TaskNotes/Tasks/`. Evening staging will run at your configured evening time."*
+  > *"▶️ Chrysalis has been RESUMED. System is active in flex mode. Remaining backlog items are available in `chrysalis/Tasks/` (or `TaskNotes/Tasks/`). Evening staging will run at your configured evening time."*
 * **Evening Window ($> 18:00\text{ CDT}$):**
   > *"▶️ Chrysalis has been RESUMED. System is ready for tonight's `/evening` staging pass."*
 

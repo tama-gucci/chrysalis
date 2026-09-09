@@ -23,9 +23,9 @@ tags:
 
 | Window | Focus Block / Sprint | Modality | Duration | Task Reference |
 | :--- | :--- | :---: | :---: | :--- |
-| `{{time_window_1}}` | **Peak Focus Sprint 1** | Analytical | 90m | `[[TaskNotes/Tasks/example-task\|Example Task]]` |
+| `{{time_window_1}}` | **Peak Focus Sprint 1** | Analytical | 90m | `[[chrysalis/Tasks/example-task\|Example Task]]` |
 | `{{time_window_2}}` | *Decompression Buffer* | — | 15m | Rest & Hydrate |
-| `{{time_window_3}}` | **Focus Sprint 2** | Synthesis | 75m | `[[TaskNotes/Tasks/example-task\|Example Task]]` |
+| `{{time_window_3}}` | **Focus Sprint 2** | Synthesis | 75m | `[[chrysalis/Tasks/example-task\|Example Task]]` |
 
 ---
 

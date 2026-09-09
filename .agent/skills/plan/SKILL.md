@@ -4,16 +4,16 @@ description: "Master two-stage focus scheduling engine: Protocol 1 (Staging Mode
 trigger: "/plan"
 domain: runtime
 reads:
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/Projects/*/Roadmap.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
-  - "chrysalis/.agent/skills/audit/SKILL.md"
+  - "System/Scheduling-Memory.md"
+  - "System/Life-Roadmap.md"
+  - "Projects/*/Roadmap.md"
+  - "chrysalis/Tasks/*.md"
+  - ".agent/skills/audit/SKILL.md"
 writes:
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/Projects/*/Roadmap.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "System/Scheduling-Memory.md"
+  - "System/Life-Roadmap.md"
+  - "Projects/*/Roadmap.md"
+  - "chrysalis/Tasks/*.md"
 ---
 
 # /plan (Master Focus Scheduling & Bio-Cognitive Diurnal Engine)
@@ -29,24 +29,24 @@ Initiate the conversation by prompting the user:
 Upon receiving the user's natural language response:
 1. **Roadmap Context Ingestion:** If the user's response introduces new project developments, shifting priorities, or new constraints, update `Life-Roadmap.md` and relevant `Projects/*/Roadmap.md` (or delegate to `/audit --mutate`).
 2. **Task Materialization & Cognitive Modality Classification:**
-   * If the user requested a specific task that does not yet exist in `chrysalis/TaskNotes/Tasks/`:
+   * If the user requested a specific task that does not yet exist in `chrysalis/Tasks/`:
      * Classify **Cognitive Modality**:
        - `analytical`: Deep mental load, convergent logic (CAD drafting, legal/academic writing, problem sets).
        - `kinetic`: Physical/mechanical movement, low mental load (ebike repairs, physical builds, errands, cleaning).
        - `synthesis`: Creative/divergent pattern recognition (Zettelkasten notes, portfolio layouts, design ideation).
        - `administrative`: Low-friction forms, portal checks, emails.
-     * Create the task note in `chrysalis/TaskNotes/Tasks/YYYYMMDD-<slug>.md` with complete YAML frontmatter (`dateCreated`, `created`, `priority`, `urgency_tier`, `modality`, `status: todo`, `scheduled: null`).
+     * Create the task note in `chrysalis/Tasks/YYYYMMDD-<slug>.md` with complete YAML frontmatter (`dateCreated`, `created`, `priority`, `urgency_tier`, `modality`, `status: todo`, `scheduled: null`).
 3. **Priority Arbitration Hierarchy (Life Roadmap Primary):**
    * **`Life-Roadmap.md` active milestone deliverables remain the primary source of daily priority.**
    * **Case A (Active Roadmap Milestone Present):** The analytical roadmap deliverable is assigned as the **Anchor Task (Peak Focus Sprints)**. The user's requested item is paired to its natural cognitive window: kinetic items into **Slump / Kinetic Defrost** ($+06:30 \to +08:15$), synthesis items into **Recovery Focus** ($+08:30 \to +10:30$).
    * **Case B (No Imminent Roadmap Deadlines):** If there are no urgent roadmap deadlines, the user's requested item *can* be elevated to the **Anchor Task**.
     * **Case C (No Additions Specified):** Assemble the prototype entirely from the active roadmap milestone tasks and `inferred_task_pool`.
 4. **Dynamic Calendar Synchronization (Model C OS Bridge & Cache Ingestion):**
-   * Ingest external calendar commitments for tomorrow via Model C (`CalendarContract` platform channel cached in `calendar_sync.cached_events` of `chrysalis/System/Scheduling-Memory.md`), private iCal feed fallback (`fetch_ical.py`), or Google Workspace tool integrations (if active).
+   * Ingest external calendar commitments for tomorrow via Model C (`CalendarContract` platform channel cached in `calendar_sync.cached_events` of `System/Scheduling-Memory.md`), private iCal feed fallback (`fetch_ical.py`), or Google Workspace tool integrations (if active).
    * Parse all external calendar commitments (e.g., CAD certification studio/online classes).
    * For events with physical locations (e.g., studio classrooms), allocate an automatic 30-minute transition/travel buffer before and after.
-   * Save parsed events to `calendar_sync.staged_events_tomorrow` in `chrysalis/System/Scheduling-Memory.md`.
-5. **Record Intent:** Save any user context or notes to `prototype_schedule.staged_user_intent` in `chrysalis/System/Scheduling-Memory.md`.
+   * Save parsed events to `calendar_sync.staged_events_tomorrow` in `System/Scheduling-Memory.md`.
+5. **Record Intent:** Save any user context or notes to `prototype_schedule.staged_user_intent` in `System/Scheduling-Memory.md`.
 
 ### Step 3: Bio-Cognitive Prototype Schedule Assembly & Collision Avoidance
 1. **Diurnal Window Anchoring & Ultradian Sprint Stacking:**
@@ -124,12 +124,12 @@ Triggered during the morning workflow (`/morning`) to calibrate the pre-approved
 > [!IMPORTANT]
 > **Tool Execution Mandate:** You MUST actively execute file tool calls (`replace_file_content`) to serialize the scheduled state to disk. Never stop at printing text in chat.
 
-1. **Mutate Task Frontmatter:** Call `replace_file_content` on each scheduled task file in `chrysalis/TaskNotes/Tasks/*.md` to write the resolved local ISO-8601 timestamp:
+1. **Mutate Task Frontmatter:** Call `replace_file_content` on each scheduled task file in `chrysalis/Tasks/*.md` to write the resolved local ISO-8601 timestamp:
    ```yaml
    scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"
    ```
-2. **Update Scheduling Memory:** Call `replace_file_content` on `chrysalis/System/Scheduling-Memory.md` to update `morning_checkin.active_today`, `morning_checkin.learned_rhythms`, and `morning_checkin.checkin_history`.
-3. **Populate Daily Note:** Call `replace_file_content` (or create) `chrysalis/YYYY-MM-DD.md` with the calibrated daily schedule table, biomarker telemetry, and task wikilinks.
+2. **Update Scheduling Memory:** Call `replace_file_content` on `System/Scheduling-Memory.md` to update `morning_checkin.active_today`, `morning_checkin.learned_rhythms`, and `morning_checkin.checkin_history`.
+3. **Populate Daily Note:** Call `replace_file_content` (or create) `Daily/YYYY-MM-DD.md` (or `YYYY-MM-DD.md`) with the calibrated daily schedule table, biomarker telemetry, and task wikilinks.
 4. **Model C Calendar Synchronization & Hypergraph Annotation:** When running on or connected to the mobile client, trigger synchronization via `CalendarContract` to write the 75m focus blocks directly to the Android device calendar (mirroring to Google Calendar and Wear OS watch complications). The calendar event description is automatically populated with parent project roadmap titles and clickable `[[linked_zettels]]` from `Slipbox/`.
 
 ### Step 4: Deliver Final Locked Agenda

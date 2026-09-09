@@ -577,6 +577,13 @@
     "TaskNotes/Tasks/example-task.md": "{\"title\":\"Initialize Chrysalis Workspace & Obsidian Plugins\",\"status\":\"todo\",\"priority\":\"normal\",\"archived\":false,\"scheduled\":null,\"due\":\"2026-09-07\",\"timeEstimate\":20,\"recurrence\":null,\"recurrence_anchor\":null,\"complete_instances\":[],\"skipped_instances\":[],\"reminders\":[],\"tags\":[\"task\",\"pillar-1/setup\"],\"contexts\":[],\"projects\":[]}"
   },
   "googleCalendarEventIndex": [],
-  "googleCalendarSyncQueue": [],
+  "googleCalendarSyncQueue": [
+    {
+      "taskPath": "chrysalis/Tasks/example-task.md",
+      "requestedAt": 1788981759472,
+      "attempts": 0,
+      "lastError": "Google Calendar sync is not ready"
+    }
+  ],
   "googleCalendarDeletionQueue": []
 }

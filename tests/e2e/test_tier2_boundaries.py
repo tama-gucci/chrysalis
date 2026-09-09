@@ -141,6 +141,21 @@ class TestTier2BoundaryAndCornerCases(unittest.TestCase):
         ignored = stdout.splitlines()
         self.assertEqual(len(ignored), 3, f"All workstation manifests should be ignored: {ignored}")
 
+    def test_f2_b06_gitignore_blocks_chrysalis_tasks_and_archive(self):
+        """
+        [F2-T2-06] .gitignore must block personal tasks and archive under chrysalis/Tasks/*.md and chrysalis/Archive/*.md except example-task.md.
+        Authoritative Source: AGENTS.md Part II § 1 Quarantined Personal Substrates.
+        """
+        ret, stdout, _ = run_cmd([
+            "git", "check-ignore",
+            "chrysalis/Tasks/" + "20260901-personal-task.md",
+            "chrysalis/Archive/" + "20260901-completed-task.md",
+            "chrysalis/Daily/2026-09-02.md"
+        ])
+        self.assertEqual(ret, 0, "git check-ignore must recognize personal chrysalis tasks, archive, and daily notes as ignored")
+        ignored = stdout.splitlines()
+        self.assertEqual(len(ignored), 3, f"All personal chrysalis files should be ignored: {ignored}")
+
     # =========================================================================
     # FEATURE F3: Nomenclature & Synthetic Standards Boundaries
     # Authoritative Source: PROJECT.md § Feature Inventory F3

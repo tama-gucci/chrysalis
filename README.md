@@ -5,14 +5,14 @@
 > **Chrysalis unifies this into a single living ecosystem:**
 > 1. **Knowledge (Zettelkasten / Slipbox):** Atomic thoughts, research, and mental models.
 > 2. **Strategy (Project Roadmaps):** Long-term outcomes, milestones, and deliverables.
-> 3. **Execution (TaskNotes):** Granular, bite-sized tasks tagged with cognitive modality and energy requirements.
+> 3. **Execution (Chrysalis Tasks):** Granular, bite-sized tasks tagged with cognitive modality and energy requirements.
 > 4. **Timeblocking (Calendar Sprints):** 75-minute ultradian focus sessions scheduled around your natural biological rhythm.
 
 ---
 
 ## 🧭 The Knowledge-to-Execution Continuum (The Chrysalis Hypergraph)
 
-Chrysalis bridges the gap between deep thinking and daily execution. Operating natively on an open Markdown vault substrate (with deep [Obsidian](https://obsidian.md) and [TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes) interoperability), the intelligence engine maintains a living, bidirectional graph:
+Chrysalis bridges the gap between deep thinking and daily execution. Operating natively on an open Markdown vault substrate (with deep [Obsidian](https://obsidian.md) and [chrysalis-obsidian](https://github.com/tama-gucci/chrysalis) interoperability), the intelligence engine maintains a living, bidirectional graph:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -30,9 +30,9 @@ Chrysalis bridges the gap between deep thinking and daily execution. Operating n
                                        │  Decomposed into Atomic Deliverables
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 3. EXECUTION LAYER: TaskNotes Schema (TaskNotes/Tasks/*.md)                 │
-│    • Standard TaskNotes markdown frontmatter (modality, energy, timeEstimate)│
-│    • Native 1:1 compatibility with the Obsidian TaskNotes plugin (Port 8080).│
+│ 3. EXECUTION LAYER: Chrysalis Schema (chrysalis/Tasks/*.md)                 │
+│    • Standard Chrysalis markdown frontmatter (modality, energy, timeEstimate)│
+│    • Native 1:1 compatibility with the chrysalis-obsidian plugin (Port 8080).│
 │    • Injects linked_zettels & project_ref for one-tap research access.      │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │  Calibrated via Bio-Cognitive Clock
@@ -54,7 +54,7 @@ graph TD
     subgraph "Knowledge & Markdown Substrate (Obsidian Vault)"
         Zettel["Slipbox/*.md (Zettelkasten)"]
         Projects["Projects/*/Roadmap.md"]
-        Tasks["TaskNotes/Tasks/*.md"]
+        Tasks["chrysalis/Tasks/*.md"]
         SystemState["System/ (Roadmap, Scheduling-Memory)"]
         
         Zettel <-->|Bidirectional Links| Projects
@@ -64,8 +64,8 @@ graph TD
 
     subgraph "Desktop Exploration Layer"
         Obsidian["Obsidian App (Desktop / Tablet)"]
-        TaskNotesPlugin["TaskNotes Obsidian Plugin (Port 8080)"]
-        Obsidian --- TaskNotesPlugin
+        ChrysalisPlugin["chrysalis-obsidian Plugin (Port 8080)"]
+        Obsidian --- ChrysalisPlugin
         Obsidian <-->|Live File Editing| Zettel
         Obsidian <-->|Visual Graph & Canvas| Tasks
     end
@@ -121,10 +121,10 @@ Chrysalis enforces architectural modularity at the interface level, supporting t
 * **Option A (Dedicated Home Hub - Golem):** The Ambient Gateway (`apps/gateway/`, FastAPI on port `8765`) runs 24/7 on Golem behind an outbound-only Cloudflare Zero-Trust Tunnel. It connects to autonomous agents via a pluggable adapter bridge (`BaseOrchestratorBridge`), with Google Antigravity as the reference implementation, and pluggable slots for OpenClaw, Hermes OS, or local LLMs.
 * **Option B (Mobile-Native / Serverless):** For edge deployments without a dedicated home server, the mobile client connects directly to on-device models (e.g. Gemini Nano via AICore) or direct cloud model endpoints.
 
-### 3. Deep Obsidian & TaskNotes Interoperability
-* Chrysalis operates natively within an Obsidian vault. All task files in `TaskNotes/Tasks/*.md` use standard TaskNotes frontmatter schema (`status`, `due`, `scheduled`, `modality`, `energy`, `priority`, `timeEstimate`).
+### 3. Deep Obsidian & chrysalis-obsidian Interoperability
+* Chrysalis operates natively within an Obsidian vault. All task files in `chrysalis/Tasks/*.md` use standard Chrysalis frontmatter schema (`status`, `due`, `scheduled`, `modality`, `energy`, `priority`, `timeEstimate`).
 * **Port Separation Invariant:**
-  - **Port `8080`:** Reserved exclusively for the Obsidian TaskNotes plugin API and local server.
+  - **Port `8080`:** Reserved exclusively for the `chrysalis-obsidian` plugin API and local server.
   - **Port `8765`:** Dedicated to the Ambient Chrysalis Gateway daemon.
   - Both services run simultaneously on the home node with zero port conflicts.
 
@@ -133,7 +133,7 @@ Chrysalis enforces architectural modularity at the interface level, supporting t
 * **Standalone Wear OS Smartwatch Companion:** Designed specifically for circular OLED displays (384×384 px, pure black `#000000` to turn off OLED pixels and preserve battery):
   - Rotary card stack with glanceable active sprint card and countdown timer.
   - Prominent circular voice dictation mic button for instant audio capture.
-  - Intelligent intent classification routing voice notes to TaskNotes or Zettelkasten.
+  - Intelligent intent classification routing voice notes to Chrysalis tasks or Zettelkasten.
 * **Biometric Telemetry:** Google Health Connect integration (`androidx.health.connect.client`) ingesting sleep duration, sleep stages (deep, REM, light), resting heart rate (RHR), and HRV RMSSD to dynamically calculate morning readiness ($1$ to $5$).
 
 ### 5. Calendar Integration Architecture (Model C: Mobile OS Bridge)
@@ -182,7 +182,7 @@ Work is partitioned into **75-minute ultradian focus sprints** separated by mand
 | **`/morning`** | Runtime | Captures wake time and energy score (1–5) or Health Connect biometrics, unpauses system, and locks calibrated timeblocks to disk. |
 | **`/evening`** | Runtime | Reviews today's completed tasks, ingests tomorrow's calendar, and stages tomorrow's prototype focus schedule. |
 | **`/plan`** | Runtime | Master diurnal engine: Protocol 1 (Staging Mode) queries for additions; Protocol 2 (Calibration Mode) locks ISO timestamps. |
-| **`/task`** | Runtime | Parses shorthand input (`/task [title] #tag ~45m !urgent`), computes multiplier-adjusted duration, and creates TaskNotes markdown note. |
+| **`/task`** | Runtime | Parses shorthand input (`/task [title] #tag ~45m !urgent`), computes multiplier-adjusted duration, and creates Chrysalis task markdown note. |
 | **`/zettel`** | Runtime | Captures atomic thoughts or system evolution ideas (`#chrysalis`), generates unique timestamp IDs (`YYYYMMDDHHmmss`), and bidirectionally links concepts. |
 | **`/pause`** | Runtime | Suspends daily focus cycles across 4 semantic modes (`vacation`, `rest`, `flow`, `maintenance`), freezing multiplier decay. |
 | **`/resume`** | Runtime | Restores active diurnal scheduling and orchestrates frictionless lifecycle re-entry. |
@@ -199,7 +199,7 @@ Work is partitioned into **75-minute ultradian focus sprints** separated by mand
 ### 1. Prerequisites
 1. **[Obsidian](https://obsidian.md):** Installed on your workstation or tablet.
 2. **Obsidian Community Plugins:**
-   * **[TaskNotes](https://github.com/lucas-rego/obsidian-tasknotes):** Required for task frontmatter management, boards, and calendar views (Port `8080`).
+   * **[chrysalis-obsidian](.obsidian/plugins/chrysalis-obsidian):** Core plugin required for task frontmatter management, boards, MCP server, and hybrid intelligence calendar views (Port `8080`).
    * **[Dataview](https://github.com/blacksmithgu/obsidian-dataview):** Recommended for dynamic dashboard queries.
 3. **Python 3.14+:** For running the Ambient Gateway daemon and test suite.
 4. **Flutter 3.47+ / Dart 3.13+:** (Optional) For building and running the mobile client and Wear OS companion app.
@@ -207,7 +207,7 @@ Work is partitioned into **75-minute ultradian focus sprints** separated by mand
 ### 2. Vault Installation & Initial Onboarding
 ```bash
 # Clone the repository
-git clone https://github.com/tama-gucci/chrysalis.git ~/chrysalis
+git clone https://github.com/tama-gucci/chrysalis.git ~/vault
 
 # Open the folder as a vault in Obsidian
 # Open your AI orchestrator (Google Antigravity) pointed at the vault root
@@ -231,7 +231,7 @@ $env:CHRYSALIS_GATEWAY_PORT = "8765"
 $env:CHRYSALIS_GATEWAY_TOKEN = "your-secure-token"
 python main.py
 ```
-Test health endpoint in browser: `http://localhost:8765/health` (leaves port `8080` completely free for Obsidian TaskNotes!).
+Test health endpoint in browser: `http://localhost:8765/health` (leaves port `8080` completely free for chrysalis-obsidian!).
 
 ### 4. Running the Complete E2E Test Suite
 Chrysalis includes 104 comprehensive end-to-end tests across 4 tiers:
@@ -245,7 +245,7 @@ python tests\e2e\runner.py
 ## 🔒 Absolute Zero-Leak PII Law (GitHub Privacy Invariant)
 
 Chrysalis is distributed publicly on GitHub (`tama-gucci/chrysalis`). To guarantee that private user data never leaks to public version control:
-1. **Default-Deny Substrate (`.gitignore`):** The repository enforces root `/*` denial. Personal tasks (`TaskNotes/Tasks/*.md`), live state (`System/*.md`), daily notes (`YYYY-MM-DD*.md`), personal slipbox notes, and device manifests are strictly ignored.
+1. **Default-Deny Substrate (`.gitignore`):** The repository enforces root `/*` denial. Personal tasks (`chrysalis/Tasks/*.md`), live state (`System/*.md`), daily notes (`Daily/YYYY-MM-DD*.md`, `chrysalis/Daily/*.md`), personal slipbox notes, and device manifests are strictly ignored.
 2. **1-to-1 Public Template Matrix:** Every personal runtime file has an exact, sanitized public template tracked in git (`System/_templates/`).
 3. **Synthetic Placeholders Standard:** All public documentation, examples, and tests strictly use synthetic placeholders (`Jane Doe`, `user@example.com`, relative paths).
 

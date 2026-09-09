@@ -20,14 +20,14 @@ production_runtime:
   gateway:
     daemon: "apps/gateway (FastAPI)"
     port: 8765 # Chrysalis Ambient Gateway port
-    obsidian_tasknotes_port: 8080 # Obsidian TaskNotes port
+    obsidian_chrysalis_port: 8080 # chrysalis-obsidian plugin port
     tunnel: "Cloudflare Zero-Trust Tunnel"
     bridge: "Pluggable Orchestrator Bridge (BaseOrchestratorBridge)"
   intelligence_mode: "option_a_gateway" # option_a_gateway (Golem) or option_b_mobile_native (Edge)
   storage_substrate:
     provider: "{{storage_provider}}" # e.g., google_drive, icloud, syncthing
     central_host_type: "cloud_synced_substrate"
-    cloud_root: "{{cloud_root}}" # e.g., GoogleDrive/chrysalis
+    cloud_root: "{{cloud_root}}" # e.g., GoogleDrive/vault
     notes: "{{storage_provider}} is the synced substrate connecting the home server node, development workstation, and mobile Obsidian clients."
   orchestrator:
     name: "{{production_orchestrator_name}}" # e.g., Google Antigravity
@@ -65,7 +65,7 @@ development_pipeline:
 client_topology:
   sync_model: "Multi-device concurrent sync via {{storage_provider}}"
   client_apps:
-    obsidian: "Desktop and tablet Obsidian vault with TaskNotes (Port 8080)"
+    obsidian: "Desktop and tablet Obsidian vault with chrysalis-obsidian (Port 8080)"
     mobile: "Android smartphone Flutter client with Model C calendar sync"
     wearable: "Standalone circular Wear OS smartwatch companion (384x384 OLED)"
   devices: "Concurrently active mobile, wearable, tablet, and desktop clients"

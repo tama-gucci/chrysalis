@@ -62,7 +62,21 @@
 !/Development/skills/
 !/Development/skills/**
 
-# 7. Whitelist TaskNotes Views, Workflows, Templates & Example Task ONLY
+# 7. Whitelist Chrysalis & Legacy TaskNotes Views, Workflows, Templates & Example Task ONLY
+!/chrysalis/
+/chrysalis/*
+!/chrysalis/Views/
+!/chrysalis/Views/**
+!/chrysalis/Workflows/
+!/chrysalis/Workflows/**
+!/chrysalis/_templates/
+!/chrysalis/_templates/**
+!/chrysalis/Tasks/
+/chrysalis/Tasks/*
+!/chrysalis/Tasks/example-task.md
+/chrysalis/Archive/
+/chrysalis/Archive/**
+
 !/TaskNotes/
 /TaskNotes/*
 !/TaskNotes/Views/
@@ -108,6 +122,7 @@
 /.obsidian/workspace*.json
 /.obsidian/plugins/obsidian-git/obsidian_askpass.sh
 !/.obsidian/plugins/obsidian-git/data.json
+!/.obsidian/plugins/chrysalis-obsidian/data.json
 !/.obsidian/plugins/tasknotes/data.json
 !/.obsidian/plugins/tasknotes-workflows/data.json
 !/.obsidian/plugins/various-complements/data.json

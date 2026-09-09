@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Chrysalis Calendar Synchronizer (TaskNotes Bridge & Substrate Serializer)
-Fetches dynamic external calendar events from TaskNotes Local HTTP API (port 8080),
+Chrysalis Calendar Synchronizer (chrysalis-obsidian Bridge & Substrate Serializer)
+Fetches dynamic external calendar events from chrysalis-obsidian / TaskNotes Local HTTP API (port 8080),
 extracts locations, times, and recurrence metadata, and writes the 7-day snapshot
-directly into chrysalis/System/Scheduling-Memory.md so autonomous orchestrators
+directly into Scheduling-Memory.md so autonomous orchestrators
 and offline schedulers have instant zero-latency access.
 """
 
@@ -35,9 +35,9 @@ def extract_timezone_from_memory(memory_content: str) -> str:
         return m.group(1).strip('"\'')
     return "-05:00"
 
-def get_tasknotes_events(start_date_str: str, end_date_str: str, port: int = DEFAULT_PORT, host: str = DEFAULT_HOST):
+def get_chrysalis_events(start_date_str: str, end_date_str: str, port: int = DEFAULT_PORT, host: str = DEFAULT_HOST):
     """
-    Queries TaskNotes Local REST API for events between start_date_str and end_date_str.
+    Queries chrysalis-obsidian / TaskNotes Local REST API for events between start_date_str and end_date_str.
     """
     try:
         start_bound = f"{start_date_str}T00:00:00"
@@ -54,9 +54,11 @@ def get_tasknotes_events(start_date_str: str, end_date_str: str, port: int = DEF
                     raw_events = data.get("events", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
                     return parse_events(raw_events)
     except Exception as e:
-        return {"error": f"TaskNotes API unreachable on port {port}: {str(e)}", "events": []}
+        return {"error": f"chrysalis-obsidian API unreachable on port {port}: {str(e)}", "events": []}
     
-    return {"error": "Invalid response from TaskNotes API", "events": []}
+    return {"error": "Invalid response from chrysalis-obsidian API", "events": []}
+
+get_tasknotes_events = get_chrysalis_events
 
 def parse_events(raw_events: list):
     """
@@ -107,7 +109,7 @@ except ImportError:
 def sync_to_memory(port: int = DEFAULT_PORT, memory_path: str = MEMORY_PATH, force_ical: bool = False):
     """
     Fetches the 7-day calendar window and serializes it into Scheduling-Memory.md.
-    If TaskNotes on port 8080 is unreachable, automatically falls back to fetch_ical.
+    If chrysalis-obsidian on port 8080 is unreachable, automatically falls back to fetch_ical.
     """
     p = Path(memory_path)
     if not p.exists():
@@ -125,11 +127,11 @@ def sync_to_memory(port: int = DEFAULT_PORT, memory_path: str = MEMORY_PATH, for
     start_str = today.strftime("%Y-%m-%d")
     end_str = (today + timedelta(days=7)).strftime("%Y-%m-%d")
     
-    res = get_tasknotes_events(start_str, end_str, port=port)
+    res = get_chrysalis_events(start_str, end_str, port=port)
     if res.get("error"):
         print(f"Notice: {res['error']}")
         if sync_ical:
-            print("[sync_calendar] TaskNotes port 8080 is offline. Seamlessly falling back to direct iCal feed...")
+            print("[sync_calendar] chrysalis-obsidian port 8080 is offline. Seamlessly falling back to direct iCal feed...")
             return sync_ical(memory_path=memory_path)
         return False
     
@@ -146,7 +148,7 @@ def sync_to_memory(port: int = DEFAULT_PORT, memory_path: str = MEMORY_PATH, for
             in_cal_block = True
             out_lines.append("calendar_sync:\n")
             out_lines.append("  enabled: true\n")
-            out_lines.append('  provider: "tasknotes_api"\n')
+            out_lines.append('  provider: "chrysalis_api"\n')
             out_lines.append(f"  port: {port}\n")
             out_lines.append(f'  last_sync: "{now_iso}"\n')
             out_lines.append(f'  horizon_start: "{start_str}"\n')
@@ -207,7 +209,7 @@ def main():
         elif arg == "--tomorrow":
             target = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
     
-    result = get_tasknotes_events(target, target, port=port)
+    result = get_chrysalis_events(target, target, port=port)
     print(json.dumps(result, indent=2))
 
 if __name__ == "__main__":

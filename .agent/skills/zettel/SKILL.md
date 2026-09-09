@@ -37,7 +37,7 @@ writes:
      [Detailed description of the tool, habit tracker, or workflow concept and why it helps.]
 
      ## Proposed Mechanics & Vault Integration
-     [Initial ideas on how this could fit into TaskNotes workflows, agent skills, or Dashboard tables.]
+     [Initial ideas on how this could fit into Chrysalis workflows, agent skills, or Dashboard tables.]
 
      ## References & Source Inspiration
      - [[Source-or-Link]]
@@ -71,8 +71,8 @@ writes:
 
 3. **Autonomous Hypergraph Linking (Knowledge-to-Execution Pipeline):**
    * After writing the Zettel note to `Slipbox/`:
-     1. **Project Roadmap Linking:** Inspect all active project roadmaps in `chrysalis/Projects/*/Roadmap.md`. If the Zettel note's tags or core thesis intersect with an active project's tags or domain, append a `[[WikiLink]]` to that project roadmap under `## 3. Reference Files & Contacts`.
-     2. **Task Frontmatter Injection:** For tasks in `chrysalis/TaskNotes/Tasks/*.md` that belong to that project or share its tags, inject the Zettel note reference into the task's frontmatter:
+     1. **Project Roadmap Linking:** Inspect all active project roadmaps in `Projects/*/Roadmap.md`. If the Zettel note's tags or core thesis intersect with an active project's tags or domain, append a `[[WikiLink]]` to that project roadmap under `## 3. Reference Files & Contacts`.
+     2. **Task Frontmatter Injection:** For tasks in `chrysalis/Tasks/*.md` that belong to that project or share its tags, inject the Zettel note reference into the task's frontmatter:
         ```yaml
         linked_zettels:
           - "[[YYYYMMDDHHmmss-slug]]"

@@ -23,7 +23,7 @@ googleCalendarEventId: null
 # Initialize Chrysalis Workspace & Obsidian Plugins
 
 ## Context & Objective
-Verify that all Obsidian community plugins (TaskNotes, Dataview, Obsidian Git) are active and configured with custom views.
+Verify that all Obsidian community plugins (chrysalis-obsidian, Dataview, Obsidian Git) are active and configured with custom views.
 
 ## Starter Wedge Execution Checklist
 - [ ] Step 1: Open Obsidian settings and ensure Community Plugins are turned on.

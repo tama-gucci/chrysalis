@@ -4,14 +4,14 @@ description: "Interactive autonomous onboarding engine: detects environment tele
 trigger: "/onboard"
 domain: runtime
 reads:
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/System/_templates/Life-Roadmap.template.md"
-  - "chrysalis/System/_templates/Scheduling-Memory.template.md"
+  - "System/Life-Roadmap.md"
+  - "System/Scheduling-Memory.md"
+  - "System/_templates/Life-Roadmap.template.md"
+  - "System/_templates/Scheduling-Memory.template.md"
 writes:
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "System/Life-Roadmap.md"
+  - "System/Scheduling-Memory.md"
+  - "chrysalis/Tasks/*.md"
 ---
 
 # /onboard (Autonomous Onboarding & Life-Roadmap Engine)
@@ -72,7 +72,7 @@ When the user selects an archetype or provides their priorities:
    * Inject matching tags into `inferred_task_pool.learning_weights` initialized to `1.00`.
    * Seed the `inferred_task_pool.tasks` with 2–4 starter candidate tasks extracted from Milestone M1.1.
 3. **Generate Starter Task Notes:**
-   * If requested, generate 1–2 initial starter task notes in `TaskNotes/Tasks/*.md` adhering strictly to the Universal TaskNotes Frontmatter Schema (`status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
+   * If requested, generate 1–2 initial starter task notes in `chrysalis/Tasks/*.md` (or `TaskNotes/Tasks/*.md`) adhering strictly to the Universal Chrysalis Task Frontmatter Schema (`status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
 
 ---
 

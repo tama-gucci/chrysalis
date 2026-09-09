@@ -1,6 +1,6 @@
 {
-  "workflowFolder": "TaskNotes/Workflows",
-  "workflowViewPath": "TaskNotes/Views/workflows.base",
+  "workflowFolder": "chrysalis/Workflows",
+  "workflowViewPath": "chrysalis/Views/workflows.base",
   "autoCreateDefaultWorkflows": true,
   "autoCreateWorkflowView": true,
   "enableScheduledTriggers": false,

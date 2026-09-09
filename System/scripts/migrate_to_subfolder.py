@@ -330,15 +330,19 @@ def update_obsidian_configs(vault_root: Path, folder_name: str, dry_run: bool = 
     if nexus_cfg.exists():
         try:
             nexus_data = json.loads(nexus_cfg.read_text(encoding="utf-8"))
-            models_section = nexus_data.get("models", {})
-            default_model = models_section.get("defaultModel", {})
-            agent_model = models_section.get("agentModel", {})
-            if default_model.get("model") != "gemini-3.8-flash" or agent_model.get("model") != "gemini-3.8-flash":
-                default_model["model"] = "gemini-3.8-flash"
-                agent_model["model"] = "gemini-3.8-flash"
-                models_section["defaultModel"] = default_model
-                models_section["agentModel"] = agent_model
-                nexus_data["models"] = models_section
+            updated_nexus = False
+            for section_key in ["models", "llmProviders"]:
+                if section_key in nexus_data and isinstance(nexus_data[section_key], dict):
+                    models_section = nexus_data[section_key]
+                    default_model = models_section.get("defaultModel")
+                    agent_model = models_section.get("agentModel")
+                    if isinstance(default_model, dict) and default_model.get("model") != "gemini-3.8-flash":
+                        default_model["model"] = "gemini-3.8-flash"
+                        updated_nexus = True
+                    if isinstance(agent_model, dict) and agent_model.get("model") != "gemini-3.8-flash":
+                        agent_model["model"] = "gemini-3.8-flash"
+                        updated_nexus = True
+            if updated_nexus:
                 if dry_run:
                     print("  [dry-run] Would update Nexus plugin model to gemini-3.8-flash")
                 else:

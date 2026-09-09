@@ -20,7 +20,7 @@ steps:
     input:
       task:
         $expr: event.after.path
-      targetFolder: TaskNotes/Review
+      targetFolder: chrysalis/Review
 run:
   concurrency:
     group: workflow

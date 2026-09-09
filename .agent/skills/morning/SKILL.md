@@ -4,13 +4,13 @@ description: "Orchestrates the morning workflow: executes /calibrate to unpause 
 trigger: "/morning"
 domain: runtime
 reads:
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/.agent/skills/calibrate/SKILL.md"
-  - "chrysalis/.agent/skills/plan/SKILL.md"
+  - "System/Scheduling-Memory.md"
+  - ".agent/skills/calibrate/SKILL.md"
+  - ".agent/skills/plan/SKILL.md"
 writes:
-  - "chrysalis/System/Scheduling-Memory.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
-  - "chrysalis/YYYY-MM-DD.md"
+  - "System/Scheduling-Memory.md"
+  - "chrysalis/Tasks/*.md"
+  - "Daily/YYYY-MM-DD.md"
 ---
 
 # /morning (Morning Operational Orchestrator)
@@ -18,7 +18,7 @@ writes:
 ## Execution Protocol
 
 ### 1. Execute Morning Calibration Check-In & State Gate
-Read and execute `chrysalis/.agent/skills/calibrate/SKILL.md`:
+Read and execute `.agent/skills/calibrate/SKILL.md`:
 1. Check `system_state.pause_state.is_paused` and `prototype_schedule.feedback_status` in `Scheduling-Memory.md`.
 2. Dispatch proactive check-in prompt:
    * **If Active with Pre-Approved Prototype (`feedback_status == "approved"`):**
@@ -30,8 +30,8 @@ Read and execute `chrysalis/.agent/skills/calibrate/SKILL.md`:
 * **Case A (User Responds):**
   1. **Unpause System & Log Telemetry:** Call `replace_file_content` on `Scheduling-Memory.md` to unpause (`is_paused: false`, `mode: null`, `reason: null`, `paused_at: null`, `resume_policy: null`, `resume_target: null`, `freeze_multiplier_decay: false`), update `morning_checkin.active_today`, compute rolling wake baseline, and log to `checkin_history`.
   2. **Route Scheduling Mode:**
-     * **If Pre-Approved (`feedback_status == "approved"`):** Execute `chrysalis/.agent/skills/plan/SKILL.md` under **Protocol 2: Calibration & Timeblocking Mode** to shift diurnal timeblocks, execute tool calls to serialize `scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"` into all scheduled `TaskNotes/Tasks/*.md` notes, and write the calibrated daily focus note `YYYY-MM-DD.md`.
-     * **If Previously Paused / Pending:** Execute `chrysalis/.agent/skills/plan/SKILL.md` under **Protocol 1: Staging Mode** using $T_{\text{wake}}$ and energy level to stage today's focus, present the prototype table, and obtain approval before locking timestamps.
+     * **If Pre-Approved (`feedback_status == "approved"`):** Execute `.agent/skills/plan/SKILL.md` under **Protocol 2: Calibration & Timeblocking Mode** to shift diurnal timeblocks, execute tool calls to serialize `scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"` into all scheduled `chrysalis/Tasks/*.md` notes, and write the calibrated daily focus note `Daily/YYYY-MM-DD.md`.
+     * **If Previously Paused / Pending:** Execute `.agent/skills/plan/SKILL.md` under **Protocol 1: Staging Mode** using $T_{\text{wake}}$ and energy level to stage today's focus, present the prototype table, and obtain approval before locking timestamps.
 * **Case B (User Still Does Not Respond / Inaction):**
   * Retain `system_state.pause_state.is_paused: true`.
   * Multiplier decay curves remain frozen, and no unapproved timestamps are written to disk.

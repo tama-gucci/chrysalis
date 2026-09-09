@@ -161,7 +161,7 @@ if [ -n "$CAL_MATCHES" ]; then
 fi
 
 # Check for Quarantined TaskNote filenames / dated paths
-TASK_MATCHES=$(git grep -nE 'TaskNotes/Tasks/202[0-9]{5}-[a-zA-Z0-9_-]+\.md' -- "${PATH_EXCLUDES[@]}" 2>/dev/null || true)
+TASK_MATCHES=$(git grep -nE '(TaskNotes|chrysalis)/Tasks/202[0-9]{5}-[a-zA-Z0-9_-]+\.md' -- "${PATH_EXCLUDES[@]}" 2>/dev/null || true)
 if [ -n "$TASK_MATCHES" ]; then
     echo -e "${RED}  ❌ [TASK LEAK] Quarantined task note path detected:${NC}"
     echo "$TASK_MATCHES" | while IFS= read -r LINE; do
@@ -203,7 +203,7 @@ if [ -n "$CACHED_DIFF" ]; then
     fi
 
     # Check for Quarantined TaskNote additions in staged diff
-    STAGED_TASK_ADDITIONS=$(echo "$CACHED_DIFF" | grep -E '^\+[^+]' | grep -E 'TaskNotes/Tasks/202[0-9]' 2>/dev/null || true)
+    STAGED_TASK_ADDITIONS=$(echo "$CACHED_DIFF" | grep -E '^\+[^+]' | grep -E '(TaskNotes|chrysalis)/Tasks/202[0-9]' 2>/dev/null || true)
     if [ -n "$STAGED_TASK_ADDITIONS" ]; then
         echo -e "${RED}  ❌ [STAGED LEAK] Quarantined task note path staged in git diff:${NC}"
         echo -e "     $STAGED_TASK_ADDITIONS"

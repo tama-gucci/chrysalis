@@ -4,24 +4,24 @@ description: "Development & Architecture IDE Skill (Google Antigravity Only): On
 trigger: "/evolve"
 domain: development
 reads:
-  - "chrysalis/Slipbox/*.md"
-  - "chrysalis/System/Life-Roadmap.md"
-  - "chrysalis/System/System-Health.md"
-  - "chrysalis/System/Changelog.md"
-  - "chrysalis/System/Environment/*.md"
-  - "chrysalis/System/Orchestrators/*/*.md"
-  - "chrysalis/.agent/skills/*/*.md"
-  - "chrysalis/Development/skills/*/*.md"
+  - "Slipbox/*.md"
+  - "System/Life-Roadmap.md"
+  - "System/System-Health.md"
+  - "System/Changelog.md"
+  - "System/Environment/*.md"
+  - "System/Orchestrators/*/*.md"
+  - ".agent/skills/*/*.md"
+  - "Development/skills/*/*.md"
 writes:
-  - "chrysalis/System/Changelog.md"
-  - "chrysalis/System/System-Health.md"
-  - "chrysalis/System/Orchestrators/*/*.md"
-  - "chrysalis/TaskNotes/Workflows/*.md"
-  - "chrysalis/Dashboard.md"
-  - "chrysalis/.agent/skills/*/*.md"
-  - "chrysalis/Development/skills/*/*.md"
-  - "chrysalis/.agent/skills/.backup/*.md"
-  - "chrysalis/Slipbox/*.md"
+  - "System/Changelog.md"
+  - "System/System-Health.md"
+  - "System/Orchestrators/*/*.md"
+  - "chrysalis/Workflows/*.md"
+  - "Dashboard.md"
+  - ".agent/skills/*/*.md"
+  - "Development/skills/*/*.md"
+  - ".agent/skills/.backup/*.md"
+  - "Slipbox/*.md"
 ---
 
 # /evolve (Development Architecture & RSI Engine — Google Antigravity IDE)
@@ -70,12 +70,12 @@ Inspect active system architecture and staged evolutions:
 Execute proactive system growth by scanning unintegrated ideas and formulating architectural upgrade proposals:
 
 ### Step 1: Scan for Feature Notes
-* Query all vault files in `chrysalis/Slipbox/` and across the vault containing tag `chrysalis` where `integration_status == "unintegrated"` or missing.
+* Query all vault files in `Slipbox/` and across the vault containing tag `chrysalis` where `integration_status == "unintegrated"` or missing.
 * Parse conceptual requirements, architectural intents, and theoretical references.
 
 ### Step 2: Multi-Vector Architectural Brainstorming
 For each unintegrated note, analyze the 5 Chrysalis integration pathways:
-1. **Workflows:** Automated TaskNotes pipelines in `TaskNotes/Workflows/`.
+1. **Workflows:** Automated Chrysalis pipelines in `chrysalis/Workflows/`.
 2. **Skills:** Modular skill additions, protocol enhancements, or new slash commands in `.agent/skills/`.
 3. **Dashboard UI:** Obsidian Dataview blocks, callouts, or summaries in `Dashboard.md`.
 4. **Operational Memory:** Schema additions or diurnal telemetry expansions in `System/Scheduling-Memory.md`.
@@ -87,7 +87,7 @@ For each unintegrated note, analyze the 5 Chrysalis integration pathways:
 
 ### Step 4: Formulate Feature Integration Spec
 1. Generate complete code/markdown specifications for the proposed feature or adapter update.
-2. Log proposal in `chrysalis/System/Changelog.md` under `## 💡 Staged Feature Proposals`.
+2. Log proposal in `System/Changelog.md` under `## 💡 Staged Feature Proposals`.
 3. Present the proposal directly in the Antigravity developer chat for interactive feedback and approval.
 
 ---

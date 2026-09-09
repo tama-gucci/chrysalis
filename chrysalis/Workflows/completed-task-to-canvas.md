@@ -18,7 +18,7 @@ steps:
       id: canvas.card.create
       version: ^1.0.0
     input:
-      canvas_path: TaskNotes/Canvases/Completed tasks.canvas
+      canvas_path: chrysalis/Canvases/Completed tasks.canvas
       card:
         kind: file
         file:

@@ -40,6 +40,7 @@ ENGINE_FILES = [
     "System/Runtime-Constitution.md",
     "System/Environment/Environment-Index.md",
     "TaskNotes/Tasks/example-task.md",
+    "chrysalis/Tasks/example-task.md",
 ]
 
 ENGINE_DIRS = [
@@ -55,6 +56,9 @@ ENGINE_DIRS = [
     "TaskNotes/_templates",
     "TaskNotes/Views",
     "TaskNotes/Workflows",
+    "chrysalis/_templates",
+    "chrysalis/Views",
+    "chrysalis/Workflows",
 ]
 
 PROTECTED_PATHS = [
@@ -76,27 +80,29 @@ def is_protected_target(rel_path_str: str) -> bool:
     if parts and parts[0] == "chrysalis":
         parts.pop(0)
     norm_p = Path(*parts) if parts else p
+    posix_p = norm_p.as_posix()
+    orig_posix = p.as_posix()
 
     # Never touch personal tasks or archive
-    if (str(norm_p).startswith("TaskNotes/Tasks") or str(norm_p).startswith("Tasks")) and norm_p.name != "example-task.md":
+    if (posix_p.startswith("TaskNotes/Tasks") or posix_p.startswith("Tasks") or orig_posix.startswith("chrysalis/Tasks")) and norm_p.name != "example-task.md":
         return True
-    if str(norm_p).startswith("TaskNotes/Archive") or str(norm_p).startswith("Archive"):
+    if posix_p.startswith("TaskNotes/Archive") or posix_p.startswith("Archive") or orig_posix.startswith("chrysalis/Archive"):
         return True
     # Never touch personal projects or slipbox
-    if str(norm_p).startswith("Projects/") and not str(norm_p).startswith("Projects/_templates") and norm_p.name != "README.md":
+    if posix_p.startswith("Projects/") and not posix_p.startswith("Projects/_templates") and norm_p.name != "README.md":
         return True
-    if str(norm_p).startswith("Slipbox/") and not str(norm_p).startswith("Slipbox/_templates") and norm_p.name != "README.md":
+    if posix_p.startswith("Slipbox/") and not posix_p.startswith("Slipbox/_templates") and norm_p.name != "README.md":
         return True
     # Never touch daily notes (format: YYYY-MM-DD*.md or Daily/YYYY-MM-DD*.md)
     if norm_p.name.endswith(".md") and len(norm_p.name) >= 10 and norm_p.name[:4].isdigit() and norm_p.name[4] == "-":
         return True
     # Protect personal environment node manifests (generic rule, no machine hostnames)
-    if str(norm_p).startswith("System/Environment") and norm_p.suffix == ".md":
+    if (posix_p.startswith("System/Environment") or orig_posix.startswith("System/Environment")) and norm_p.suffix == ".md":
         if norm_p.name not in ["Environment-Index.md", "README.md"] and "_templates" not in norm_p.parts:
             return True
     # Check explicit protected list
     for protected in PROTECTED_PATHS:
-        if str(norm_p) == protected or str(norm_p).startswith(f"{protected}/"):
+        if posix_p == protected or posix_p.startswith(f"{protected}/") or orig_posix == protected or orig_posix.startswith(f"{protected}/"):
             return True
     return False
 

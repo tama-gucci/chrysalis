@@ -186,6 +186,8 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         tracked_files = [line.strip() for line in stdout.splitlines() if line.strip()]
         
         forbidden_substrings = [
+            "chrysalis/Tasks/202",
+            "chrysalis/Archive/",
             "TaskNotes/Tasks/202",
             "TaskNotes/Archive/",
             "System/Life-Roadmap.md",

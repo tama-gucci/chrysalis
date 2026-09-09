@@ -22,7 +22,7 @@ graph TD
         Constitution["AGENTS.md<br/>(Universal Master Constitution)"]
         Memory["System/Scheduling-Memory.md<br/>(Dynamic Multipliers & State)"]
         Hypergraph["Slipbox/ & Projects/<br/>(Knowledge Hypergraph)"]
-        Tasks["TaskNotes/Tasks/*.md<br/>(Frontmatter Backlog)"]
+        Tasks["chrysalis/Tasks/*.md<br/>(Frontmatter Backlog)"]
         Skills[".agent/skills/<br/>(Universal Executable Runbooks)"]
     end
 
@@ -58,9 +58,9 @@ To orchestrate Chrysalis, an AI agent platform must satisfy six core capabilitie
    * **Read:** Inspect files (`view_file`).
    * **Write/Edit:** Modify existing files with precise contiguous replacements (`replace_file_content`) or write new files (`write_to_file`).
 3. **Explicit Local Timezone Enforcement:** All generated or mutated timestamps must serialize with the explicit local offset defined in `Scheduling-Memory.md` (`-05:00`). Raw UTC (`Z`) timestamps are strictly prohibited.
-4. **Skill Discovery & State Execution:** The orchestrator discovers and executes operational protocols defined in `chrysalis/.agent/skills/<skill>/SKILL.md` (`doctor`, `audit`, `plan`, `morning`, `evening`, `pause`, `task`, `zettel`, `onboard`).
-5. **Knowledge Hypergraph Linking:** The orchestrator bidirectionally links atomic Zettelkasten research notes (`Slipbox/`) to strategic deliverables (`Projects/*/Roadmap.md`) and execution frontmatter (`TaskNotes/Tasks/*.md` `linked_zettels`).
-6. **Calendar Synchronization & Port Coexistence:** The orchestrator synchronizes with external calendar commitments (via Model C Mobile OS Bridge, private iCal feed `fetch_ical.py`, or TaskNotes MCP) and respects the strict port boundary: port `8080` for Obsidian TaskNotes, port `8765` for the Ambient Gateway.
+4. **Skill Discovery & State Execution:** The orchestrator discovers and executes operational protocols defined in `.agent/skills/<skill>/SKILL.md` (`doctor`, `audit`, `plan`, `morning`, `evening`, `pause`, `task`, `zettel`, `onboard`).
+5. **Knowledge Hypergraph Linking:** The orchestrator bidirectionally links atomic Zettelkasten research notes (`Slipbox/`) to strategic deliverables (`Projects/*/Roadmap.md`) and execution frontmatter (`chrysalis/Tasks/*.md` `linked_zettels`).
+6. **Calendar Synchronization & Port Coexistence:** The orchestrator synchronizes with external calendar commitments (via Model C Mobile OS Bridge, private iCal feed `fetch_ical.py`, or chrysalis-obsidian MCP) and respects the strict port boundary: port `8080` for chrysalis-obsidian, port `8765` for the Ambient Gateway.
 
 ---
 

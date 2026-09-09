@@ -53,7 +53,7 @@ Antigravity accommodates flexible deployment models depending on user preference
 ### 3. Mode 3: Ambient Gateway Service on "Golem" (Surface Pro X Production Topology)
 * **Runtime:** Ambient Chrysalis Gateway (`apps/gateway/`, FastAPI on port `8765`) running 24/7 on Golem (Surface Pro X on Windows 11 on ARM64, 16GB total RAM: 4GB Hyper-V Home Assistant, 12GB operational memory).
 * **Workflow:** The gateway wraps Antigravity's headless language server (`language_server.exe agentapi` / `agentapi.bat` on Windows, or POSIX equivalent) via `AntigravityBridge`. Mobile and Wear OS clients connect over a secure Cloudflare Zero-Trust Tunnel.
-* **Port Separation:** Operates strictly on port `8765`, coexisting peacefully with the Obsidian TaskNotes plugin on port `8080`.
+* **Port Separation:** Operates strictly on port `8765`, coexisting peacefully with the chrysalis-obsidian plugin on port `8080`.
 
 ---
 
@@ -63,11 +63,11 @@ Unlike consumer web LLM interfaces that lack filesystem mutation tools, Antigrav
 
 | Operation | Native Antigravity Tool | Target Files |
 | :--- | :--- | :--- |
-| **Inspect State** | `view_file` | `System/Scheduling-Memory.md`, `TaskNotes/Tasks/*.md`, `System/Life-Roadmap.md`, `Slipbox/*.md` |
-| **Lock Timestamps** | `replace_file_content` | `TaskNotes/Tasks/*.md` (`scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"`) |
-| **Create Notes** | `write_to_file` | `TaskNotes/Tasks/*.md`, `YYYY-MM-DD.md` (Daily Note), `Slipbox/*.md` (/zettel) |
+| **Inspect State** | `view_file` | `System/Scheduling-Memory.md`, `chrysalis/Tasks/*.md`, `System/Life-Roadmap.md`, `Slipbox/*.md` |
+| **Lock Timestamps** | `replace_file_content` | `chrysalis/Tasks/*.md` (`scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"`) |
+| **Create Notes** | `write_to_file` | `chrysalis/Tasks/*.md`, `Daily/YYYY-MM-DD.md` (Daily Note), `Slipbox/*.md` (/zettel) |
 | **Update Memory** | `replace_file_content` | `System/Scheduling-Memory.md` (`morning_checkin`, `prototype_schedule`) |
-| **Hypergraph Linking** | `replace_file_content` | `Projects/*/Roadmap.md` (Ref Files), `TaskNotes/Tasks/*.md` (`linked_zettels`) |
+| **Hypergraph Linking** | `replace_file_content` | `Projects/*/Roadmap.md` (Ref Files), `chrysalis/Tasks/*.md` (`linked_zettels`) |
 | **Run Diagnostics** | `run_command`, `write_to_file` | `System/System-Health.md` (via `/doctor`) |
 | **Scheduled Automation** | `schedule`, `manage_task` | Background cron triggers (`08:30` and `21:30`) |
 
@@ -84,8 +84,8 @@ Antigravity ensures zero collisions with external commitments using a multi-laye
    * Reads `calendar_sync.cached_events` from `System/Scheduling-Memory.md` (populated and kept current by client-side calendar synchronization via Android `CalendarContract`, requiring zero Google Cloud Console setup).
 2. **Decoupled iCal Ingestion Fallback:**
    * Standalone/headless environments ingest calendar feeds via `fetch_ical.py` using Google Calendar's private `.ics` URL.
-3. **TaskNotes MCP Integration (Direct Query):**
-   * If the TaskNotes MCP server is registered in `mcp_config.json`, Antigravity calls `tasknotes_get_calendar_events` directly to ingest real-time calendar commitments from port `8080`.
+3. **chrysalis-obsidian MCP Integration (Direct Query):**
+   * If the chrysalis-obsidian MCP server is registered in `mcp_config.json`, Antigravity calls `chrysalis_get_calendar_events` (or `tasknotes_get_calendar_events`) directly to ingest real-time calendar commitments from port `8080`.
 4. **Bio-Cognitive Wrapping:** Focus sprint blocks (75–90m) automatically wrap around external meetings, appointments, and travel buffers without overlap.
 
 ---
@@ -98,19 +98,19 @@ When running in automated scheduled mode, Antigravity executes the following sta
 ```text
 Execute skill /morning:
 1. Read "System/Scheduling-Memory.md" and check pause_state. If paused, respect the pause policy.
-2. Ingest external calendar commitments from "calendar_sync.cached_events" or TaskNotes MCP.
+2. Ingest external calendar commitments from "calendar_sync.cached_events" or chrysalis-obsidian MCP.
 3. Prompt the user for morning wake telemetry (actual wake time and energy score 1-5).
 4. Shift diurnal focus sprint windows anchored to Twake.
-5. Execute replace_file_content tool calls to write locked ISO timestamps (scheduled: YYYY-MM-DDTHH:mm:ss-05:00) to TaskNotes/Tasks/*.md.
-6. Create today's daily note at YYYY-MM-DD.md and update morning_checkin in System/Scheduling-Memory.md.
+5. Execute replace_file_content tool calls to write locked ISO timestamps (scheduled: YYYY-MM-DDTHH:mm:ss-05:00) to chrysalis/Tasks/*.md.
+6. Create today's daily note at Daily/YYYY-MM-DD.md and update morning_checkin in System/Scheduling-Memory.md.
 ```
 
 ### 2. Evening Staging & Nightly Audit Trigger
 ```text
 Execute skill /evening:
 1. Run Unified Nightly Audit (/audit):
-   - Reconcile completed tasks in TaskNotes/Tasks/*.md against session deltas; update bounded multipliers within [0.20, 2.00] in System/Scheduling-Memory.md.
-   - Evaluate upcoming 14-day roadmap milestones in System/Life-Roadmap.md and instantiate required TaskNotes.
+   - Reconcile completed tasks in chrysalis/Tasks/*.md against session deltas; update bounded multipliers within [0.20, 2.00] in System/Scheduling-Memory.md.
+   - Evaluate upcoming 14-day roadmap milestones in System/Life-Roadmap.md and instantiate required task notes.
    - Inject Starter Wedges (micro_chunked: true) into stalled tasks (>72h).
 2. Ingest external calendar commitments for tomorrow.
 3. Query the user for any schedule additions, errands, or contextual constraints.
