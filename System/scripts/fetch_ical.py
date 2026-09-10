@@ -153,26 +153,27 @@ def parse_ical_feed(ics_text: str, start_date: date, end_date: date, tz_str: str
     parsed_events = []
     
     for block in raw_blocks:
-        ev_dict = {}
+        ev_dict = {"exdates": []}
         for line in block:
-            if line.startswith("SUMMARY"):
+            line_upper = line.upper()
+            if line_upper.startswith("SUMMARY"):
                 ev_dict["summary"] = line.split(":", 1)[1].replace(r"\,", ",").replace(r"\;", ";").replace(r"\\", "\\")
-            elif line.startswith("LOCATION"):
+            elif line_upper.startswith("LOCATION"):
                 ev_dict["location"] = line.split(":", 1)[1].replace(r"\,", ",").replace(r"\;", ";").replace(r"\\", "\\")
-            elif line.startswith("DESCRIPTION"):
+            elif line_upper.startswith("DESCRIPTION"):
                 ev_dict["description"] = line.split(":", 1)[1].replace(r"\,", ",").replace(r"\;", ";").replace(r"\\", "\\")
-            elif line.startswith("UID"):
+            elif line_upper.startswith("UID"):
                 ev_dict["uid"] = line.split(":", 1)[1]
-            elif line.startswith("STATUS"):
+            elif line_upper.startswith("STATUS"):
                 ev_dict["status"] = line.split(":", 1)[1].upper()
-            elif line.startswith("DTSTART"):
+            elif line_upper.startswith("DTSTART"):
                 ev_dict["dtstart_line"] = line
-            elif line.startswith("DTEND"):
+            elif line_upper.startswith("DTEND"):
                 ev_dict["dtend_line"] = line
-            elif line.startswith("RRULE"):
+            elif line_upper.startswith("RRULE"):
                 ev_dict["rrule"] = line.split(":", 1)[1]
-            elif line.startswith("EXDATE"):
-                ev_dict["exdate"] = line.split(":", 1)[1]
+            elif line_upper.startswith("EXDATE"):
+                ev_dict["exdates"].append(line.split(":", 1)[1])
                 
         # Skip cancelled events
         if ev_dict.get("status") == "CANCELLED":
@@ -213,6 +214,15 @@ def parse_ical_feed(ics_text: str, start_date: date, end_date: date, tz_str: str
             "teams" not in location.lower() and 
             "online" not in location.lower()
         )
+
+        exdate_dates = set()
+        for exdate_str in ev_dict.get("exdates", []):
+            for part in exdate_str.split(","):
+                part = part.strip()
+                if part:
+                    d_ex, _, _ = parse_ical_dt(":" + part, tz_str, default_tz)
+                    if d_ex:
+                        exdate_dates.add(d_ex)
         
         # Handle recurring events
         if rrule_str:
@@ -220,20 +230,54 @@ def parse_ical_feed(ics_text: str, start_date: date, end_date: date, tz_str: str
             freq = rule.get("FREQ")
             bydays_raw = rule.get("BYDAY", "")
             bydays = [WEEKDAY_MAP[d] for d in bydays_raw.split(",") if d in WEEKDAY_MAP]
-            
-            curr = start_date
+
+            until_str = rule.get("UNTIL")
+            d_until = None
+            dt_until = None
+            until_all_day = False
+            if until_str:
+                d_until, iso_until, until_all_day = parse_ical_dt(":" + until_str, tz_str, default_tz)
+                if d_until and d_until < start_date:
+                    continue
+                if iso_until and not until_all_day:
+                    try:
+                        dt_until = datetime.fromisoformat(iso_until)
+                    except Exception:
+                        pass
+
+            count_str = rule.get("COUNT")
+            max_count = int(count_str) if count_str and count_str.isdigit() else None
+            if max_count is not None and max_count <= 0:
+                continue
+
+            curr = d_start if max_count else max(start_date, d_start)
+            occ_count = 0
             while curr <= end_date:
-                if curr >= d_start:
-                    matches = False
-                    if freq == "DAILY":
+                if d_until and curr > d_until:
+                    break
+                matches = False
+                if freq == "DAILY":
+                    matches = True
+                elif freq == "WEEKLY":
+                    if curr == d_start:
                         matches = True
-                    elif freq == "WEEKLY":
-                        if bydays:
-                            matches = curr.weekday() in bydays
-                        else:
-                            matches = (curr.weekday() == d_start.weekday())
-                            
-                    if matches:
+                    elif bydays:
+                        matches = curr.weekday() in bydays
+                    else:
+                        matches = (curr.weekday() == d_start.weekday())
+                        
+                if matches:
+                    if not all_day and dt_until:
+                        t0_time = datetime.fromisoformat(iso_start).time()
+                        occ_dt = datetime.combine(curr, t0_time, tzinfo=default_tz)
+                        if occ_dt > dt_until:
+                            break
+
+                    if max_count:
+                        occ_count += 1
+                        if occ_count > max_count:
+                            break
+                    if curr >= start_date and curr not in exdate_dates:
                         if all_day:
                             occ_start = curr.isoformat()
                             occ_end = (curr + timedelta(days=1)).isoformat()
@@ -253,10 +297,12 @@ def parse_ical_feed(ics_text: str, start_date: date, end_date: date, tz_str: str
                             "has_physical_location": has_phys_loc,
                             "is_recurring": True
                         })
+                    if max_count and occ_count >= max_count:
+                        break
                 curr += timedelta(days=1)
         else:
             # Single non-recurring event
-            if start_date <= d_start <= end_date:
+            if start_date <= d_start <= end_date and d_start not in exdate_dates:
                 parsed_events.append({
                     "id": uid,
                     "title": title,
@@ -409,6 +455,8 @@ def sync_ical(ical_url: str = None, memory_path: str = None, horizon_days: int =
                     Path(vault_base) / "System" / "Scheduling-Memory.md",
                 ])
             candidates.extend([
+                repo_root.parent / "chrysalis" / "System" / "Scheduling-Memory.md",
+                repo_root.parent / "chrysalis" / "chrysalis" / "System" / "Scheduling-Memory.md",
                 Path(__file__).resolve().parent.parent / "Scheduling-Memory.md",
                 repo_root / "chrysalis" / "System" / "Scheduling-Memory.md",
                 repo_root / "System" / "Scheduling-Memory.md",

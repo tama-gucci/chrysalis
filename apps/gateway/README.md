@@ -1,23 +1,23 @@
 # 🛰️ Ambient Chrysalis Gateway
 
-The **Ambient Chrysalis Gateway** is a lightweight, asynchronous Python FastAPI daemon designed to run 24/7 on your home server ("Golem" — Microsoft Surface Pro X on Windows 11 ARM64). It exposes high-throughput, low-latency REST and bidirectional WebSocket interfaces bridging the Chrysalis Mobile and Wear OS clients to autonomous agent orchestrators via a **Pluggable Orchestrator Bridge**.
+The **Ambient Chrysalis Gateway** is a lightweight, asynchronous Python FastAPI daemon engineered to operate 24/7 on your dedicated home hub ("Golem" — Microsoft Surface Pro X on Windows 11 ARM64). It exposes high-throughput, low-latency REST and bidirectional WebSocket interfaces bridging the Chrysalis Mobile and Wear OS clients to autonomous agent orchestrators via a **Pluggable Orchestrator Bridge**.
 
 ---
 
 ## 🏛️ Architecture & Port Separation Invariant
 
 ### 1. The Port Separation Invariant (Port 8765 vs Port 8080)
-To ensure seamless coexistence with the desktop Obsidian environment:
-* **Port `8080`:** Reserved exclusively for the **Obsidian TaskNotes plugin API** and local server.
+To ensure seamless, collision-free coexistence with the desktop Obsidian environment:
+* **Port `8080`:** Reserved exclusively for the **`chrysalis-obsidian` plugin Local REST API & MCP server**.
 * **Port `8765`:** Dedicated to the **Ambient Chrysalis Gateway daemon**.
-* *Both services run side-by-side on Golem without port collision.*
+* *Both services run side-by-side on Golem with zero port collisions.*
 
 ### 2. The Single-Install Invariant (Zero-Phone-Config)
-> *The Chrysalis Android app and Wear OS watch must be the ONLY pieces of software installed on client devices. No auxiliary VPN apps (WireGuard/Tailscale), no secondary sync daemons, and no mobile terminal emulators.*
+> *The Chrysalis Android app and Wear OS smartwatch must be the ONLY software installed on client devices. No secondary VPN apps (WireGuard/Tailscale), no third-party sync daemons, and no mobile terminal emulators.*
 
-To achieve secure global remote access with zero open router ports:
+To achieve secure global remote access with zero open inbound router ports:
 1. **At-Home Daemon:** The FastAPI gateway runs locally on `0.0.0.0:8765`.
-2. **Cloudflare Zero-Trust Tunnel:** An outbound-only tunnel (`cloudflared`) connects the local gateway to a secure public hostname (e.g. `https://gateway.example.com`).
+2. **Cloudflare Zero-Trust Tunnel:** An outbound-only tunnel (`cloudflared`) securely exposes the gateway to an encrypted endpoint (e.g. `https://gateway.example.com`).
 3. **Client Access:** Chrysalis Mobile and Wear OS make standard HTTPS and WSS requests over TLS using Bearer token authentication.
 
 ```
@@ -31,7 +31,7 @@ To achieve secure global remote access with zero open router ports:
 │ "Golem" Home Server (Surface Pro X - Windows 11 on ARM64 - 16GB Total RAM)  │
 │                                                                             │
 │  ┌───────────────────────────────┐      ┌────────────────────────────────┐  │
-│  │ Hyper-V: Home Assistant (4GB) │      │ Obsidian TaskNotes (Port 8080) │  │
+│  │ Hyper-V: Home Assistant (4GB) │      │ chrysalis-obsidian (Port 8080) │  │
 │  └───────────────────────────────┘      └────────────────────────────────┘  │
 │                                                                             │
 │  ┌───────────────────────────────┐      ┌────────────────────────────────┐  │
@@ -59,7 +59,7 @@ To achieve secure global remote access with zero open router ports:
 
 The gateway decouples network transport from agent orchestration through the `BaseOrchestratorBridge` adapter interface ([`orchestrator_bridge.py`](orchestrator_bridge.py)):
 
-* **`AntigravityBridge` (Reference Implementation):** Connects to the local Google Antigravity language server via `language_server.exe agentapi` or `agentapi.bat` on Windows (`~/.gemini/antigravity/bin/agentapi` on POSIX). Dispatches slash commands (`/morning`, `/evening`, `/plan`, `/task`, `/zettel`, `/doctor`, `/audit`, `/pause`) and streams markdown responses.
+* **`AntigravityBridge` (Reference Implementation):** Connects to the local Google Antigravity language server via `language_server.exe agentapi` or `agentapi.bat` on Windows (`~/.gemini/antigravity/bin/agentapi` on POSIX). Dispatches slash commands (`/morning`, `/evening`, `/plan`, `/task`, `/project`, `/zettel`, `/doctor`, `/audit`, `/pause`) and streams markdown responses.
 * **`OpenClawBridge` (Pluggable Slot):** Direct bridge for OpenClaw-based autonomous agent execution.
 * **`HermesOSBridge` (Pluggable Slot):** Direct bridge for Hermes OS / local LLM inference engines.
 
@@ -79,7 +79,7 @@ Dispatches a Chrysalis slash command or conversational prompt to the active orch
     "energy": 4
   },
   "conversation_id": "optional-existing-conversation-id",
-  "model": "flash"
+  "model": "gemini-3.8-flash"
 }
 ```
 
@@ -91,7 +91,7 @@ Dispatches a Chrysalis slash command or conversational prompt to the active orch
   "output": "🌅 Morning Calibration Completed\n- Wake time locked: 07:45...",
   "conversation_id": "auto-created-or-passed-id",
   "execution_time_ms": 240,
-  "timestamp": "2026-09-09T07:45:00-05:00"
+  "timestamp": "2026-09-10T07:45:00-05:00"
 }
 ```
 
@@ -101,103 +101,36 @@ Returns real-time health, uptime, active profile, and availability of the orches
 **Response:**
 ```json
 {
-  "status": "online",
-  "orchestrator": "antigravity",
-  "agentapi_available": true,
-  "agentapi_path": "C:\\Users\\user\\AppData\\Local\\Programs\\antigravity\\resources\\bin\\language_server.exe",
-  "uptime_seconds": 3600.0,
-  "active_profile": "station-node",
-  "port": 8765,
-  "version": "1.0.0",
-  "emulation_mode": false,
-  "timestamp": "2026-09-09T07:45:00-05:00"
+  "status": "healthy",
+  "active_bridge": "antigravity",
+  "bridge_connected": true,
+  "vault_path": "vault/chrysalis",
+  "version": "5.0.0",
+  "port": 8765
 }
 ```
 
-### 3. `WebSocket /api/orchestrator/ws`
-Bidirectional streaming connection for real-time interactive chat, voice transcription playback, and task generation.
-
-- **Client Ping:** `{"type": "ping"}` $\to$ **Server Pong:** `{"type": "pong", "timestamp": "..."}`
-- **Client Command:** `{"type": "command", "command": "/plan", "args": {}}`
-- **Server Stream:**
-  - `{"type": "chunk", "data": "Dispatching command: /plan..."}`
-  - `{"type": "complete", "success": true, "data": {...}}`
+### 3. `WebSocket /ws/orchestrator`
+Provides real-time bidirectional streaming for conversational chat, active sprint telemetry, and rapid task creation.
 
 ---
 
-## 🚀 Setup on "Golem" (Surface Pro X - Windows 11 on ARM64)
+## 🚀 Setup & Execution
 
-### 1. Python Environment Setup (PowerShell)
 ```powershell
-cd "apps\gateway"
+# Navigate to gateway directory
+cd apps\gateway
 
-# Create a clean Windows venv and install dependencies
-Remove-Item -Recurse -Force .venv -ErrorAction SilentlyContinue
+# Set up Python virtual environment
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-```
 
-### 2. Launching Gateway Locally
-```powershell
-$env:CHRYSALIS_GATEWAY_HOST = "0.0.0.0"
+# Configure environment variables
 $env:CHRYSALIS_GATEWAY_PORT = "8765"
-$env:CHRYSALIS_GATEWAY_TOKEN = "generate-a-secure-random-token"
+$env:CHRYSALIS_GATEWAY_TOKEN = "your-secure-bearer-token"
+$env:CHRYSALIS_VAULT_PATH = "vault/chrysalis"
+
+# Launch daemon
 python main.py
 ```
-
-Verify in browser:
-```text
-http://localhost:8765/health
-```
-Response: `{"status": "healthy", "service": "ambient-chrysalis-gateway", "version": "1.0.0"}`
-
-### 3. Cloudflare Zero-Trust Tunnel Setup (Windows Service)
-1. Install `cloudflared` on Windows:
-   ```powershell
-   winget install --id Cloudflare.cloudflared
-   cloudflared tunnel login
-   ```
-2. Create your tunnel:
-   ```powershell
-   cloudflared tunnel create chrysalis-gateway
-   ```
-3. Configure `config.yml` (point service to `http://localhost:8765`):
-   ```yaml
-   tunnel: <TUNNEL-UUID>
-   credentials-file: C:\Users\<user>\.cloudflared\<TUNNEL-UUID>.json
-
-   ingress:
-     - hostname: gateway.yourdomain.com
-       service: http://localhost:8765
-     - service: http_status:404
-   ```
-4. Install and start as a 24/7 background Windows Service:
-   ```powershell
-   cloudflared tunnel route dns chrysalis-gateway gateway.yourdomain.com
-   cloudflared service install
-   Start-Service cloudflared
-   ```
-
----
-
-## 🐧 Linux / POSIX Deployment (Alternative)
-
-If hosting the gateway on a Linux server:
-
-```bash
-cd apps/gateway
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8765
-```
-
-Systemd unit template is provided in `cloudflare/chrysalis-gateway.service.template`.
-
----
-
-## 🔒 Security Configuration
-
-- **Bearer Token Authentication:** Set `CHRYALIS_GATEWAY_TOKEN="your-secret-token"`. All REST requests must pass `Authorization: Bearer your-secret-token`, and WebSocket connections must pass `?token=your-secret-token`.
-- **Cloudflare Zero-Trust:** Access can be protected with Cloudflare Access policies, service tokens, or client certificates.

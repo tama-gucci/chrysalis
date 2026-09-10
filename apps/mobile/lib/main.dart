@@ -7,6 +7,8 @@ import 'domain/models/task_note.dart';
 import 'domain/models/cognitive_modality.dart';
 import 'domain/models/task_priority.dart';
 import 'domain/services/biometric_service.dart';
+import 'domain/services/share_receiver_service.dart';
+import 'domain/services/share_auto_staging_controller.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/theme/app_theme.dart';
 import 'transport/ambient_gateway_client.dart';
@@ -66,11 +68,21 @@ void main() async {
   // 5. Initialize Biometrics Source (Google Health Connect)
   final biometricSource = MockHealthConnectDataSource();
 
+  // 6. Initialize Universal Share Sheet Receiver & Auto-Staging Controller
+  final shareReceiverService = ShareReceiverService();
+  final shareAutoStagingController = ShareAutoStagingController(
+    shareReceiverService: shareReceiverService,
+    storageProvider: storage,
+  );
+  await shareAutoStagingController.initialize();
+
   runApp(
     ChrysalisApp(
       synchronizer: synchronizer,
       transport: transport,
       biometricSource: biometricSource,
+      shareReceiverService: shareReceiverService,
+      shareAutoStagingController: shareAutoStagingController,
     ),
   );
 }
@@ -79,12 +91,16 @@ class ChrysalisApp extends StatelessWidget {
   final VaultSynchronizer synchronizer;
   final HybridOrchestratorTransport transport;
   final BiometricDataSource biometricSource;
+  final ShareReceiverService? shareReceiverService;
+  final ShareAutoStagingController? shareAutoStagingController;
 
   const ChrysalisApp({
     super.key,
     required this.synchronizer,
     required this.transport,
     required this.biometricSource,
+    this.shareReceiverService,
+    this.shareAutoStagingController,
   });
 
   @override
@@ -97,6 +113,8 @@ class ChrysalisApp extends StatelessWidget {
         synchronizer: synchronizer,
         transport: transport,
         biometricSource: biometricSource,
+        shareReceiverService: shareReceiverService,
+        shareAutoStagingController: shareAutoStagingController,
       ),
     );
   }

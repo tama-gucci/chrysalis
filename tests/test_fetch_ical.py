@@ -174,6 +174,164 @@ class TestFetchIcal(unittest.TestCase):
         self.assertIn("chronotype_telemetry:", content)
         self.assertIn("# Operational Memory Notes", content)
 
+    def test_rrule_until_pre_pruning(self):
+        """Historical recurrences whose UNTIL is before start_date must be pre-pruned."""
+        ics_expired = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20151109T174500Z
+RRULE:FREQ=WEEKLY;UNTIL=20151130T234500Z;BYDAY=MO
+UID:expired-job-shift@example.com
+SUMMARY:Old Shift
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR"""
+        start_d = date(2026, 9, 8)
+        end_d = date(2026, 9, 15)
+        events = parse_ical_feed(ics_expired, start_d, end_d, tz_str="-05:00")
+        self.assertEqual(len(events), 0, "Expired series before start_date must be pruned")
+
+    def test_rrule_until_active_window(self):
+        """Recurrences bounded by UNTIL must stop producing events after UNTIL date."""
+        ics_until = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260909T140000Z
+DTEND:20260909T150000Z
+RRULE:FREQ=DAILY;UNTIL=20260911T235959Z
+UID:workshop-series@example.com
+SUMMARY:Three Day Workshop
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR"""
+        start_d = date(2026, 9, 8)
+        end_d = date(2026, 9, 15)
+        events = parse_ical_feed(ics_until, start_d, end_d, tz_str="-05:00")
+        event_dates = [e["start"][:10] for e in events]
+        self.assertEqual(event_dates, ["2026-09-09", "2026-09-10", "2026-09-11"])
+
+    def test_rrule_count_active_and_exhausted(self):
+        """COUNT must count occurrences sequentially from d_start and stop once reached."""
+        # 1. COUNT terminates within window
+        ics_count = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260909T140000Z
+DTEND:20260909T150000Z
+RRULE:FREQ=DAILY;COUNT=2
+UID:two-day-sprint@example.com
+SUMMARY:Two Day Sprint
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR"""
+        start_d = date(2026, 9, 8)
+        end_d = date(2026, 9, 15)
+        events = parse_ical_feed(ics_count, start_d, end_d, tz_str="-05:00")
+        event_dates = [e["start"][:10] for e in events]
+        self.assertEqual(event_dates, ["2026-09-09", "2026-09-10"])
+
+        # 2. COUNT was already exhausted before start_date
+        ics_exhausted = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260901T140000Z
+DTEND:20260901T150000Z
+RRULE:FREQ=DAILY;COUNT=3
+UID:past-sprint@example.com
+SUMMARY:Past Sprint
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR"""
+        events_past = parse_ical_feed(ics_exhausted, start_d, end_d, tz_str="-05:00")
+        self.assertEqual(len(events_past), 0, "Exhausted COUNT series must produce 0 events in window")
+
+    def test_exdate_filtering(self):
+        """EXDATE must filter out excluded occurrence dates."""
+        ics_exdate = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260909T140000Z
+DTEND:20260909T150000Z
+RRULE:FREQ=DAILY;UNTIL=20260913T235959Z
+EXDATE:20260910T140000Z,20260911T140000Z
+EXDATE;TZID=America/Chicago:20260912T090000
+UID:daily-with-exceptions@example.com
+SUMMARY:Daily Standup
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR"""
+        start_d = date(2026, 9, 8)
+        end_d = date(2026, 9, 15)
+        events = parse_ical_feed(ics_exdate, start_d, end_d, tz_str="-05:00")
+        event_dates = [e["start"][:10] for e in events]
+        # Sept 10, 11, 12 are excluded, so only Sept 9 and Sept 13 remain
+        self.assertEqual(event_dates, ["2026-09-09", "2026-09-13"])
+
+    def test_rrule_until_intraday_cutoff(self):
+        """Recurrence bounded by a DATE-TIME UNTIL must not generate instances after the cutoff time on the UNTIL date."""
+        # Event is at 18:00 local (23:00 UTC). UNTIL is 07:00 local (12:00 UTC) on Sept 11.
+        ics_intraday = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260909T230000Z
+DTEND:20260910T000000Z
+RRULE:FREQ=DAILY;UNTIL=20260911T120000Z
+UID:intraday-cutoff@example.com
+SUMMARY:Evening Lab Session
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR"""
+        start_d = date(2026, 9, 8)
+        end_d = date(2026, 9, 15)
+        events = parse_ical_feed(ics_intraday, start_d, end_d, tz_str="-05:00")
+        event_dates = [e["start"][:10] for e in events]
+        # Sept 9 and 10 are generated; Sept 11 18:00 is after 07:00 UNTIL and must NOT be generated
+        self.assertEqual(event_dates, ["2026-09-09", "2026-09-10"])
+
+    def test_rrule_weekly_count_with_dtstart_not_in_byday(self):
+        """DTSTART must always count as the first occurrence per RFC 5545 even if not in BYDAY."""
+        # DTSTART is Tuesday Sept 8. BYDAY is MO,WE. COUNT=3.
+        # Occurrences must be: Tue Sept 8 (DTSTART), Wed Sept 9 (BYDAY), Mon Sept 14 (BYDAY).
+        ics_byday = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260908T180000Z
+DTEND:20260908T190000Z
+RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=3
+UID:tue-start-mowe@example.com
+SUMMARY:Bi-Weekly Sprint
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR"""
+        start_d = date(2026, 9, 8)
+        end_d = date(2026, 9, 20)
+        events = parse_ical_feed(ics_byday, start_d, end_d, tz_str="-05:00")
+        event_dates = [e["start"][:10] for e in events]
+        self.assertEqual(event_dates, ["2026-09-08", "2026-09-09", "2026-09-14"])
+
+    def test_exdate_case_insensitivity_and_multi_value(self):
+        """EXDATE parsing must handle lowercase property names, VALUE=DATE, and multiple lines."""
+        ics_exdate_multi = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260909T180000Z
+DTEND:20260909T190000Z
+RRULE:FREQ=DAILY;COUNT=5
+exdate:20260910T180000Z
+EXDATE;VALUE=DATE:20260911,20260912
+UID:case-and-value-date@example.com
+SUMMARY:Flexible Standup
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR"""
+        start_d = date(2026, 9, 8)
+        end_d = date(2026, 9, 15)
+        events = parse_ical_feed(ics_exdate_multi, start_d, end_d, tz_str="-05:00")
+        event_dates = [e["start"][:10] for e in events]
+        # Sept 10 (via lowercase exdate), Sept 11 and Sept 12 (via VALUE=DATE) are excluded
+        # Sept 9 and Sept 13 remain
+        self.assertEqual(event_dates, ["2026-09-09", "2026-09-13"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -12,6 +12,8 @@ import '../../transport/hybrid_orchestrator_transport.dart';
 import '../../transport/orchestrator_transport.dart';
 import '../theme/app_theme.dart';
 import '../widgets/active_sprint_card.dart';
+import '../../domain/services/share_receiver_service.dart';
+import '../../domain/services/share_auto_staging_controller.dart';
 import '../widgets/morning_calibration_sheet.dart';
 import '../widgets/orchestrator_status_chip.dart';
 import '../widgets/rapid_capture_bar.dart';
@@ -22,12 +24,16 @@ class HomeScreen extends StatefulWidget {
   final VaultSynchronizer synchronizer;
   final HybridOrchestratorTransport transport;
   final BiometricDataSource biometricSource;
+  final ShareReceiverService? shareReceiverService;
+  final ShareAutoStagingController? shareAutoStagingController;
 
   const HomeScreen({
     super.key,
     required this.synchronizer,
     required this.transport,
     required this.biometricSource,
+    this.shareReceiverService,
+    this.shareAutoStagingController,
   });
 
   @override
@@ -233,6 +239,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       widget.transport.sendCommand('/pause', parameters: {'mode': 'flow'});
                     },
                   ),
+                  if (widget.shareReceiverService != null)
+                    ActionChip(
+                      avatar: const Icon(Icons.share_outlined, size: 16),
+                      label: const Text('Share Focus'),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        final active = _schedule?.currentBlock();
+                        final title = active?.title ?? 'Active Chrysalis Sprint';
+                        widget.shareReceiverService?.shareContent(
+                          'Currently in Chrysalis focus session: $title',
+                          title: title,
+                        );
+                      },
+                    ),
                 ],
               ),
             ],

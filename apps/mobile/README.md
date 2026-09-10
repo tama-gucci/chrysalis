@@ -1,29 +1,52 @@
 # 📱 Chrysalis Mobile & Wearable Client (Flutter)
 
-A cross-platform, local-first Flutter frontend engineered for **Chrysalis**, streamlining user interactions across Android smartphones and standalone circular Wear OS smartwatches with the home orchestrator, bio-cognitive diurnal scheduling, decentralized vault synchronization, and the **Chrysalis Knowledge Hypergraph**.
+A cross-platform, local-first Flutter application engineered for **Chrysalis**, serving as both a primary **Ingestion Surface (Pillar I)** and **Interface Translation Cockpit (Pillar III)** across Android smartphones and standalone circular Wear OS smartwatches.
 
 ---
 
-## 🏛️ Architecture & Core Principles
+## 🌊 Role in the Three Core Pillars
 
-The application is structured into four decoupled layers following Clean Architecture principles:
+1. **Pillar I: Data Ingestion Surface 🐛🍃 (The Hungry Caterpillar)**
+   - **Native Android Sharesheet Receiver:** Hooks directly into Android's system sharesheet (`ACTION_SEND` / `ACTION_SEND_MULTIPLE`) to receive text clippings, web URLs, PDFs (course syllabi, assignments), and audio recordings (lectures, voice memos).
+   - **Binary-Safe Stream Cache & Auto-Staging:** Safely caches `content://` byte streams to disk and drops files into `chrysalis/Inbox/` with zero user friction or popup dialogs.
+   - **Rapid Shorthand Capture:** Single-line capture bar with autocomplete for tags, modalities, and time estimates.
+   - **Wear OS Voice Dictation:** One-tap circular microphone button on smartwatch capturing audio and classifying into tasks or Zettels.
+
+2. **Pillar III: Interface Translation Cockpit 🦋✨ (The Emergent Butterfly)**
+   - **Active Sprint Cockpit Hero Card:** Renders the active 75-minute ultradian focus sprint with real-time countdown timer and modality accent colors.
+   - **Expandable Linked Knowledge Drawer:** Directly inspects connected atomic research notes (`linked_zettels`) from `Slipbox/` inside the active sprint card without switching apps.
+   - **Diurnal Timeline Widget:** Visual day block representation showing wake time, morning analytical peak, slump defrost, and evening recovery windows.
+   - **Model C Calendar Synchronization:** Direct Android `CalendarContract` integration writing focus blocks to the phone's built-in calendar database, mirroring to Google Calendar and Wear OS watch complications with zero cloud setup.
+
+---
+
+## 🏛️ Clean Architecture & Directory Structure
+
+The mobile application is structured into four decoupled layers:
 
 ```
 apps/mobile/
+├── android/                   # Native Android integration
+│   └── app/src/main/
+│       ├── AndroidManifest.xml# ACTION_SEND / SEND_MULTIPLE intent filters
+│       ├── kotlin/.../MainActivity.kt # MethodChannels (Sharesheet, Calendar, Health Connect)
+│       └── res/xml/file_paths.xml    # FileProvider configuration
+│
 ├── lib/
-│   ├── core/                  # Constants, timezones (-05:00), exceptions
+│   ├── core/                  # System constants, explicit timezones (-05:00), exceptions
 │   │   ├── constants/timezones.dart
 │   │   └── exceptions/app_exceptions.dart
 │   │
 │   ├── domain/                # Business logic, entities, parsers, scheduling
 │   │   ├── models/            # TaskNote, Biometrics, UltradianSprint, Modalities
-│   │   ├── parser/            # TaskNoteParser (14+ fields), TaskShorthandParser
+│   │   ├── parser/            # TaskNoteParser (Universal Schema), TaskShorthandParser
 │   │   └── services/          # BioCognitiveScheduler, BiometricService (Health Connect),
-│   │                          # DeviceCalendarSyncCoordinator, IntelligenceEngine
+│   │                          # DeviceCalendarSyncCoordinator, ShareReceiverService,
+│   │                          # ShareAutoStagingController, IntelligenceEngine
 │   │
-│   ├── data/                  # Storage abstractions, offline-first SQLite cache
-│   │   ├── database/          # Drift/SQLite tables, mutation journal, queries
-│   │   ├── storage/           # VaultStorageProvider interface & implementations
+│   ├── data/                  # Storage abstractions, offline-first Drift/SQLite cache
+│   │   ├── database/          # Tables, mutation journal (SHA-256), queries
+│   │   ├── storage/           # VaultStorageProvider (Local, Google Drive, In-Memory)
 │   │   └── sync/              # VaultSynchronizer (offline-first caching & drain loop)
 │   │
 │   ├── transport/             # Modular Intelligence Engine transport
@@ -32,83 +55,63 @@ apps/mobile/
 │   │   ├── substrate_mailbox_client.dart  # Offline fallback via System/Inbox/events.json
 │   │   └── hybrid_orchestrator_transport.dart
 │   │
-│   ├── presentation/          # Material 3 & Wear OS reactive UI
+│   ├── presentation/          # Material 3 Dark & Wear OS circular reactive UI
 │   │   ├── screens/home_screen.dart
 │   │   ├── theme/app_theme.dart
-│   │   └── widgets/           # ActiveSprintCard, Timeline, RapidCaptureBar,
-│   │                          # WearOSCockpitView, OrchestratorChatSheet, Sheets
+│   │   └── widgets/           # ActiveSprintCard, LinkedKnowledgeDrawer,
+│   │                          # RapidCaptureBar, UltradianTimelineWidget,
+│   │                          # MorningCalibrationSheet, OrchestratorStatusChip
 │   │
 │   └── main.dart              # Application entrypoint & dependency injection
-└── test/                      # Comprehensive unit, integration, and widget tests
+└── test/                      # Comprehensive unit, widget, and domain tests
 ```
 
 ---
 
-## 🔑 Key Architectural Systems
+## 🔑 Key Subsystems & Features
 
-### 1. Modular Intelligence Engine Principle
-The mobile client decouples UI presentation from backend intelligence via the `IntelligenceEngine` interface:
-* **Option A (Ambient Gateway Mode — Primary):** Connects to the home server daemon ("Golem" — Surface Pro X, port `8765`) over secure WebSockets and HTTPS through a Cloudflare Zero-Trust Tunnel. Dispatches commands to Antigravity, OpenClaw, Hermes OS, or local LLMs.
-* **Option B (Mobile-Native / Serverless — Edge Mode):** Bypasses the home server, running edge models on-device (e.g. Gemini Nano via AICore) or direct cloud model APIs.
-* **Offline Mailbox Fallback:** When network connectivity is absent, intents are buffered to `System/Inbox/events.json` in the synced vault, executing automatically when connectivity resumes.
+### 1. Universal Android Native Sharesheet Ingestion
+* **No Custom Web Dialog Friction:** External apps (Chrome, PDF viewers, Audio Recorders) share directly to Chrysalis via Android's native sharesheet.
+* **Persistent Byte Stream Caching:** Android content URIs expire quickly. `MainActivity.kt` streams bytes into `context.cacheDir/shared_staging/<filename>` before permission expires.
+* **Auto-Staging to `chrysalis/Inbox/`:** `ShareAutoStagingController` moves cached payloads directly into `<vault>/chrysalis/Inbox/` on physical disk, resolves filename collisions (`<filename>_1.<ext>`), shows a brief confirmation Toast, and auto-dismisses when opened as a share target.
 
-### 2. Standalone Wear OS Smartwatch Support (Circular OLED)
-* **Tailored for Circular Displays (384×384 px):** Automatically adapts layout when `shortestSide < 320`.
-* **Pure OLED Black (`#000000`):** Powers down OLED pixels to minimize battery drain.
-* **Rotary Vertical Card Stack:**
-  - Glanceable connection pill (`● Gateway Online`).
-  - Active sprint cockpit hero card with remaining countdown timer.
-  - Large circular microphone button (`#6366F1`) for instant voice dictation. Voice commands automatically classify into tasks or Zettel notes (`/zettel`).
-  - Tactile action buttons: `Calibrate Today` and `Pause System`.
+### 2. Standalone Wear OS Smartwatch Companion
+* **Circular OLED Display (384×384 px):** Automatically adapts layout when `shortestSide < 320`.
+* **Pure OLED Black (`#000000`):** Powers off pixels to maximize battery life.
+* **Rotary Card Stack:**
+  - Active sprint countdown timer and modality pill.
+  - Large circular microphone button (`#6366F1`) for instant voice capture.
+  - One-tap quick actions: `Calibrate Today` and `Pause System`.
 
-### 3. The Chrysalis Knowledge Hypergraph (Sprint Cockpit Knowledge Drawer)
-* Tasks are not isolated items; they are rooted in research and strategy.
-* Tasks in `TaskNotes/Tasks/*.md` support `linked_zettels: ["[[note-id]]"]` and `project_ref: "[[Projects/slug/Roadmap]]"`.
-* The **Active Sprint Cockpit Card** on mobile features an expandable **Linked Knowledge Drawer** displaying connected research notes from `Slipbox/`, allowing the user to open read-only reference cards during deep focus sprints with a single tap.
+### 3. Active Sprint Knowledge Drawer (Hypergraph Integration)
+* Chrysalis tasks in `chrysalis/Tasks/*.md` declare `linked_zettels: ["[[20260912100000-concept]]"]`.
+* During deep focus sprints, users tap the **Linked Knowledge Drawer** at the bottom of the active sprint card to inspect read-only atomic notes from `Slipbox/` without navigating away.
 
-### 4. Calendar Integration Architecture (Model C: Mobile OS Bridge)
-* **Zero Google Cloud Console Setup:** Operates without OAuth client secrets, developer console configurations, or cloud API quotas.
-* The Flutter app communicates through a native Android platform channel (`CalendarManager.kt` via `CalendarContract`) to write focus blocks directly into the phone's built-in calendar database.
-* Android mirrors these events to Google Calendar and Wear OS watch complications automatically for free.
-* Supports two-way synchronization: when tasks are calibrated, changed, or marked `done`, calendar events are created, updated, or removed accordingly.
+### 4. Model C Calendar Synchronization (Zero Cloud Setup)
+* Communicates through native Android `CalendarContract` platform channel (`CalendarManager.kt`).
+* Focus sprints are written directly to the smartphone's built-in calendar database, automatically mirroring to Google Calendar and Wear OS watch complications for free with zero Google Cloud console setup or OAuth tokens.
 
-### 5. Universal TaskNotes Frontmatter Compliance
-* Strict parser and serializer for the universal TaskNotes frontmatter fields:
-  - `title`, `status`, `dateCreated`, `created`, `due`, `scheduled`, `priority`, `urgency_tier`, `modality`, `timeEstimate`, `energy`, `friction`, `micro_chunked`, `tags`, `linked_zettels`, `project_ref`, `googleCalendarEventId`.
-* **Constitutional Timezone Invariant:** Enforces explicit local timezone serialization (`-05:00`) and strictly prohibits unadorned UTC `"Z"` strings.
-* 100% compatible with the Obsidian TaskNotes plugin on port `8080`.
+### 5. Universal Chrysalis Frontmatter Compliance
+* Strict serialization and deserialization conforming to the Universal Chrysalis Task Schema (`AGENTS.md`).
+* Enforces explicit local timezone offsets (e.g. `"-05:00"`).
+* Full 1:1 interoperability with the desktop `chrysalis-obsidian` plugin on port `8080`.
 
 ### 6. Google Health Connect Biometric Telemetry
-* Reads Sleep Sessions (deep, REM, light, awake stages, efficiency), Resting Heart Rate (RHR), and Heart Rate Variability (HRV RMSSD).
-* Computes algorithmic morning readiness score ($1$ to $5$) for morning `/calibrate` and bio-cognitive timeblocking.
-
-### 7. Bio-Cognitive Diurnal Scheduler & Ultradian Sprint Tracker
-* Automatically calculates daily ultradian focus schedules:
-  - 75-minute focus sprints separated by 15-minute decompression buffers.
-  - Modality alignment: Peak Focus $\to$ Analytical tasks, Slump Defrost $\to$ Kinetic tasks, Recovery $\to$ Synthesis tasks.
-  - Adaptive multiplier learning bounded strictly to $[0.20, 2.00]$.
+* Interfaces with `androidx.health.connect.client` to ingest Sleep Sessions (deep, REM, light), Resting Heart Rate (RHR), and Heart Rate Variability (HRV RMSSD).
+* Algorithmic calculation of morning readiness score ($1$ to $5$) for morning `/calibrate` and adaptive diurnal sprint shifting.
 
 ---
 
 ## 🧪 Testing & Verification
 
-Run the full test suite and static analysis:
+Run the full Dart test suite and static analysis:
 
 ```bash
-# Navigate to mobile project
 cd apps/mobile
 
-# Run all tests
+# Run static analysis
+dart analyze
+
+# Run unit and widget tests
 flutter test
-
-# Run static analysis (0 errors, 0 warnings)
-flutter analyze
 ```
-
----
-
-## 🔒 Zero-Leak PII & Hygiene
-
-Build directories and local files are strictly quarantined from git:
-- `.dart_tool/`, `build/`, `.flutter-plugins*`, and local Gradle caches are gitignored via default-deny.
-- All tests and sample files use synthetic placeholders (`Jane Doe`, `station-node`, `user@example.com`).

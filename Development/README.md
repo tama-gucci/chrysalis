@@ -2,7 +2,7 @@
 type: developer_guide
 id: chrysalis-development-readme
 status: active
-version: 1.0.0
+version: 1.1.0
 ---
 
 # 🛠️ Chrysalis Development & Engineering Hub
@@ -16,7 +16,7 @@ All activities within this directory are strictly governed by the [`Development-
 ## 📁 Directory Structure
 
 ```
-chrysalis/Development/
+vault-git/Development/
 ├── Development-Constitution.md   # The supreme engineering law, zero-leak PII rules & RSI invariants
 ├── README.md                     # This onboarding and developer orientation guide
 ├── scripts/                      # Developer utilities, PII scanner, and git boundary checkers
@@ -33,8 +33,8 @@ chrysalis/Development/
 Chrysalis is an open-source framework hosted on GitHub (`tama-gucci/chrysalis`). To guarantee that private user data never leaks to public version control, the repository enforces a strict **Zero-Leak Whitelist (Default-Deny)** architecture:
 
 1. **Default-Deny `.gitignore`:** Everything is ignored by default (`/*`), and only explicitly whitelisted open-source framework assets and templates are tracked.
-2. **1-to-1 Template Rule:** Every file containing personal user information (tasks, roadmaps, chronotype memory, health logs, daily notes) MUST have a corresponding sanitized `.template.md` tracked in git.
-3. **Synthetic Placeholders Only:** Never commit real names, usernames, machine-bound paths (`/home/...`), personal emails, or credentials. Use `Jane Doe`, `user@example.com`, and relative paths (`chrysalis/...`).
+2. **1-to-1 Template Rule:** Every file containing personal user information (tasks, roadmaps, chronotype memory, health logs, daily notes) MUST have a corresponding sanitized `.template.md` tracked in git (`System/_templates/`).
+3. **Synthetic Placeholders Only:** Never commit real names, usernames, machine-bound paths (`/home/...`, `C:\Users\...`), personal emails, or credentials. Use `Jane Doe`, `user@example.com`, and relative paths (`vault/...`, `vault-git/...`).
 
 ---
 
@@ -57,5 +57,5 @@ When developing new features, skills, or workflows:
 * Always test optimizations with pre-commit snapshots in `.agent/skills/.backup/`.
 
 ### 3. Adding or Updating Agent Skills
-* **Runtime Skills:** Placed in `.agent/skills/<skill-name>/SKILL.md` (e.g. `audit`, `plan`, `morning`, `evening`, `doctor`).
+* **Runtime Skills:** Placed in `.agent/skills/<skill-name>/SKILL.md` (e.g. `audit`, `plan`, `morning`, `evening`, `doctor`, `task`, `zettel`, `project`).
 * **Development Skills:** Placed in `Development/skills/<skill-name>/SKILL.md` (registered via `.agent/skills.json`).
