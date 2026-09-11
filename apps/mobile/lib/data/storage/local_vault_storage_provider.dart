@@ -67,43 +67,56 @@ class LocalVaultStorageProvider implements VaultStorageProvider {
   @override
   Stream<VaultChangeEvent> get watchChanges => _changesController.stream;
 
+  File _resolveFile(String relativePath) {
+    final rootCanonical = p.canonicalize(rootDirectory.path);
+    final fileCanonical = p.canonicalize(p.join(rootDirectory.path, relativePath));
+    final file = File(fileCanonical);
+    if (!p.isWithin(rootCanonical, file.path) && !p.equals(rootCanonical, file.path)) {
+      throw VaultStorageException('Access denied: path "$relativePath" escapes vault root');
+    }
+    return file;
+  }
+
   @override
   Future<bool> fileExists(String relativePath) async {
-    final file = File(p.join(rootDirectory.path, relativePath));
+    final file = _resolveFile(relativePath);
     return file.exists();
   }
 
   @override
   Future<String> readTextFile(String relativePath) async {
-    final file = File(p.join(rootDirectory.path, relativePath));
+    final file = _resolveFile(relativePath);
     if (!await file.exists()) {
       throw VaultStorageException('File not found: "$relativePath"');
     }
     try {
       return await file.readAsString();
     } catch (e) {
+      if (e is VaultStorageException) rethrow;
       throw VaultStorageException('Failed to read file "$relativePath"', e);
     }
   }
 
   @override
   Future<void> writeTextFile(String relativePath, String content, {String? eTag}) async {
-    final file = File(p.join(rootDirectory.path, relativePath));
+    final file = _resolveFile(relativePath);
     try {
       await file.parent.create(recursive: true);
       await file.writeAsString(content);
     } catch (e) {
+      if (e is VaultStorageException) rethrow;
       throw VaultStorageException('Failed to write file "$relativePath"', e);
     }
   }
 
   @override
   Future<void> deleteFile(String relativePath) async {
-    final file = File(p.join(rootDirectory.path, relativePath));
+    final file = _resolveFile(relativePath);
     if (await file.exists()) {
       try {
         await file.delete();
       } catch (e) {
+        if (e is VaultStorageException) rethrow;
         throw VaultStorageException('Failed to delete file "$relativePath"', e);
       }
     }
@@ -111,7 +124,12 @@ class LocalVaultStorageProvider implements VaultStorageProvider {
 
   @override
   Future<List<VaultFileEntry>> listFiles({String directory = ''}) async {
-    final targetDir = Directory(p.join(rootDirectory.path, directory));
+    final rootCanonical = p.canonicalize(rootDirectory.path);
+    final dirCanonical = p.canonicalize(p.join(rootDirectory.path, directory));
+    final targetDir = Directory(dirCanonical);
+    if (!p.isWithin(rootCanonical, targetDir.path) && !p.equals(rootCanonical, targetDir.path)) {
+      throw VaultStorageException('Access denied: path "$directory" escapes vault root');
+    }
     if (!await targetDir.exists()) return [];
 
     final list = <VaultFileEntry>[];
@@ -131,6 +149,7 @@ class LocalVaultStorageProvider implements VaultStorageProvider {
         }
       }
     } catch (e) {
+      if (e is VaultStorageException) rethrow;
       throw VaultStorageException('Failed to list files in "$directory"', e);
     }
     return list;

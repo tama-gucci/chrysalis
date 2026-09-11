@@ -117,7 +117,7 @@ def clone_upstream(repo_url: str, dest_dir: str) -> bool:
     clone_env["GCM_INTERACTIVE"] = "never"
     clone_env["GIT_SSH_COMMAND"] = "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
     try:
-        res = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=5, env=clone_env)
+        res = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=5, env=clone_env, stdin=subprocess.DEVNULL)
         return True
     except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
         return False
@@ -267,7 +267,10 @@ def main():
         count, updated_list = sync_engine(src_path, target_path, dry_run=args.dry_run)
     else:
         print("[1/3] Fetching upstream release from GitHub...")
-        repos_to_try = [args.repo] if args.repo else [DEFAULT_UPSTREAM_HTTPS, DEFAULT_UPSTREAM_SSH]
+        if os.environ.get("CHRYSALIS_OFFLINE_SYNC") == "1":
+            repos_to_try = []
+        else:
+            repos_to_try = [args.repo] if args.repo else [DEFAULT_UPSTREAM_HTTPS, DEFAULT_UPSTREAM_SSH]
         
         with tempfile.TemporaryDirectory() as tmp_dir:
             cloned = False

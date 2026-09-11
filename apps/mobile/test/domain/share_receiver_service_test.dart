@@ -386,6 +386,123 @@ void main() {
       expect(isShare, isTrue);
     });
 
+    test('getInitialSharedPayload correctly parses ACTION_SEND screenshot image payload', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'getInitialSharedPayload') {
+          return <String, dynamic>{
+            'action': 'android.intent.action.SEND',
+            'type': 'image/png',
+            'files': [
+              {
+                'name': 'Screenshot_20260910_183000.png',
+                'path': '/cache/shared_staging/Screenshot_20260910_183000.png',
+                'uri': 'content://media/external/images/media/42',
+                'mimeType': 'image/png',
+                'size': 1048576,
+              }
+            ],
+            'paths': [
+              '/cache/shared_staging/Screenshot_20260910_183000.png',
+            ],
+            'path': '/cache/shared_staging/Screenshot_20260910_183000.png',
+            'fileName': 'Screenshot_20260910_183000.png',
+          };
+        }
+        return null;
+      });
+
+      final payload = await service.getInitialSharedPayload();
+      expect(payload, isNotNull);
+      expect(payload!.action, equals('android.intent.action.SEND'));
+      expect(payload.type, equals('image/png'));
+      expect(payload.files.length, equals(1));
+      expect(payload.files.first.name, equals('Screenshot_20260910_183000.png'));
+      expect(payload.files.first.mimeType, equals('image/png'));
+      expect(payload.files.first.size, equals(1048576));
+      expect(payload.fileName, equals('Screenshot_20260910_183000.png'));
+    });
+
+    test('getInitialSharedPayload correctly parses ACTION_SEND audio recording payload with transcript', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'getInitialSharedPayload') {
+          return <String, dynamic>{
+            'action': 'android.intent.action.SEND',
+            'type': 'audio/mp4',
+            'text': 'Class lecture on architecture detailing',
+            'files': [
+              {
+                'name': 'Audio_Lecture_01.m4a',
+                'path': '/cache/shared_staging/Audio_Lecture_01.m4a',
+                'uri': 'content://media/external/audio/media/105',
+                'mimeType': 'audio/mp4',
+                'size': 5242880,
+              }
+            ],
+            'paths': [
+              '/cache/shared_staging/Audio_Lecture_01.m4a',
+            ],
+            'path': '/cache/shared_staging/Audio_Lecture_01.m4a',
+            'fileName': 'Audio_Lecture_01.m4a',
+          };
+        }
+        return null;
+      });
+
+      final payload = await service.getInitialSharedPayload();
+      expect(payload, isNotNull);
+      expect(payload!.action, equals('android.intent.action.SEND'));
+      expect(payload.type, equals('audio/mp4'));
+      expect(payload.text, equals('Class lecture on architecture detailing'));
+      expect(payload.files.length, equals(1));
+      expect(payload.files.first.name, equals('Audio_Lecture_01.m4a'));
+      expect(payload.files.first.mimeType, equals('audio/mp4'));
+      expect(payload.files.first.size, equals(5242880));
+    });
+
+    test('getInitialSharedPayload correctly parses ACTION_SEND_MULTIPLE batch screenshots and audio', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'getInitialSharedPayload') {
+          return <String, dynamic>{
+            'action': 'android.intent.action.SEND_MULTIPLE',
+            'type': '*/*',
+            'files': [
+              {
+                'name': 'Screenshot_1.png',
+                'path': '/cache/shared_staging/Screenshot_1.png',
+                'mimeType': 'image/png',
+                'size': 1024,
+              },
+              {
+                'name': 'Recording_1.mp3',
+                'path': '/cache/shared_staging/Recording_1.mp3',
+                'mimeType': 'audio/mpeg',
+                'size': 2048,
+              },
+            ],
+            'paths': [
+              '/cache/shared_staging/Screenshot_1.png',
+              '/cache/shared_staging/Recording_1.mp3',
+            ],
+            'path': '/cache/shared_staging/Screenshot_1.png',
+            'fileName': 'Screenshot_1.png',
+          };
+        }
+        return null;
+      });
+
+      final payload = await service.getInitialSharedPayload();
+      expect(payload, isNotNull);
+      expect(payload!.action, equals('android.intent.action.SEND_MULTIPLE'));
+      expect(payload.files.length, equals(2));
+      expect(payload.files[0].name, equals('Screenshot_1.png'));
+      expect(payload.files[0].mimeType, equals('image/png'));
+      expect(payload.files[1].name, equals('Recording_1.mp3'));
+      expect(payload.files[1].mimeType, equals('audio/mpeg'));
+    });
+
     test('dispose safely closes stream and unregisters method call handler without error', () {
       expect(() => service.dispose(), returnsNormally);
       expect(() => service.dispose(), returnsNormally);

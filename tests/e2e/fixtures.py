@@ -97,6 +97,8 @@ def run_cmd(args: List[str], cwd: Optional[Path] = None, env: Optional[Dict[str,
                 cmd_args[0] = sh_exe
     
     run_env["PYTHONIOENCODING"] = "utf-8"
+    run_env["PYTHONUTF8"] = "1"
+    run_env["CHRYSALIS_OFFLINE_SYNC"] = "1"
     proc = subprocess.run(
         cmd_args,
         cwd=str(cwd or REPO_ROOT),

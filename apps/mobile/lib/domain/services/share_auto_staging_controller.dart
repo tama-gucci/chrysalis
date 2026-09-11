@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import '../../data/storage/vault_storage_provider.dart';
 import 'share_receiver_service.dart';
 
@@ -35,9 +36,12 @@ class ShareAutoStagingController {
 
   bool get isInitialized => _isInitialized;
 
-  /// Resolves the default vault `chrysalis/Inbox` directory.
+  /// Resolves the default vault `chrysalis/Inbox` directory synchronously.
   static Directory resolveDefaultInboxDirectory() {
-    final envVault = Platform.environment['CHRYSALIS_VAULT_PATH'];
+    final envVault = Platform.environment['CHRYSALIS_VAULT_PATH']
+        ?.trim()
+        .replaceAll('"', '')
+        .replaceAll("'", '');
     if (envVault != null && envVault.trim().isNotEmpty) {
       final candidateInbox = Directory(p.join(envVault, 'chrysalis', 'Inbox'));
       if (candidateInbox.existsSync()) return candidateInbox;
@@ -47,6 +51,10 @@ class ShareAutoStagingController {
     }
 
     for (final candidate in [
+      'g:/My Drive/vault/chrysalis/Inbox',
+      'G:/My Drive/vault/chrysalis/Inbox',
+      'g:/My Drive/vault/Inbox',
+      'G:/My Drive/vault/Inbox',
       'g:/My Drive/chrysalis/chrysalis/Inbox',
       'G:/My Drive/chrysalis/chrysalis/Inbox',
       'g:/My Drive/chrysalis/Inbox',
@@ -58,7 +66,92 @@ class ShareAutoStagingController {
       }
     }
 
+    if (Platform.isAndroid) {
+      for (final candidate in [
+        '/storage/emulated/0/Android/data/com.chrysalis.mobile.chrysalis_mobile/files',
+        '/data/user/0/com.chrysalis.mobile.chrysalis_mobile/files',
+        '/data/data/com.chrysalis.mobile.chrysalis_mobile/files',
+      ]) {
+        final dir = Directory(candidate);
+        if (dir.existsSync()) {
+          return Directory(p.join(candidate, 'chrysalis', 'Inbox'));
+        }
+      }
+      return Directory(p.join(Directory.systemTemp.path, 'chrysalis', 'Inbox'));
+    }
+
     return Directory(p.join(Directory.current.path, 'chrysalis', 'Inbox'));
+  }
+
+  /// Resolves the default vault `chrysalis/Inbox` directory asynchronously.
+  ///
+  /// Provides safe Android-native fallback using [getApplicationDocumentsDirectory]
+  /// from `path_provider` when running on Android where drive letters do not exist
+  /// and `Directory.current` is `/` (read-only).
+  static Future<Directory> resolveDefaultInboxDirectoryAsync() async {
+    final envVault = Platform.environment['CHRYSALIS_VAULT_PATH']
+        ?.trim()
+        .replaceAll('"', '')
+        .replaceAll("'", '');
+    if (envVault != null && envVault.trim().isNotEmpty) {
+      final candidateInbox = Directory(p.join(envVault, 'chrysalis', 'Inbox'));
+      if (await candidateInbox.exists()) return candidateInbox;
+      final fallbackInbox = Directory(p.join(envVault, 'Inbox'));
+      if (await fallbackInbox.exists()) return fallbackInbox;
+      return candidateInbox;
+    }
+
+    for (final candidate in [
+      'g:/My Drive/vault/chrysalis/Inbox',
+      'G:/My Drive/vault/chrysalis/Inbox',
+      'g:/My Drive/vault/Inbox',
+      'G:/My Drive/vault/Inbox',
+      'g:/My Drive/chrysalis/chrysalis/Inbox',
+      'G:/My Drive/chrysalis/chrysalis/Inbox',
+      'g:/My Drive/chrysalis/Inbox',
+      'G:/My Drive/chrysalis/Inbox',
+    ]) {
+      final dir = Directory(candidate);
+      if (await dir.exists()) {
+        return dir;
+      }
+    }
+
+    if (Platform.isAndroid) {
+      try {
+        final appDocDir = await getApplicationDocumentsDirectory();
+        return Directory(p.join(appDocDir.path, 'chrysalis', 'Inbox'));
+      } catch (_) {}
+    }
+
+    return resolveDefaultInboxDirectory();
+  }
+
+  /// Derives the root vault directory from an inbox directory.
+  ///
+  /// For example, `<vault>/chrysalis/Inbox` -> `<vault>`,
+  /// and `<vault>/Inbox` -> `<vault>`.
+  static Directory resolveVaultDirectoryFromInbox(Directory inboxDir) {
+    final normalized = p.normalize(inboxDir.path).replaceAll('\\', '/');
+    final lower = normalized.toLowerCase();
+    if (lower.endsWith('/chrysalis/inbox')) {
+      return inboxDir.parent.parent;
+    } else if (lower.endsWith('/inbox')) {
+      if (p.basename(inboxDir.parent.path).toLowerCase() == 'chrysalis') {
+        return inboxDir.parent.parent;
+      }
+      return inboxDir.parent;
+    }
+    if (p.basename(inboxDir.parent.path).toLowerCase() == 'chrysalis') {
+      return inboxDir.parent.parent;
+    }
+    return inboxDir.parent;
+  }
+
+  /// Resolves the root vault directory asynchronously.
+  static Future<Directory> resolveDefaultVaultDirectoryAsync() async {
+    final inboxDir = await resolveDefaultInboxDirectoryAsync();
+    return resolveVaultDirectoryFromInbox(inboxDir);
   }
 
   /// Formats the current local timestamp for file naming: `YYYYMMDD_HHmmss`.

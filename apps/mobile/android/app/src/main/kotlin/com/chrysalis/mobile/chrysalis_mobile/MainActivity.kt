@@ -14,7 +14,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.FileProvider
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.lifecycleScope
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val healthChannelName = "org.chrysalis.mobile/health_connect"
     private val shareChannelName = "org.chrysalis.mobile/share_receiver"
     private lateinit var healthConnectManager: HealthConnectManager
@@ -42,7 +42,7 @@ class MainActivity : FlutterActivity() {
     private val pendingPayloadRequests = mutableListOf<PendingPayloadRequest>()
 
     private val requestPermissionLauncher: ActivityResultLauncher<Set<String>> =
-        registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { _ ->
+        registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { _: Set<String> ->
             lifecycleScope.launch {
                 val hasAll = withContext(Dispatchers.IO) {
                     healthConnectManager.hasPermissions()
@@ -568,24 +568,41 @@ class MainActivity : FlutterActivity() {
     private fun getExtensionFromMimeType(mimeType: String?): String {
         if (mimeType.isNullOrBlank()) return ""
         val cleanMime = mimeType.lowercase().split(";")[0].trim()
-        val extFromMap = MimeTypeMap.getSingleton().getExtensionFromMimeType(cleanMime)
-        if (!extFromMap.isNullOrBlank()) {
-            return ".$extFromMap"
-        }
-        return when (cleanMime) {
+
+        // Comprehensive audio, image, and document MIME extension mappings
+        val explicitExt = when (cleanMime) {
+            "audio/mp4", "audio/m4a" -> ".m4a"
+            "audio/mpeg", "audio/mp3" -> ".mp3"
+            "audio/wav", "audio/x-wav" -> ".wav"
+            "audio/aac" -> ".aac"
+            "audio/ogg", "audio/opus" -> ".opus"
+            "audio/flac" -> ".flac"
+            "image/jpeg", "image/jpg" -> ".jpg"
+            "image/png" -> ".png"
+            "image/webp" -> ".webp"
+            "image/gif" -> ".gif"
             "application/pdf" -> ".pdf"
             "text/plain" -> ".txt"
             "text/markdown", "text/x-markdown" -> ".md"
             "text/csv" -> ".csv"
             "text/html" -> ".html"
-            "image/jpeg" -> ".jpg"
-            "image/png" -> ".png"
-            "image/webp" -> ".webp"
-            "image/gif" -> ".gif"
             "application/json" -> ".json"
             "application/zip" -> ".zip"
             "application/octet-stream" -> ""
-            else -> ""
+            else -> null
         }
+        if (explicitExt != null) {
+            return explicitExt
+        }
+
+        val extFromMap = try {
+            MimeTypeMap.getSingleton().getExtensionFromMimeType(cleanMime)
+        } catch (_: Exception) {
+            null
+        }
+        if (!extFromMap.isNullOrBlank()) {
+            return ".$extFromMap"
+        }
+        return ""
     }
 }
