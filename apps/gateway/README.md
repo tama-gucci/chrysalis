@@ -1,7 +1,7 @@
 # 🛰️ Ambient Chrysalis Gateway
 
-> **Status:** 🟡 **Functional Prototype (60%)** | `[██████░░░░] 60%` | **Port:** 8765 | **Architecture:** Windows 11 ARM64/x64  
-> The **Ambient Chrysalis Gateway** is a lightweight, asynchronous Python FastAPI daemon engineered to operate 24/7 on your dedicated home hub ("Golem" — Microsoft Surface Pro X on Windows 11 ARM64). It exposes high-throughput, low-latency REST and bidirectional WebSocket interfaces bridging the Chrysalis Mobile and Wear OS clients to autonomous agent orchestrators via a **Pluggable Orchestrator Bridge**.
+> **Status:** 🟡 **Functional Prototype** | **Port:** 8765 | **Architecture:** Windows 11 ARM64/x64  
+> The **Ambient Chrysalis Gateway** is a lightweight, asynchronous Python FastAPI daemon engineered to operate 24/7 on your dedicated home hub ("golem" — Microsoft Surface Pro X on Windows 11 ARM64). It exposes high-throughput, low-latency REST and bidirectional WebSocket interfaces bridging the Chrysalis Mobile and Wear OS clients to autonomous agent orchestrators via a **Pluggable Orchestrator Bridge**.
 
 ---
 
@@ -11,7 +11,7 @@
 To ensure seamless, collision-free coexistence with the desktop Obsidian environment:
 * **Port `8080`:** Reserved exclusively for the **`chrysalis-obsidian` plugin Local REST API & MCP server**.
 * **Port `8765`:** Dedicated to the **Ambient Chrysalis Gateway daemon**.
-* *Both services run side-by-side on Golem with zero port collisions.*
+* *Both services run side-by-side on golem with zero port collisions.*
 
 ### 2. The Single-Install Invariant (Zero-Phone-Config)
 > *The Chrysalis Android app and Wear OS smartwatch must be the ONLY software installed on client devices. No secondary VPN apps (WireGuard/Tailscale), no third-party sync daemons, and no mobile terminal emulators.*
@@ -29,7 +29,7 @@ To achieve secure global remote access with zero open inbound router ports:
                                                                   │ Outbound Tunnel
                                                                   ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ "Golem" Home Server (Surface Pro X - Windows 11 on ARM64 - 16GB Total RAM)  │
+│ "golem" Home Server (Surface Pro X - Windows 11 on ARM64 - 16GB Total RAM)  │
 │                                                                             │
 │  ┌───────────────────────────────┐      ┌────────────────────────────────┐  │
 │  │ Hyper-V: Home Assistant (4GB) │      │ chrysalis-obsidian (Port 8080) │  │

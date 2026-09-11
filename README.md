@@ -1,10 +1,10 @@
-# 🌌 Chrysalis: Autonomous Bio-Cognitive Life Cockpit & Knowledge Hypergraph
+# 🌌 Chrysalis: Pluggable AI Time-Management & Life-Operating Framework
 
-> **The Integrated Cockpit for Mind, Knowledge, and Action.**  
-> Conventional productivity apps isolate your life across fragmented silos: notes in one app, tasks in another, calendar blocks in a third. You spend your day manually transcribing what you *know*, what you *plan to do*, and *when you actually do it*.  
+> **The Local-First Life-Operating Framework for Generalized AI.**  
+> Conventional productivity tools isolate your life across fragmented silos: notes in one app, tasks in another, calendar blocks in a third. You spend your day manually transcribing what you *know*, what you *plan to do*, and *when you actually do it*.  
 > 
-> **Chrysalis unifies this into a single, closed-loop bio-cognitive ecosystem.**  
-> Grounded in an open, local-first Markdown filesystem, Chrysalis eliminates cognitive friction between real-world inputs, autonomous AI processing, and daily human execution.
+> **Chrysalis unifies this into a single, closed-loop operating framework.**  
+> Grounded in an open, local-first Markdown filesystem, Chrysalis provides an ambient time-management substrate that any generalized AI (Google Antigravity, local LLMs, or autonomous agents) can plug into to eliminate cognitive friction between real-world inputs, automated planning, and human execution.
 
 ---
 
@@ -37,11 +37,11 @@ Chrysalis models the flow of knowledge and action through the biological narrati
 │                                                                                           │
 │   Autonomous AI Engine (Antigravity Language Server / Gemini 3.8 Flash)                   │
 │   • Anti-Simulation Invariant: Physical tool mutations persist state to disk              │
-│   • Audio & Lecture Pipeline: Map-Reduce transcription into Zettels (Slipbox/)            │
+│   • Audio & Transcript Intake: Third-party sharesheet handoff (Inbox/)                    │
 │   • Document Ingestion: Syllabi & dossiers into 3-Tier Roadmaps (Projects/)               │
 │   • Task Shorthand Parsing: Synthesis into Chrysalis Schema (chrysalis/Tasks/)            │
 │   • Bio-Cognitive Scheduling: 75m ultradian focus sprints + 15m decompression             │
-│   • Hypergraph Linking: Automated [[WikiLinks]] connecting knowledge to action            │
+│   • Bidirectional Linking: Automated [[WikiLinks]] connecting knowledge to action          │
 │   • Dynamic Chronotype Multipliers: Learned execution tracking bounded in [0.20, 2.00]    │
 └─────────────────────────────────────────────┬─────────────────────────────────────────────┘
                                               │
@@ -51,11 +51,11 @@ Chrysalis models the flow of knowledge and action through the biological narrati
 │                                                                                           │
 │   Obsidian Desktop Cockpit                 Chrysalis Mobile (Flutter 3.47 / Dart 3.13)    │
 │   • Kanban, Sprint Boards, Views           • Active Sprint Cockpit Hero Card              │
-│   • Visual Knowledge Graph View            • Expandable Linked Knowledge Drawer           │
+│   • Visual Graph View & Canvas             • Expandable Linked Knowledge Drawer           │
 │   • Canvas Project Workflows               • Rapid Capture Bar & Timeline Widget          │
 │                                                                                           │
-│   Wear OS Smartwatch (Circular OLED)       Model C Calendar Synchronization               │
-│   • 384x384 Pure #000000 Black Stack       • Direct Android CalendarContract Sync         │
+│   Wear OS Smartwatch (Circular OLED)       Native Mobile Calendar Sync                    │
+│   • 384x384 Pure #000000 Black Stack       • Direct Android CalendarContract Bridge       │
 │   • Active Countdown Timer & Controls      • Zero Google Cloud setup / OAuth quotas       │
 │   • Glanceable Complications               • Auto-mirrors to Google Calendar & Watch      │
 └───────────────────────────────────────────────────────────────────────────────────────────┘
@@ -71,11 +71,11 @@ Chrysalis comprises three symbiotic software engines operating over a shared, lo
 Overall Ecosystem Status: [█████████████░░░░░░░] 67% (Phase 1 MVP Achieved)
 ```
 
-| Component | Status | Progress | Key Deliverables & Next Steps |
-| :--- | :--- | :--- | :--- |
-| **1. Android Mobile & Wearable Client**<br/>`apps/mobile/` | 🟢 **MVP Complete** | `[██████████] 100%` | **Delivered:** Native sharesheet & screenshot intake (`image/*`, `audio/*`, `application/pdf`, `text/plain`), auto-staging to `<vault>/chrysalis/Inbox/`, local Drift SQLite persistence (`DatabaseFactory.createPersistent`), and verified debug APK (162MB, minSdk 26).<br/>**Next:** UI polish, Wear OS standalone build, and biometric background sync. |
-| **2. Desktop Ambient Gateway**<br/>`apps/gateway/` | 🟡 **Functional Prototype** | `[██████░░░░]  60%` | **Delivered:** Asynchronous Python FastAPI daemon on Port 8765, Pluggable Orchestrator Bridge to Antigravity language server / `agentapi`, auth tokens, and health telemetry.<br/>**Next:** PyInstaller Windows `.exe` packaging with `freeze_support()`, Inno Setup user-login installer, and `%LOCALAPPDATA%\Chrysalis\gateway.json` config. |
-| **3. Chrysalis Obsidian Plugin**<br/>`chrysalis-obsidian` | 🟡 **Pre-Fork Prototype** | `[████░░░░░░]  40%` | **Delivered:** Deployed locally in `.obsidian/plugins/chrysalis-obsidian/`, full decommissioning of legacy TaskNotes codebase (28.9k lines removed), canonical `chrysalis/` layout.<br/>**Next:** Standalone repository `tama-gucci/chrysalis-obsidian`, Chrysalis schema default settings & modal wizard, embedded Port 8080 REST/MCP server, and BRAT / Community Registry distribution. |
+| Component | Status | Key Deliverables & Next Steps |
+| :--- | :--- | :--- |
+| **1. Android Mobile & Wearable Client**<br/>`apps/mobile/` | 🟢 **MVP Complete** | **Delivered:** Native sharesheet & screenshot intake (`image/*`, `audio/*`, `application/pdf`, `text/plain`), auto-staging to `<vault>/chrysalis/Inbox/`, local Drift SQLite persistence (`DatabaseFactory.createPersistent`), and verified debug APK (162MB, minSdk 26).<br/>**Next:** UI polish, Wear OS standalone build, and biometric background sync. |
+| **2. Desktop Ambient Gateway**<br/>`apps/gateway/` | 🟡 **Functional Prototype** | **Delivered:** Asynchronous Python FastAPI daemon on Port 8765, Pluggable Orchestrator Bridge to Antigravity language server / `agentapi`, auth tokens, and health telemetry.<br/>**Next:** PyInstaller Windows `.exe` packaging with `freeze_support()`, Inno Setup user-login installer, and `%LOCALAPPDATA%\Chrysalis\gateway.json` config. |
+| **3. Chrysalis Obsidian Plugin**<br/>`chrysalis-obsidian` | 🟡 **Pre-Fork Prototype** | **Delivered:** Deployed locally in `.obsidian/plugins/chrysalis-obsidian/`, full decommissioning of legacy TaskNotes codebase (28.9k lines removed), canonical `chrysalis/` layout.<br/>**Next:** Standalone repository `tama-gucci/chrysalis-obsidian`, Chrysalis schema default settings & modal wizard, embedded Port 8080 REST/MCP server, and BRAT / Community Registry distribution. |
 
 ### ⏱️ Timeline of Major Milestones
 
@@ -129,7 +129,7 @@ flowchart LR
 
 ### 1. Universal Android Native Sharesheet & Screenshot Ingestion
 * **Native System Integration:** Direct integration with Android's system sharesheet (`Intent.ACTION_SEND` and `Intent.ACTION_SEND_MULTIPLE`).
-* **Universal MIME Handling:** Ingests system screenshot overlays (`image/*`), PDFs (course syllabi, specification dossiers), audio recordings (`audio/*`), and text notes (`text/plain`).
+* **Universal MIME Handling:** Ingests system screenshot overlays (`image/*`), PDFs (course syllabi, specification dossiers), audio recordings from external apps (`audio/*`), and text notes (`text/plain`).
 * **Binary-Safe Stream Caching:** Android content URIs (`content://`) expire quickly. The Kotlin native layer (`MainActivity.kt`) instantly streams incoming bytes into `context.cacheDir/shared_staging/<filename>`, performing path-traversal sanitization and collision deduplication before permissions lapse.
 * **Frictionless Auto-Staging to `chrysalis/Inbox/`:** The Dart `ShareAutoStagingController` automatically routes cached payloads to `<vault>/chrysalis/Inbox/`, presents a lightweight native Toast confirmation (*"Saved to Chrysalis Inbox: [filename]"*), and immediately dismisses (`finishAndRemoveTask()`) with zero UI interruption.
 
@@ -147,7 +147,7 @@ flowchart LR
 ### 3. Obsidian & Chrysalis-Obsidian Interface Ingestion
 * **Interactive Quick Capture & NLP Triggers:** Create structured tasks on the fly using natural language triggers (`#` tags, `+` project roadmaps, `~` durations, modality selectors).
 * **Instant Inline Checkbox-to-Task Conversion:** Highlight any standard markdown checklist item (`- [ ]`) to convert it into a schema-compliant Chrysalis task file (`chrysalis/Tasks/YYYYMMDD-<title>.md`) while leaving a clean `[[WikiLink]]` in place.
-* **Drag-and-Drop Ingestion to `chrysalis/Inbox/`:** Drag course syllabi, briefs, or lecture audio files directly into `chrysalis/Inbox/`. The orchestrator automatically routes them through the 3-Tier Cascade or Map-Reduce audio pipelines.
+* **Drag-and-Drop Ingestion to `chrysalis/Inbox/`:** Drag course syllabi, briefs, or audio recordings directly into `chrysalis/Inbox/`. The orchestrator automatically processes them into roadmaps, tasks, and reference notes.
 * **Dedicated REST API & MCP Server Architecture (Port 8080):** Port 8080 is reserved exclusively for the upcoming embedded `chrysalis-obsidian` Local REST API and MCP server (with current calendar synchronization gracefully falling back to headless `fetch_ical.py`), strictly isolated from the Gateway daemon on Port 8765.
 * **Single-Folder Encapsulation Invariant:** All runtime data lives cleanly encapsulated inside `<vault>/chrysalis/` (`Tasks/`, `Archive/`, `Daily/`, `Views/`, `Workflows/`, `Inbox/`), enabling users to open any existing Obsidian vault without namespace collisions.
 
@@ -155,33 +155,33 @@ flowchart LR
 
 ## ⚙️ Pillar II: Orchestrator Processing 🧬 (The Metamorphic Chrysalis — Synthesizing into Markdown)
 
-Pillar II is the cognitive core of Chrysalis—the protective cocoon where raw ingested leaves undergo radical metamorphosis. The autonomous AI orchestrator (Google Antigravity language server / Gemini 3.8 Flash baseline) breaks down unstructured data and reconstitutes it into an interconnected, bidirectional Markdown hypergraph stored physically on disk.
+Pillar II is the cognitive core of Chrysalis—the protective cocoon where raw ingested leaves undergo radical metamorphosis. The autonomous AI orchestrator (Google Antigravity language server / Gemini 3.8 Flash baseline) breaks down unstructured data and reconstitutes it into an interconnected web of Markdown notes and tasks stored physically on disk.
 
 ```mermaid
 flowchart TD
     RawInput["Raw Ingested Data<br/>(chrysalis/Inbox/, Chat, /task)"] --> Dispatcher{"Payload Type"}
     
-    Dispatcher -->|Audio Recording| AudioPipe["Map-Reduce Lecture Pipeline<br/>(Transcription, Chunking, Synthesis)"]
+    Dispatcher -->|Audio & Transcripts<br/>(Google Recorder)| AudioPipe["Third-Party Audio Intake<br/>(Sharesheet Ingestion to Inbox)"]
     Dispatcher -->|PDF Syllabus / Dossier| SyllabusPipe["3-Tier Cascade Parser<br/>(Roadmap, Tasks, Reference Notes)"]
     Dispatcher -->|Task Shorthand / Intent| TaskPipe["Bio-Cognitive Task Compiler<br/>(Modality, Multipliers, Wedges)"]
     Dispatcher -->|Zettel Concept / Research| ZettelPipe["Zettel Curation & Linking<br/>(Slipbox/*.md, #chrysalis)"]
 
-    AudioPipe --> MasterNote["Projects/*/Lectures/*.md"]
-    AudioPipe --> SlipboxNotes["Slipbox/*.md (Permanent Zettels)"]
+    AudioPipe --> InboxLanding["chrysalis/Inbox/*.m4a, *.txt"]
+    InboxLanding --> TaskPipe
+    InboxLanding --> ZettelPipe
     SyllabusPipe --> ProjectRoadmap["Projects/*/Roadmap.md"]
     SyllabusPipe --> TasksNotes["chrysalis/Tasks/*.md"]
     TaskPipe --> TasksNotes
-    ZettelPipe --> SlipboxNotes
+    ZettelPipe --> SlipboxNotes["Slipbox/*.md (Permanent Zettels)"]
 
     subgraph Substrate ["Physical Markdown Substrate"]
-        MasterNote
         SlipboxNotes
         ProjectRoadmap
         TasksNotes
         SchedulingMemory["System/Scheduling-Memory.md"]
     end
 
-    TasksNotes <-->|Hypergraph Linker<br/>zettel_graph_linker.py| SlipboxNotes
+    TasksNotes <-->|Bidirectional Linker<br/>zettel_graph_linker.py| SlipboxNotes
     TasksNotes -->|Duration Multiplier Learning| SchedulingMemory
 ```
 
@@ -189,13 +189,11 @@ flowchart TD
 * **The Core Constitutional Invariant:** Chat text output alone **NEVER** mutates Chrysalis state. The AI agent must never claim tasks are scheduled, staged, or calibrated without calling physical disk manipulation tools (`replace_file_content`, `write_to_file`).
 * All system roadmaps, task lifecycles, and agent skills exist as plain Markdown files with YAML frontmatter.
 
-### 2. Audio & Lecture Processing Pipeline (Map-Reduce Paradigm)
-Chrysalis processes long-form technical lectures (45–90 minutes) through a robust **Sliding-Window Map-Reduce Protocol**:
-1. **Map Phase (Transcription & Chunking):** Audio from `chrysalis/Inbox/` is parsed into timestamped, speaker-diarized text windows.
-2. **Extraction:** The orchestrator extracts core arguments, definitions, and citations across 15-minute segments.
-3. **Reduce Phase (Dual-Target Synthesis):**
-   - **Lecture Master Note:** Written to `Projects/<Course>/Lectures/YYYY-MM-DD-<Topic>.md` containing executive summaries and chronological outlines.
-   - **Atomic Permanent Zettels:** 2–4 standalone atomic notes generated in `Slipbox/<Timestamp>-<concept>.md` with formal definitions and bidirectional `[[WikiLinks]]`.
+### 2. Audio & Transcript Ingestion (Third-Party Bridge)
+For the immediate future, audio recording and speech-to-text transcription are offloaded to dedicated third-party applications (such as Google Recorder or Pixel Recorder).
+* **Sharesheet Handoff:** Once recorded and transcribed externally, audio files and text transcripts are shared directly with Chrysalis via the Android Sharesheet.
+* **Auto-Staging to Inbox:** Payloads land automatically in `<vault>/chrysalis/Inbox/` as timestamped artifacts.
+* **Orchestrator Intake:** The orchestrator ingests the resulting text transcripts to extract actionable tasks, daily log entries, and reference notes.
 
 ### 3. Document & Syllabus Ingestion (The 3-Tier Cascade)
 When complex documents (e.g. course syllabi, contract specifications) are shared to Chrysalis:
@@ -246,9 +244,9 @@ googleCalendarEventId: "android_calendar_event_12345"
 - [ ] 3. Begin drawing sheet border.
 ```
 
-### 6. Dynamic Multipliers & Hypergraph Linking
+### 6. Dynamic Multipliers & Bidirectional Knowledge Linking
 * **Experiential Multiplier Learning:** During the unified nightly `/audit`, Chrysalis calculates $T_{\text{actual}} = \text{completedAt} - \text{startedAt}$, updating tag multipliers bounded strictly within $[0.20, 2.00]$ in `System/Scheduling-Memory.md`.
-* **Automated Hypergraph Linking (`zettel_graph_linker.py`):** Traverses `Slipbox/*.md` and links relevant reference notes directly into task frontmatter (`linked_zettels`).
+* **Automated Knowledge Linking (`zettel_graph_linker.py`):** Traverses `Slipbox/*.md` and links relevant reference notes directly into task frontmatter (`linked_zettels`).
 
 ---
 
@@ -258,13 +256,13 @@ Pillar III translates the internal crystalline Markdown substrate into lightweig
 
 ```mermaid
 flowchart TD
-    Substrate["Markdown Substrate<br/>(chrysalis/Tasks/, Slipbox/, Daily/)"] --> ObsidianUI["Obsidian Desktop Cockpit<br/>• chrysalis-obsidian (Port 8080)<br/>• Kanban Boards & Dataview<br/>• Visual Hypergraph & Canvas"]
+    Substrate["Markdown Substrate<br/>(chrysalis/Tasks/, Slipbox/, Daily/)"] --> ObsidianUI["Obsidian Desktop Cockpit<br/>• chrysalis-obsidian (Port 8080)<br/>• Kanban Boards & Dataview<br/>• Visual Graph View & Canvas"]
     
     Substrate --> MobileUI["Chrysalis Mobile (Flutter 3.47)<br/>• Active Sprint Hero Card<br/>• Expandable Linked Knowledge Drawer<br/>• Rapid Capture & Timeline Widgets"]
     
     Substrate --> WatchUI["Wear OS Smartwatch Companion<br/>• 384x384 Circular Pure #000000 OLED<br/>• Active Sprint Countdown & Controls<br/>• Rotary Vertical Card Stack"]
     
-    Substrate --> CalendarSync["Model C Calendar Synchronization<br/>• Android CalendarContract Platform Channel<br/>• Auto-mirrors to Google Calendar & Watch<br/>• Zero Google Cloud Setup / Free Sync"]
+    Substrate --> CalendarSync["Native Mobile Calendar Synchronization<br/>• Android CalendarContract Platform Channel<br/>• Auto-mirrors to Google Calendar & Watch<br/>• Zero Google Cloud Setup / Free Sync"]
 ```
 
 ### 1. Obsidian Desktop Cockpit (`chrysalis-obsidian`)
@@ -283,24 +281,28 @@ flowchart TD
 * **OLED-Optimized Layout:** Formatted specifically for circular displays (384×384 px) with pure black backgrounds (`#000000`) to maximize battery endurance.
 * **Rotary Card Stack:** Active sprint card with real-time countdown, one-tap voice capture microphone, and quick action controls (`Calibrate Today`, `Pause System`).
 
-### 4. Frictionless Calendar Synchronization (Model C: Mobile OS Bridge)
+### 4. Frictionless Calendar Synchronization (Android CalendarContract Bridge)
 * **Zero Cloud Console Configuration:** Eliminates the friction of registering Google Cloud developer projects, managing client IDs, handling OAuth consent screens, or dealing with rate limits.
 * **Native Platform Channel (`CalendarContract`):** The Flutter app writes scheduled focus blocks directly to Android's built-in device calendar database. Android mirrors these events to Google Calendar and Wear OS complications automatically for free.
 * **RFC 5545 Headless Fallback (`fetch_ical.py`):** Standalone server environments ingest calendar commitments via a pure Python iCal parser supporting `UNTIL`, `COUNT`, and `EXDATE` recurrence rules.
 
-### 5. Dedicated "Golem" Hardware Topology & Ambient Gateway
-* **Home Server Hardware:** Microsoft Surface Pro X (16GB RAM, Windows 11 on ARM64) running 24/7.
-* **Strict Port Separation Invariant:**
-  - **Port 8080:** Reserved exclusively for `chrysalis-obsidian` Local REST API and MCP server.
-  - **Port 8765:** Reserved exclusively for the Ambient Chrysalis Gateway daemon.
-  - Both services run simultaneously on Golem with zero port collisions.
+### 5. Dedicated Hardware Topology (`golem`, `obelisk`, `diatom`) & Port Separation
+Chrysalis coordinates across three primary hardware nodes:
+* **`golem` (Home Server Hub):** Microsoft Surface Pro X (16GB RAM, Windows 11 on ARM64) running 24/7. Hosts the Ambient Gateway daemon (`apps/gateway/` on Port 8765) and manages background automation.
+* **`obelisk` (Desktop Workstation):** Primary workstation running Obsidian desktop (`chrysalis-obsidian` on Port 8080) for deep analytical work, canvas planning, and large-scale synthesis.
+* **`diatom` (Mobile & Wearable Node):** Android smartphone and Wear OS smartwatch running Chrysalis Mobile (`apps/mobile/`), providing instant sharesheet capture and active sprint tracking.
+
+**Strict Port Separation Invariant (on `golem` & `obelisk`):**
+* **Port 8080:** Reserved exclusively for `chrysalis-obsidian` Local REST API and MCP server.
+* **Port 8765:** Reserved exclusively for the Ambient Chrysalis Gateway daemon.
+* Both services run simultaneously on `golem` and `obelisk` with zero port collisions.
 
 ---
 
 ## 🎮 Command Reference
 
 | Command | Domain | Function |
-| :--- | :---: | :--- |
+| :--- | :--- | :--- |
 | **`/morning`** | Runtime | Captures wake time and energy score (1–5) or biometrics, unpauses system, and locks calibrated timeblocks to disk. |
 | **`/evening`** | Runtime | Reviews completed tasks, ingests calendar commitments, and stages tomorrow's prototype schedule. |
 | **`/plan`** | Runtime | Master diurnal engine: Protocol 1 (Staging Mode) queries additions; Protocol 2 (Calibration Mode) locks ISO timestamps. |
@@ -351,61 +353,14 @@ vault-git/
 
 ---
 
-## 🚀 Quickstart & Setup Guide
+## 🗺️ Long-Term Roadmap
 
-### 1. Prerequisites
-1. **[Obsidian](https://obsidian.md):** Installed on your workstation or tablet.
-2. **Obsidian Community Plugins:**
-   * **`chrysalis-obsidian`:** Core plugin for task frontmatter management, boards, MCP server, and REST API (Port 8080).
-   * **`Dataview`:** Recommended for dynamic dashboard queries.
-3. **Python 3.11+:** For running the Ambient Gateway daemon, diagnostic linters, and test suite.
-4. **Android SDK & Flutter 3.47+:** (Optional) For compiling mobile and Wear OS applications.
+The following advanced capabilities are scheduled for future development phases once all three core software components (Mobile Client, Ambient Gateway, and Chrysalis Obsidian Plugin) achieve stable MVP status:
 
-### 2. Vault Installation & Initial Onboarding
-```bash
-# Clone the repository
-git clone https://github.com/tama-gucci/chrysalis.git ~/vault
-
-# Open the directory as a vault in Obsidian
-# Launch your AI orchestrator (Google Antigravity) pointing at the vault root
-```
-Run the interactive onboarding skill in chat:
-```text
-/onboard
-```
-This configures your explicit local timezone offset (e.g. `"-05:00"`), compiles your initial `Life-Roadmap.md`, and seeds `Scheduling-Memory.md`.
-
-### 3. Deploying the Mobile Android MVP App
-To install the verified debug APK on a physical Android device or emulator via ADB:
-```bash
-adb install -r "apps/mobile/build/app/outputs/flutter-apk/app-debug.apk"
-```
-Once installed, share any screenshot, PDF, or audio file to **Chrysalis** to verify instant staging into `<vault>/chrysalis/Inbox/`.
-
-### 4. Ambient Gateway Setup on "Golem" (Surface Pro X)
-To launch the 24/7 background gateway service on your home server:
-```powershell
-cd apps\gateway
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-
-# Launch gateway daemon on dedicated port 8765
-$env:CHRYSALIS_GATEWAY_PORT = "8765"
-$env:CHRYSALIS_GATEWAY_TOKEN = "your-secure-token"
-python main.py
-```
-Test health endpoint: `http://localhost:8765/health` (leaves port 8080 completely free for `chrysalis-obsidian`).
-
-### 5. Running System Diagnostics & Verification Suite
-Run the 6-point system diagnostic health suite:
-```powershell
-python System\scripts\doctor.py
-```
-Execute the complete 124-test verification suite:
-```powershell
-python -m unittest discover -t . -s tests
-```
+* **Autonomous Map-Reduce Lecture Pipeline:** Direct sliding-window audio chunking, speaker diarization, and map-reduce synthesis for long-form (45–90 min) lecture recordings, compiling executive summaries and atomic Zettels directly within the vault.
+* **Standalone Wear OS Package:** Standalone circular Wear OS application build with background Health Connect biometric ingestion.
+* **Cross-Node Peer Mesh:** Autonomous discovery and sync mesh connecting `golem`, `obelisk`, and `diatom`.
+* **Universal Setup & Onboarding Wizard:** Interactive cross-platform installer and automated configuration suite.
 
 ---
 

@@ -17,7 +17,7 @@
    - **Active Sprint Cockpit Hero Card:** Renders the active 75-minute ultradian focus sprint with live countdown timer and modality accent colors.
    - **Expandable Linked Knowledge Drawer:** One-tap inspection of connected atomic research notes (`linked_zettels`) from `Slipbox/` inside the active sprint card.
    - **Diurnal Timeline Widget:** Visual day block showing wake time, morning analytical peak, slump defrost, and evening recovery windows.
-   - **Model C Calendar Synchronization:** Direct Android `CalendarContract` integration writing focus blocks to the built-in calendar database, mirroring to Google Calendar and Wear OS watch complications with zero cloud setup.
+   - **Native Mobile Calendar Synchronization:** Direct Android `CalendarContract` integration writing focus blocks to the built-in calendar database, mirroring to Google Calendar and Wear OS watch complications with zero cloud setup.
 
 ---
 
@@ -89,11 +89,11 @@ apps/mobile/
   - Large circular microphone button (`#6366F1`) for instant voice capture.
   - One-tap quick actions: `Calibrate Today` and `Pause System`.
 
-### 4. Active Sprint Knowledge Drawer (Hypergraph Integration)
+### 4. Active Sprint Knowledge Drawer (Bidirectional Note Linking)
 * Chrysalis tasks in `chrysalis/Tasks/*.md` declare `linked_zettels: ["[[20260912100000-concept]]"]`.
 * During deep focus sprints, users tap the **Linked Knowledge Drawer** at the bottom of the active sprint card to inspect read-only atomic notes from `Slipbox/` without navigating away.
 
-### 5. Model C Calendar Synchronization (Zero Cloud Setup)
+### 5. Native Mobile Calendar Synchronization (Android CalendarContract Bridge)
 * Communicates through native Android `CalendarContract` platform channel (`CalendarManager.kt`).
 * Focus sprints are written directly to the smartphone's built-in calendar database, automatically mirroring to Google Calendar and Wear OS watch complications for free with zero Google Cloud console setup or OAuth tokens.
 
