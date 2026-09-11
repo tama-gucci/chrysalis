@@ -61,8 +61,8 @@ class TestTier4RealWorldScenarios(unittest.TestCase):
 
             # Step 3: Verify directory substrate
             for required_dir in [
-                target_path / "TaskNotes" / "Tasks",
-                target_path / "TaskNotes" / "Archive",
+                target_path / "chrysalis" / "Tasks",
+                target_path / "chrysalis" / "Archive",
                 target_path / "System",
                 target_path / "Projects",
                 target_path / "Slipbox"
@@ -102,8 +102,8 @@ class TestTier4RealWorldScenarios(unittest.TestCase):
         sandbox = SandboxVault(populate_runtime=True)
         try:
             # Step 1 & 2: Record baseline state of user assets
-            user_task_path = sandbox.path / "TaskNotes" / "Tasks" / "20260903-synthetic-task.md"
-            archive_task_path = sandbox.path / "TaskNotes" / "Archive" / "20260901-completed-task.md"
+            user_task_path = sandbox.path / "chrysalis" / "Tasks" / "20260903-synthetic-task.md"
+            archive_task_path = sandbox.path / "chrysalis" / "Archive" / "20260901-completed-task.md"
             daily_note_path = sandbox.path / "2026-09-03.md"
             mem_path = sandbox.path / "System" / "Scheduling-Memory.md"
             manifest_path = sandbox.path / "System" / "Environment" / "test-node.md"
@@ -269,7 +269,7 @@ tags:
                 # If script succeeds
                 if ret == 0 and any(export_path.iterdir()):
                     # Verify no personal task notes exist
-                    tasks_dir = export_path / "TaskNotes" / "Tasks"
+                    tasks_dir = export_path / "chrysalis" / "Tasks"
                     if tasks_dir.exists():
                         for f in tasks_dir.glob("*.md"):
                             self.assertTrue(

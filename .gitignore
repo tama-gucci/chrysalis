@@ -77,20 +77,6 @@
 /chrysalis/Archive/
 /chrysalis/Archive/**
 
-!/TaskNotes/
-/TaskNotes/*
-!/TaskNotes/Views/
-!/TaskNotes/Views/**
-!/TaskNotes/Workflows/
-!/TaskNotes/Workflows/**
-!/TaskNotes/_templates/
-!/TaskNotes/_templates/**
-!/TaskNotes/Tasks/
-/TaskNotes/Tasks/*
-!/TaskNotes/Tasks/example-task.md
-/TaskNotes/Archive/
-/TaskNotes/Archive/**
-
 # 8. Whitelist Public Project & Slipbox Templates/READMEs ONLY
 !/Projects/
 /Projects/*
@@ -123,7 +109,6 @@
 /.obsidian/plugins/obsidian-git/obsidian_askpass.sh
 !/.obsidian/plugins/obsidian-git/data.json
 !/.obsidian/plugins/chrysalis-obsidian/data.json
-!/.obsidian/plugins/tasknotes/data.json
 !/.obsidian/plugins/tasknotes-workflows/data.json
 !/.obsidian/plugins/various-complements/data.json
 !/.obsidian/plugins/dataview/data.json

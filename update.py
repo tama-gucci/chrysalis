@@ -39,7 +39,6 @@ ENGINE_FILES = [
     "Slipbox/README.md",
     "System/Runtime-Constitution.md",
     "System/Environment/Environment-Index.md",
-    "TaskNotes/Tasks/example-task.md",
     "chrysalis/Tasks/example-task.md",
 ]
 
@@ -53,9 +52,6 @@ ENGINE_DIRS = [
     "System/_templates",
     "Projects/_templates",
     "Slipbox/_templates",
-    "TaskNotes/_templates",
-    "TaskNotes/Views",
-    "TaskNotes/Workflows",
     "chrysalis/_templates",
     "chrysalis/Views",
     "chrysalis/Workflows",

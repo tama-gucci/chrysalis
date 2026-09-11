@@ -35,9 +35,6 @@ ENGINE_DIRS = [
     "System/_templates",
     "Projects/_templates",
     "Slipbox/_templates",
-    "TaskNotes/_templates",
-    "TaskNotes/Views",
-    "TaskNotes/Workflows",
     "chrysalis/_templates",
     "chrysalis/Views",
     "chrysalis/Workflows",
@@ -151,13 +148,10 @@ def export_starter(target_dir: str, dry_run: bool = False):
     print("\n[4/5] Initializing Clean Template-Backed Memory & Roadmap...")
     
     # Initialize empty Task directories with sample task
-    tasks_dir = target_path / "TaskNotes" / "Tasks"
-    tasks_dir.mkdir(parents=True, exist_ok=True)
     chrysalis_tasks_dir = target_path / "chrysalis" / "Tasks"
     chrysalis_tasks_dir.mkdir(parents=True, exist_ok=True)
     (target_path / "Slipbox").mkdir(parents=True, exist_ok=True)
     (target_path / "Projects").mkdir(parents=True, exist_ok=True)
-    (target_path / "TaskNotes" / "Archive").mkdir(parents=True, exist_ok=True)
     (target_path / "chrysalis" / "Archive").mkdir(parents=True, exist_ok=True)
     (target_path / "chrysalis" / "Daily").mkdir(parents=True, exist_ok=True)
 
@@ -175,15 +169,12 @@ def export_starter(target_dir: str, dry_run: bool = False):
     sample_template = None
     if (VAULT_ROOT / "chrysalis" / "_templates" / "Task-Template.md").exists():
         sample_template = VAULT_ROOT / "chrysalis" / "_templates" / "Task-Template.md"
-    elif (VAULT_ROOT / "TaskNotes" / "_templates" / "Task-Template.md").exists():
-        sample_template = VAULT_ROOT / "TaskNotes" / "_templates" / "Task-Template.md"
         
     if sample_template:
-        shutil.copy2(sample_template, tasks_dir / "20260901-configure-chrysalis-workspace.md")
         shutil.copy2(sample_template, chrysalis_tasks_dir / "20260901-configure-chrysalis-workspace.md")
     print("  ✓ Initialized clean System/Scheduling-Memory.md")
     print("  ✓ Initialized clean System/Life-Roadmap.md")
-    print("  ✓ Created sample task in chrysalis/Tasks/ and TaskNotes/Tasks/")
+    print("  ✓ Created sample task in chrysalis/Tasks/")
 
     # 5. Security & Privacy Audit
     print("\n[5/5] Executing Safety & Privacy Leak Audit...")

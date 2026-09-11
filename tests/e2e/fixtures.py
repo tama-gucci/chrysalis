@@ -130,11 +130,12 @@ class SandboxVault:
     def _populate_mock_runtime(self):
         """Populates synthetic runtime files mirroring live personal installation."""
         # Folders
-        (self.path / "TaskNotes" / "Tasks").mkdir(parents=True, exist_ok=True)
-        (self.path / "TaskNotes" / "Archive").mkdir(parents=True, exist_ok=True)
+        (self.path / "chrysalis" / "Tasks").mkdir(parents=True, exist_ok=True)
+        (self.path / "chrysalis" / "Archive").mkdir(parents=True, exist_ok=True)
         (self.path / "Projects" / "Synthetic_Project").mkdir(parents=True, exist_ok=True)
         (self.path / "Slipbox").mkdir(parents=True, exist_ok=True)
         (self.path / "System" / "Environment").mkdir(parents=True, exist_ok=True)
+        (self.path / ".obsidian" / "plugins" / "chrysalis-obsidian").mkdir(parents=True, exist_ok=True)
         (self.path / ".obsidian" / "plugins" / "tasknotes").mkdir(parents=True, exist_ok=True)
         (self.path / ".agent" / "skills" / ".backup").mkdir(parents=True, exist_ok=True)
 
@@ -160,7 +161,7 @@ googleCalendarEventId: "synth_cal_event_123"
 # Synthetic Private Task Notes
 Do not overwrite or wipe during framework synchronization!
 """
-        (self.path / "TaskNotes" / "Tasks" / "20260903-synthetic-task.md").write_text(task_content, encoding="utf-8")
+        (self.path / "chrysalis" / "Tasks" / "20260903-synthetic-task.md").write_text(task_content, encoding="utf-8")
 
         # 2. Private Archived Task
         archive_content = """---
@@ -182,7 +183,7 @@ tags:
 ---
 Completed task note.
 """
-        (self.path / "TaskNotes" / "Archive" / "20260901-completed-task.md").write_text(archive_content, encoding="utf-8")
+        (self.path / "chrysalis" / "Archive" / "20260901-completed-task.md").write_text(archive_content, encoding="utf-8")
 
         # 3. Daily Note
         daily_content = """---
@@ -248,6 +249,7 @@ role: "workstation"
   "googleCalendarDeletionQueue": [],
   "googleCalendarEventIndex": []
 }"""
+        (self.path / ".obsidian" / "plugins" / "chrysalis-obsidian" / "data.json").write_text(data_json_content, encoding="utf-8")
         (self.path / ".obsidian" / "plugins" / "tasknotes" / "data.json").write_text(data_json_content, encoding="utf-8")
 
     def cleanup(self):

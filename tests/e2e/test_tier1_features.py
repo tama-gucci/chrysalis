@@ -355,7 +355,7 @@ class TestTier1FeatureCoverage(unittest.TestCase):
             REPO_ROOT / "System" / "_templates" / "System-Health.template.md",
             REPO_ROOT / "System" / "_templates" / "Changelog.template.md",
             REPO_ROOT / "System" / "_templates" / "Daily-Note.template.md",
-            REPO_ROOT / "TaskNotes" / "_templates" / "Task-Template.md",
+            REPO_ROOT / "chrysalis" / "_templates" / "Task-Template.md",
             REPO_ROOT / "Projects" / "_templates" / "Project-Template.md",
             REPO_ROOT / "Slipbox" / "_templates" / "Slipbox-Template.md",
             REPO_ROOT / "System" / "Environment" / "_templates" / "System-Manifest-Template.md",
@@ -521,11 +521,11 @@ class TestTier1FeatureCoverage(unittest.TestCase):
 
     def test_f8_01_public_tasknotes_validate_schema(self):
         """
-        [F8-T1-01] TaskNotes/Tasks/example-task.md must strictly validate against universal task frontmatter schema.
-        Authoritative Source: PROJECT.md § Feature Inventory F8; AGENTS.md § Universal TaskNotes Schema.
+        [F8-T1-01] chrysalis/Tasks/example-task.md must strictly validate against universal task frontmatter schema.
+        Authoritative Source: PROJECT.md § Feature Inventory F8; AGENTS.md § Universal Chrysalis Task Frontmatter Schema.
         """
-        task_path = REPO_ROOT / "TaskNotes" / "Tasks" / "example-task.md"
-        self.assertTrue(task_path.exists(), "TaskNotes/Tasks/example-task.md must exist")
+        task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
+        self.assertTrue(task_path.exists(), "chrysalis/Tasks/example-task.md must exist")
         fm, _ = read_frontmatter(task_path)
         required_fields = [
             "title", "status", "due", "priority", "urgency_tier",
@@ -542,7 +542,7 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         [F8-T1-02] Frontmatter timestamps in public task notes must use explicit local timezone offsets (e.g. -05:00).
         Authoritative Source: AGENTS.md § 1 Vault Substrate & Core System Invariants.
         """
-        task_path = REPO_ROOT / "TaskNotes" / "Tasks" / "example-task.md"
+        task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
         fm, _ = read_frontmatter(task_path)
         created = str(fm.get("dateCreated") or fm.get("created") or "")
         self.assertTrue(
@@ -555,7 +555,7 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         [F8-T1-03] Tags in example-task.md must exist in the Life-Roadmap template tag registry.
         Authoritative Source: doctor/SKILL.md § Check 3 (Life-Roadmap Tag Registry Validation).
         """
-        task_path = REPO_ROOT / "TaskNotes" / "Tasks" / "example-task.md"
+        task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
         roadmap_tmpl = REPO_ROOT / "System" / "_templates" / "Life-Roadmap.template.md"
         task_fm, _ = read_frontmatter(task_path)
         roadmap_fm, _ = read_frontmatter(roadmap_tmpl)
@@ -629,8 +629,8 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         """
         sandbox = SandboxVault(populate_runtime=True)
         try:
-            task_before = (sandbox.path / "TaskNotes" / "Tasks" / "20260903-synthetic-task.md").read_text(encoding="utf-8")
-            archive_before = (sandbox.path / "TaskNotes" / "Archive" / "20260901-completed-task.md").read_text(encoding="utf-8")
+            task_before = (sandbox.path / "chrysalis" / "Tasks" / "20260903-synthetic-task.md").read_text(encoding="utf-8")
+            archive_before = (sandbox.path / "chrysalis" / "Archive" / "20260901-completed-task.md").read_text(encoding="utf-8")
             
             # Execute dry-run or updater sync into sandbox
             update_py = REPO_ROOT / "update.py"
@@ -640,8 +640,8 @@ class TestTier1FeatureCoverage(unittest.TestCase):
                 "--dry-run"
             ])
             
-            task_after = (sandbox.path / "TaskNotes" / "Tasks" / "20260903-synthetic-task.md").read_text(encoding="utf-8")
-            archive_after = (sandbox.path / "TaskNotes" / "Archive" / "20260901-completed-task.md").read_text(encoding="utf-8")
+            task_after = (sandbox.path / "chrysalis" / "Tasks" / "20260903-synthetic-task.md").read_text(encoding="utf-8")
+            archive_after = (sandbox.path / "chrysalis" / "Archive" / "20260901-completed-task.md").read_text(encoding="utf-8")
             
             self.assertEqual(task_before, task_after, "User active task note must be 100% byte identical")
             self.assertEqual(archive_before, archive_after, "User archive task note must be 100% byte identical")

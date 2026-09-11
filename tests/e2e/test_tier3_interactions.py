@@ -101,8 +101,8 @@ class TestTier3CrossFeatureInteractions(unittest.TestCase):
             data = json.loads(runtime_data_json.read_text(encoding="utf-8"))
             self.assertEqual(data.get("googleCalendarDeletionQueue", []), [], "Runtime deletion queue must be empty")
             
-            # Verify upstream tasknotes data.json is also sanitized
-            upstream_data_json = REPO_ROOT / ".obsidian" / "plugins" / "tasknotes" / "data.json"
+            # Verify upstream plugin data.json is also sanitized
+            upstream_data_json = REPO_ROOT / ".obsidian" / "plugins" / "chrysalis-obsidian" / "data.json"
             if upstream_data_json.exists():
                 upstream_data = json.loads(upstream_data_json.read_text(encoding="utf-8"))
                 self.assertEqual(
