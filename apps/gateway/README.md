@@ -1,6 +1,7 @@
 # 🛰️ Ambient Chrysalis Gateway
 
-The **Ambient Chrysalis Gateway** is a lightweight, asynchronous Python FastAPI daemon engineered to operate 24/7 on your dedicated home hub ("Golem" — Microsoft Surface Pro X on Windows 11 ARM64). It exposes high-throughput, low-latency REST and bidirectional WebSocket interfaces bridging the Chrysalis Mobile and Wear OS clients to autonomous agent orchestrators via a **Pluggable Orchestrator Bridge**.
+> **Status:** 🟡 **Functional Prototype (60%)** | `[██████░░░░] 60%` | **Port:** 8765 | **Architecture:** Windows 11 ARM64/x64  
+> The **Ambient Chrysalis Gateway** is a lightweight, asynchronous Python FastAPI daemon engineered to operate 24/7 on your dedicated home hub ("Golem" — Microsoft Surface Pro X on Windows 11 ARM64). It exposes high-throughput, low-latency REST and bidirectional WebSocket interfaces bridging the Chrysalis Mobile and Wear OS clients to autonomous agent orchestrators via a **Pluggable Orchestrator Bridge**.
 
 ---
 
@@ -115,7 +116,19 @@ Provides real-time bidirectional streaming for conversational chat, active sprin
 
 ---
 
-## 🚀 Setup & Execution
+## 📦 Windows Packaging & Installer Roadmap (`.exe`)
+
+To transition from manual virtual environment execution to an autonomous, 1-click Windows installer:
+
+1. **Frozen Subprocess Protection:** Add `multiprocessing.freeze_support()` at the entrypoint of [`main.py`](main.py). When frozen via PyInstaller, subprocess calls to `language_server.exe` / `agentapi` on Windows will recursively spawn duplicate processes without freeze support.
+2. **Direct Uvicorn Application Passing:** Transition `uvicorn.run("main:app", ...)` to pass the application object directly (`uvicorn.run(app, ...)`), avoiding module import string failures inside PyInstaller bundles.
+3. **User-Session Execution Invariant (No Session 0 Services):** The Chrysalis vault substrate often lives on a per-user mapped virtual drive (e.g. `G:\My Drive`). Windows Services run in **Session 0** and cannot access user mapped drives or `%LOCALAPPDATA%`. The installer will register the gateway daemon in the user's **Windows Startup folder** or `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
+4. **Persistent JSON Configuration:** Read configuration from `%LOCALAPPDATA%\Chrysalis\gateway.json` with automatic fallback to environment variables.
+5. **Inno Setup (`setup.iss`):** Compile an unprivileged user installer that unpacks the PyInstaller single-file binary, provisions the default configuration, and registers user auto-start.
+
+---
+
+## 🚀 Setup & Execution (Manual Prototype)
 
 ```powershell
 # Navigate to gateway directory
