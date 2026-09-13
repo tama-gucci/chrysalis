@@ -17,6 +17,11 @@ import os
 import re
 import sys
 from pathlib import Path
+
+try:
+    from .vault_paths import resolve_vault_root, vault_path
+except ImportError:
+    from vault_paths import resolve_vault_root, vault_path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 if sys.platform == "win32":
@@ -79,18 +84,12 @@ def normalize_tag(tag: str) -> str:
 
 class ZettelGraphLinker:
     def __init__(self, vault_root: Optional[Path] = None):
-        if vault_root:
-            self.vault_root = Path(vault_root).resolve()
-        elif "CHRYSALIS_VAULT_PATH" in os.environ:
-            self.vault_root = Path(os.environ["CHRYSALIS_VAULT_PATH"]).resolve()
-        else:
-            # Fallback: traverse up from this script (System/scripts/ -> chrysalis)
-            self.vault_root = Path(__file__).resolve().parent.parent.parent
+        self.vault_root = resolve_vault_root(vault_root)
 
     def scan_zettels(self) -> List[Dict[str, Any]]:
         """Scans Slipbox/*.md for atomic notes, excluding templates and READMEs."""
         slipbox_dir = None
-        for candidate in [self.vault_root / "Slipbox", self.vault_root / "chrysalis" / "Slipbox"]:
+        for candidate in [vault_path(self.vault_root, "Slipbox")]:
             if candidate.exists():
                 slipbox_dir = candidate
                 break
@@ -129,7 +128,7 @@ class ZettelGraphLinker:
     def scan_projects(self) -> List[Dict[str, Any]]:
         """Scans Projects/*/Roadmap.md for project definitions."""
         projects_dir = None
-        for candidate in [self.vault_root / "Projects", self.vault_root / "chrysalis" / "Projects"]:
+        for candidate in [vault_path(self.vault_root, "Projects")]:
             if candidate.exists():
                 projects_dir = candidate
                 break
@@ -180,11 +179,7 @@ class ZettelGraphLinker:
     def scan_tasks(self) -> List[Dict[str, Any]]:
         """Scans chrysalis/Tasks/*.md, Tasks/*.md, or legacy TaskNotes/Tasks/*.md for active tasks."""
         tasks_dir = None
-        for candidate in [
-            self.vault_root / "chrysalis" / "Tasks",
-            self.vault_root / "Tasks",
-            self.vault_root / "TaskNotes" / "Tasks",
-        ]:
+        for candidate in [vault_path(self.vault_root, "Tasks")]:
             if candidate.exists():
                 tasks_dir = candidate
                 break

@@ -1,13 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'core/constants/timezones.dart';
 import 'data/database/connection.dart';
 import 'data/storage/local_vault_storage_provider.dart';
 import 'data/sync/vault_synchronizer.dart';
-import 'domain/models/task_note.dart';
-import 'domain/models/cognitive_modality.dart';
-import 'domain/models/task_priority.dart';
 import 'domain/services/biometric_service.dart';
 import 'domain/services/share_receiver_service.dart';
 import 'domain/services/share_auto_staging_controller.dart';
@@ -48,42 +44,14 @@ void main() async {
   );
   await synchronizer.initialize();
 
-  // Ingest existing vault tasks and guard starter task seeding behind empty database check
-  final existingNotes = await db.getAllCachedNotes();
-  if (existingNotes.isEmpty) {
-    final ingested = await synchronizer.ingestAllRemoteTasks();
-    if (ingested == 0) {
-      await synchronizer.saveTask(
-        TaskNote(
-          title: 'Review Grant Proposal Architecture',
-          due: TimezoneUtils.todayDateString(),
-          modality: CognitiveModality.analytical,
-          priority: TaskPriority.urgent,
-          urgencyTier: 4,
-          timeEstimate: 75,
-          tags: ['task', 'pillar-1/grants'],
-          body: '## Context & Objective\nComplete in-depth review of methodology section.',
-        ),
-      );
-
-      await synchronizer.saveTask(
-        TaskNote(
-          title: 'Workspace Ergonomics & Cable Clean up',
-          modality: CognitiveModality.kinetic,
-          priority: TaskPriority.normal,
-          urgencyTier: 2,
-          timeEstimate: 30,
-          tags: ['task', 'pillar-2/health'],
-          body: '## Execution Checklist\n- [ ] Clean surface desk\n- [ ] Route monitor wires',
-        ),
-      );
-    }
-  } else {
-    await synchronizer.ingestAllRemoteTasks();
-  }
+  // Personal installations start empty; sample tasks belong in tests and templates.
+  await synchronizer.ingestAllRemoteTasks();
 
   // 5. Initialize Orchestrator Transport (Hybrid Engine)
-  final gatewayClient = AmbientGatewayClient();
+  final gatewayClient = AmbientGatewayClient(
+    gatewayUrl: Platform.environment['CHRYSALIS_GATEWAY_URL'],
+    authToken: Platform.environment['CHRYSALIS_GATEWAY_TOKEN'],
+  );
   final transport = HybridOrchestratorTransport(
     gatewayClient: gatewayClient,
     storageProvider: storage,
@@ -91,7 +59,7 @@ void main() async {
   await transport.initialize();
 
   // 6. Initialize Biometrics Source (Google Health Connect)
-  final biometricSource = MockHealthConnectDataSource();
+  final biometricSource = HealthConnectPlatformChannelDataSource();
 
   // 7. Initialize Universal Share Sheet Receiver & Auto-Staging Controller
   final shareReceiverService = ShareReceiverService();

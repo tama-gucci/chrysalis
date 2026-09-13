@@ -8,6 +8,9 @@ domain: development
 
 # Chrysalis Development Constitution
 
+> Architecture decision (2026-09-12): keep the personal runtime vault separate from the development repository. Runtime framework files are deployed snapshots; edit reusable code and runbooks in source. ARCHITECTURE.md defines supported layouts, and STATUS.md is the implementation reference. Future capabilities below must not be assumed operational.
+
+
 ## Preamble: Separation of Spheres (Runtime vs. Development)
 Chrysalis operates across two strictly segregated functional domains:
 1. **The Runtime Sphere (`vault/chrysalis/System/`, `vault/chrysalis/Tasks/` or `System/`, `chrysalis/Tasks/`):** The private, local execution substrate of daily life focus, chronotype rhythms, task execution, and personal memory. All runtime state files containing personal data are strictly quarantined from public version control. Governed by the **Runtime Constitution** ([`System/Runtime-Constitution.md`](../System/Runtime-Constitution.md)).
@@ -65,11 +68,11 @@ All development-specific assets reside exclusively within `vault-git/Development
 * **`Development/scripts/`:** Developer utility scripts, PII linters, git boundary verifiers, and setup helpers.
 * **`Development/skills/`:** Modular development-only agent skills (`audit-dev`, `evolve`), registered into Antigravity via `.agent/skills.json`.
 * **`apps/gateway/`:** Ambient Chrysalis Gateway daemon (Python FastAPI on port `8765`), implementing `BaseOrchestratorBridge` for pluggable agents (Antigravity reference, OpenClaw, Hermes OS, local LLMs) and Cloudflare Zero-Trust Tunnel configuration.
-* **`apps/mobile/`:** Cross-platform Flutter mobile client and standalone circular Wear OS smartwatch companion (384×384 OLED), offline-first SQLite cache (Drift), Model C Mobile OS Calendar Bridge (`CalendarContract`), and Health Connect biometric ingestion.
+* **`apps/mobile/`:** Flutter prototype with local task storage and Android share intake. Health Connect has a native bridge; calendar export integration and Wear OS remain unfinished. See [STATUS.md](../STATUS.md).
 
 ### Architectural Invariants in Development
 1. **Port Coexistence Invariant:** Port `8080` is reserved exclusively for the `chrysalis-obsidian` plugin API; Port `8765` is dedicated to the Ambient Chrysalis Gateway daemon. Port collisions between Obsidian and Chrysalis are strictly prohibited.
-2. **Hardware Topology Awareness:** Engineering assets must support the "Golem" production hardware topology (Surface Pro X on Windows 11 on ARM64, 16GB total RAM: 4GB Hyper-V Home Assistant, 12GB operational memory dedicated to Chrysalis and background agents) as well as development workstations and serverless mobile-native edge modes.
+2. **Hardware Portability:** A dedicated gateway host is optional. Keep device specifications, resource budgets, and deployment profiles in private environment manifests. Distinguish tested platforms from planned support in STATUS.md.
 3. **Pluggable Modular Orchestrator Interface:** The gateway and mobile clients must remain decoupled from any single LLM or agent implementation via the `IntelligenceEngine` abstract contract and `BaseOrchestratorBridge` adapter architecture.
 
 ---

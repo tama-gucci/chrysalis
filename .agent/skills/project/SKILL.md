@@ -16,6 +16,9 @@ writes:
   - "chrysalis/Tasks/*.md"
 ---
 
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
+
+
 # /project (Chrysalis Project Staging & Strategic Integration Engine)
 
 ## Supported Commands & Triggers
@@ -60,9 +63,9 @@ If the user provides raw notes or a project name, prompt for or extract the foll
 > [!CAUTION]
 > **Anti-Simulation Law:** You MUST execute `write_to_file` to physically create the project folder and `Roadmap.md` on disk.
 
-1. **Create Project Folder:** `chrysalis/Projects/<Project_Folder_Name>/`
+1. **Create Project Folder:** `Projects/<Project_Folder_Name>/`
 2. **Initialize Subdirectories:** Based on the project archetype, create relevant subfolders (e.g., `Docs/`, `Notes/`, `Exports/`, `Deliverables/`).
-3. **Generate Project Roadmap (`chrysalis/Projects/<Project_Folder_Name>/Roadmap.md`):**
+3. **Generate Project Roadmap (`Projects/<Project_Folder_Name>/Roadmap.md`):**
    Strictly serialize frontmatter matching the Chrysalis project schema:
 
 ```yaml
@@ -97,7 +100,7 @@ tags:
 ---
 
 ## 3. Reference Files, Contacts & Slipbox Notes
-- Main Directory: `chrysalis/Projects/{{Project_Folder_Name}}/`
+- Main Directory: `Projects/{{Project_Folder_Name}}/`
 - Reference Research Zettels:
   - [[Related-Note]]
 ```
@@ -115,16 +118,16 @@ tags:
 Promote an incubating or staged project into active strategic execution:
 
 ### Step 1: Validation & Pillar Resolution
-1. Read `chrysalis/Projects/<Project_Folder>/Roadmap.md`. Validate frontmatter and extract milestones, reference Zettels, and tags.
-2. Read `chrysalis/System/Life-Roadmap.md`.
+1. Read `Projects/<Project_Folder>/Roadmap.md`. Validate frontmatter and extract milestones, reference Zettels, and tags.
+2. Read `System/Life-Roadmap.md`.
 3. If `pillar` is `unassigned` or `staged`, prompt the user to designate the target Strategic Pillar (e.g. `Pillar 1`, `Pillar 2`) or create a designated Parallel Project Track in `Life-Roadmap.md`.
 
 ### Step 2: Strategic Life-Roadmap Insertion (Physical Tool Call)
-1. In `chrysalis/System/Life-Roadmap.md`:
+1. In `System/Life-Roadmap.md`:
    * Append a new milestone under the target Pillar (e.g. `### Milestone M1.6: <Project Title> (<Timeline>)`).
    * Insert the objective, horizon window, and key results checklist annotated with `#pillar-X/<subtag>`.
    * **Tag Registry Synchronization:** Ensure all project tags are registered under the respective pillar in `tag_registry` in frontmatter.
-2. Update `chrysalis/System/Scheduling-Memory.md`:
+2. Update `System/Scheduling-Memory.md`:
    * For any new tags, initialize `tag_multipliers` at baseline `1.00`.
    * Initialize `inferred_task_pool.learning_weights` at baseline `1.00`.
 

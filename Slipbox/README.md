@@ -1,31 +1,15 @@
-# 🗃️ Slipbox (Atomic Zettelkasten Knowledge Base)
+# Slipbox
 
-The **Slipbox** is the permanent atomic knowledge repository of the Chrysalis Hypergraph (Pillar II). It preserves mental models, literature insights, technical drafting conventions, and autonomous system evolution hypotheses.
+The slipbox stores reusable reference notes. Keep personal notes in the runtime vault; only this guide and the templates belong in Git.
 
----
+## Write a note
 
-## 🏛️ Core Principles of Chrysalis Zettels
+Use `/zettel` or copy [Slipbox-Template.md](_templates/Slipbox-Template.md). Give each note one main idea, useful source context, and relevant tags. Use `YYYYMMDDHHmmss-<slug>.md` filenames with local time, checking for collisions before saving.
 
-1. **Atomicity:** Each note focuses on a single conceptual claim, definition, or mental model.
-2. **Standardized Identification:** Note filenames and titles use high-precision local timestamps (`YYYYMMDDHHmmss-<slug>.md`) guaranteeing permanent uniqueness and immutable linking.
-3. **Bidirectional Linking:** Notes connect to peer Zettels, parent project roadmaps (`Projects/*/Roadmap.md`), and active execution tasks (`chrysalis/Tasks/*.md`) via semantic `[[WikiLinks]]`.
+Link related notes with wikilinks. Project roadmaps can reference the notes, and task frontmatter can include them in `linked_zettels`.
 
----
+## Connect knowledge to work
 
-## 🌊 Audio Ingestion & Lecture Synthesis Pipeline
+`System/scripts/zettel_graph_linker.py --vault <runtime-vault>` links using tags and existing wikilinks. Review its output for relevance. Notes tagged `#chrysalis` can be reviewed during a requested development evolution pass.
 
-When audio recordings (such as college lectures, design studio briefings, or technical podcasts) are ingested via the Android Sharesheet (`chrysalis/Inbox/`):
-
-1. **Map Phase (Transcription & Chunking):** Long-form audio (45–90m) is transcribed and segmented into timestamped windows.
-2. **Reduce Phase (Atomic Synthesis):** The orchestrator extracts fundamental ideas, producing:
-   - **Lecture Master Note:** Archived in `Projects/<Course>/Lectures/YYYY-MM-DD-<Topic>.md`.
-   - **Atomic Zettel Notes:** 2–4 permanent concept notes synthesized directly into `Slipbox/`, formatted with definitions, mental models, and tags.
-
----
-
-## 🔍 The Knowledge-Execution Continuum
-
-Knowledge in Chrysalis is never passive:
-* **Active Sprint Cockpit Knowledge Drawer:** Tasks in `chrysalis/Tasks/*.md` specify `linked_zettels: ["[[20260912100000-aia-cad-layer-guidelines]]"]`. When executing an active 75-minute sprint on the mobile app, users expand the **Linked Knowledge Drawer** to read these atomic reference notes with one tap.
-* **Automated Graph Linker (`zettel_graph_linker.py`):** Traverses project roadmaps and automatically injects relevant Zettel references into task frontmatter.
-* **Recursive Self-Improvement (`#chrysalis`):** Notes tagged with `#chrysalis` capture architecture evolution ideas and are automatically ingested by the developer agent via `/evolve`.
+Audio transcription, lecture synthesis, and automated document ingestion remain agent-assisted workflows or planned automation. Sharing a recording into the mobile app does not prove that it has been transcribed, synthesized, or synchronized. Current limitations are recorded in [STATUS.md](../STATUS.md).

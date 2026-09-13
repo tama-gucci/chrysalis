@@ -71,6 +71,8 @@ class HybridOrchestratorTransport implements OrchestratorTransport {
     if (_currentState == TransportConnectionState.connectedGateway) {
       try {
         await gatewayClient.sendCommand(command, parameters: parameters);
+        // Errors are forwarded by the gateway event stream. A failed response
+        // may follow a partial action; do not automatically queue a replay.
         return;
       } catch (_) {
         // If gateway fails in-flight, fall back to mailbox
@@ -84,7 +86,7 @@ class HybridOrchestratorTransport implements OrchestratorTransport {
       OrchestratorEvent(
         type: OrchestratorEventType.statusUpdate,
         content: 'Intent buffered to System/Inbox/events.json ($eventId). '
-            'Home orchestrator will execute upon next sync.',
+            'Saved locally; awaiting an orchestrator. This is not an executed action.',
         metadata: {'eventId': eventId, 'mode': 'mailbox'},
         timestamp: DateTime.now(),
       ),

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
-import '../../core/constants/timezones.dart';
+import '../core/constants/timezones.dart';
 import '../domain/services/intelligence_engine.dart';
 import 'orchestrator_transport.dart';
 
@@ -73,7 +73,7 @@ class AmbientGatewayClient implements IntelligenceEngine {
     return EngineStatus(
       isAvailable: available,
       mode: EngineMode.homeGateway,
-      engineName: 'Ambient Gateway (Golem)',
+      engineName: 'Ambient Gateway',
       version: '1.0.0',
       details: {
         'url': gatewayUrl ?? 'not configured',
@@ -92,7 +92,12 @@ class AmbientGatewayClient implements IntelligenceEngine {
     }
 
     try {
-      final uri = Uri.parse(gatewayUrl!);
+      final base = Uri.parse(_getHttpBaseUrl()!);
+      final uri = base.replace(
+        scheme: base.scheme == 'https' ? 'wss' : 'ws',
+        path: '${base.path}/api/orchestrator/ws',
+        queryParameters: authToken == null ? null : {'token': authToken!},
+      );
       _channel = WebSocketChannel.connect(uri);
       await _channel!.ready.timeout(const Duration(seconds: 3));
 
@@ -116,91 +121,42 @@ class AmbientGatewayClient implements IntelligenceEngine {
     }
   }
 
-  /// Sends command over active socket or HTTP REST POST, returning structured response.
+  /// Commands use one request path. Never replay a timed-out mutation over a
+  /// second transport: the backend may already have performed it.
   @override
   Future<OrchestratorResponse> sendCommand(String command, {Map<String, dynamic>? parameters}) async {
+    final base = _getHttpBaseUrl();
+    if (base == null) throw StateError('Gateway is not configured');
     final stopwatch = Stopwatch()..start();
-    final params = parameters ?? {};
-
-    // 1. Try HTTP REST POST if base URL is available
-    final httpBase = _getHttpBaseUrl();
-    if (httpBase != null) {
-      try {
-        final uri = Uri.parse('$httpBase/api/orchestrator/command');
-        final headers = <String, String>{
+    OrchestratorResponse result;
+    try {
+      final response = await http.post(Uri.parse('$base/api/orchestrator/command'),
+        headers: {
           'Content-Type': 'application/json',
-        };
-        if (authToken != null && authToken!.isNotEmpty) {
-          headers['Authorization'] = 'Bearer $authToken';
-        }
-        final body = jsonEncode({
-          'command': command,
-          'parameters': params,
-          'args': params,
-        });
-        final response = await http
-            .post(uri, headers: headers, body: body)
-            .timeout(const Duration(seconds: 15));
-        stopwatch.stop();
-
-        if (response.statusCode == 200) {
-          final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-          final orchResponse = OrchestratorResponse.fromJson(decoded);
-
-          _eventController.add(
-            OrchestratorEvent(
-              type: OrchestratorEventType.response,
-              content: orchResponse.output,
-              metadata: decoded,
-              timestamp: DateTime.now(),
-            ),
-          );
-          return orchResponse;
-        }
-      } catch (_) {
-        // Fall back to WebSocket channel
+          if (authToken != null) 'Authorization': 'Bearer $authToken',
+        },
+        body: jsonEncode({'command': command, 'parameters': parameters ?? {}}),
+      ).timeout(const Duration(seconds: 65));
+      if (response.statusCode != 200) {
+        throw StateError('Gateway returned HTTP ${response.statusCode}');
       }
-    }
-
-    // 2. Fall back to WebSocket channel
-    if (_isConnected && _channel != null) {
-      final msg = jsonEncode({
-        'type': 'command',
-        'command': command,
-        'args': params,
-        'parameters': params,
-        'timestamp': TimezoneUtils.formatIsoWithOffset(DateTime.now()),
-      });
-      _channel!.sink.add(msg);
-      stopwatch.stop();
-
-      return OrchestratorResponse(
-        success: true,
-        command: command,
-        output: 'Command dispatched via WebSocket: $command',
+      result = OrchestratorResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    } catch (_) {
+      result = OrchestratorResponse(success: false, command: command, output: '',
+        error: 'Could not confirm command completion. Check the vault before retrying.',
         executionTimeMs: stopwatch.elapsedMilliseconds,
-        timestamp: TimezoneUtils.formatIsoWithOffset(DateTime.now()),
-      );
+        timestamp: TimezoneUtils.formatIsoWithOffset(DateTime.now()));
     }
-
-    stopwatch.stop();
-    throw StateError('Cannot send command: Ambient Gateway is not connected.');
+    _eventController.add(OrchestratorEvent(
+      type: result.success ? OrchestratorEventType.response : OrchestratorEventType.error,
+      content: result.success ? result.output : (result.error ?? 'Command failed'),
+      metadata: result.toJson(), timestamp: DateTime.now(),
+    ));
+    return result;
   }
 
-  /// Sends text message over active socket or HTTP command endpoint.
   @override
-  Future<void> sendMessage(String text) async {
-    if (_isConnected && _channel != null) {
-      final msg = jsonEncode({
-        'type': 'message',
-        'text': text,
-        'timestamp': TimezoneUtils.formatIsoWithOffset(DateTime.now()),
-      });
-      _channel!.sink.add(msg);
-      return;
-    }
-    await sendCommand(text);
-  }
+  Future<void> sendMessage(String text) async { await sendCommand(text); }
 
   void _handleIncoming(dynamic data) {
     try {

@@ -7,7 +7,12 @@
 
 # 2. Root Open-Source Framework Files
 !/.gitignore
+!/.gitattributes
+!/.editorconfig
+!/requirements.txt
 !/README.md
+!/ARCHITECTURE.md
+!/STATUS.md
 !/LICENSE
 !/Dashboard.md
 !/AGENTS.md
@@ -54,6 +59,7 @@
 /Development/*
 !/Development/Development-Constitution.md
 !/Development/README.md
+!/Development/TESTING.md
 !/Development/ROADMAP.md
 !/Development/_templates/
 !/Development/_templates/**
@@ -107,11 +113,6 @@
 /.obsidian/plugins/**/storage/
 /.obsidian/workspace*.json
 /.obsidian/plugins/obsidian-git/obsidian_askpass.sh
-!/.obsidian/plugins/obsidian-git/data.json
-!/.obsidian/plugins/chrysalis-obsidian/data.json
-!/.obsidian/plugins/tasknotes-workflows/data.json
-!/.obsidian/plugins/various-complements/data.json
-!/.obsidian/plugins/dataview/data.json
 !/.obsidian/plugins/**/main.js
 !/.obsidian/plugins/**/manifest.json
 !/.obsidian/plugins/**/styles.css
@@ -186,3 +187,6 @@ Nexus/
 tests/**/__pycache__/
 tests/**/*.pyc
 
+
+# Private installation metadata and deployment backups
+.chrysalis/

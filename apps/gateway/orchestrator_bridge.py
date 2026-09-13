@@ -1,10 +1,9 @@
 import asyncio
 import json
 import os
-import shutil
 import time
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -75,7 +74,12 @@ class AntigravityBridge(BaseOrchestratorBridge):
             args_str = " ".join(f"--{k}={v}" for k, v in args.items())
             prompt = f"{prompt} {args_str}".strip()
 
-        # If agentapi is available and emulation mode is not explicitly forced, invoke real binary
+        if not prompt:
+            return self._failure(command, "Command must not be empty", conversation_id)
+        if not self.is_available() and not config.EMULATION_MODE:
+            return self._failure(command, "Antigravity is unavailable. Configure CHRYSALIS_AGENTAPI_PATH; no action was executed.", conversation_id)
+
+        # Real execution is distinct from explicitly enabled test emulation.
         if self.is_available() and not config.EMULATION_MODE:
             try:
                 if self.agentapi_path.lower().endswith(".bat") or self.agentapi_path.lower().endswith(".cmd"):
@@ -98,7 +102,12 @@ class AntigravityBridge(BaseOrchestratorBridge):
                     stderr=asyncio.subprocess.PIPE,
                 )
 
-                stdout_b, stderr_b = await asyncio.wait_for(process.communicate(), timeout=60.0)
+                try:
+                    stdout_b, stderr_b = await asyncio.wait_for(process.communicate(), timeout=60.0)
+                except (asyncio.TimeoutError, asyncio.CancelledError):
+                    process.kill()
+                    await process.communicate()
+                    raise
                 stdout = stdout_b.decode("utf-8", errors="replace").strip()
                 stderr = stderr_b.decode("utf-8", errors="replace").strip()
 
@@ -172,154 +181,54 @@ class AntigravityBridge(BaseOrchestratorBridge):
             "emulated": True,
         }
 
-    def _emulate_command_output(self, command: str, args: Optional[Dict[str, Any]]) -> str:
-        """Produces realistic domain outputs for standard Chrysalis commands during emulation."""
-        cmd = command.split()[0].lower()
+    @staticmethod
+    def _failure(command, error, conversation_id=None):
+        return {"success": False, "command": command, "output": "", "error": error,
+                "conversation_id": conversation_id, "execution_time_ms": 0,
+                "timestamp": _format_local_iso_timestamp(), "emulated": False}
 
-        if cmd == "/morning":
-            wake = args.get("wake", "07:45") if args else "07:45"
-            energy = args.get("energy", 4) if args else 4
-            return (
-                f"🌅 **Morning Calibration Completed**\n"
-                f"- Wake time locked: {wake} (Diurnal shift: +00:00)\n"
-                f"- Energy baseline: {energy}/5 (Optimal Flow)\n"
-                f"- Active timeblocks serialized with explicit -05:00 offset.\n"
-                f"- 3 ultradian focus sprints allocated."
-            )
-        elif cmd == "/evening":
-            return (
-                "🌙 **Evening Staging Reconciliation**\n"
-                "- Unified /audit pre-flight integrity check: PASSED.\n"
-                "- Multiplier telemetry updated from completed sessions.\n"
-                "- Tomorrow prototype schedule staged in System/Scheduling-Memory.md."
-            )
-        elif cmd == "/doctor":
-            return (
-                "🩺 **Chrysalis System Diagnostic Integrity Pass**\n"
-                "- [1/6] TaskNotes Frontmatter Schema: 100% VALID\n"
-                "- [2/6] Explicit Timezone Offset (-05:00): STRICTLY ENFORCED\n"
-                "- [3/6] Life-Roadmap Tag Registry: CONSISTENT\n"
-                "- [4/6] Wikilink & Graph Integrity: 0 BROKEN LINKS\n"
-                "- [5/6] Skill Runbook Validation: 15/15 HEALTHY\n"
-                "- [6/6] Telemetry Multiplier Bounds [0.20, 2.00]: ALL IN BOUNDS\n"
-                "Result: System integrity is pristine."
-            )
-        elif cmd == "/audit":
-            return (
-                "⚖️ **Nightly Audit Pass Completed**\n"
-                "- Task lifecycles reconciled.\n"
-                "- Multiplier telemetry weights updated.\n"
-                "- 14-day roadmap milestone horizon synced."
-            )
-        elif cmd == "/pause":
-            mode = args.get("mode", "maintenance") if args else "maintenance"
-            return (
-                f"⏸️ **Chrysalis System Paused (Mode: {mode})**\n"
-                "- Multiplier decay frozen.\n"
-                "- Active sprint timeblocks de-scheduled."
-            )
-        elif cmd == "/plan":
-            return (
-                "📋 **Two-Stage Focus Plan Synchronized**\n"
-                "- Stacking 75m sprints with 15m decompression buffers.\n"
-                "- Modality pairing aligned with bio-cognitive diurnal windows."
-            )
-        else:
-            return f"🤖 Orchestrator acknowledged: \"{command}\""
+    def _emulate_command_output(self, command, args):
+        return f"[SIMULATION ONLY] Received {command}. No vault files were changed."
 
     def get_status(self) -> Dict[str, Any]:
         """Returns real-time orchestrator health and telemetry."""
         return {
-            "status": "online",
+            "status": "simulation" if config.EMULATION_MODE else ("online" if self.is_available() else "unavailable"),
             "adapter": "antigravity",
             "agentapi_available": self.is_available(),
             "agentapi_path": self.agentapi_path,
             "uptime_seconds": round(time.time() - self._start_time, 2),
             "active_profile": config.ACTIVE_PROFILE,
             "version": config.VERSION,
-            "emulation_mode": config.EMULATION_MODE or not self.is_available(),
+            "emulation_mode": config.EMULATION_MODE,
             "timestamp": _format_local_iso_timestamp(),
         }
 
 
-class OpenClawBridge(BaseOrchestratorBridge):
-    """Pluggable adapter for OpenClaw-based autonomous agent execution."""
+class UnimplementedBridge(BaseOrchestratorBridge):
+    """Reserved adapter; never reports successful execution."""
+    adapter = "unimplemented"
 
-    def __init__(self, endpoint_url: Optional[str] = None):
-        self.endpoint_url = endpoint_url or os.environ.get("OPENCLAW_ENDPOINT", "http://localhost:8000")
-        self._start_time = time.time()
+    def __init__(self, endpoint_url=None):
+        self.endpoint_url = endpoint_url
 
-    def is_available(self) -> bool:
-        return bool(shutil.which("openclaw")) or bool(os.environ.get("OPENCLAW_ENDPOINT"))
+    def is_available(self):
+        return False
 
-    async def execute_command(
-        self,
-        command: str,
-        args: Optional[Dict[str, Any]] = None,
-        conversation_id: Optional[str] = None,
-        model: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        start_time = time.perf_counter()
-        await asyncio.sleep(0.05)
-        elapsed_ms = int((time.perf_counter() - start_time) * 1000)
-        return {
-            "success": True,
-            "command": command,
-            "output": f"🐾 [OpenClaw] Acknowledged: {command}",
-            "conversation_id": conversation_id or "openclaw-conv-001",
-            "execution_time_ms": elapsed_ms,
-            "timestamp": _format_local_iso_timestamp(),
-            "adapter": "openclaw",
-        }
+    async def execute_command(self, command, args=None, conversation_id=None, model=None):
+        return AntigravityBridge._failure(command, f"{self.adapter} adapter is not implemented", conversation_id)
 
-    def get_status(self) -> Dict[str, Any]:
-        return {
-            "status": "online" if self.is_available() else "standby",
-            "adapter": "openclaw",
-            "endpoint_url": self.endpoint_url,
-            "uptime_seconds": round(time.time() - self._start_time, 2),
-            "timestamp": _format_local_iso_timestamp(),
-        }
+    def get_status(self):
+        return {"status": "unavailable", "adapter": self.adapter,
+                "timestamp": _format_local_iso_timestamp()}
 
 
-class HermesOSBridge(BaseOrchestratorBridge):
-    """Pluggable adapter for Hermes OS and local LLM inference engines."""
+class OpenClawBridge(UnimplementedBridge):
+    adapter = "openclaw"
 
-    def __init__(self, endpoint_url: Optional[str] = None):
-        self.endpoint_url = endpoint_url or os.environ.get("HERMES_ENDPOINT", "http://localhost:11434")
-        self._start_time = time.time()
 
-    def is_available(self) -> bool:
-        return bool(shutil.which("hermes")) or bool(os.environ.get("HERMES_ENDPOINT"))
-
-    async def execute_command(
-        self,
-        command: str,
-        args: Optional[Dict[str, Any]] = None,
-        conversation_id: Optional[str] = None,
-        model: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        start_time = time.perf_counter()
-        await asyncio.sleep(0.05)
-        elapsed_ms = int((time.perf_counter() - start_time) * 1000)
-        return {
-            "success": True,
-            "command": command,
-            "output": f"⚡ [Hermes OS] Processed: {command}",
-            "conversation_id": conversation_id or "hermes-conv-001",
-            "execution_time_ms": elapsed_ms,
-            "timestamp": _format_local_iso_timestamp(),
-            "adapter": "hermes_os",
-        }
-
-    def get_status(self) -> Dict[str, Any]:
-        return {
-            "status": "online" if self.is_available() else "standby",
-            "adapter": "hermes_os",
-            "endpoint_url": self.endpoint_url,
-            "uptime_seconds": round(time.time() - self._start_time, 2),
-            "timestamp": _format_local_iso_timestamp(),
-        }
+class HermesOSBridge(UnimplementedBridge):
+    adapter = "hermes_os"
 
 
 # Backward-compatible alias

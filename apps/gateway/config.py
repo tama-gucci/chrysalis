@@ -5,7 +5,7 @@ from typing import Optional
 class GatewayConfig:
     """Configuration settings for the Ambient Chrysalis Gateway daemon."""
 
-    HOST: str = os.environ.get("CHRYSALIS_GATEWAY_HOST") or os.environ.get("CHRYALIS_GATEWAY_HOST", "0.0.0.0")
+    HOST: str = os.environ.get("CHRYSALIS_GATEWAY_HOST") or os.environ.get("CHRYALIS_GATEWAY_HOST", "127.0.0.1")
     PORT: int = int(os.environ.get("CHRYSALIS_GATEWAY_PORT") or os.environ.get("CHRYALIS_GATEWAY_PORT", "8765"))
 
     # Optional Bearer Token for securing external access over Cloudflare Tunnel

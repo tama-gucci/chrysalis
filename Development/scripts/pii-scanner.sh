@@ -86,6 +86,12 @@ while IFS= read -r FILE; do
         ERRORS=$((ERRORS + 1))
     fi
 
+    # Plugin settings are private even when their current values look sanitized.
+    if [[ "$FILE" =~ ^\.obsidian/plugins/.*/data\.json$ ]]; then
+        echo -e "${RED}  ❌ [LEAK] Plugin settings tracked in git: $FILE${NC}"
+        ERRORS=$((ERRORS + 1))
+    fi
+
     # Check secrets, credentials, tokens
     if [[ "$FILE" =~ \.token\.json$ ]] || [[ "$FILE" =~ credentials.*\.json$ ]] || [[ "$FILE" =~ \.env$ ]] || [[ "$FILE" =~ \.sqlite[0-9]?$ ]] || [[ "$FILE" =~ \.db$ ]]; then
         echo -e "${RED}  ❌ [LEAK] Secret or database file tracked in git: $FILE${NC}"
@@ -139,7 +145,7 @@ if [ -n "$KEY_MATCHES" ]; then
 fi
 
 # Check for Private Cryptographic Keys
-PRIV_KEY_MATCHES=$(git grep -nE '-----BEGIN [A-Z ]*PRIVATE KEY-----' -- "${PATH_EXCLUDES[@]}" 2>/dev/null || true)
+PRIV_KEY_MATCHES=$(git grep -nE -- '-----BEGIN [A-Z ]*PRIVATE KEY-----' -- "${PATH_EXCLUDES[@]}" 2>/dev/null || true)
 if [ -n "$PRIV_KEY_MATCHES" ]; then
     echo -e "${RED}  ❌ [KEY LEAK] Private cryptographic key detected!${NC}"
     echo "$PRIV_KEY_MATCHES" | while IFS= read -r LINE; do
@@ -248,6 +254,6 @@ if [ "$ERRORS" -gt 0 ]; then
     echo -e "${YELLOW}Please remediate all leaks before committing to GitHub.${NC}"
     exit 1
 else
-    echo -e "${GREEN}✅ AUDIT PASSED: Repository is 100% clean and zero-leak certified.${NC}"
+    echo -e "${GREEN}✅ AUDIT PASSED: No violations detected by these checks; review additions before publishing.${NC}"
     exit 0
 fi

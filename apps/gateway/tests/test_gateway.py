@@ -14,6 +14,14 @@ from orchestrator_bridge import orchestrator_bridge
 
 client = TestClient(app)
 
+
+@pytest.fixture(autouse=True)
+def isolated_gateway(monkeypatch):
+    # API tests must never launch the user's real orchestrator.
+    monkeypatch.setattr(config, "EMULATION_MODE", True)
+    monkeypatch.setattr(config, "AUTH_TOKEN", None)
+
+
 def test_health_check():
     response = client.get("/health")
     assert response.status_code == 200
@@ -26,7 +34,7 @@ def test_get_orchestrator_status():
     response = client.get("/api/orchestrator/status")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "online"
+    assert data["status"] == "simulation"
     assert "uptime_seconds" in data
     assert "active_profile" in data
     assert "agentapi_available" in data
@@ -71,7 +79,7 @@ def test_websocket_orchestrator_flow():
         # 1. Server emits initial status frame on connect
         initial_frame = websocket.receive_json()
         assert initial_frame["type"] == "status"
-        assert initial_frame["data"]["status"] == "online"
+        assert initial_frame["data"]["status"] == "simulation"
 
         # 2. Client ping -> Server pong
         websocket.send_json({"type": "ping"})
@@ -137,4 +145,26 @@ def test_token_authentication(monkeypatch):
         headers={"Authorization": "Bearer super-secret-token"}
     )
     assert auth_resp.status_code == 200
-    assert auth_resp.json()["status"] == "online"
+    assert auth_resp.json()["status"] == "simulation"
+
+
+def test_missing_backend_fails_without_simulation(monkeypatch):
+    monkeypatch.setattr(config, "EMULATION_MODE", False)
+    monkeypatch.setattr(orchestrator_bridge, "is_available", lambda: False)
+    data = client.post("/api/orchestrator/command", json={"command": "/morning"}).json()
+    assert data["success"] is False
+    assert data["emulated"] is False
+    assert "unavailable" in data["error"]
+
+
+def test_simulation_is_visible():
+    data = client.post("/api/orchestrator/command", json={"command": "/plan"}).json()
+    assert data["emulated"] is True
+    assert "No vault files were changed" in data["output"]
+
+
+def test_websocket_rejects_non_object():
+    with client.websocket_connect("/api/orchestrator/ws") as websocket:
+        websocket.receive_json()
+        websocket.send_text("[]")
+        assert websocket.receive_json()["type"] == "error"

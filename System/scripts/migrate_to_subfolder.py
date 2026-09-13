@@ -81,8 +81,7 @@ def move_path(src: Path, dst: Path, dry_run: bool = False):
                 pass
             return True
         else:
-            # File already exists at dst; overwrite if newer or identical
-            dst.unlink()
+            raise FileExistsError(f"Migration conflict: {dst}; existing files are never overwritten")
     shutil.move(str(src), str(dst))
     print(f"  [OK] Moved: {src.name} -> {dst}")
     return True
@@ -325,31 +324,7 @@ def update_obsidian_configs(vault_root: Path, folder_name: str, dry_run: bool = 
         daily_cfg.write_text(json.dumps(daily_data, indent=2) + "\n", encoding="utf-8")
         print(f"  [OK] Set daily notes folder to: {folder_name}/Daily")
 
-    # 3. Nexus Plugin Model Updates
-    nexus_cfg = vault_root / ".obsidian" / "plugins" / "nexus" / "data.json"
-    if nexus_cfg.exists():
-        try:
-            nexus_data = json.loads(nexus_cfg.read_text(encoding="utf-8"))
-            updated_nexus = False
-            for section_key in ["models", "llmProviders"]:
-                if section_key in nexus_data and isinstance(nexus_data[section_key], dict):
-                    models_section = nexus_data[section_key]
-                    default_model = models_section.get("defaultModel")
-                    agent_model = models_section.get("agentModel")
-                    if isinstance(default_model, dict) and default_model.get("model") != "gemini-3.8-flash":
-                        default_model["model"] = "gemini-3.8-flash"
-                        updated_nexus = True
-                    if isinstance(agent_model, dict) and agent_model.get("model") != "gemini-3.8-flash":
-                        agent_model["model"] = "gemini-3.8-flash"
-                        updated_nexus = True
-            if updated_nexus:
-                if dry_run:
-                    print("  [dry-run] Would update Nexus plugin model to gemini-3.8-flash")
-                else:
-                    nexus_cfg.write_text(json.dumps(nexus_data, indent=2) + "\n", encoding="utf-8")
-                    print("  [OK] Updated Nexus plugin model to: gemini-3.8-flash")
-        except Exception as e:
-            print(f"  ! Warning: Failed to update Nexus plugin config: {e}")
+    # Model/provider settings are unrelated to folder migration and remain private.
 
 def update_dashboard_queries(vault_root: Path, folder_name: str, dry_run: bool = False):
     """Updates Dataview queries inside Dashboard.md."""
@@ -415,6 +390,11 @@ def main():
 
     args = parser.parse_args()
     vault_root = Path(args.vault_root).resolve()
+    folder = Path(args.folder_name)
+    if folder.is_absolute() or len(folder.parts) != 1 or args.folder_name in {".", ".."}:
+        parser.error("folder-name must be a single relative directory name")
+    if not (vault_root / folder).resolve().is_relative_to(vault_root):
+        parser.error("migration target must remain inside the selected vault")
 
     if not args.execute and not args.dry_run:
         print("Notice: Running in preview/dry-run mode by default.")

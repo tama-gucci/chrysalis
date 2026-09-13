@@ -4,10 +4,13 @@ description: "Captures atomic literature, technical insights, or Chrysalis syste
 trigger: "/zettel"
 domain: runtime
 reads:
-  - "chrysalis/Slipbox/*.md"
+  - "Slipbox/*.md"
 writes:
-  - "chrysalis/Slipbox/*.md"
+  - "Slipbox/*.md"
 ---
+
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
+
 
 # /zettel (Atomic Knowledge & System Evolution Synthesis Engine)
 
@@ -19,7 +22,7 @@ writes:
 1. **Timestamp Generation:** Create unique identifier `YYYYMMDDHHmmss`.
 2. **Note Type Identification:**
    * **Branch A (Chrysalis System Evolution Idea):** If tags contain `chrysalis` or `chrysalis/*`:
-     Construct note in `chrysalis/Slipbox/YYYYMMDDHHmmss-slug.md` with YAML frontmatter:
+     Construct note in `Slipbox/YYYYMMDDHHmmss-slug.md` with YAML frontmatter:
      ```yaml
      ---
      id: "YYYYMMDDHHmmss"
@@ -78,4 +81,4 @@ writes:
           - "[[YYYYMMDDHHmmss-slug]]"
         ```
      3. **Active Sprint Cockpit Integration:** During active focus sprints, the mobile client reads `linked_zettels` to render the expandable **Linked Knowledge Drawer** with one-tap access to the underlying research.
-     4. **Calendar Event Annotation:** When focus blocks are written to Android Calendar via Model C (`CalendarContract`), include linked Zettel note titles and wikilinks in the calendar event description.
+     4. **Calendar Event Annotation (Planned):** Keep linked Zettels in task notes. Calendar event annotation requires the future native calendar integration.

@@ -7,6 +7,9 @@ version: 5.0.0
 
 # Chrysalis Master Constitution (Dual-Mode: Runtime & Development)
 
+> Architecture decision (2026-09-12): keep the personal runtime vault separate from the development repository. Runtime framework files are deployed snapshots; edit reusable code and runbooks in source. ARCHITECTURE.md defines supported layouts, and STATUS.md is the implementation reference. Future capabilities below must not be assumed operational.
+
+
 ## Preamble: Separation of Spheres (Runtime vs. Development)
 Chrysalis operates across two strictly segregated functional domains:
 1. **The Runtime Sphere (`vault/chrysalis/System/`, `vault/chrysalis/Tasks/` or `System/`, `chrysalis/Tasks/`):** The private execution substrate governing daily focus, chronotype rhythms, task execution, and personal memory. Governed by the **Runtime Constitution** ([`System/Runtime-Constitution.md`](System/Runtime-Constitution.md)).
@@ -15,15 +18,15 @@ Chrysalis operates across two strictly segregated functional domains:
 ---
 
 ## 1. Vault Substrate & Core System Invariants
-* **Markdown File Substrate:** The vault filesystem and synced cloud storage substrate (`Google Drive`) is the absolute single source of truth (`vault/`). All state, roadmaps, task lifecycles, and agent skills exist as plain Markdown files with YAML frontmatter encapsulated within `<vault>/chrysalis/`.
+* **Markdown File Substrate:** The vault filesystem and synced cloud storage substrate (`Google Drive`) is the absolute single source of truth (`vault/`). All state, roadmaps, task lifecycles, and agent skills exist as plain Markdown files with YAML frontmatter stored in the selected vault using the layout documented in `ARCHITECTURE.md`.
 * **Tripartite Knowledge-Execution Continuum (The Chrysalis Hypergraph):** Unifies atomic Zettelkasten knowledge (`Slipbox/*.md`), strategic roadmaps (`Projects/*/Roadmap.md`), granular task execution (`chrysalis/Tasks/*.md`), and temporal calendar focus blocks into a living, bidirectional hypergraph linked via `[[WikiLinks]]`.
 * **Modular Intelligence Engine Principle:** Dual topology supporting:
   - **Option A (Dedicated Home Hub - Golem):** Ambient Gateway daemon (`apps/gateway/`, FastAPI on port `8765`) running on the home server, connecting via a pluggable orchestrator bridge (`BaseOrchestratorBridge`) to Google Antigravity language server (reference), OpenClaw, Hermes OS, or local LLMs over a secure Cloudflare Zero-Trust Tunnel.
   - **Option B (Mobile-Native / Serverless):** Direct edge AI transport executing on-device (e.g. Gemini Nano) or direct cloud model APIs without a home server requirement.
-* **Dedicated "Golem" Hardware Topology:** Surface Pro X with 16GB total RAM running Windows 11 on ARM64 24/7 plugged in: 4GB is dedicated to Home Assistant in Hyper-V, leaving 12GB of operational RAM dedicated to Chrysalis, the Ambient Gateway daemon, and autonomous background agents.
-* **Deep Obsidian & Chrysalis Plugin Interoperability:** Chrysalis operates natively as an Obsidian vault. All tasks use standard Chrysalis frontmatter schema for 1:1 compatibility with the `chrysalis-obsidian` plugin on port `8080` (featuring zero-config defaults, MCP server, and hybrid intelligence routing), running concurrently and without port collision with the Chrysalis Gateway on port `8765`.
-* **Standalone Wear OS Smartwatch Support:** Native circular wearable client (384×384 OLED, pure black `#000000` to preserve battery), featuring rotary card stack, glanceable active sprint cockpit, and prominent voice dictation routing to tasks or Zettels.
-* **Model C (Mobile OS Bridge) Calendar Synchronization:** Direct Android `CalendarContract` platform channel that writes focus sprints directly to the device's built-in calendar database, mirroring to Google Calendar and Wear OS watch complications automatically for free with zero Google Cloud Console setup, paired with an iCal feed fallback (`fetch_ical.py`).
+* **Optional Gateway Host:** A dedicated host is optional; hardware capacity and profiles belong in private environment manifests rather than framework assumptions.
+* **Obsidian Interoperability:** The installed task plugin uses the Chrysalis task schema and configured port 8080. Dataview is required for Dashboard.md. The complete standalone plugin source and release pipeline are not present; hybrid AI routing remains planned. Gateway port 8765 remains separate.
+* **Wear OS Roadmap:** A standalone smartwatch client is planned and not implemented.
+* **Calendar Integration:** Private iCal import (`fetch_ical.py`) is implemented. Native mobile calendar export has Dart interfaces only; the Android handler and application wiring remain planned.
 * **Autonomous AI Orchestration:** Google Antigravity executes daily focus operations (Runtime) and system refactoring (Development) over the Markdown substrate.
 * **No External Task Managers:** Never use proprietary cloud task managers, external databases, or third-party APIs for task management. All task mutations must occur directly on task notes in `chrysalis/Tasks/` (encapsulated under `vault/chrysalis/Tasks/`).
 * **Explicit Local Timezone:** All frontmatter ISO timestamps must strictly serialize with the explicit local timezone offset defined in `Scheduling-Memory.md` (e.g., `"-05:00"`). Never write raw UTC `"Z"` strings.
@@ -82,7 +85,7 @@ googleCalendarEventId: null # Android CalendarContract event ID for Model C cale
 * **Feedback-Gated Execution:** Prototype schedules require user review. If omitted, the system auto-pauses to prevent schedule drift.
 * **Semantic Pause Lifecycle (`/pause [mode]`):** Supports 4 semantic pause modes (`maintenance`, `rest`, `flow`, `vacation`), freezing multiplier decay and de-scheduling active blocks (`scheduled: null`).
 * **Institutional Buffering:** Never schedule official administrative or institutional actions on weekends. Multi-day institutional workflows require a mandatory buffer of 3–5 business days between submission and verification.
-* **Model C Mobile OS Bridge & Calendar Ingestion:** Calendar commitments are ingested via Model C (`CalendarContract` platform channel) or private iCal feed (`fetch_ical.py`) before scheduling; focus sprints wrap around commitments with zero collisions and mirror out to Google Calendar and Wear OS watch complications with zero cloud setup.
+* **Calendar Commitments:** Refresh configured calendar commitments before scheduling. Native calendar export is unfinished; never report external event creation without verified execution.
 * **Telemetry Multipliers & Chronotype Learning:** Session durations ($T_{\text{actual}} = \text{completedAt} - \text{startedAt}$) adjust multipliers bounded in $[0.20, 2.00]$.
 * **Unified Nightly Life Audit (`/audit`):** Reconciles task lifecycles, learns multipliers, ingests 14-day roadmap milestones, injects starter wedges, and tunes candidate task pools.
 

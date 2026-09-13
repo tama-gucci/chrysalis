@@ -16,14 +16,13 @@ import re
 from datetime import datetime, date, timedelta
 from pathlib import Path
 
+try:
+    from .vault_paths import resolve_vault_root, vault_path, memory_path as resolve_memory_path
+except ImportError:
+    from vault_paths import resolve_vault_root, vault_path, memory_path as resolve_memory_path
+
 DEFAULT_PORT = 8080
 DEFAULT_HOST = "localhost"
-REPO_ROOT = Path(__file__).resolve().parent.parent
-MEMORY_PATH = os.environ.get("CHRYSALIS_MEMORY_PATH") or (
-    str(REPO_ROOT / "Scheduling-Memory.md")
-    if (REPO_ROOT / "Scheduling-Memory.md").exists()
-    else str(REPO_ROOT / "System" / "Scheduling-Memory.md")
-)
 
 def extract_timezone_from_memory(memory_content: str) -> str:
     """Extracts timezone_offset from frontmatter, defaulting to '-05:00'."""
@@ -106,11 +105,12 @@ except ImportError:
     except ImportError:
         sync_ical = None
 
-def sync_to_memory(port: int = DEFAULT_PORT, memory_path: str = MEMORY_PATH, force_ical: bool = False):
+def sync_to_memory(port: int = DEFAULT_PORT, memory_path: str = None, force_ical: bool = False):
     """
     Fetches the 7-day calendar window and serializes it into Scheduling-Memory.md.
     If chrysalis-obsidian on port 8080 is unreachable, automatically falls back to fetch_ical.
     """
+    memory_path = str(resolve_memory_path(memory_path))
     p = Path(memory_path)
     if not p.exists():
         print(f"Memory file not found: {memory_path}")
@@ -181,36 +181,25 @@ def sync_to_memory(port: int = DEFAULT_PORT, memory_path: str = MEMORY_PATH, for
     return True
 
 def main():
-    if "--ical" in sys.argv:
-        if sync_ical:
-            success = sync_ical()
-            sys.exit(0 if success else 1)
-        else:
-            print("Error: fetch_ical module could not be imported.")
-            sys.exit(1)
-
-    if "--sync-to-memory" in sys.argv or "--sync" in sys.argv:
-        port = DEFAULT_PORT
-        for i, arg in enumerate(sys.argv):
-            if arg == "--port" and i + 1 < len(sys.argv):
-                port = int(sys.argv[i + 1])
-        sync_to_memory(port=port)
-        return
-        
-    target = datetime.now().strftime("%Y-%m-%d")
-    port = DEFAULT_PORT
-    
-    if len(sys.argv) > 1 and not sys.argv[1].startswith("--"):
-        target = sys.argv[1]
-    
-    for i, arg in enumerate(sys.argv):
-        if arg == "--port" and i + 1 < len(sys.argv):
-            port = int(sys.argv[i + 1])
-        elif arg == "--tomorrow":
-            target = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
-    
-    result = get_chrysalis_events(target, target, port=port)
+    import argparse
+    parser = argparse.ArgumentParser(description="Inspect or import calendar commitments")
+    parser.add_argument("date", nargs="?", default=None)
+    parser.add_argument("--vault", help="Selected vault root")
+    parser.add_argument("--memory", help="Explicit memory file")
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    parser.add_argument("--sync-to-memory", "--sync", dest="sync", action="store_true")
+    parser.add_argument("--ical", action="store_true")
+    parser.add_argument("--tomorrow", action="store_true")
+    args = parser.parse_args()
+    if args.sync or args.ical:
+        memory = resolve_memory_path(args.memory, vault=args.vault)
+        success = sync_to_memory(port=args.port, memory_path=str(memory), force_ical=args.ical)
+        sys.exit(0 if success else 1)
+    day = args.date or (date.today() + timedelta(days=int(args.tomorrow))).isoformat()
+    result = get_chrysalis_events(day, day, port=args.port)
     print(json.dumps(result, indent=2))
+    sys.exit(1 if result.get("error") else 0)
+
 
 if __name__ == "__main__":
     main()

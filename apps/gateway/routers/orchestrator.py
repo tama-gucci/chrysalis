@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import (
@@ -38,7 +38,7 @@ class CommandRequest(BaseModel):
     args: Optional[Dict[str, Any]] = Field(default=None, description="Command arguments")
     parameters: Optional[Dict[str, Any]] = Field(default=None, description="Alias for command arguments")
     conversation_id: Optional[str] = Field(default=None, description="Active Antigravity conversation ID")
-    model: Optional[str] = Field(default="flash", description="Language model tier (e.g. flash -> gemini-3.8-flash, pro -> gemini-3.5-pro)")
+    model: Optional[str] = Field(default="flash", description="Antigravity CLI model tier (flash_lite, flash, or pro)")
 
 
 class CommandResponse(BaseModel):
@@ -113,10 +113,13 @@ async def orchestrator_websocket(websocket: WebSocket):
                 })
                 continue
 
+            if not isinstance(msg, dict):
+                await websocket.send_json({"type": "error", "content": "Expected a JSON object"})
+                continue
             msg_type = msg.get("type", "command")
 
             if msg_type == "ping":
-                now_iso = datetime.now(timezone.utc).isoformat()
+                now_iso = datetime.now().astimezone().isoformat()
                 await websocket.send_json({
                     "type": "pong",
                     "timestamp": now_iso,
@@ -151,11 +154,11 @@ async def orchestrator_websocket(websocket: WebSocket):
                 )
 
                 await websocket.send_json({
-                    "type": "complete",
+                    "type": "complete" if result.get("success") else "error",
                     "success": result.get("success", False),
                     "data": result,
                     "metadata": result,
-                    "content": result.get("output", ""),
+                    "content": result.get("output") or result.get("error", ""),
                 })
             else:
                 err_msg = f"Unsupported message type: {msg_type}"

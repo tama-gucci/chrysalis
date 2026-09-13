@@ -16,6 +16,9 @@ writes:
   - "chrysalis/Tasks/*.md"
 ---
 
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
+
+
 # /plan (Master Focus Scheduling & Bio-Cognitive Diurnal Engine)
 
 ## Protocol 1: Staging Mode (`/plan --stage` or `/stage`)
@@ -42,7 +45,7 @@ Upon receiving the user's natural language response:
    * **Case B (No Imminent Roadmap Deadlines):** If there are no urgent roadmap deadlines, the user's requested item *can* be elevated to the **Anchor Task**.
     * **Case C (No Additions Specified):** Assemble the prototype entirely from the active roadmap milestone tasks and `inferred_task_pool`.
 4. **Dynamic Calendar Synchronization (Model C OS Bridge & Cache Ingestion):**
-   * Ingest external calendar commitments for tomorrow via Model C (`CalendarContract` platform channel cached in `calendar_sync.cached_events` of `System/Scheduling-Memory.md`), private iCal feed fallback (`fetch_ical.py`), or Google Workspace tool integrations (if active).
+   * Ingest external calendar commitments for tomorrow from the configured private iCal feed (`fetch_ical.py`) into `calendar_sync.cached_events` in `System/Scheduling-Memory.md`. Do not assume that the unfinished native mobile calendar bridge provides commitments.
    * Parse all external calendar commitments (e.g., CAD certification studio/online classes).
    * For events with physical locations (e.g., studio classrooms), allocate an automatic 30-minute transition/travel buffer before and after.
    * Save parsed events to `calendar_sync.staged_events_tomorrow` in `System/Scheduling-Memory.md`.
@@ -129,8 +132,8 @@ Triggered during the morning workflow (`/morning`) to calibrate the pre-approved
    scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"
    ```
 2. **Update Scheduling Memory:** Call `replace_file_content` on `System/Scheduling-Memory.md` to update `morning_checkin.active_today`, `morning_checkin.learned_rhythms`, and `morning_checkin.checkin_history`.
-3. **Populate Daily Note:** Call `replace_file_content` (or create) `Daily/YYYY-MM-DD.md` (or `YYYY-MM-DD.md`) with the calibrated daily schedule table, biomarker telemetry, and task wikilinks.
-4. **Model C Calendar Synchronization & Hypergraph Annotation:** When running on or connected to the mobile client, trigger synchronization via `CalendarContract` to write the 75m focus blocks directly to the Android device calendar (mirroring to Google Calendar and Wear OS watch complications). The calendar event description is automatically populated with parent project roadmap titles and clickable `[[linked_zettels]]` from `Slipbox/`.
+3. **Populate Daily Note:** Call `replace_file_content` (or create) `chrysalis/Daily/YYYY-MM-DD.md` (or `YYYY-MM-DD.md`) with the calibrated daily schedule table, biomarker telemetry, and task wikilinks.
+4. **Calendar Export Status:** Native mobile calendar export is not implemented. Persist the approved schedule to task notes and daily memory; do not claim that Android, Google Calendar, or a watch was updated. Keep reference links in task frontmatter.
 
 ### Step 4: Deliver Final Locked Agenda
 Output the finalized daily schedule table in chat with exact sprint and defrost timeblocks and clickable markdown links to task notes.

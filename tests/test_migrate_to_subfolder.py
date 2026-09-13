@@ -148,12 +148,12 @@ class TestMigrateToSubfolder(unittest.TestCase):
         daily_cfg = json.loads((self.vault_root / ".obsidian" / "daily-notes.json").read_text(encoding="utf-8"))
         self.assertEqual(daily_cfg["folder"], "chrysalis/Daily")
 
-        # 7. Verify Nexus plugin model
+        # 7. Folder migration must preserve the user-selected model
         nexus_cfg = json.loads(
             (self.vault_root / ".obsidian" / "plugins" / "nexus" / "data.json").read_text(encoding="utf-8")
         )
-        self.assertEqual(nexus_cfg["models"]["defaultModel"]["model"], "gemini-3.8-flash")
-        self.assertEqual(nexus_cfg["models"]["agentModel"]["model"], "gemini-3.8-flash")
+        self.assertEqual(nexus_cfg["models"]["defaultModel"]["model"], "gemini-3.7-flash")
+        self.assertEqual(nexus_cfg["models"]["agentModel"]["model"], "gemini-3.7-flash")
 
         # 8. Verify Dashboard Dataview queries
         dash_content = (chrysalis_base / "Dashboard.md").read_text(encoding="utf-8")

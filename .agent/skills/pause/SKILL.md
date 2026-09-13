@@ -6,12 +6,15 @@ domain: runtime
 reads:
   - "System/Scheduling-Memory.md"
   - "chrysalis/Tasks/*.md"
-  - "Daily/YYYY-MM-DD.md"
+  - "chrysalis/Daily/YYYY-MM-DD.md"
 writes:
   - "System/Scheduling-Memory.md"
   - "chrysalis/Tasks/*.md"
-  - "Daily/YYYY-MM-DD.md"
+  - "chrysalis/Daily/YYYY-MM-DD.md"
 ---
+
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
+
 
 # /pause & /resume (System Suspension & Re-Entry Orchestrator)
 
@@ -62,7 +65,7 @@ For modes requiring focus de-scheduling (`maintenance`, `rest`, `vacation`):
    *(Tasks remain safely in `status: todo` in the daily backlog without phantom timeblock locks).*
 
 ### Step 4: Daily Note Status Annotation (Tool Call)
-If `Daily/YYYY-MM-DD.md` (or `YYYY-MM-DD.md`) exists for today:
+If `chrysalis/Daily/YYYY-MM-DD.md` (or `YYYY-MM-DD.md`) exists for today:
 1. **MANDATORY TOOL CALL:** Execute `replace_file_content` to inject a status callout into the Daily Focus Note:
    ```markdown
    > [!WARNING]

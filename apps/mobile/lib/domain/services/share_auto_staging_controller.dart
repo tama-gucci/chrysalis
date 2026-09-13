@@ -36,94 +36,36 @@ class ShareAutoStagingController {
 
   bool get isInitialized => _isInitialized;
 
-  /// Resolves the default vault `chrysalis/Inbox` directory synchronously.
+  /// Explicit configuration wins. Desktop CLI callers may use the current
+  /// vault; Android always uses its persistent application documents directory.
+  static Directory? _configuredInbox() {
+    final selected = Platform.environment['CHRYSALIS_VAULT_PATH']?.trim();
+    if (selected == null || selected.isEmpty) return null;
+    final root = selected.replaceAll('"', '').replaceAll("'", '');
+    if (!p.isAbsolute(root)) {
+      throw ArgumentError('CHRYSALIS_VAULT_PATH must be an absolute directory');
+    }
+    final canonical = Directory(p.join(root, 'chrysalis', 'Inbox'));
+    final legacy = Directory(p.join(root, 'Inbox'));
+    return !canonical.existsSync() && legacy.existsSync() ? legacy : canonical;
+  }
+
   static Directory resolveDefaultInboxDirectory() {
-    final envVault = Platform.environment['CHRYSALIS_VAULT_PATH']
-        ?.trim()
-        .replaceAll('"', '')
-        .replaceAll("'", '');
-    if (envVault != null && envVault.trim().isNotEmpty) {
-      final candidateInbox = Directory(p.join(envVault, 'chrysalis', 'Inbox'));
-      if (candidateInbox.existsSync()) return candidateInbox;
-      final fallbackInbox = Directory(p.join(envVault, 'Inbox'));
-      if (fallbackInbox.existsSync()) return fallbackInbox;
-      return candidateInbox;
-    }
-
-    for (final candidate in [
-      'g:/My Drive/vault/chrysalis/Inbox',
-      'G:/My Drive/vault/chrysalis/Inbox',
-      'g:/My Drive/vault/Inbox',
-      'G:/My Drive/vault/Inbox',
-      'g:/My Drive/chrysalis/chrysalis/Inbox',
-      'G:/My Drive/chrysalis/chrysalis/Inbox',
-      'g:/My Drive/chrysalis/Inbox',
-      'G:/My Drive/chrysalis/Inbox',
-    ]) {
-      final dir = Directory(candidate);
-      if (dir.existsSync()) {
-        return dir;
-      }
-    }
-
+    final configured = _configuredInbox();
+    if (configured != null) return configured;
     if (Platform.isAndroid) {
-      for (final candidate in [
-        '/storage/emulated/0/Android/data/com.chrysalis.mobile.chrysalis_mobile/files',
-        '/data/user/0/com.chrysalis.mobile.chrysalis_mobile/files',
-        '/data/data/com.chrysalis.mobile.chrysalis_mobile/files',
-      ]) {
-        final dir = Directory(candidate);
-        if (dir.existsSync()) {
-          return Directory(p.join(candidate, 'chrysalis', 'Inbox'));
-        }
-      }
-      return Directory(p.join(Directory.systemTemp.path, 'chrysalis', 'Inbox'));
+      throw StateError('Android storage must be initialized asynchronously');
     }
-
     return Directory(p.join(Directory.current.path, 'chrysalis', 'Inbox'));
   }
 
-  /// Resolves the default vault `chrysalis/Inbox` directory asynchronously.
-  ///
-  /// Provides safe Android-native fallback using [getApplicationDocumentsDirectory]
-  /// from `path_provider` when running on Android where drive letters do not exist
-  /// and `Directory.current` is `/` (read-only).
   static Future<Directory> resolveDefaultInboxDirectoryAsync() async {
-    final envVault = Platform.environment['CHRYSALIS_VAULT_PATH']
-        ?.trim()
-        .replaceAll('"', '')
-        .replaceAll("'", '');
-    if (envVault != null && envVault.trim().isNotEmpty) {
-      final candidateInbox = Directory(p.join(envVault, 'chrysalis', 'Inbox'));
-      if (await candidateInbox.exists()) return candidateInbox;
-      final fallbackInbox = Directory(p.join(envVault, 'Inbox'));
-      if (await fallbackInbox.exists()) return fallbackInbox;
-      return candidateInbox;
-    }
-
-    for (final candidate in [
-      'g:/My Drive/vault/chrysalis/Inbox',
-      'G:/My Drive/vault/chrysalis/Inbox',
-      'g:/My Drive/vault/Inbox',
-      'G:/My Drive/vault/Inbox',
-      'g:/My Drive/chrysalis/chrysalis/Inbox',
-      'G:/My Drive/chrysalis/chrysalis/Inbox',
-      'g:/My Drive/chrysalis/Inbox',
-      'G:/My Drive/chrysalis/Inbox',
-    ]) {
-      final dir = Directory(candidate);
-      if (await dir.exists()) {
-        return dir;
-      }
-    }
-
+    final configured = _configuredInbox();
+    if (configured != null) return configured;
     if (Platform.isAndroid) {
-      try {
-        final appDocDir = await getApplicationDocumentsDirectory();
-        return Directory(p.join(appDocDir.path, 'chrysalis', 'Inbox'));
-      } catch (_) {}
+      final documents = await getApplicationDocumentsDirectory();
+      return Directory(p.join(documents.path, 'chrysalis', 'Inbox'));
     }
-
     return resolveDefaultInboxDirectory();
   }
 

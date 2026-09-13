@@ -10,8 +10,11 @@ reads:
 writes:
   - "System/Scheduling-Memory.md"
   - "chrysalis/Tasks/*.md"
-  - "Daily/YYYY-MM-DD.md"
+  - "chrysalis/Daily/YYYY-MM-DD.md"
 ---
+
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
+
 
 # /morning (Morning Operational Orchestrator)
 
@@ -30,7 +33,7 @@ Read and execute `.agent/skills/calibrate/SKILL.md`:
 * **Case A (User Responds):**
   1. **Unpause System & Log Telemetry:** Call `replace_file_content` on `Scheduling-Memory.md` to unpause (`is_paused: false`, `mode: null`, `reason: null`, `paused_at: null`, `resume_policy: null`, `resume_target: null`, `freeze_multiplier_decay: false`), update `morning_checkin.active_today`, compute rolling wake baseline, and log to `checkin_history`.
   2. **Route Scheduling Mode:**
-     * **If Pre-Approved (`feedback_status == "approved"`):** Execute `.agent/skills/plan/SKILL.md` under **Protocol 2: Calibration & Timeblocking Mode** to shift diurnal timeblocks, execute tool calls to serialize `scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"` into all scheduled `chrysalis/Tasks/*.md` notes, and write the calibrated daily focus note `Daily/YYYY-MM-DD.md`.
+     * **If Pre-Approved (`feedback_status == "approved"`):** Execute `.agent/skills/plan/SKILL.md` under **Protocol 2: Calibration & Timeblocking Mode** to shift diurnal timeblocks, execute tool calls to serialize `scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"` into all scheduled `chrysalis/Tasks/*.md` notes, and write the calibrated daily focus note `chrysalis/Daily/YYYY-MM-DD.md`.
      * **If Previously Paused / Pending:** Execute `.agent/skills/plan/SKILL.md` under **Protocol 1: Staging Mode** using $T_{\text{wake}}$ and energy level to stage today's focus, present the prototype table, and obtain approval before locking timestamps.
 * **Case B (User Still Does Not Respond / Inaction):**
   * Retain `system_state.pause_state.is_paused: true`.

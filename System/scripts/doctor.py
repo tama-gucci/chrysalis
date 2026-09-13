@@ -19,6 +19,11 @@ import re
 import argparse
 from datetime import datetime, date
 from pathlib import Path
+
+try:
+    from .vault_paths import resolve_vault_root, vault_path
+except ImportError:
+    from vault_paths import resolve_vault_root, vault_path
 from typing import Dict, Any, List, Tuple, Optional
 import yaml
 
@@ -50,26 +55,6 @@ def read_frontmatter(file_path: Path) -> Tuple[Dict[str, Any], str]:
         return {}, ""
     return parse_frontmatter(file_path.read_text(encoding="utf-8"))
 
-def resolve_vault_root(explicit_path: Optional[str] = None) -> Path:
-    """Resolves the active Chrysalis vault root directory."""
-    if explicit_path:
-        p = Path(explicit_path).resolve()
-        if p.exists():
-            return p
-            
-    env_vault = os.environ.get("CHRYSALIS_VAULT_PATH")
-    if env_vault:
-        p = Path(env_vault).resolve()
-        if p.exists():
-            return p
-            
-    repo_root = Path(__file__).resolve().parent.parent.parent
-    sibling_vault = repo_root.parent / "chrysalis"
-    if sibling_vault.exists():
-        return sibling_vault.resolve()
-        
-    return repo_root.resolve()
-
 class ChrysalisDoctor:
     def __init__(self, vault_root: Path):
         self.vault_root = vault_root
@@ -82,20 +67,12 @@ class ChrysalisDoctor:
     def get_tasks_dirs(self) -> List[Tuple[Path, str]]:
         """Returns list of (directory_path, task_type) to check."""
         dirs = []
-        for candidate in [
-            self.vault_root / "chrysalis" / "Tasks",
-            self.vault_root / "Tasks",
-            self.vault_root / "TaskNotes" / "Tasks"
-        ]:
+        for candidate in [vault_path(self.vault_root, "Tasks")]:
             if candidate.exists() and candidate.is_dir():
                 dirs.append((candidate, "active"))
                 break
                 
-        for candidate in [
-            self.vault_root / "chrysalis" / "Archive",
-            self.vault_root / "Archive",
-            self.vault_root / "TaskNotes" / "Archive"
-        ]:
+        for candidate in [vault_path(self.vault_root, "Archive")]:
             if candidate.exists() and candidate.is_dir():
                 dirs.append((candidate, "archived"))
                 break
@@ -259,19 +236,13 @@ class ChrysalisDoctor:
         """Check 4: Graph & Wikilink Resolution Linter."""
         broken_links = []
         slipbox_dir = None
-        for candidate in [
-            self.vault_root / "chrysalis" / "Slipbox",
-            self.vault_root / "Slipbox"
-        ]:
+        for candidate in [vault_path(self.vault_root, "Slipbox")]:
             if candidate.exists() and candidate.is_dir():
                 slipbox_dir = candidate
                 break
 
         projects_dir = None
-        for candidate in [
-            self.vault_root / "chrysalis" / "Projects",
-            self.vault_root / "Projects"
-        ]:
+        for candidate in [vault_path(self.vault_root, "Projects")]:
             if candidate.exists() and candidate.is_dir():
                 projects_dir = candidate
                 break
@@ -396,10 +367,7 @@ class ChrysalisDoctor:
         """Writes diagnostic report to System/System-Health.md."""
         tz_offset = "-05:00"
         mem_file = None
-        for candidate in [
-            self.vault_root / "chrysalis" / "System" / "Scheduling-Memory.md",
-            self.vault_root / "System" / "Scheduling-Memory.md",
-        ]:
+        for candidate in [vault_path(self.vault_root, "System/Scheduling-Memory.md")]:
             if candidate.exists():
                 mem_file = candidate
                 break
@@ -467,10 +435,7 @@ class ChrysalisDoctor:
 
         content = "\n".join(report_lines)
         target_paths = []
-        for candidate in [
-            self.vault_root / "chrysalis" / "System" / "System-Health.md",
-            self.vault_root / "System" / "System-Health.md",
-        ]:
+        for candidate in [vault_path(self.vault_root, "System/System-Health.md")]:
             if candidate.parent.exists():
                 target_paths.append(candidate)
                 break
@@ -482,7 +447,7 @@ class ChrysalisDoctor:
             except Exception as e:
                 print(f"[doctor] Warning writing health ledger {tp}: {e}", file=sys.stderr)
 
-    def run_all_checks(self) -> bool:
+    def run_all_checks(self, *, write_report: bool = True) -> bool:
         """Executes all 6 checks and outputs summary."""
         print("=" * 70)
         print(f"🩺 Chrysalis System Integrity Pass (/doctor)")
@@ -496,7 +461,8 @@ class ChrysalisDoctor:
         self.check_5_skills_integrity()
         self.check_6_dynamic_state_multipliers()
 
-        self.update_system_health_ledger()
+        if write_report:
+            self.update_system_health_ledger()
 
         print("\nDiagnostic Linter Results:")
         for k in sorted(self.check_results.keys()):
@@ -521,11 +487,12 @@ class ChrysalisDoctor:
 def main():
     parser = argparse.ArgumentParser(description="Chrysalis System Integrity & Diagnostic Suite")
     parser.add_argument("--vault", type=str, default=None, help="Path to Chrysalis vault root")
+    parser.add_argument("--read-only", action="store_true", help="Check without updating the health ledger")
     args = parser.parse_args()
 
     vault_root = resolve_vault_root(args.vault)
     doctor = ChrysalisDoctor(vault_root)
-    success = doctor.run_all_checks()
+    success = doctor.run_all_checks(write_report=not args.read_only)
     sys.exit(0 if success else 1)
 
 if __name__ == "__main__":

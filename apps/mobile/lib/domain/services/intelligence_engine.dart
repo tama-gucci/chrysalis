@@ -112,109 +112,40 @@ abstract class IntelligenceEngine {
   Future<void> dispose();
 }
 
-/// Option B: Mobile-Native / Serverless Edge Intelligence Engine.
-///
-/// Executes on-device inference (e.g. Gemini Nano via AICore) or direct
-/// cloud model APIs when operating without a dedicated home server.
+/// Reserved direct inference adapter. No cloud or on-device execution is
+/// implemented; callers receive an explicit unavailable result.
 class MobileNativeIntelligenceEngine implements IntelligenceEngine {
-  final StreamController<OrchestratorEvent> _eventController =
-      StreamController<OrchestratorEvent>.broadcast();
+  final _eventController = StreamController<OrchestratorEvent>.broadcast();
   final String modelName;
 
-  MobileNativeIntelligenceEngine({
-    this.modelName = 'gemini-nano',
-  });
+  MobileNativeIntelligenceEngine({this.modelName = 'unconfigured'});
 
-  /// Factory constructor for Option B Serverless Cloud endpoint defaulting to Gemini 3.8 Flash
-  factory MobileNativeIntelligenceEngine.cloud({
-    String modelName = 'gemini-3.8-flash',
-  }) {
-    return MobileNativeIntelligenceEngine(modelName: modelName);
-  }
+  factory MobileNativeIntelligenceEngine.cloud({String modelName = 'unconfigured'}) =>
+      MobileNativeIntelligenceEngine(modelName: modelName);
 
   @override
   EngineMode get mode => EngineMode.mobileNative;
-
   @override
   Stream<OrchestratorEvent> get eventStream => _eventController.stream;
-
   @override
-  Future<bool> isAvailable() async {
-    // Edge on-device model availability check stub
-    return true;
-  }
-
+  Future<bool> isAvailable() async => false;
   @override
-  Future<EngineStatus> getStatus() async {
-    return EngineStatus(
-      isAvailable: true,
-      mode: EngineMode.mobileNative,
-      engineName: 'MobileNative ($modelName)',
-      version: '1.0.0',
-      details: {
-        'model': modelName,
-        'accelerator': 'NNAPI / AICore',
-        'edge_mode': true,
-      },
-      timestamp: DateTime.now(),
-    );
-  }
-
+  Future<EngineStatus> getStatus() async => EngineStatus(
+    isAvailable: false, mode: mode, engineName: 'Direct AI (not configured)',
+    details: {'implemented': false}, timestamp: DateTime.now(),
+  );
   @override
-  Future<OrchestratorResponse> sendCommand(
-    String command, {
-    Map<String, dynamic>? parameters,
-  }) async {
-    final stopwatch = Stopwatch()..start();
-    final cmd = command.split(' ').first.toLowerCase();
-
-    // Emulate edge AI execution
-    final output = _emulateEdgeResponse(cmd, parameters);
-    stopwatch.stop();
-
+  Future<OrchestratorResponse> sendCommand(String command, {Map<String, dynamic>? parameters}) async {
+    const error = 'Direct AI execution is not implemented. No action was performed.';
     _eventController.add(OrchestratorEvent(
-      type: OrchestratorEventType.response,
-      content: output,
-      timestamp: DateTime.now(),
+      type: OrchestratorEventType.error, content: error, timestamp: DateTime.now(),
     ));
-
-    return OrchestratorResponse(
-      success: true,
-      command: command,
-      output: output,
-      executionTimeMs: stopwatch.elapsedMilliseconds,
-      timestamp: TimezoneUtils.formatIsoWithOffset(DateTime.now()),
-      emulated: true,
-    );
+    return OrchestratorResponse(success: false, command: command, output: '',
+      error: error, executionTimeMs: 0,
+      timestamp: TimezoneUtils.formatIsoWithOffset(DateTime.now()));
   }
-
   @override
-  Future<void> sendMessage(String text) async {
-    _eventController.add(OrchestratorEvent(
-      type: OrchestratorEventType.token,
-      content: '🤖 [Edge Nano] Thinking...',
-      timestamp: DateTime.now(),
-    ));
-  }
-
+  Future<void> sendMessage(String text) async { await sendCommand(text); }
   @override
-  Future<void> dispose() async {
-    await _eventController.close();
-  }
-
-  String _emulateEdgeResponse(String cmd, Map<String, dynamic>? params) {
-    switch (cmd) {
-      case '/morning':
-        final wake = params?['wake'] ?? '07:30';
-        return '🌅 Edge morning calibration locked at $wake.';
-      case '/evening':
-        return '🌙 Edge evening review: 14-day roadmap milestones synced.';
-      case '/doctor':
-        return '🩺 Edge integrity check: 100% healthy.';
-      case '/plan':
-        return '📋 Edge focus plan calibrated: 75m ultradian sprints stacked.';
-      default:
-        return '🤖 Edge intelligence processed: "$cmd"';
-    }
-  }
+  Future<void> dispose() async { await _eventController.close(); }
 }

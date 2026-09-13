@@ -93,6 +93,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadBiometrics() async {
     try {
+      if (!await widget.biometricSource.isAvailable() ||
+          !await widget.biometricSource.hasPermissions()) {
+        return;
+      }
       final bio = await widget.biometricSource.getTelemetryForDate(DateTime.now());
       if (mounted) {
         _biometrics = bio;
@@ -156,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Task "${task.title}" saved (<10ms) & journaled.'),
+          content: Text('Task "${task.title}" saved on this device.'),
           behavior: SnackBarBehavior.floating,
         ),
       );

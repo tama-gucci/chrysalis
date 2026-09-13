@@ -254,7 +254,7 @@ x-tasknotes:
 # Task
 
 This type definition describes the data schema for tasks managed by
-[chrysalis-obsidian](.obsidian/plugins/chrysalis-obsidian), an Obsidian plugin
+[chrysalis-obsidian](../.obsidian/plugins/chrysalis-obsidian), an Obsidian plugin
 for note-based task management.
 
 It conforms to [mdbase-spec](https://github.com/callumalpass/mdbase-spec) v0.2.0,

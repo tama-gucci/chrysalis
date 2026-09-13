@@ -4,73 +4,26 @@ description: "Upstream framework synchronization engine: inspects GitHub upstrea
 trigger: "/update"
 domain: runtime
 reads:
-  - "chrysalis/update.py"
-  - "chrysalis/System/Runtime-Constitution.md"
-  - "chrysalis/System/System-Health.md"
-  - "chrysalis/System/Changelog.md"
+  - "update.py"
+  - "System/Runtime-Constitution.md"
+  - "System/System-Health.md"
+  - "System/Changelog.md"
 writes:
-  - "chrysalis/System/System-Health.md"
-  - "chrysalis/System/Changelog.md"
+  - "System/System-Health.md"
+  - "System/Changelog.md"
 ---
 
-# /update (Chrysalis Upstream Synchronization Engine)
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
 
-## Supported Commands & Triggers
-* `/update` — Performs dry-run inspection, reports available upstream updates, and prompts or executes the update.
-* `/update --check` (or `/update --dry-run`) — Inspects upstream changes without applying modifications.
-* `/update --force` (or `/update --yes`) — Automatically downloads upstream changes and runs `/doctor`.
 
-```mermaid
-graph TD
-    Trigger["/update Trigger"] --> DryRun["Step 1: Execute update.py --dry-run"]
-    DryRun --> Parse["Step 2: Parse Commit & File Diff"]
-    Parse --> CheckCount{"Updates Available?"}
-    CheckCount -->|0 Updates| UpToDate["Report: Vault is already up-to-date"]
-    CheckCount -->|Updates Found| Present["Present Change Summary to User"]
-    Present --> RunSync["Step 3: Execute update.py"]
-    RunSync --> Doctor["Step 4: Run /doctor Integrity Suite"]
-    Doctor --> Log["Step 5: Record Version in System-Health & Changelog"]
-```
+# /update
 
----
+Use the selected runtime vault. Source changes belong in the development repository.
 
-## Execution Protocol
+1. Preview the local source with `python update.py --source ../vault-git --target . --dry-run` from the runtime root. Resolve both paths explicitly; folder names are examples.
+2. If updates are authorized, run the same command without `--dry-run`. Do not use force to bypass locally edited framework conflicts.
+3. The updater backs up changed framework files and records their hashes in `.chrysalis/deployments/`. Personal state and plugin settings are excluded. `--plugins` explicitly includes approved plugin binaries.
+4. Run `python System/scripts/doctor.py --vault . --read-only` and verify the affected workflow. On encapsulated installations use `chrysalis/System/scripts/doctor.py`.
+5. Preview latest rollback with `python update.py --target . --rollback --dry-run`; remove `--dry-run` to restore it. Rollback stops when a deployed file was edited afterward.
 
-### Step 1: Pre-Flight Upstream Inspection
-Execute physical tool call to check upstream state:
-```bash
-python3 update.py --dry-run
-```
-Extract the upstream commit hash, timestamp, and the count/list of modified framework files.
-
-### Step 2: User Presentation & Confirmation
-Display the findings to the user:
-* **Upstream Version:** Latest commit hash and subject.
-* **Component Summary:** Number of updated skills, workflows, views, or system specs.
-* **Safety Confirmation:** Remind the user that personal tasks, roadmaps, and telemetry are untouched.
-* If invoked with `--check` or `--dry-run`, stop here.
-* If invoked with `/update`, proceed to execute or prompt confirmation.
-
-### Step 3: Physical Update Synchronization
-Execute physical tool call:
-```bash
-python3 update.py
-```
-> [!CAUTION]
-> **Anti-Simulation Law:** You MUST execute `run_command` to invoke `update.py`. Never merely claim files were updated.
-
-### Step 4: Automated Integrity Gate (`/doctor`)
-Immediately trigger `/doctor` to run the 6-point integrity audit:
-1. Universal Chrysalis Task Frontmatter Linter
-2. Timezone & Temporal Compliance Linter
-3. Tag Registry & Strategic Pillar Validator
-4. Graph & Wikilink Resolution Linter
-5. Skill Protocol & Dependency Linter
-6. Dynamic State & Multiplier Sanity Check
-
-### Step 5: Ledger Update
-Append an entry into `System/Changelog.md` and `System/System-Health.md` recording:
-* Date and ISO timestamp
-* Upstream commit hash
-* Count of updated components
-* Health status post-update (e.g., `HEALTHY`)
+`/update --check` is preview only. Never report update or rollback success without running the command and checking its result. Consult ARCHITECTURE.md and STATUS.md for ownership and current capabilities.

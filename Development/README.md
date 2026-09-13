@@ -1,61 +1,50 @@
----
-type: developer_guide
-id: chrysalis-development-readme
-status: active
-version: 1.1.0
----
+# Developing while using Chrysalis
 
-# 🛠️ Chrysalis Development & Engineering Hub
+Edit the framework in `vault-git/`, use `vault/` for daily operations, and promote changes through the updater. [ARCHITECTURE.md](../ARCHITECTURE.md) defines ownership and [STATUS.md](../STATUS.md) records capability maturity.
 
-Welcome to the **Chrysalis Development Sphere**. This directory contains all architecture specifications, developer tooling, development-only agent skills, and environment manifests for engineering the Chrysalis framework.
+See [Testing](TESTING.md) for test setup and validation boundaries.
 
-All activities within this directory are strictly governed by the [`Development-Constitution.md`](Development-Constitution.md).
+## Daily workflow
 
----
+1. Open the personal vault in Obsidian and select it explicitly for life operations.
+2. Make framework changes in the repository. Tests use synthetic data in temporary vaults.
+3. Run the checks relevant to the changed subsystem.
+4. Preview and deploy from the local source. No GitHub push is needed to try a change locally.
+5. Run the runtime diagnostic check and verify the affected workflow. Roll back the deployment if necessary.
 
-## 📁 Directory Structure
-
-```
-vault-git/Development/
-├── Development-Constitution.md   # The supreme engineering law, zero-leak PII rules & RSI invariants
-├── README.md                     # This onboarding and developer orientation guide
-├── scripts/                      # Developer utilities, PII scanner, and git boundary checkers
-│   └── pii-scanner.sh            # Automated pre-commit and CI PII validation script
-└── skills/                       # Modular development-only agent skills (registered in .agent/skills.json)
-    ├── audit-dev/                # /audit-dev: Git boundary, zero-leak PII scanner & evolve coordinator
-    └── evolve/                   # /evolve: Proactive capability expansion & recursive self-improvement
+```powershell
+python -m unittest discover -t . -s tests
+python -m pytest apps/gateway/tests -q
+# In apps/mobile:
+flutter test
+flutter analyze
+# Back in the repository root:
+python update.py --source . --target ../vault --dry-run
+python update.py --source . --target ../vault
+python System/scripts/doctor.py --vault ../vault --read-only
 ```
 
----
+Install the gateway test dependencies in an isolated environment using `apps/gateway/requirements.txt`. Use the same environment when running its tests. The framework scripts require PyYAML.
 
-## 🔒 The Absolute Zero-Leak PII Law
+## Runtime edits and rollback
 
-Chrysalis is an open-source framework hosted on GitHub (`tama-gucci/chrysalis`). To guarantee that private user data never leaks to public version control, the repository enforces a strict **Zero-Leak Whitelist (Default-Deny)** architecture:
+Personal notes remain editable during development. Framework changes belong in source. If a managed runtime file has changed, deployment stops: compare it, incorporate the intended change in source, and retry. Do not bypass conflicts by deleting deployment history.
 
-1. **Default-Deny `.gitignore`:** Everything is ignored by default (`/*`), and only explicitly whitelisted open-source framework assets and templates are tracked.
-2. **1-to-1 Template Rule:** Every file containing personal user information (tasks, roadmaps, chronotype memory, health logs, daily notes) MUST have a corresponding sanitized `.template.md` tracked in git (`System/_templates/`).
-3. **Synthetic Placeholders Only:** Never commit real names, usernames, machine-bound paths (`/home/...`, `C:\Users\...`), personal emails, or credentials. Use `Jane Doe`, `user@example.com`, and relative paths (`vault/...`, `vault-git/...`).
-
----
-
-## 🚀 Developer Workflows
-
-### 1. Pre-Commit Verification Gate
-Before staging or pushing any commits to GitHub, execute the Development Audit:
-```bash
-/audit-dev
-```
-Or run the standalone script:
-```bash
-bash Development/scripts/pii-scanner.sh
+```powershell
+python update.py --target ../vault --rollback --dry-run
+python update.py --target ../vault --rollback
 ```
 
-### 2. Recursive Self-Improvement (RSI) via `/evolve`
-When developing new features, skills, or workflows:
-* Use `/evolve` to scan unintegrated `#chrysalis` notes from `Slipbox/`.
-* Synthesize 5-vector integration specs (Workflows, Skills, Dashboard UI, Operational Memory, Orchestrator Adapters).
-* Always test optimizations with pre-commit snapshots in `.agent/skills/.backup/`.
+Rollback restores only the most recent deployment and refuses to overwrite files edited afterward. It does not undo personal task activity. Repeated rollback follows the saved deployment chain. Backups remain in the private vault.
 
-### 3. Adding or Updating Agent Skills
-* **Runtime Skills:** Placed in `.agent/skills/<skill-name>/SKILL.md` (e.g. `audit`, `plan`, `morning`, `evening`, `doctor`, `task`, `zettel`, `project`).
-* **Development Skills:** Placed in `Development/skills/<skill-name>/SKILL.md` (registered via `.agent/skills.json`).
+## Plugins and exports
+
+`--plugins` deploys approved binary assets, preserving settings. Restart Obsidian afterward. The current plugin is vendored; develop a future standalone plugin in its own source project rather than hand-editing minified JavaScript.
+
+`python Development/scripts/export_starter.py <empty-directory>` creates a starter from the deployment allowlist and synthetic templates. It refuses a nonempty destination and excludes all plugin settings.
+
+## Skills and privacy
+
+Runtime skills are in `.agent/skills/`; development skills are in `Development/skills/`. Back up each modified runbook to `.agent/skills/.backup/` before editing it. Installed copies are updated by deployment.
+
+Before committing or pushing, run `/audit-dev` or `bash Development/scripts/pii-scanner.sh`. Review untracked additions as well. Follow [Development-Constitution.md](Development-Constitution.md): private state stays out of Git, and source examples use synthetic values.

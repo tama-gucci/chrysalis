@@ -43,6 +43,11 @@ import urllib.parse
 from datetime import datetime, date, timedelta, timezone
 from pathlib import Path
 
+try:
+    from .vault_paths import resolve_vault_root, vault_path, memory_path as resolve_memory_path
+except ImportError:
+    from vault_paths import resolve_vault_root, vault_path, memory_path as resolve_memory_path
+
 DEFAULT_HORIZON_DAYS = 7
 WEEKDAY_MAP = {"MO": 0, "TU": 1, "WE": 2, "TH": 3, "FR": 4, "SA": 5, "SU": 6}
 
@@ -443,31 +448,8 @@ def update_scheduling_memory(memory_path: str, events: list, ical_url: str, tz_s
 
 def sync_ical(ical_url: str = None, memory_path: str = None, horizon_days: int = DEFAULT_HORIZON_DAYS):
     """Main orchestration function to fetch and sync iCal events to memory."""
-    repo_root = Path(__file__).resolve().parent.parent.parent
-    if not memory_path:
-        memory_path = os.environ.get("CHRYSALIS_MEMORY_PATH")
-        if not memory_path:
-            vault_base = os.environ.get("CHRYSALIS_VAULT_PATH")
-            candidates = []
-            if vault_base:
-                candidates.extend([
-                    Path(vault_base) / "chrysalis" / "System" / "Scheduling-Memory.md",
-                    Path(vault_base) / "System" / "Scheduling-Memory.md",
-                ])
-            candidates.extend([
-                repo_root.parent / "chrysalis" / "System" / "Scheduling-Memory.md",
-                repo_root.parent / "chrysalis" / "chrysalis" / "System" / "Scheduling-Memory.md",
-                Path(__file__).resolve().parent.parent / "Scheduling-Memory.md",
-                repo_root / "chrysalis" / "System" / "Scheduling-Memory.md",
-                repo_root / "System" / "Scheduling-Memory.md",
-            ])
-            for candidate in candidates:
-                if candidate.exists():
-                    memory_path = str(candidate)
-                    break
-            if not memory_path:
-                memory_path = str(candidates[0])
-                
+    memory_path = str(resolve_memory_path(memory_path))
+
     p = Path(memory_path)
     if not p.exists():
         print(f"[fetch_ical] Error: Memory file not found at {memory_path}")
@@ -489,7 +471,7 @@ def sync_ical(ical_url: str = None, memory_path: str = None, horizon_days: int =
     start_str = today.strftime("%Y-%m-%d")
     end_str = end_date.strftime("%Y-%m-%d")
     
-    print(f"[fetch_ical] Fetching iCal feed from: {ical_url[:40]}... (Horizon: {start_str} to {end_str})")
+    print(f"[fetch_ical] Fetching configured iCal feed (Horizon: {start_str} to {end_str})")
     try:
         raw_ics = fetch_ical_url(ical_url)
     except Exception as e:
@@ -505,21 +487,14 @@ def sync_ical(ical_url: str = None, memory_path: str = None, horizon_days: int =
 
 
 def main():
-    """Command-line entrypoint for testing and manual sync."""
-    if "--help" in sys.argv:
-        print("Usage:")
-        print("  python fetch_ical.py                     # Syncs using URL from Scheduling-Memory.md")
-        print("  python fetch_ical.py --url <secret_url>  # Syncs using specified iCal URL")
-        print("  python fetch_ical.py --print             # Prints parsed events as JSON")
-        sys.exit(0)
-        
-    target_url = None
-    for i, arg in enumerate(sys.argv):
-        if arg == "--url" and i + 1 < len(sys.argv):
-            target_url = sys.argv[i + 1]
-            
-    success = sync_ical(ical_url=target_url)
-    sys.exit(0 if success else 1)
+    import argparse
+    parser = argparse.ArgumentParser(description="Import calendar commitments into a selected vault")
+    parser.add_argument("--vault", help="Vault root; defaults to this installation")
+    parser.add_argument("--memory", help="Explicit scheduling memory file")
+    parser.add_argument("--url", help="Calendar feed URL; prefer private memory or environment configuration")
+    args = parser.parse_args()
+    target = resolve_memory_path(args.memory, vault=args.vault)
+    sys.exit(0 if sync_ical(ical_url=args.url, memory_path=str(target)) else 1)
 
 
 if __name__ == "__main__":

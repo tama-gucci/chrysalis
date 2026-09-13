@@ -12,8 +12,8 @@ The **Environment Substrate** tracks host machines, hardware roles, operating sy
 ## 🎯 Active Deployment Profile
 
 * **[[Active-Profile|Active-Profile.md]]**
-  * **Production Runtime:** Central Host: `Google Drive` • Orchestrator: `Google Antigravity` • Clients: Multi-device Obsidian sync
-  * **System Topology:** Dedicated At-Home Server & High-Performance Workstation Node
+  * Create this private file from [_templates/Active-Profile.template.md](_templates/Active-Profile.template.md).
+  * Record the selected storage, orchestrator, and devices there. No dedicated server is required.
 
 ---
 
@@ -34,8 +34,8 @@ WHERE type = "system_manifest"
 SORT system_name ASC
 ```
 
-### Active System Nodes
-* **[[station-node]]** — Primary Workstation (`Arch Linux`, `x86_64`, `pacman`, 218 packages)
+### Example system node
+* `[[station-node]]` is a synthetic name, not an installed machine. Actual nodes appear in the private manifests listed above.
 
 ---
 
@@ -60,12 +60,12 @@ python3 System/Environment/scripts/generate_manifest.py --system-name "laptop-no
 powershell -ExecutionPolicy Bypass -File .\System\Environment\scripts\generate_manifest.ps1
 
 # Or specify custom name and role (e.g. for Surface Pro X home server):
-powershell -ExecutionPolicy Bypass -File .\System\Environment\scripts\generate_manifest.ps1 -SystemName "surface-pro-x" -Role "At-Home Server"
+powershell -ExecutionPolicy Bypass -File .\System\Environment\scripts\generate_manifest.ps1 -SystemName "server-node" -Role "At-Home Server"
 ```
 
 #### On Windows PCs (Python):
 ```cmd
-python System\Environment\scripts\generate_manifest.py --system-name "surface-pro-x" --role "At-Home Server"
+python System\Environment\scripts\generate_manifest.py --system-name "server-node" --role "At-Home Server"
 ```
 
 ### Method 2: Manual Template Instantiation
