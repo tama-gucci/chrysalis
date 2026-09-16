@@ -337,12 +337,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Icon(Icons.access_time_outlined, size: 16, color: ChrysalisTheme.primaryTeal),
                           SizedBox(width: 6),
-                          Text(
-                            "Today's Diurnal Timeline (75-90m Sprints • 15m Buffers)",
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white70,
+                          Expanded(
+                            child: Text(
+                              "Today's Diurnal Timeline (75-90m Sprints • 15m Buffers)",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white70,
+                              ),
                             ),
                           ),
                         ],

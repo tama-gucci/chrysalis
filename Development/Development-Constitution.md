@@ -80,7 +80,7 @@ All development-specific assets reside exclusively within `vault-git/Development
 ## Article III: Recursive Self-Improvement (RSI) Protocol
 System growth and autonomous capability expansion occur exclusively via the `/evolve` engine in development environments:
 
-1. **Development-Only Execution:** `/evolve` is an engineering tool executed interactively in Google Antigravity. It is never invoked during automated daily runtime routines.
+1. **Development-Only Execution:** `/evolve` is an engineering tool executed interactively in the selected coding agent, including Antigravity or Codex. It is never invoked during automated daily runtime routines. Shared engineering context follows [AGENT-WORKFLOW.md](AGENT-WORKFLOW.md).
 2. **Mandatory Snapshot Rollback Anchor:** Prior to modifying any existing skill file in `.agent/skills/` or `Development/skills/`, the agent MUST write a timestamped backup copy to `.agent/skills/.backup/<skill>_<timestamp>.md`.
 3. **Constitutional Pre-Commit Linter:** Every proposed modification to skills, workflows, or schemas must be verified against:
    * Explicit local timezone offset compliance (`"-05:00"`).

@@ -35,7 +35,6 @@ void main() async {
 
   // 3. Initialize persistent vault storage provider
   final storage = LocalVaultStorageProvider(rootDirectory: vaultDir);
-  await storage.initialize();
 
   // 4. Initialize offline-first synchronization engine
   final synchronizer = VaultSynchronizer(
@@ -48,8 +47,13 @@ void main() async {
   await synchronizer.ingestAllRemoteTasks();
 
   // 5. Initialize Orchestrator Transport (Hybrid Engine)
+  // Android apps do not inherit the development terminal's environment.
+  // A build-time URL supports USB testing; credentials are not embedded in builds.
+  const gatewayUrlFromBuild = String.fromEnvironment('CHRYSALIS_GATEWAY_URL');
   final gatewayClient = AmbientGatewayClient(
-    gatewayUrl: Platform.environment['CHRYSALIS_GATEWAY_URL'],
+    gatewayUrl: gatewayUrlFromBuild.trim().isNotEmpty
+        ? gatewayUrlFromBuild.trim()
+        : Platform.environment['CHRYSALIS_GATEWAY_URL'],
     authToken: Platform.environment['CHRYSALIS_GATEWAY_TOKEN'],
   );
   final transport = HybridOrchestratorTransport(

@@ -30,7 +30,7 @@ X-WR-TIMEZONE:America/Chicago
 BEGIN:VEVENT
 DTSTART:20260909T140000Z
 DTEND:20260909T151500Z
-UID:single-meeting-1@google.com
+UID:single-meeting-1@example.com
 SUMMARY:Chemistry 101 Lecture
 LOCATION:Hall A, Room 204
 STATUS:CONFIRMED
@@ -38,7 +38,7 @@ END:VEVENT
 BEGIN:VEVENT
 DTSTART;VALUE=DATE:20260910
 DTEND;VALUE=DATE:20260911
-UID:allday-event-1@google.com
+UID:allday-event-1@example.com
 SUMMARY:Fall Career Expo
 LOCATION:Campus Center
 STATUS:CONFIRMED
@@ -46,7 +46,7 @@ END:VEVENT
 BEGIN:VEVENT
 DTSTART:20260810T190000Z
 DTEND:20260810T200000Z
-UID:recurring-event-1@google.com
+UID:recurring-event-1@example.com
 SUMMARY:Weekly TA Office Hours
 LOCATION:https://zoom.us/j/123456789
 RRULE:FREQ=WEEKLY;BYDAY=WE,FR
@@ -55,7 +55,7 @@ END:VEVENT
 BEGIN:VEVENT
 DTSTART:20260909T160000Z
 DTEND:20260909T170000Z
-UID:cancelled-meeting-1@google.com
+UID:cancelled-meeting-1@example.com
 SUMMARY:Cancelled Department Seminar
 STATUS:CANCELLED
 END:VEVENT

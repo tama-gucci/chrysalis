@@ -9,7 +9,7 @@ import 'substrate_mailbox_client.dart';
 /// Implements Model 3:
 /// - Online: Routes to Ambient Gateway WSS/REST for sub-second streaming.
 /// - Offline: Seamlessly falls back to Substrate Mailbox, buffering intents
-///   into `System/Inbox/events.json` on the vault filesystem.
+///   into the configured mailbox on the vault filesystem.
 class HybridOrchestratorTransport implements OrchestratorTransport {
   final AmbientGatewayClient gatewayClient;
   final SubstrateMailboxClient mailboxClient;
@@ -80,12 +80,12 @@ class HybridOrchestratorTransport implements OrchestratorTransport {
       }
     }
 
-    // Offline / Mailbox mode: buffer to System/Inbox/events.json
+    // Offline / Mailbox mode: buffer to the configured write destination.
     final eventId = await mailboxClient.appendCommand(command, parameters: parameters);
     _eventController.add(
       OrchestratorEvent(
         type: OrchestratorEventType.statusUpdate,
-        content: 'Intent buffered to System/Inbox/events.json ($eventId). '
+        content: 'Intent buffered to ${mailboxClient.mailboxPath} ($eventId). '
             'Saved locally; awaiting an orchestrator. This is not an executed action.',
         metadata: {'eventId': eventId, 'mode': 'mailbox'},
         timestamp: DateTime.now(),
@@ -104,12 +104,13 @@ class HybridOrchestratorTransport implements OrchestratorTransport {
       }
     }
 
-    // Offline / Mailbox mode: buffer to System/Inbox/events.json
+    // Offline / Mailbox mode: buffer to the configured write destination.
     final eventId = await mailboxClient.appendMessage(text);
     _eventController.add(
       OrchestratorEvent(
         type: OrchestratorEventType.statusUpdate,
-        content: 'Message buffered to System/Inbox/events.json ($eventId).',
+        content: 'Message buffered to ${mailboxClient.mailboxPath} ($eventId). '
+            'Saved locally; awaiting an orchestrator. This is not an executed action.',
         metadata: {'eventId': eventId, 'mode': 'mailbox'},
         timestamp: DateTime.now(),
       ),

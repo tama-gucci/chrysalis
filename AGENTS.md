@@ -11,6 +11,8 @@ version: 5.0.0
 
 
 ## Preamble: Separation of Spheres (Runtime vs. Development)
+For framework development with any agent, first read `Development/AGENT-WORKFLOW.md`, `Development/HANDOFF.md`, `ARCHITECTURE.md`, and `STATUS.md`. Run `python Development/scripts/agent_context.py show` from the source checkout for current Git state. Follow the handoff protocol before yielding engineering work. These development instructions do not redirect life operations away from the selected personal runtime vault.
+
 Chrysalis operates across two strictly segregated functional domains:
 1. **The Runtime Sphere (`vault/chrysalis/System/`, `vault/chrysalis/Tasks/` or `System/`, `chrysalis/Tasks/`):** The private execution substrate governing daily focus, chronotype rhythms, task execution, and personal memory. Governed by the **Runtime Constitution** ([`System/Runtime-Constitution.md`](System/Runtime-Constitution.md)).
 2. **The Development Sphere (`vault-git/Development/`):** The engineering substrate governing open-source framework design, modular skill authoring, recursive self-improvement (`/evolve`), and codebase maintenance. Governed by the **Development Constitution** ([`Development/Development-Constitution.md`](Development/Development-Constitution.md)).
@@ -122,7 +124,7 @@ Chrysalis is distributed publicly on GitHub (`tama-gucci/chrysalis`). Under NO c
    * Machine-bound user paths (`/home/...`, `C:\Users\...`) are strictly prohibited in public files.
 
 4. **Recursive Self-Improvement (RSI) Protocol (`/evolve`):**
-   * Development-only execution in Google Antigravity.
+   * Development-only execution in the selected coding agent, including Antigravity or Codex.
    * Mandatory pre-mutation backup snapshot to `.agent/skills/.backup/<skill>_<timestamp>.md`.
    * Pre-commit constitutional verification against all system invariants.
    * Instant rollback via `/evolve --rollback <skill>`.

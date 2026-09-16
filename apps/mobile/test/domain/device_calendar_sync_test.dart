@@ -137,14 +137,14 @@ void main() {
           DeviceCalendarInfo(
             id: 'subscribed-holidays',
             name: 'US Holidays',
-            accountName: 'holidays@google.com',
+            accountName: 'holidays@example.com',
             isPrimary: false,
             isReadOnly: true,
           ),
           DeviceCalendarInfo(
             id: 'work-cal',
             name: 'Work Focus',
-            accountName: 'work@company.com',
+            accountName: 'work@example.com',
             isPrimary: true,
             isReadOnly: false,
           ),

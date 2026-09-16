@@ -1,0 +1,11 @@
+{
+  "chrysalis-context": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "python3 \"$(git rev-parse --show-toplevel)/Development/scripts/agent_context.py\" antigravity",
+        "timeout": 5
+      }
+    ]
+  }
+}

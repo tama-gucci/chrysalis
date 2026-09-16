@@ -13,6 +13,7 @@ class LocalVaultStorageProvider implements VaultStorageProvider {
   final StreamController<SyncStatus> _statusController = StreamController<SyncStatus>.broadcast();
   final StreamController<VaultChangeEvent> _changesController = StreamController<VaultChangeEvent>.broadcast();
   StreamSubscription<FileSystemEvent>? _watcherSub;
+  Future<void>? _initialization;
 
   LocalVaultStorageProvider({required this.rootDirectory});
 
@@ -23,7 +24,9 @@ class LocalVaultStorageProvider implements VaultStorageProvider {
   String get displayName => 'Local Filesystem Vault';
 
   @override
-  Future<void> initialize() async {
+  Future<void> initialize() => _initialization ??= _initialize();
+
+  Future<void> _initialize() async {
     if (!await rootDirectory.exists()) {
       await rootDirectory.create(recursive: true);
     }

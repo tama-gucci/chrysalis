@@ -21,6 +21,14 @@ python -m pytest apps/gateway/tests -q
 
 From `apps/mobile/`, run `flutter analyze` and `flutter test`. Native dependencies require a supported local compiler toolchain. Tests and builds do not establish physical-device integration; capture, synchronization, permissions, and calendar lifecycle still need device rehearsal.
 
+A lightweight local-storage regression check can run without Flutter native test assets. From `apps/mobile/`:
+
+```powershell
+dart --packages=.dart_tool/package_config.json test/data/local_vault_initialization_check.dart
+```
+
+See [mobile USB testing](../apps/mobile/README.md#test-the-gateway-over-usb) for physical-device gateway tests. A successful command round trip does not establish task synchronization or working agent execution.
+
 ## Before publishing
 
 Run `/audit-dev`, including `bash Development/scripts/pii-scanner.sh`, and review the staged diff and newly added files. Plugin settings, private notes, caches, and deployment history must remain untracked.

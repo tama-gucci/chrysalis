@@ -7,9 +7,10 @@ import '../data/storage/vault_storage_provider.dart';
 /// Client implementing Model 1: Substrate-Mediated Decoupled Mailbox.
 ///
 /// When mobile is offline or unable to connect to the Ambient Gateway,
-/// user intents and slash commands are safely serialized to
-/// `System/Inbox/events.json` in the Chrysalis vault substrate.
-/// The at-home Antigravity orchestrator processes these upon next sync.
+/// user intents and slash commands are serialized to [mailboxPath].
+/// The default is `chrysalis/System/Inbox/events.json`; reads fall back to
+/// the legacy path when the selected file is absent. No automatic consumer
+/// or cross-device delivery is established by a successful local append.
 class SubstrateMailboxClient {
   static const String defaultMailboxPath = 'chrysalis/System/Inbox/events.json';
   static const String legacyMailboxPath = 'System/Inbox/events.json';
@@ -23,7 +24,7 @@ class SubstrateMailboxClient {
     this.mailboxPath = defaultMailboxPath,
   });
 
-  /// Appends a command intent to `System/Inbox/events.json`.
+  /// Appends a command intent to [mailboxPath].
   Future<String> appendCommand(String command, {Map<String, dynamic>? parameters}) async {
     final eventId = 'cmd-${DateTime.now().millisecondsSinceEpoch}-${_uuid.v4().substring(0, 8)}';
     final payload = {
@@ -38,7 +39,7 @@ class SubstrateMailboxClient {
     return eventId;
   }
 
-  /// Appends a chat message intent to `System/Inbox/events.json`.
+  /// Appends a chat message intent to [mailboxPath].
   Future<String> appendMessage(String text) async {
     final eventId = 'msg-${DateTime.now().millisecondsSinceEpoch}-${_uuid.v4().substring(0, 8)}';
     final payload = {

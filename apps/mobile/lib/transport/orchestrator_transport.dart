@@ -6,7 +6,7 @@ enum TransportConnectionState {
   connecting,
   /// Active sub-second streaming connection to Ambient Gateway (WSS/REST)
   connectedGateway,
-  /// Offline fallback buffering intents into System/Inbox/events.json on vault substrate
+  /// Offline fallback buffering intents into the configured vault mailbox.
   bufferingMailbox,
 }
 

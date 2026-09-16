@@ -2,7 +2,13 @@
 
 Edit the framework in `vault-git/`, use `vault/` for daily operations, and promote changes through the updater. [ARCHITECTURE.md](../ARCHITECTURE.md) defines ownership and [STATUS.md](../STATUS.md) records capability maturity.
 
+New to the project? Start with the [beginner architecture and development guide](BEGINNERS-GUIDE.md), which explains the source/runtime boundary, agent handoffs, Git, testing, and controlled deployment.
+
 See [Testing](TESTING.md) for test setup and validation boundaries.
+
+For a separate Linux development workstation and runtime server, follow [Workstation setup](WORKSTATION-SETUP.md). Antigravity and Codex share the [agent workflow](AGENT-WORKFLOW.md) and [current handoff](HANDOFF.md).
+
+To set up automation with limited development experience, follow the [step-by-step background development guide](BACKGROUND-DEVELOPMENT.md). Each step includes a message to paste into Codex and a result to check. Technical details remain in the [engineering reference](BACKGROUND-DEVELOPMENT-REFERENCE.md), [prioritized backlog](BACKLOG.md), and [2026-09-15 source review](REVIEW-2026-09-15.md). These documents do not themselves configure a recurring developer or release job.
 
 ## Daily workflow
 
