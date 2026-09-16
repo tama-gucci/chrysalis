@@ -32,7 +32,7 @@ dart --packages=.dart_tool/package_config.json test/data/local_vault_initializat
 flutter build apk --debug
 ```
 
-The bootstrap creates a per-checkout Python environment and installs declared dependencies. Without `--mobile`, it only prepares Python. It does not install OS packages, create a runtime vault, deploy files, or configure credentials. Root `bootstrap.sh` initializes a runtime and is not the development setup command. Python requirements currently specify ranges rather than a complete lockfile; record resolved versions after a successful destination run.
+The bootstrap creates a per-checkout Python environment and installs declared dependencies. Without `--mobile`, it only prepares Python. It does not install OS packages, create a runtime vault, deploy files, or configure credentials. Root `bootstrap.sh` initializes a runtime and is not the development setup command. The local check environment is pinned in `Development/requirements.lock`; setup installs it alongside the application requirements and enforces the mobile lockfile. See [the single-command local checks](TESTING.md#one-local-check-command) for the verified toolchain and external-controller integration boundary.
 
 Recreate environments in every worktree. Run Android device tests on an explicitly selected test device with synthetic data. Linux builds cannot validate Windows-specific behavior or iOS builds. [TESTING.md](TESTING.md) and [STATUS.md](../STATUS.md) define remaining integration limits.
 

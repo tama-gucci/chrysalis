@@ -4,7 +4,7 @@ Edit the framework in `vault-git/`, use `vault/` for daily operations, and promo
 
 New to the project? Start with the [beginner architecture and development guide](BEGINNERS-GUIDE.md), which explains the source/runtime boundary, agent handoffs, Git, testing, and controlled deployment.
 
-See [Testing](TESTING.md) for test setup and validation boundaries.
+Run `python3 Development/scripts/check.py` for all required local checks. See [Testing](TESTING.md) for setup, failure reports, candidate privacy checks and the trusted integration boundary. Hosted CI remains pending.
 
 For a separate Linux development workstation and runtime server, follow [Workstation setup](WORKSTATION-SETUP.md). Antigravity and Codex share the [agent workflow](AGENT-WORKFLOW.md) and [current handoff](HANDOFF.md).
 

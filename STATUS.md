@@ -1,6 +1,6 @@
 # Capability status
 
-Reviewed against source on 2026-09-16 (B00 scope; broader review remains dated below). This file is the implementation reference; design aspirations belong in Development/ROADMAP.md. Test counts are run results, not permanent completion percentages.
+Reviewed against source on 2026-09-16 (B00 and B01 local checks; broader review remains dated below). This file is the implementation reference; design aspirations belong in Development/ROADMAP.md. Test counts are run results, not permanent completion percentages.
 
 | Capability | State | Evidence / limitation |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Reviewed against source on 2026-09-16 (B00 scope; broader review remains dated b
 | Audio/PDF knowledge ingestion | Agent-assisted workflow / planned automation | No ingest_payload.py pipeline; capture does not imply transcription or synthesis |
 | Wear OS, QR pairing, evening triage UI | Planned | Dedicated implementations absent |
 | Gateway installer / standalone plugin distribution | Planned | No release packaging pipeline |
-| Background framework development | Proposed workflow | Review, backlog and prompts in Development; no scheduler, queue dispatcher or checked-in CI workflow implemented |
+| Background framework development | Local validation implemented; runner planned | One-command local checks and candidate privacy audit verified in a fresh worktree; scheduler, dispatcher and hosted CI remain pending |
 
 ## Validation boundaries
 
@@ -69,3 +69,12 @@ The local checkpoint containing this entry restores the task schema's framework 
 - Standalone storage initialization regression: passed.
 - Independent staged-candidate review: no actionable introduced B00 findings. Complete candidate privacy audit and staged whitespace checks passed; details in [the handoff](Development/HANDOFF.md#b00-starting-version-repair--2026-09-16).
 - This establishes a local source test baseline. The earlier calendar, diagnostic, malformed-mailbox, scheduling and synchronization findings remain open. No new device rehearsal, real backend execution, hosted CI, background routine or runtime deployment was performed.
+
+## B01 local checks verification on 2026-09-16
+
+`python3 Development/scripts/check.py` now runs all required local checks with individual logs and a nonzero overall result on any failure. Setup installs the tested Python pins and enforces the mobile dependency lock. Candidate privacy scans both staged blobs and tracked/eligible-untracked working files. A separate trusted-controller invocation rejects candidate replacements of its required policy.
+
+- Fresh worktree setup and full checker passed: framework 152, gateway 11 (two dependency deprecation warnings), Flutter 108, clean Flutter analysis, standalone storage regression and candidate privacy/stability checks.
+- An intentionally failing framework test produced overall exit 1 while remaining suites ran. A replacement candidate checker was rejected before test execution. Synthetic failures were removed and the final fresh run passed.
+- Separate review identified and verified the repair of a credential-helper quarantine omission; final staged review and `/audit-dev` passed before the local checkpoint.
+- B01's local milestone is complete. Hosted GitHub checks are unimplemented/unverified and remain pending; no background execution, integration service, publishing or runtime deployment was enabled.

@@ -9,7 +9,7 @@ Evidence: [engineering review, 2026-09-15](REVIEW-2026-09-15.md). Setup: [beginn
 - Background execution: **not configured**.
 - Reviewed source test baseline: **B00 complete** in the local commit containing the 2026-09-16 B00 handoff. Unattended execution still requires B01 and B02.
 - Active work item: **none**.
-- B00: **done**. B01–B11: **proposed**. No background item is running.
+- B00: **done**. B01 local milestone: **complete**; B01 hosted milestone: **pending**. B02–B11: **proposed**. No background item is running.
 
 The first supervised setup pass resolves B00, B01's local milestone, and B02, then records a selected ready item. After activation, maintain one authoritative queue and one active implementation. A branch-local copy of this file is not a shared lock. A dispatcher must identify the current worktree, preserve unfinished work, and refuse duplicate claims before selecting another item.
 
@@ -51,6 +51,8 @@ Acceptance:
 This establishes a test baseline; it does not certify the unresolved calendar, doctor, or runtime integrations.
 
 ### B01 — Automate validation
+
+**Local milestone complete — 2026-09-16; hosted milestone pending.** Run `python3 Development/scripts/check.py`. Fresh-worktree setup and full checks passed (152 framework, 11 gateway, 108 Flutter, clean analysis and storage regression). Actual required-test failure and candidate-checker replacement both produced nonzero overall results. Independent review and candidate privacy audit passed for the local checkpoint containing this entry. See [Testing](TESTING.md#one-local-check-command) and [the B01 handoff](HANDOFF.md#b01-local-check-milestone--2026-09-16). B01 is not fully done until its hosted acceptance checks pass.
 
 Deliver this in two recorded milestones: local validation first, then hosted CI. Reuse `Development/scripts/setup-dev.sh`; document the supported Python/Flutter/native toolchain and pin dependencies sufficiently to reproduce the runner. Register only the specific public workflow/configuration files in the default-deny allowlist.
 

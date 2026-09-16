@@ -25,8 +25,9 @@ if [[ "$(git rev-parse --show-toplevel)" != "$repository" ]]; then
   printf 'Run this from a Chrysalis source checkout.\n' >&2
   exit 1
 fi
+python3 -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 14) else "Use Python 3.14 for the pinned local environment")'
 if $mobile; then
-  command -v flutter >/dev/null || { printf 'Add the Flutter SDK bin directory to PATH.\n' >&2; exit 1; }
+  flutter_bin="$(python3 Development/scripts/dev_tools.py)"
 fi
 if [[ -L .venv || ( -e .venv && ! -f .venv/pyvenv.cfg ) ]]; then
   printf 'Refusing an unexpected or linked .venv directory.\n' >&2
@@ -39,12 +40,8 @@ if [[ ! -x .venv/bin/python ]]; then
   printf 'The existing .venv is not a usable Linux environment. Recreate it locally.\n' >&2
   exit 1
 fi
-.venv/bin/python -m pip install -r requirements.txt -r apps/gateway/requirements.txt
+.venv/bin/python -m pip install -r requirements.txt -r apps/gateway/requirements.txt -r Development/requirements.lock
 if $mobile; then
-  (cd apps/mobile && flutter pub get)
+  (cd apps/mobile && "$flutter_bin" pub get --enforce-lockfile)
 fi
-printf '%s\n' 'Ready. Validate with:' \
-  '.venv/bin/python -m unittest discover -t . -s tests' \
-  '.venv/bin/python -m pytest apps/gateway/tests -q' \
-  'bash Development/scripts/pii-scanner.sh' \
-  'In apps/mobile: flutter analyze; flutter test'
+printf '%s\n' 'Ready. Validate with:' 'python3 Development/scripts/check.py'

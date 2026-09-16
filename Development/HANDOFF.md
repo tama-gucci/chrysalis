@@ -1,12 +1,36 @@
 # Current engineering handoff
 
 Date: 2026-09-16
-Prepared by: Codex, B00 implementation with independent review
+Prepared by: Codex, B01 local checks implementation with independent review
 Branch: `main`
-Code baseline: `cfa92e845773c501b4bdf3c62bda6a1570e86307`
-Checkpoint: the local commit containing this B00 entry; identify it with `git log -1 --format=%H -- Development/HANDOFF.md`. The parent baseline above does not identify the repaired source.
+Code baseline: `3ed7f7356bbe9e6f32ab43e5835dee99236da6b9`
+Checkpoint: the local commit containing this B01 entry; identify it with `git log -1 --format=%H -- Development/HANDOFF.md`. The baseline above is the preceding B00 checkpoint.
 
-Current activity: B00 repairs and acceptance checks are complete, with independent review of the source candidate. This checkpoint includes the preserved development working state. Background execution, publication and runtime installation remain off. Earlier notes below are historical evidence, not current instructions or authorization.
+Current activity: B01's local-check milestone is implemented and verified in a fresh development worktree. Hosted GitHub CI remains pending; B01 as a whole is not marked done. No scheduler, publication or runtime deployment was enabled. Earlier notes below are historical evidence.
+
+## B01 local-check milestone — 2026-09-16
+
+Run `python3 Development/scripts/check.py` from the source checkout. It provides named results and private temporary logs plus a JSON report, runs every required local check, and returns nonzero on a required failure. It checks candidate privacy first; then Python/Flutter versions, pinned dependencies, framework/gateway suites, Flutter analysis/tests, standalone storage regression, and candidate stability. Reports identify both working and staged contents, Git index entries and executable modes. Missing executables, timeouts, empty framework discovery and changed candidates cannot pass.
+
+Implementation paths: `Development/scripts/check.py`, `candidate_audit.py`, `dev_tools.py`, the `pii-scanner.sh` compatibility wrapper, `setup-dev.sh`, and `Development/requirements.lock`. Setup uses the existing isolated-environment workflow, exact tested Python pins and `flutter pub get --enforce-lockfile`. Python 3.14 and Flutter 3.47.2/Dart 3.13.2 are checked explicitly. Tool discovery accepts private environment/PATH/local-properties settings without recording machine paths in source. The `.gitignore` addition allows only the new public lockfile.
+
+The privacy scanner now reads complete staged blobs and tracked/eligible-untracked working contents, including additions; neither view can hide the other's findings. It covers Unix/Windows paths, credentials, private calendar/task references, email patterns, quarantined paths, unresolved entries, symlinks (including parent directories), unknown binary contents and candidate ignore boundaries. Exact existing upstream plugin artifacts are hash-bound provenance exceptions; the permitted asset/SSH and reserved-example cases are documented. Diagnostics omit offending values. Pattern scanning remains a supplement to source review, not proof about arbitrary private data.
+
+The updated `/audit-dev` runbook reconciles this implemented contract; its pre-edit backup is in the ignored skill backup directory. No runtime skill or personal state was edited. Tests in `tests/test_candidate_audit.py` and `tests/test_local_checks.py` exercise real temporary Git indexes, staged leaks hidden by clean working files, untracked leaks, forced private paths, credential helper quarantine, symlinks, narrow exceptions, missing commands, nonzero exits, timeouts, empty discovery and dependency failure with Python optimization enabled.
+
+Trusted integration boundary: run an explicitly reviewed controller from a separate checkout using `--candidate`. Its check list/privacy policy remain external to the candidate. Protected checker/setup/lock/audit changes and removed baseline test files require separate policy review. The candidate cannot substitute a print-PASS checker. This is not an OS sandbox or an integration service; B02 must select that trusted revision and bind integration to its successful receipt. Required check changes were themselves independently reviewed for this initial policy checkpoint.
+
+Verification:
+
+- Created a fresh detached development worktree at B00, explicitly copied the complete eligible candidate and verified it using its own new `.venv` and newly resolved locked mobile dependencies. No old build cache, local-properties file or environment was copied into it.
+- `bash Development/scripts/setup-dev.sh --mobile` passed in that worktree using an explicitly selected installed SDK. Dependency installation and mobile lock enforcement passed.
+- The one-command checker passed locally and from a separate controller against the fresh worktree. Final fresh run: framework 152 passed; gateway 11 passed with two dependency deprecation warnings; Flutter analysis clean; Flutter tests 108 passed; storage regression, dependency pins, privacy and unchanged-candidate checks passed.
+- Added a deliberate failing unittest only in the temporary worktree. The external controller reported framework exit 1 and overall exit 1 while still running the other suites successfully. Removed the synthetic failure afterward.
+- Replaced only the temporary candidate's checker with a print-PASS stub. The external controller rejected the protected-policy mismatch before executing tests, exit 1. Restored it and passed the final fresh run.
+- The independent reviewer reproduced a missing legacy credential-helper quarantine rule in the first scanner draft. Restored the rule, added an ignore probe and forced-add regression, and independently verified rejection in both views. The reviewer also inspected the failure evidence and the final staged candidate before this checkpoint.
+- `/audit-dev` candidate checks, complete staged diff/addition review and whitespace checks passed before the local commit. Public documentation contains sanitized results; raw reports remain in the private temporary locations printed by the command.
+
+The application logic and existing tests' contracts were preserved. Synthetic calendar addresses were already normalized in B00. No hosted workflow, branch protection, actual integration runner, APK/device rehearsal, remote push or deployment was performed. Next: B02 can use the completed local milestone; B01's separate hosted milestone remains pending until configured and exercised.
 
 ## B00 starting-version repair — 2026-09-16
 

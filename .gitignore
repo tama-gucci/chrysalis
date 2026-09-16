@@ -59,6 +59,7 @@
 /Development/*
 !/Development/Development-Constitution.md
 !/Development/README.md
+!/Development/requirements.lock
 !/Development/TESTING.md
 !/Development/ROADMAP.md
 !/Development/AGENT-WORKFLOW.md

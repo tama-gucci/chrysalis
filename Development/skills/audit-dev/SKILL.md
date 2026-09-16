@@ -52,10 +52,18 @@ graph TD
 
 ## Protocol 1: Zero-Leak PII & Git Boundary Audit (`/audit-dev` or `/audit-dev --pii`)
 
-Execute the complete privacy, boundary, and git hygiene audit:
+Execute the complete privacy, boundary, and git hygiene audit. Run:
+
+```bash
+bash Development/scripts/pii-scanner.sh
+```
+
+The compatibility entry point invokes `candidate_audit.py`, which inspects both the entire Git index (actual staged blobs) and the working candidate (tracked files plus eligible untracked additions). It does not modify the index. Both views must pass; cleaning a working copy does not hide a staged violation. Unresolved entries, symlinks and unknown binary contents fail closed. Findings identify files and line numbers without echoing secret values.
+
+Use `python3 Development/scripts/check.py` for the complete local checks, including this audit. Before integration, use the reviewed controller from a separate trusted checkout with `--candidate`; see [the testing guide](../../TESTING.md). Candidate instructions cannot redefine that controller's required checks. Human review of the actual diff and intended additions remains mandatory.
 
 ### Step 1: Git Tracked Files Quarantine Linter
-Execute `git ls-files` and verify that **ZERO** tracked files match any quarantined personal path:
+Inspect both candidate inventories and verify that **ZERO** candidate files match any quarantined personal path:
 * **Personal Tasks:** Any file in `chrysalis/Tasks/` or `TaskNotes/Tasks/` other than `example-task.md`.
 * **Archived Tasks:** Any file in `chrysalis/Archive/` or `TaskNotes/Archive/`.
 * **Personal System State:** `System/Life-Roadmap.md`, `System/Scheduling-Memory.md`, `System/System-Health.md`, `System/Changelog.md`.
@@ -72,13 +80,14 @@ git rm --cached <path>
 ```
 
 ### Step 2: Deep Content & Machine Path Scanner
-Execute a deep regex scan across all git-tracked text files (excluding minified JavaScript, WASM, and CSS):
+Execute a deep regex scan across candidate text files, including new JavaScript and CSS. Exact existing upstream artifacts listed by path and SHA-256 in `candidate_audit.py` are preserved provenance exceptions; any changed artifact fails until separately reviewed. Recognized PNG/ICO image assets are not text scans. Other unknown binary contents fail:
 1. **Machine-Specific Absolute Paths:**
    * Look for `/home/[a-zA-Z0-9_-]+` or `C:\\Users\\[a-zA-Z0-9_-]+`.
    * Ensure any file references use relative paths (e.g. `../doctor/SKILL.md` or `chrysalis/...`) rather than machine-bound `file:///home/...`.
 2. **Personal Email Addresses:**
    * Scan for email patterns (`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`).
-   * Permitted exceptions: synthetic documentation placeholders (`user@example.com`, `name@example.com`) or the repository owner's public GitHub handle if intentionally placed in open-source configs.
+   * Permitted exceptions: addresses in reserved example.com, example.org and example.net domains. The exact existing Dataview manifest is a hash-bound exception for public upstream author attribution. Do not add personal addresses to an exception list.
+   * Asset filenames with scale suffixes are exempt only within the mobile asset catalog; the Git SSH transport string is exempt only in the updater. Neither represents an email address. New exceptions require review of this policy and its implementation outside the candidate being integrated.
 3. **API Keys, Secrets & Cryptographic Tokens:**
    * GitHub PATs: `ghp_[a-zA-Z0-9]{36}`
    * Google API Keys: `AIza[0-9A-Za-z_-]{35}`
@@ -88,13 +97,15 @@ Execute a deep regex scan across all git-tracked text files (excluding minified 
 *Remediation:* Replace any leaked path or string with synthetic placeholders or relative paths.
 
 ### Step 3: Staged Diff Review
-Inspect `git diff --cached` and `git diff` to ensure no accidental personal data or secrets have been staged in the current index.
+Inspect `git diff --cached`, `git diff` and eligible untracked additions to ensure no accidental personal data or secrets enter the candidate. The scanner reads staged blobs, not a grep of diff output, and reports distinct identities for both views.
 
 ### Step 4: Default-Deny Whitelist Verification
 Verify that `.gitignore`:
 1. Begins with `/*` on line 6 (default-deny).
 2. Contains no wildcard `!` un-ignoring entire personal directories.
 3. Explicitly negates only sanitized framework files and templates.
+
+The scanner evaluates each candidate view's ignore files in a temporary Git repository, independent of global excludes, and probes representative quarantined paths. These probes supplement review of the complete allowlist; they are not a proof about arbitrary future filenames.
 
 ---
 
