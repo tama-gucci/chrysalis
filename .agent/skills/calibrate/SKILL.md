@@ -4,11 +4,11 @@ description: "Handles morning check-in telemetry: unpauses system if paused, cap
 trigger: "/calibrate"
 domain: runtime
 reads:
-  - "System/Scheduling-Memory.md"
+  - "System/Memory.md"
   - ".agent/skills/plan/SKILL.md"
 writes:
-  - "System/Scheduling-Memory.md"
-  - "chrysalis/Tasks/*.md"
+  - "System/Memory.md"
+  - "chrysalis/TaskNotes/Tasks/*.md"
 ---
 
 > Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
@@ -19,7 +19,7 @@ writes:
 ## Execution Protocol
 
 ### 1. Morning Dispatch & Pause Check
-1. Read `system_state.pause_state.is_paused` and `prototype_schedule.feedback_status` in `Scheduling-Memory.md`.
+1. Read `system_state.pause_state.is_paused` and `prototype_schedule.feedback_status` in `System/Memory.md`.
 2. Dispatch prompt based on state:
    * **If Paused or Missed/Pending Evening Staging (`is_paused == true` or `feedback_status == "pending"`):**
      > *"🌅 Morning Check-In. Chrysalis is currently PAUSED (or awaiting schedule staging). Reply with your energy level (1–5) and top focus (or schedule additions) to unpause the system and stage today's agenda."*
@@ -30,15 +30,13 @@ writes:
 * **Case A (User Replies):**
   1. **Unpause System & Log Telemetry:**
      * Capture reply timestamp as exact $T_{\text{wake}}$ (e.g., `09:18:00-05:00`).
-     * Parse numerical energy score (1–5) or ingest automated sleep duration and HRV RMSSD telemetry via Android Health Connect platform channel (`HealthConnectManager.kt`).
+     * Parse numerical energy score (1–5) or ingest self-reported sleep/recovery telemetry.
      * Calculate updated rolling average wake time:
        $$\text{New Rolling Wake} = \text{Current Baseline} + 0.15 \times (T_{\text{wake}} - \text{Current Baseline})$$
      * Set `applied_energy_mode: "sleep_deprived"` for 1–2, or `"optimal"` for 3–5.
-     * **MANDATORY TOOL CALL:** Execute `replace_file_content` on `System/Scheduling-Memory.md` to:
+     * **MANDATORY TOOL CALL:** Execute `replace_file_content` on `System/Memory.md` to:
        - Set `system_state.pause_state`: `{ is_paused: false, mode: null, reason: null, paused_at: null, resume_policy: null, resume_target: null, freeze_multiplier_decay: false }`.
-       - Update `morning_checkin.active_today` with today's date, timestamp, energy level, and energy mode.
-       - Update `morning_checkin.learned_rhythms.rolling_avg_wake_weekday` (or weekend).
-       - Append the check-in record to `morning_checkin.checkin_history`.
+       - Update session metrics and active day check-in with today's date, timestamp, energy level, and energy mode.
   2. **Route to Execution:**
      * If `prototype_schedule.feedback_status` was `"approved"`: Read and execute `.agent/skills/plan/SKILL.md` under **Protocol 2: Calibration & Timeblocking Mode**, passing $T_{\text{wake}}$ and `energy_level`.
      * If `prototype_schedule.feedback_status` was `"pending"` or system was paused: Read and execute `.agent/skills/plan/SKILL.md` under **Protocol 1: Staging Mode**, passing $T_{\text{wake}}$ and `energy_level` to stage today's focus and obtain feedback before locking timestamps.

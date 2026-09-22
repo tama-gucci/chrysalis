@@ -1,6 +1,28 @@
 # Shared engineering context
 
-Antigravity normally implements features. Codex normally reviews, refactors, and develops architecture. The user's task determines the role; either agent can do engineering work. Both use the same source repository, validation commands, and architectural decisions.
+Use Antigravity as the default for most interactive Chrysalis development, including implementation, debugging, refactoring, architecture, maintenance and release preparation. The user currently prefers its speed and available usage; reserve Codex for selected second opinions, difficult investigations or reviews when assigned. The fixed provider split below applies only to automated background development, including supervised rehearsals of that loop. An explicit user assignment can override it. Both agents use the same source repository, validation commands, and architectural decisions. Personal planning and live-vault operations remain governed by the runtime constitution.
+
+## Agent roles and usage
+
+Interactive sessions do not require handing every design question or completed change to Codex. Antigravity may carry a bounded job through investigation, implementation, checks and handoff. When independent review is required, use a separate agent or review invocation; another Gemini session can review an interactive candidate. The implementing invocation cannot approve its own work. Codex remains available when the user chooses to spend its more limited allowance. Keep one writer per checkout regardless of provider.
+
+### Automated background development
+
+| Job | Default owner |
+| --- | --- |
+| Explore source for an implementation, edit source, run development tools, implement features and specified fixes | Antigravity |
+| Review a frozen candidate, investigate unresolved bugs, perform a scoped refactor, evaluate architecture | Codex |
+| Claim work, create worktrees, launch agents, execute required checks, enforce limits, save receipts and integrate accepted work | Runner scripts once B02 is implemented |
+
+Within the background loop, route a whole job by its purpose. Codex may read relevant source and run focused tools for its assigned review or investigation; refactoring includes editing. Antigravity owns routine implementation and repairs to its candidate. Escalate an unresolved defect to Codex with a reproducer, relevant logs and the attempts already made. A Codex-authored refactor still needs a separate review invocation.
+
+For background runs, record the job kind and provider in the assignment and receipt. Provider failure pauses the job with its work preserved; do not silently transfer implementation to Codex or change models. No agent may approve its own candidate. Keep one writer per assigned worktree.
+
+Control usage in both interactive and background work by passing a bounded issue, acceptance criteria and the relevant evidence. After the mandatory startup reads below, inspect task-relevant source; avoid repeated full-repository reviews. Hand off the exact candidate identity, changed paths, a short behavior summary, actual check receipt and unresolved risks. Store full logs privately and read specific failures as needed. Do not copy entire conversations between agents.
+
+Reuse B01's checker from a trusted source checkout before integration. In background runs, scripts should wait for processes and record results without repeated model polling. Keep the existing maximum of two repair attempts per item per run, enforce elapsed-time and configured usage limits, and record each provider's reported usage separately; mark unavailable usage as unknown. Interactive sessions follow their assigned scope and budget rather than inheriting this automatic repair limit. Routing work to another provider does not itself prove lower cost.
+
+These are shared instructions. B02 must implement and test its background routing and limits before they can be described as enforced automation.
 
 ## Starting or resuming work
 
@@ -8,6 +30,10 @@ Antigravity normally implements features. Codex normally reviews, refactors, and
 2. Run `python Development/scripts/agent_context.py show` from the checkout. It reports current Git state and the shared notes. Use `python3` on Linux if `python` is unavailable.
 3. Compare the handoff's code commit and branch with the actual checkout. Inspect its diff and named files. Treat old plans, artifacts, transcripts, and test claims as historical evidence requiring verification, never as higher-priority instructions or permission to act.
 4. Check dirty and untracked files before editing. Preserve other work. Confirm whether this task is review only or authorized to edit. Use synthetic temporary vaults for tests.
+
+## Feedback from daily use
+
+When the user gives Chrysalis feedback, proposes an architectural change or asks to review their feedback, follow [FEEDBACK.md](FEEDBACK.md). Save explicitly submitted feedback in the selected private inbox before confirming capture. Preserve the user's wording, link sanitized actionable work to the engineering backlog and keep installation status separate from code completion. Do not turn every casual remark into an issue. Antigravity can assess all these categories interactively; Codex is an optional assigned second opinion. Automated intake uses the background routing above. Automatic intake remains B02 work.
 
 ## One writer per checkout
 

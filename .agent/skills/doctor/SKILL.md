@@ -4,20 +4,20 @@ description: "Comprehensive 6-point system integrity and diagnostic suite: valid
 trigger: "/doctor"
 domain: runtime
 reads:
-  - "chrysalis/Tasks/*.md"
-  - "chrysalis/Archive/*.md"
+  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "chrysalis/TaskNotes/Archive/*.md"
   - "Projects/*/Roadmap.md"
   - "Slipbox/*.md"
-  - "System/Scheduling-Memory.md"
+  - "System/Memory.md"
   - "System/Life-Roadmap.md"
   - "Dashboard.md"
   - ".agent/skills/*/*.md"
   - "Development/skills/*/*.md"
 writes:
   - "System/System-Health.md"
-  - "chrysalis/Tasks/*.md"
-  - "chrysalis/Archive/*.md"
-  - "System/Scheduling-Memory.md"
+  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "chrysalis/TaskNotes/Archive/*.md"
+  - "System/Memory.md"
 ---
 
 > Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
@@ -47,7 +47,7 @@ graph TD
 ## The 6-Point Integrity & Diagnostic Suite
 
 ### 1. Schema & Frontmatter Linter
-* Scan all active task files in `chrysalis/Tasks/*.md` and `chrysalis/Archive/*.md`.
+* Scan all active task files in `chrysalis/TaskNotes/Tasks/*.md` (or `TaskNotes/Tasks/*.md` / `chrysalis/Tasks/*.md`) and archive folders.
 * Validate required fields: `title`, `status`, `dateCreated`, `priority`, `urgency_tier`, `timeEstimate`, `modality`, `tags`.
 * Validate hypergraph & sync fields: `linked_zettels` (list of wikilinks), `project_ref` (wikilink or null), `googleCalendarEventId` (string or null).
 * Validate enums:
@@ -75,9 +75,9 @@ graph TD
 * Verify that all internal inter-skill execution references point to existing skill paths.
 
 ### 6. Dynamic State & Multiplier Sanity Check
-* Verify YAML syntax in `System/Scheduling-Memory.md`.
-* Enforce invariant bounds: clamp all `tag_multipliers` and `learning_weights` strictly within $[0.20, 2.00]$.
-* Verify that relative offsets in `diurnal_baselines` parse cleanly as valid time deltas.
+* Verify YAML syntax in `System/Memory.md`.
+* Enforce invariant bounds: clamp all cognitive modality multipliers strictly within $[0.20, 2.00]$.
+* Verify that user profile preferences and timezone offset parse cleanly.
 
 ---
 

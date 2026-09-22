@@ -75,10 +75,10 @@ writes:
 3. **Autonomous Hypergraph Linking (Knowledge-to-Execution Pipeline):**
    * After writing the Zettel note to `Slipbox/`:
      1. **Project Roadmap Linking:** Inspect all active project roadmaps in `Projects/*/Roadmap.md`. If the Zettel note's tags or core thesis intersect with an active project's tags or domain, append a `[[WikiLink]]` to that project roadmap under `## 3. Reference Files & Contacts`.
-     2. **Task Frontmatter Injection:** For tasks in `chrysalis/Tasks/*.md` that belong to that project or share its tags, inject the Zettel note reference into the task's frontmatter:
+     2. **Task Frontmatter Injection:** For tasks in `chrysalis/TaskNotes/Tasks/*.md` (or `TaskNotes/Tasks/*.md`) that belong to that project or share its tags, inject the Zettel note reference into the task's frontmatter:
         ```yaml
         linked_zettels:
           - "[[YYYYMMDDHHmmss-slug]]"
         ```
-     3. **Active Sprint Cockpit Integration:** During active focus sprints, the mobile client reads `linked_zettels` to render the expandable **Linked Knowledge Drawer** with one-tap access to the underlying research.
+     3. **Task & Knowledge Interoperability:** During active focus sprints, external interfaces (Obsidian with TaskNotes community plugin) and AI runtime agents read `linked_zettels` to surface the underlying research directly within task context.
      4. **Calendar Event Annotation (Planned):** Keep linked Zettels in task notes. Calendar event annotation requires the future native calendar integration.

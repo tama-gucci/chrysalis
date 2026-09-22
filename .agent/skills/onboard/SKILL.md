@@ -1,17 +1,17 @@
 ---
 name: onboard
-description: "Interactive autonomous onboarding engine: detects environment telemetry and timezone, guides the user through a 4-step intake interview or archetype preset, compiles Life-Roadmap.md and tag_registry, seeds Scheduling-Memory.md multipliers and candidate pools, and runs pre-flight /doctor validation."
+description: "Interactive autonomous onboarding engine: detects environment telemetry and timezone, guides the user through a 4-step intake interview or archetype preset, compiles Life-Roadmap.md and tag_registry, seeds System/Memory.md multipliers and candidate pools, and runs pre-flight /doctor validation."
 trigger: "/onboard"
 domain: runtime
 reads:
   - "System/Life-Roadmap.md"
-  - "System/Scheduling-Memory.md"
+  - "System/Memory.md"
   - "System/_templates/Life-Roadmap.template.md"
-  - "System/_templates/Scheduling-Memory.template.md"
+  - "System/_templates/Memory.template.md"
 writes:
   - "System/Life-Roadmap.md"
-  - "System/Scheduling-Memory.md"
-  - "chrysalis/Tasks/*.md"
+  - "System/Memory.md"
+  - "chrysalis/TaskNotes/Tasks/*.md"
 ---
 
 > Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
@@ -24,7 +24,7 @@ writes:
 ### Step 1: Pre-Flight State & Environment Detection
 1. **Timezone Offset Detection:**
    * Inspect current local timezone from runtime environment (e.g., `-05:00`, `-04:00`, `+01:00`).
-   * Read `System/Scheduling-Memory.md`. If missing, copy from `System/_templates/Scheduling-Memory.template.md` and stamp the detected `timezone_offset`.
+   * Read `System/Memory.md`. If missing, copy from `System/_templates/Memory.template.md` and stamp the detected `timezone_offset`.
 2. **Roadmap Existence Check:**
    * Read `System/Life-Roadmap.md`.
    * If `Life-Roadmap.md` already contains an active customized roadmap, prompt the user whether they wish to **(A) Refine current roadmap**, or **(B) Full Reset & Re-Onboard**.
@@ -69,13 +69,13 @@ When the user selects an archetype or provides their priorities:
 
 1. **Write `System/Life-Roadmap.md`:**
    * Serialize the compiled frontmatter with valid `tag_registry`, `active_pillar`, and formatted Markdown body.
-2. **Update `System/Scheduling-Memory.md`:**
+2. **Update `System/Memory.md`:**
    * Update `system_state.active_pillar` to match Pillar 1.
    * Inject all compiled tags into `tag_multipliers` initialized to baseline `1.00`.
    * Inject matching tags into `inferred_task_pool.learning_weights` initialized to `1.00`.
    * Seed the `inferred_task_pool.tasks` with 2–4 starter candidate tasks extracted from Milestone M1.1.
 3. **Generate Starter Task Notes:**
-   * If requested, generate 1–2 initial starter task notes in `chrysalis/Tasks/*.md` (or `TaskNotes/Tasks/*.md`) adhering strictly to the Universal Chrysalis Task Frontmatter Schema (`status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
+   * If requested, generate 1–2 initial starter task notes in `chrysalis/TaskNotes/Tasks/*.md` adhering strictly to the Universal Chrysalis Task Frontmatter Schema (`status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
 
 ---
 
@@ -85,5 +85,5 @@ When the user selects an archetype or provides their priorities:
 2. Verify:
    * **Check #1:** Universal frontmatter schema valid.
    * **Check #2:** Explicit local timezone serialized.
-   * **Check #3:** 100% tag alignment between `Life-Roadmap.md` and `Scheduling-Memory.md`.
+   * **Check #3:** 100% tag alignment between `Life-Roadmap.md` and `System/Memory.md`.
 3. Report final system health to the user and present tomorrow's initial focus schedule.

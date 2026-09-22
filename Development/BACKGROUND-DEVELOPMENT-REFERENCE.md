@@ -2,6 +2,8 @@
 
 For numbered setup steps and copy-and-paste instructions, use the [beginner walkthrough](BACKGROUND-DEVELOPMENT.md). This document retains the technical design and optional deployment choices.
 
+The [automated background role policy](AGENT-WORKFLOW.md#automated-background-development) governs this loop: Antigravity implements and repairs; Codex independently reviews and handles assigned escalations; scripts coordinate. Ordinary interactive development normally stays in Antigravity, including architecture and debugging, with Codex used selectively. Dated setup claims below are historical; check the current handoff before repeating a milestone.
+
 ## The intended experience
 
 Use the personal vault to pursue the Life Roadmap. Let a development process turn a small, prioritized engineering backlog into tested improvements. Review a short digest and the decisions that change how the product works. Routine investigation, implementation, tests, review feedback, and release preparation should proceed within a standing scope.
@@ -28,7 +30,7 @@ flowchart TD
 
 A worktree is a separate working folder attached to the same Git repository. It lets a background task edit code without interfering with the files open in your normal development session. A release candidate is a named version that has passed its checks and is ready to try in the personal installation.
 
-There are two separate loops: engineering improves the framework; the installed framework supports daily life. The existing gateway is part of the second loop. It does not need to become the development supervisor.
+There are two separate loops: engineering improves the framework; the installed framework supports daily life. The framework operates directly on local Markdown files conforming to mdbase v0.3 specifications without requiring a background gateway daemon.
 
 ## 1. Establish a source baseline once
 
@@ -46,10 +48,10 @@ The green baseline makes future failures attributable. It does not mean the outs
 
 Implement **B01** so each proposed change automatically runs the same checks. Its local milestone enables the beginner setup; hosted CI is a later milestone that must be verified before relying on it for automatic remote integration. Continuous integration, or CI, runs these checks for a candidate independently of the implementing chat.
 
-Use the existing setup command in a fresh development checkout with Python, Flutter and the native build tools available:
+Use the setup command in a fresh development checkout with Python 3.14 available:
 
 ```bash
-bash Development/scripts/setup-dev.sh --mobile
+bash Development/scripts/setup-dev.sh
 ```
 
 The existing check commands are documented in [TESTING.md](TESTING.md). The validation entry point should collect their exit codes, keep readable logs, and fail when a required check fails. It should also run the privacy audit against all candidate additions and changes. No personal vault path or calendar credential belongs in this environment.
@@ -64,7 +66,7 @@ Configure the repository's required checks when publishing is enabled. Agent-wri
 
 The desktop app supports scheduled local-project work in isolated worktrees and shows results in Scheduled. Local runs require the computer to remain on, the app running, and the project accessible. Codex CLI itself does not have the Scheduled management interface. [Official scheduled-task documentation](https://learn.chatgpt.com/docs/automations).
 
-Configure the source project with a worktree setup step invoking `bash Development/scripts/setup-dev.sh --mobile`. Codex local environments can run setup on worktree creation and store their configuration under the project's `.codex` directory. Review and allowlist the specific generated configuration before sharing it. [Official local-environment documentation](https://learn.chatgpt.com/docs/environments/local-environment).
+Configure the source project with a worktree setup step invoking `bash Development/scripts/setup-dev.sh`. Codex local environments can run setup on worktree creation and store their configuration under the project's `.codex` directory. Review and allowlist the specific generated configuration before sharing it. [Official local-environment documentation](https://learn.chatgpt.com/docs/environments/local-environment).
 
 Proposed starting settings, to use after B02 passes its rehearsal:
 
@@ -87,21 +89,9 @@ Use the [builder prompt](_templates/background-builder.prompt.md). Test one run 
 
 Use this route when the development host should work while the desktop app is closed. A Linux service/timer can launch a bounded command; the wrapper must implement B02's locking, queue, time limit, recovery, and digest behavior. Run it on the development host with source and synthetic fixtures available.
 
-The installed CLI's help was checked during this review. It supports `codex exec`, an explicit working directory, a workspace-write sandbox, structured output, and saving the final response. The non-interactive interface can also reuse saved local authentication. [Official non-interactive documentation](https://learn.chatgpt.com/docs/non-interactive-mode).
+The runner must resolve and privately pin the verified Antigravity CLI for implementation and the Codex CLI for review. Check each installed interface, authentication, project/worktree selection and scoped permissions before a synthetic rehearsal. A desktop launcher called `agy` is not interchangeable with the headless agent CLI. See the [beginner setup](BACKGROUND-DEVELOPMENT.md#step-4--connect-antigravity-implementation-to-codex-review) for this verification and the [official Codex non-interactive documentation](https://learn.chatgpt.com/docs/non-interactive-mode) for its reviewer interface.
 
-For a runner that has already created and claimed an issue worktree, a command has this shape. It is an invocation example, not an installed service:
-
-```bash
-codex exec \
-  --cd ../chrysalis-worktrees/B03 \
-  --sandbox workspace-write \
-  --output-last-message /tmp/chrysalis-builder-result.md \
-  - < Development/_templates/background-builder.prompt.md
-```
-
-The runner must supply the assignment required by that template, use unique retained output locations for real runs, inspect the actual result, and trigger review only after validation. A successful process exit alone does not mean the issue is complete. Preserve interrupted work and record a blocker when authentication or a required tool is unavailable.
-
-An existing Antigravity implementation workflow can fill the builder role after a successful non-interactive rehearsal. Start with one agent tool if that is easier to operate. A separate Codex review invocation can provide a fresh review context; operating two products is optional.
+After claiming a worktree, supply the complete assignment required by the [builder template](_templates/background-builder.prompt.md) to Antigravity. Use unique retained output locations, inspect the actual candidate, run trusted validation, then give the unchanged result and receipts to a separate Codex review invocation. A successful process exit alone does not mean the issue is complete. Preserve interrupted work and report unavailable authentication or tools without silently changing providers. A different interactive provider choice does not reconfigure this background loop.
 
 ### Later: hosted checks and agent work
 

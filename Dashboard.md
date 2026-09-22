@@ -23,7 +23,7 @@ TABLE
     energy as "Energy",
     due as "Due Date",
     file.folder as "Folder"
-FROM "chrysalis/Tasks" OR "TaskNotes/Tasks"
+FROM "chrysalis/TaskNotes/Tasks" OR "TaskNotes/Tasks" OR "chrysalis/Tasks"
 WHERE status = "todo" AND file.name != "example-task"
 SORT urgency_tier DESC, priority DESC, due ASC
 ```
@@ -37,7 +37,7 @@ TABLE
     scheduled as "Scheduled Block",
     priority as "Priority",
     energy as "Energy"
-FROM "chrysalis/Tasks" OR "TaskNotes/Tasks"
+FROM "chrysalis/TaskNotes/Tasks" OR "TaskNotes/Tasks" OR "chrysalis/Tasks"
 WHERE scheduled != null AND date(scheduled).day = date(today).day AND date(scheduled).month = date(today).month AND date(scheduled).year = date(today).year AND status != "done" AND status != "archived"
 SORT scheduled ASC
 ```

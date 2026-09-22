@@ -1,10 +1,13 @@
 # Chrysalis background builder
 
+Default background provider: Antigravity. Follow the automated-background section of Development/AGENT-WORKFLOW.md. This template does not assign providers for ordinary interactive development. A Codex refactor is a separately assigned background job; do not silently substitute Codex when Antigravity is unavailable.
+
 This is a reusable execution prompt. It does not install a schedule, create a task claim, or grant publishing/deployment access. The caller supplies the assignment and applicable standing scope after completing B00–B02 in Development/BACKLOG.md.
 
 ## Required assignment from the runner
 
 - Issue ID and bounded acceptance criteria, selected from the authoritative engineering backlog.
+- Job kind and selected provider, following the shared role policy.
 - Reviewed baseline revision and assigned worktree/branch.
 - Durable run/claim identifier and the runner-managed state/receipt locations.
 - Remaining attempts and time/usage budget.
@@ -26,4 +29,4 @@ Constitution/policy rewrites, runtime skill self-mutation, private schema migrat
 
 ## Result
 
-Return: state; issue ID; baseline; candidate identity; changed paths; user-visible behavior; commands and exit codes; remaining risk; receipt location; next required transition. A builder cannot mark its own work independently reviewed, integrated, or deployed.
+Return a concise packet: state; issue ID; job kind/provider; baseline; candidate identity; changed paths; user-visible behavior; commands and exit codes; remaining risk; receipt location; provider-reported usage (or unknown); next required transition. Keep full private logs out of the handoff unless needed to explain a failure. A builder cannot mark its own work independently reviewed, integrated, or deployed.

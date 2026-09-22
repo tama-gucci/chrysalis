@@ -20,10 +20,27 @@
 !/update.sh
 !/update.py
 !/mdbase.yaml
+!/pytest.ini
 
-# 3. Whitelist _types Directory
+# 2b. Whitelist Framework Documentation & Test Fixtures
+!/docs/
+!/docs/**
+!/fixtures/
+!/fixtures/**
+
+# 3. Whitelist _types and contracts Directories
 !/_types/
 !/_types/**
+!/contracts/
+!/contracts/**
+!/_contracts/
+!/_contracts/**
+!/_templates/
+!/_templates/**
+!/helpers/
+!/helpers/**
+helpers/**/__pycache__/
+helpers/**/*.pyc
 
 # 4. Whitelist System Architecture, Public Templates & Environment Tools ONLY
 !/System/
@@ -70,12 +87,17 @@
 !/Development/BACKGROUND-DEVELOPMENT.md
 !/Development/BACKGROUND-DEVELOPMENT-REFERENCE.md
 !/Development/BACKLOG.md
+!/Development/FEEDBACK.md
+!/Development/SPARK-INTEGRATION-ASSESSMENT.md
 !/Development/_templates/
 !/Development/_templates/**
 !/Development/scripts/
 !/Development/scripts/**
 !/Development/skills/
 !/Development/skills/**
+
+# Private feedback stays local; only sanitized engineering summaries are public.
+/Development/feedback/
 
 # 7. Whitelist Chrysalis & Legacy TaskNotes Views, Workflows, Templates & Example Task ONLY
 !/chrysalis/

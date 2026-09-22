@@ -1,0 +1,36 @@
+TRANSCRIPT: CS 410 Lecture 04 — Raft Consensus & Log Matching Invariant
+Recorded: 2026-09-22 14:05:12-05:00 | Siebel 1404
+Speaker: Prof. Alex Vance
+
+[00:00:02] Prof. Vance: Welcome back, everyone. Today we are diving deep into the core
+safety invariant of the Raft consensus protocol: the Log Matching Property.
+
+[00:00:18] If you recall from last Tuesday, we distinguished leader election from log
+replication. Today I want to make an emphatic point about why Raft never requires
+complex commit-rollback protocols like Paxos. It all hinges on one inductive invariant.
+
+[00:01:05] Here is the formal definition: The Log Matching Invariant states two things.
+First: If two entries in different logs have the same integer index and the same term,
+they store the exact same state machine command. Why? Because a leader creates at most
+one entry with a given index in a given term, and leader logs are append-only.
+
+[00:02:14] Second: If two entries in different logs have the same index and term, then
+their logs are identical in all preceding entries, from index 1 up to index N.
+
+[00:03:01] Student Question: Prof. Vance, how does the leader enforce that second property
+during AppendEntries RPCs?
+
+[00:03:15] Prof. Vance: Excellent question. The leader includes the term and index of
+its immediately preceding entry in the AppendEntries RPC—prevLogIndex and prevLogTerm.
+If the follower doesn't find a matching entry in its local log with that exact index
+and term, it rejects the RPC. This is the consistency check. When the follower accepts,
+it guarantees induction holds.
+
+[00:04:45] Therefore, commit safety is guaranteed: once a leader commits an entry by
+replicating it on a majority of servers in its current term, that entry is guaranteed
+to be present in the logs of all future leaders.
+
+# MOCKED REASONING & EXTERNAL EFFECTS LABELS:
+# [MOCKED_REASONING: ZETTEL_CONCEPT_EXTRACTION]: Extract atomic theoretical concept ("Raft Log Matching Invariant and Commit Safety") rather than monolithic transcript dump.
+# [MOCKED_REASONING: HYPERGRAPH_LINKING]: Mint chronological ID (20260922143000-raft-log-matching-invariant), link to parent project [[Projects/cs410/Roadmap]], and record source SHA-256 provenance checksum.
+# [MOCKED_EXTERNAL_EFFECT: AUDIO_STREAM_INGEST]: Simulated automated speech-to-text transcript ingest pipeline.

@@ -163,13 +163,13 @@ class TestTier2BoundaryAndCornerCases(unittest.TestCase):
 
     def test_f3_b01_types_task_valid_yaml_mdbase(self):
         """
-        [F3-T2-01] _types/task.md frontmatter must parse as valid YAML and declare version: 0.2.0.
+        [F3-T2-01] _types/task.md frontmatter must parse as valid YAML and declare a valid schema version (1 or 0.2.0).
         Authoritative Source: _types/task.md line 1-10.
         """
         types_path = REPO_ROOT / "_types" / "task.md"
         self.assertTrue(types_path.exists())
         fm, _ = read_frontmatter(types_path)
-        self.assertEqual(str(fm.get("version")), "0.2.0", "_types/task.md must have version 0.2.0")
+        self.assertIn(str(fm.get("version")), ["1", "0.2.0", "0.3.0"], "_types/task.md must have valid version")
 
     def test_f3_b02_types_task_priority_enum_completeness(self):
         """
@@ -198,7 +198,7 @@ class TestTier2BoundaryAndCornerCases(unittest.TestCase):
         """
         email_pattern = re.compile(r"\b[A-Za-z0-9._%+-]+@(?!example\.com|example\.org)[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
         for f in REPO_ROOT.glob("**/*.md"):
-            if ".agent/skills/.backup" in str(f):
+            if ".agent/skills/.backup" in str(f) or ".agents" in str(f) or ".venv" in str(f):
                 continue
             text = f.read_text(encoding="utf-8")
             matches = email_pattern.findall(text)

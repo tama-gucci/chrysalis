@@ -4,9 +4,9 @@ description: "Parses shorthand task input, extracts project tags and cognitive m
 trigger: "/task"
 domain: runtime
 reads:
-  - "System/Scheduling-Memory.md"
+  - "System/Memory.md"
 writes:
-  - "chrysalis/Tasks/*.md"
+  - "chrysalis/TaskNotes/Tasks/*.md"
 ---
 
 > Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
@@ -27,14 +27,14 @@ writes:
      - `synthesis`: Zettelkasten notes, reading, portfolio review.
      - `administrative`: student portals, emails, forms, payments.
 3. **Multiplier Resolution & Fallback Rule:**
-   * Read `tag_multipliers` from `System/Scheduling-Memory.md`.
+   * Read `tag_multipliers` from `System/Memory.md`.
    * Look up the active multiplier matching the assigned tag (baseline `1.00` fallback).
    * Compute effective duration:
      $$\text{timeEstimate} = \text{round}(\text{base\_estimate} \times \text{multiplier})$$
 4. **Zettelkasten Hypergraph Association:**
    * If `project_ref` is present, scan that project's `## 3. Reference Files & Contacts` section for linked Zettels in `Slipbox/`.
    * Inject matching Zettel references into `linked_zettels` frontmatter array.
-5. **File Generation:** Create a new file in `chrysalis/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
+5. **File Generation:** Create a new file in `chrysalis/TaskNotes/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
 
 ```yaml
 ---

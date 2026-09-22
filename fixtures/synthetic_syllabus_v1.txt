@@ -1,0 +1,62 @@
+================================================================================
+COLLEGE OF ENGINEERING — DEPARTMENT OF COMPUTER SCIENCE
+CS 410: ADVANCED DISTRIBUTED SYSTEMS & CONSENSUS ALGORITHMS
+FALL SEMESTER 2026 | 4 CREDIT HOURS
+================================================================================
+
+INSTRUCTOR:
+  Prof. Alex Vance (avance@example.com)
+  Office: Siebel Center 3102 | Office Hours: Tue/Thu 14:00 - 15:30 -05:00
+
+COURSE OVERVIEW:
+  CS 410 covers theoretical and practical foundations of fault-tolerant distributed
+  systems. Topics include logical time, vector clocks, state machine replication,
+  consensus (Paxos, Raft, Byzantine fault tolerance), distributed transactions
+  (2PC, Spanner), and consistency models (linearizability vs. eventual consistency).
+
+PREREQUISITES:
+  CS 241 (System Programming) and CS 374 (Algorithms & Models of Computation).
+
+GRADING POLICY:
+  - Problem Sets (20%): Mathematical proofs and protocol traces.
+  - Programming Labs (30%): Go-based implementations of distributed protocols.
+  - Midterm Exam (20%): In-class theoretical examination.
+  - Final Project (30%): Complete distributed key-value store with consensus.
+
+COURSE DELIVERABLES & SCHEDULE (Reference Date: 2026-09-22):
+--------------------------------------------------------------------------------
+1. Problem Set 1: Vector Clocks and Distributed State
+   - Due Date: 2026-09-27 23:59:00-05:00 (5 days from reference date)
+   - Scope: Proof of causal delivery invariants using vector timestamps.
+   - Deliverable ID: cs410-ps1
+   - Horizon Classification: Near-Term (within 14-day planning horizon)
+   - Modality: Analytical | Urgency Tier: 2 | Est Duration: 120 min
+
+2. Lab 1: Raft Consensus RPC Skeleton
+   - Due Date: 2026-10-04 23:59:00-05:00 (12 days from reference date)
+   - Scope: Implement RPC transport, election timer jitter, and heartbeat loops.
+   - Deliverable ID: cs410-lab1
+   - Horizon Classification: Near-Term (within 14-day planning horizon)
+   - Modality: Analytical | Urgency Tier: 3 | Est Duration: 180 min
+
+3. Midterm Examination
+   - Due Date: 2026-10-25 10:00:00-05:00 (33 days from reference date)
+   - Scope: In-class exam covering logical clocks, FLP impossibility, and Raft.
+   - Deliverable ID: cs410-midterm
+   - Horizon Classification: Long-Term (outside 14-day planning horizon)
+   - Modality: Analytical | Urgency Tier: 3 | Est Duration: 90 min
+
+4. Final Distributed KV-Store Project
+   - Due Date: 2026-12-10 23:59:00-05:00 (79 days from reference date)
+   - Scope: Multi-node sharded Raft key-value database with dynamic rebalancing.
+   - Deliverable ID: cs410-final-proj
+   - Horizon Classification: Long-Term (outside 14-day planning horizon)
+   - Modality: Synthesis | Urgency Tier: 4 | Est Duration: 360 min
+================================================================================
+
+# MOCKED REASONING & EXTERNAL EFFECTS LABELS:
+# [MOCKED_REASONING: ENTITY_EXTRACTION]: Agent parser extracts course code (CS 410), title, instructor, semester window (2026-09-01 -> 2026-12-15).
+# [MOCKED_REASONING: DELIVERABLE_PARTITIONING]: Deliverables partitioned against 14-day horizon (reference: 2026-09-22, cutoff: 2026-10-06). Near-term active: cs410-ps1, cs410-lab1. Out-of-horizon inert: cs410-midterm, cs410-final-proj.
+# [MOCKED_REASONING: MODALITY_PAIRING]: cs410-ps1 and cs410-lab1 -> modality: analytical; cs410-final-proj -> modality: synthesis.
+# [MOCKED_EXTERNAL_EFFECT: LMS_DEADLINE_SYNC]: Simulated Canvas/Blackboard LMS verification webhook query.
+# [MOCKED_EXTERNAL_EFFECT: CALENDAR_EXPORT]: External Google Calendar event export suppressed (googleCalendarEventId: null) per calendar decoupling invariant.

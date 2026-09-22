@@ -1,8 +1,8 @@
 # Set up background development: a beginner's guide
 
-This guide shows you how to have Codex improve Chrysalis while you spend your time using your personal vault.
+This guide shows you how to have Antigravity and Codex improve Chrysalis while you spend your time using your personal vault.
 
-**You will mostly copy messages into a chat. Codex will do the coding, testing, and setup work.** Follow the steps in order and check the result at the end of each one. You can pause between steps and return later.
+**For the automated background loop, Antigravity handles implementation; Codex handles review, unresolved bug investigation, refactoring and architecture.** Interactive development normally stays in Antigravity, including design and debugging; Codex is used selectively. This guide sets up the automated loop so you do not have to relay its messages each day. Follow the steps in order and check the result at the end of each one. You can pause between steps and return later.
 
 The first setup requires some development: Chrysalis has a backlog and instructions, but the complete automatic workflow still needs to be built. Creating a scheduled chat alone would not finish that work.
 
@@ -27,6 +27,24 @@ Three terms used in the app:
 
 The initial setup keeps development on your computer. Connecting automatic checks to GitHub can come later.
 
+## Continue from the completed setup
+
+The local checkpoint `93cc21a` contains the completed starting-version repair and local checks from Steps 1–3. If your checkout contains that checkpoint and the recorded setup still works, continue at **Step 4**. There is no need to rebuild those steps. Hosted GitHub checks remain pending.
+
+The fixed provider split in the [agent role policy](AGENT-WORKFLOW.md#automated-background-development) applies to automated background work and its supervised rehearsals. It does not require a Codex handoff for ordinary interactive development. The automated daily flow will be:
+
+**Schedule starts the runner → Antigravity makes one change → scripts run checks → Codex reviews → the runner saves accepted work.**
+
+Codex still reads the relevant code and uses tools during its review, investigation or refactoring. Giving it the finished change and a short test report helps avoid repeating the implementation work.
+
+### Can a Codex scheduled task launch Antigravity?
+
+A local task that can execute commands can call the installed Antigravity CLI as a child process. This is a way to connect the two tools, inferred from their documented command-execution and headless interfaces. It is not a built-in provider switch. Keep the development computer awake and Codex running, with the required local permissions and authentication. [Codex scheduling documentation](https://learn.chatgpt.com/docs/automations).
+
+Antigravity documents a single unattended invocation using `agy -p`, with `--output-format json` and `--print-timeout`. Step 4 must verify the installed executable, working folder and scoped tool permissions. Some denied tools can still produce a successful process exit; actual changes and checks determine completion. [Antigravity headless documentation](https://antigravity.google/docs/cli/headless/).
+
+The scheduled Codex task still uses Codex usage to start the routine and review results; Antigravity uses its own configured account/provider. Measure both before claiming savings. An operating-system timer can later start the same runner directly if reducing Codex coordination overhead is worthwhile.
+
 ## Step 1 — Open the Chrysalis development project
 
 **You do this:**
@@ -36,7 +54,7 @@ The initial setup keeps development on your computer. Connecting automatic check
 3. Start a chat in that project. Keep it open for Steps 1–4.
 4. Let any other agent currently editing that same project finish first.
 
-The correct folder contains **AGENTS.md**, **Development**, and **apps**. The personal vault containing your daily notes is a different folder.
+The correct folder contains **AGENTS.md**, **ARCHITECTURE.md**, **mdbase.yaml**, **_types**, **contracts**, and **Development**. The personal vault containing your daily notes is a different folder.
 
 **Copy this into the chat:**
 
@@ -60,6 +78,8 @@ The source review found five failing tests. Have Codex recheck and fix those bef
 
 ```text
 Complete the starting-version repair described as B00 in Development/BACKLOG.md.
+
+Follow Development/AGENT-WORKFLOW.md: use Antigravity for implementation and a separate Codex invocation for review. Verify the CLI connection before handing work over.
 
 Preserve existing work. Recheck and fix the task-schema and mailbox-contract failures from Development/REVIEW-2026-09-15.md. Run the required tests and privacy checks.
 
@@ -87,6 +107,8 @@ You should not have to remember a list of test commands.
 ```text
 Complete the local-check milestone of B01 in Development/BACKLOG.md.
 
+Use Antigravity for implementation and Codex for architecture decisions and a separate review, following Development/AGENT-WORKFLOW.md.
+
 Create and verify one command that runs the required development checks and reports failures clearly. Include the candidate privacy checks. Use the existing setup tools where appropriate.
 
 Test it in a fresh development working folder. Verify that a failing required check produces a failed overall result. Arrange a separate review and save the reviewed result after /audit-dev.
@@ -98,20 +120,28 @@ Keep hosted GitHub checks recorded as pending if they have not actually run. Giv
 
 You do not need to type that command each day. The next step connects it to the background job.
 
-## Step 4 — Ask Codex to build the daily routine
+## Step 4 — Connect Antigravity implementation to Codex review
 
-This is the largest setup step. The agent needs to build the missing connection between choosing work, making changes, checking them, and saving the result.
+This is the largest remaining setup step. Codex directs the setup and reviews the design; Antigravity implements the runner. The runner is a small program that chooses work, launches the appropriate agent, runs checks and saves the result. You do not need to write it yourself.
 
 **Copy this into the same chat:**
 
 ```text
 Build the development routine described in B02 in Development/BACKLOG.md, using its verified local-check prerequisite.
 
+Apply the automated-background section of Development/AGENT-WORKFLOW.md to this setup and future runs of this loop. Use Antigravity CLI for implementation and normal repair work. Use Codex for review, unresolved bug investigation, scoped refactoring and architecture within the loop. This fixed split does not govern ordinary interactive development. Codex may read source and run focused tools for its assigned jobs. Do not repeat completed Steps 1–3.
+
+First verify both installed CLI executables and the Antigravity headless interface. Store executable paths privately. Verify authentication, required tool permissions and the assigned working directory with a small synthetic rehearsal before relying on unattended work. If a provider is unavailable, preserve the work and report the problem without silently switching providers.
+
+Connect the private feedback inbox using Development/FEEDBACK.md. Assess new or changed feedback within the run budget, route architectural proposals to Codex, and link sanitized actionable items to the existing engineering queue. Test this with synthetic feedback and report code completion separately from installation and verified daily-use improvement.
+
 Start with one worker and one small ready item at a time. Use isolated worktrees, durable task ownership, and saved progress so repeated or interrupted runs cannot duplicate work.
 
-Connect implementation, actual validation, a separate review invocation, and at most two repair attempts. Accepted changes may be integrated into a dedicated local development branch after review and /audit-dev. Record the exact integrated revision. Keep publication and personal-vault installation outside this daily routine.
+Use ordinary scripts to launch and wait for agents, manage state and run the trusted B01 checker from outside the candidate checkout. Connect Antigravity implementation, actual validation, a separate Codex review invocation, and at most two repair attempts. Give the reviewer the exact candidate, concise change summary and check receipt; keep full logs private and read them as needed. Verify actual work even if an agent exits successfully.
 
-Implement a 45-minute maximum per run. Explain how usage is measured and ask for any spending limit that is genuinely needed before enabling paid execution. Preserve unfinished work when a limit is reached.
+Accepted changes may be integrated into a dedicated local development branch after review and /audit-dev. Bind integration to the unchanged candidate identified in the successful receipts, and record the exact integrated revision. Keep publication and personal-vault installation outside this daily routine.
+
+Implement a 45-minute maximum per run. Record each provider's reported usage separately, marking unavailable values unknown. Explain which limits can actually be enforced and ask for any spending limit that is genuinely needed before enabling paid execution. Preserve unfinished work when a limit is reached.
 
 Test startup, repeat invocation, interruption recovery, and the handoff to review. Configure and verify worktree setup and the specific tool permissions the routine needs.
 
@@ -120,9 +150,9 @@ Save the exact operating instructions in Development/AUTOMATION-RUN.md, adding i
 Leave recurring execution off. Report which parts you actually built and verified, and what remains incomplete.
 ```
 
-**This step is done when:** Codex has built and tested the routine and created **Development/AUTOMATION-RUN.md** with real operating instructions.
+**This step is done when:** Antigravity has implemented the routine, Codex has reviewed it, the connection between them has been tested, and **Development/AUTOMATION-RUN.md** contains real operating instructions.
 
-That file does **not** exist just because this guide names it. Codex creates it during this step. The existing builder/reviewer prompt templates alone are not the complete routine.
+That file does **not** exist just because this guide names it. It is created during this step. The existing builder/reviewer prompt templates alone are not the complete routine.
 
 If Codex gives you another design document instead of doing the work, reply:
 
@@ -143,6 +173,8 @@ Read Development/AUTOMATION-RUN.md and execute one complete development run now,
 
 Choose one ready bounded repair from the backlog. Carry it through implementation, checks, separate review, and the configured local integration step.
 
+Follow the shared role policy: Antigravity implements, scripts check, Codex reviews. Report which provider actually did each job and its recorded usage.
+
 Do not enable recurrence during this trial. Show me what changed, whether checks and review passed, where the result was saved, and whether any part still needs my attention.
 ```
 
@@ -161,7 +193,7 @@ The manual Chrysalis development trial has passed. Create one daily scheduled ta
 
 Use the exact tested entry point and operating instructions in Development/AUTOMATION-RUN.md. Use this source project and the worktree arrangement verified during setup.
 
-Run at most one development item at a time, using the existing checks, separate review, limits, and local integration policy. Finish with a short result summary.
+Run at most one development item at a time, using the shared Antigravity/Codex role policy, existing checks, separate review, limits, and local integration policy. Use the tested runner for coordination. Finish with a short result summary.
 
 Verify that the task was actually created. Tell me its project, next run time, and how to pause it. If your current tools cannot create it, say so and give me the exact prompt and settings to enter in Scheduled.
 ```
@@ -212,9 +244,9 @@ When the preview is satisfactory, you can reply:
 Apply the exact release you just previewed to that confirmed installation. Verify the affected workflow and report the result.
 ```
 
-**This step is done when:** Codex identifies the installed version and reports the result of checking the affected workflow in that installation.
+**This step is done when:** The assigned agent identifies the installed version and reports the result of checking the affected workflow in that installation. Antigravity is the normal choice for this interactive release work; Codex is optional.
 
-Initially, that keeps release decisions in one short weekly conversation. After several reliable releases, you can ask Codex to automate compatible updates under a defined release policy.
+Initially, that keeps release decisions in one short weekly conversation. After several reliable releases, you can ask the assigned agent to prepare automation for compatible updates under a defined release policy. Any new background loop must explicitly define its provider routing and acceptance rules.
 
 ## If something goes wrong
 

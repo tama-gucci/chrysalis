@@ -12,4 +12,4 @@ Link related notes with wikilinks. Project roadmaps can reference the notes, and
 
 `System/scripts/zettel_graph_linker.py --vault <runtime-vault>` links using tags and existing wikilinks. Review its output for relevance. Notes tagged `#chrysalis` can be reviewed during a requested development evolution pass.
 
-Audio transcription, lecture synthesis, and automated document ingestion remain agent-assisted workflows or planned automation. Sharing a recording into the mobile app does not prove that it has been transcribed, synthesized, or synchronized. Current limitations are recorded in [STATUS.md](../STATUS.md).
+Audio transcription, lecture synthesis, and automated document ingestion are governed by the ingestion pipeline (`Sources/{source_id}.md`) and agent runtime contracts. Audio or lecture recordings are staged into `Sources/` with SHA-256 provenance digests before being extracted into Zettels and project deliverables. Current capabilities are recorded in [STATUS.md](../STATUS.md).

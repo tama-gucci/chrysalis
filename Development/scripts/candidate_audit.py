@@ -28,8 +28,8 @@ PATTERNS = {
 }
 EMAIL = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
 PRIVATE_PROBES = (
-    'System/Life-Roadmap.md', 'System/Scheduling-Memory.md', 'System/System-Health.md',
-    'System/Changelog.md', 'chrysalis/System/Scheduling-Memory.md',
+    'System/Life-Roadmap.md', 'System/Memory.md', 'System/Scheduling-Memory.md', 'System/System-Health.md',
+    'System/Changelog.md', 'chrysalis/System/Memory.md', 'chrysalis/System/Scheduling-Memory.md',
     'chrysalis/Tasks/private.md', 'TaskNotes/Tasks/private.md',
     'chrysalis/Archive/private.md', 'TaskNotes/Archive/private.md',
     'chrysalis/Daily/2026-09-16.md', '2026-09-16.md',
@@ -61,7 +61,7 @@ def quarantined(path):
         return True
     if re.search(r'(^|/)(chrysalis|TaskNotes)/(Tasks|Archive|Daily)/', path):
         return path not in ('chrysalis/Tasks/example-task.md', 'TaskNotes/Tasks/example-task.md')
-    if re.search(r'(^|/)System/(Life-Roadmap|Scheduling-Memory|System-Health|Changelog)\.md$', path):
+    if re.search(r'(^|/)System/(Life-Roadmap|Memory|Scheduling-Memory|System-Health|Changelog)\.md$', path):
         return True
     if re.match(r'\d{4}-\d{2}-\d{2}.*\.md$', p.name):
         return True

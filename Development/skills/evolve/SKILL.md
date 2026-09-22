@@ -78,7 +78,7 @@ For each unintegrated note, analyze the 5 Chrysalis integration pathways:
 1. **Workflows:** Automated Chrysalis pipelines in `chrysalis/Workflows/`.
 2. **Skills:** Modular skill additions, protocol enhancements, or new slash commands in `.agent/skills/`.
 3. **Dashboard UI:** Obsidian Dataview blocks, callouts, or summaries in `Dashboard.md`.
-4. **Operational Memory:** Schema additions or diurnal telemetry expansions in `System/Scheduling-Memory.md`.
+4. **Operational Memory:** Schema additions or diurnal telemetry expansions in `System/Memory.md`.
 5. **Orchestrator Adapters:** Capability tier updates, floating alias mappings, or model release integrations in `System/Orchestrators/*`.
 
 ### Step 3: Environment & Model Telemetry Audit
@@ -97,7 +97,7 @@ For each unintegrated note, analyze the 5 Chrysalis integration pathways:
 Execute recursive self-improvement on operational skills based on telemetry friction:
 
 ### Step 1: Friction Diagnostic
-1. Scan `System/Scheduling-Memory.md` for task tags with active multipliers $> 1.40$ or tasks stalled $> 72\text{h}$.
+1. Scan `System/Memory.md` for task tags with active multipliers $> 1.40$ or tasks stalled $> 72\text{h}$.
 2. Review `schedule_refinement_memory.feedback_history` for recurring prompt friction, format overrides, or user complaints.
 
 ### Step 2: Slipbox Knowledge Retrieval
@@ -112,18 +112,18 @@ Verify that the proposed optimization satisfies all constitutional invariants:
 * Feedback gate preserved (no autonomous live changes without user review).
 
 ### Step 4: Snapshot & Mutation
-1. Execute `write_to_file` to snapshot existing skill to `chrysalis/.agent/skills/.backup/<skill>_<timestamp>.md`.
-2. Apply verified optimization to `chrysalis/.agent/skills/<skill>/SKILL.md`.
-3. Record mutation entry in `chrysalis/System/Changelog.md` under `## [Version] - YYYY-MM-DD`.
+1. Execute `write_to_file` to snapshot existing skill to `.agent/skills/.backup/<skill>_<timestamp>.md`.
+2. Apply verified optimization to `.agent/skills/<skill>/SKILL.md`.
+3. Record mutation entry in `System/Changelog.md` under `## [Version] - YYYY-MM-DD`.
 
 ---
 
 ## Protocol 3: Skill Snapshot Rollback (`/evolve --rollback [skill]`)
 
 If a self-improved skill produces degraded behavior or user rejection:
-1. Locate the most recent backup in `chrysalis/.agent/skills/.backup/<skill>_*.md`.
-2. Restore the backup to `chrysalis/.agent/skills/<skill>/SKILL.md` using `replace_file_content` / `write_to_file`.
-3. Log the rollback event in `chrysalis/System/Changelog.md`.
+1. Locate the most recent backup in `.agent/skills/.backup/<skill>_*.md`.
+2. Restore the backup to `.agent/skills/<skill>/SKILL.md` using `replace_file_content` / `write_to_file`.
+3. Log the rollback event in `System/Changelog.md`.
 4. Notify the developer of successful restoration.
 
 ---

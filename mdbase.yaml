@@ -1,8 +1,24 @@
-spec_version: "0.2.0"
+spec_version: "0.3.0"
 name: "chrysalis"
-description: "Task collection managed by chrysalis-obsidian for Obsidian"
+description: "Chrysalis AI Agent Framework authoritative mdbase v0.3 collection"
 settings:
   types_folder: "_types"
-  default_strict: false
+  contracts_folder: "_contracts"
+  record_extensions:
+    - "md"
+  validation: "error"
+  explicit_type_keys:
+    - "type"
+    - "types"
+  id_field: "id"
+  include_subfolders: true
   exclude:
     - "_types"
+    - "_contracts"
+    - "_templates"
+    - ".git"
+    - ".agents"
+    - "System"
+    - "Development"
+    - "apps"
+    - "tests"

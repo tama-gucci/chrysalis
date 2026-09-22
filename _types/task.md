@@ -1,274 +1,163 @@
 ---
+kind: mdbase.type
 name: task
-version: 0.2.0
-description: A task managed by the TaskNotes plugin for Obsidian.
-display_name_key: title
-strict: false
-path_pattern: "chrysalis/Tasks/YYYYMMDD-{title}.md"
-
+version: 1
+description: "Authoritative Chrysalis task model conforming to mdbase v0.3 and TaskNotes interop"
 match:
-  where:
-    tags:
-      contains: "task"
-
-fields:
-  title:
-    type: string
-    required: true
-    description: "Short summary of the task."
-    tn_role: title
-  status:
-    type: enum
-    required: true
-    values: [todo, in-progress, done, archived]
-    tn_completed_values: [done]
-    default: todo
-    tn_role: status
-  priority:
-    type: enum
-    values: [none, low, normal, high, urgent]
-    default: normal
-    tn_role: priority
-  due:
-    type: date
-    tn_role: due
-  scheduled:
-    type: date
-    tn_role: scheduled
-  contexts:
-    type: list
-    tn_role: contexts
-    items:
-      type: string
-  projects:
-    type: list
-    description: "Wikilinks to related project notes."
-    tn_role: projects
-    items:
-      type: link
-  timeEstimate:
-    type: integer
-    min: 0
-    description: "Estimated time in minutes."
-    tn_role: timeEstimate
-  completedDate:
-    type: date
-    tn_role: completedDate
-  dateCreated:
-    type: datetime
-    required: true
-    generated: now
-    tn_role: dateCreated
-  dateModified:
-    type: datetime
-    generated: now_on_write
-    tn_role: dateModified
-  recurrence:
-    type: string
-    tn_role: recurrence
-  recurrence_anchor:
-    type: enum
-    values: [scheduled, completion]
-    default: scheduled
-    tn_role: recurrenceAnchor
-  occurrence_materialization:
-    type: enum
-    values: [manual, on_completion, rolling]
-    default: manual
-    description: "How occurrence task notes are materialized for a recurring parent task."
-    tn_role: occurrenceMaterialization
-  occurrence_next_trigger:
-    type: enum
-    values: [completion, completion_or_skip]
-    default: completion
-    description: "Which occurrence state changes should materialize the next occurrence."
-    tn_role: occurrenceNextTrigger
-  occurrence_template:
-    type: link
-    description: "Optional template note used when materializing occurrences."
-    tn_role: occurrenceTemplate
-  occurrence_past_horizon:
-    type: string
-    description: "ISO 8601 duration controlling rolling materialization before today."
-    tn_role: occurrencePastHorizon
-  occurrence_future_horizon:
-    type: string
-    description: "ISO 8601 duration controlling rolling materialization after today."
-    tn_role: occurrenceFutureHorizon
-  recurrence_parent:
-    type: link
-    description: "Parent recurring task for a materialized occurrence note."
-    tn_role: recurrenceParent
-  occurrence_date:
-    type: date
-    description: "Target recurrence date for a materialized occurrence note."
-    tn_role: occurrenceDate
-  tags:
-    type: list
-    tn_role: tags
-    items:
-      type: string
-  timeEntries:
-    type: list
-    tn_role: timeEntries
-    items:
-      type: object
-      fields:
-        startTime:
-          type: datetime
-        endTime:
-          type: datetime
-        description:
+  path_glob: "chrysalis/Tasks/**/*.md"
+schema:
+  dialect: json-schema-2020-12
+  value:
+    $schema: "https://json-schema.org/draft/2020-12/schema"
+    $id: "https://chrysalis.dev/schemas/types/task.schema.json"
+    title: "ChrysalisTask"
+    type: object
+    additionalProperties: false
+    required:
+      - title
+      - status
+      - dateCreated
+    properties:
+      type:
+        const: task
+        description: "Explicit type identifier"
+      title:
+        type: string
+        minLength: 1
+        description: "Imperative task title describing actionable work"
+      status:
+        type: string
+        enum: [todo, in-progress, done, archived]
+        default: todo
+        description: "Lifecycle status of the task"
+      dateCreated:
+        type: string
+        format: date-time
+        description: "Creation timestamp with explicit local timezone offset"
+      created:
+        type: string
+        format: date-time
+        description: "Backward-compatible alias for dateCreated"
+      dateModified:
+        type: string
+        format: date-time
+        description: "Modification timestamp with explicit local timezone offset"
+      due:
+        type: [string, "null"]
+        format: date
+        description: "Target completion date in YYYY-MM-DD format, or null if uncertain"
+      scheduled:
+        type: [string, "null"]
+        format: date-time
+        description: "Calibrated focus window timestamp, or null if inert/staged"
+      priority:
+        type: string
+        enum: [urgent, high, normal, low, none]
+        default: normal
+        description: "Priority tier for scheduling arbitration"
+      urgency_tier:
+        type: integer
+        minimum: 1
+        maximum: 4
+        default: 2
+        description: "1 (Low) to 4 (Imminent/Blocking)"
+      modality:
+        type: string
+        enum: [analytical, kinetic, synthesis, administrative]
+        default: analytical
+        description: "Bio-cognitive work modality"
+      timeEstimate:
+        type: integer
+        minimum: 0
+        default: 45
+        description: "Estimated duration as a number of minutes"
+      energy:
+        type: string
+        enum: [high, medium, low]
+        default: medium
+        description: "Subjective energy required"
+      friction:
+        type: string
+        enum: [high, medium, low]
+        default: medium
+        description: "Anticipated resistance or cognitive startup cost"
+      micro_chunked:
+        type: boolean
+        default: false
+        description: "True if 3-step Starter Wedge has been injected into body"
+      tags:
+        type: array
+        items:
           type: string
-        duration:
-          type: integer
-  reminders:
-    type: list
-    description: "Reminder objects with id, type, offset, etc."
-    tn_role: reminders
-    items:
-      type: object
-      fields:
-        id:
+        default: ["task"]
+        description: "Taxonomy tags referencing strategic pillars"
+      linked_zettels:
+        type: array
+        items:
           type: string
-          required: true
-        type:
-          type: enum
-          values: [absolute, relative]
-        description:
-          type: string
-        relatedTo:
-          type: enum
-          values: [due, scheduled]
-          description: "Field the reminder is relative to (e.g. 'due')."
-        offset:
-          type: string
-          description: "ISO 8601 duration offset (e.g. '-PT1H')."
-        absoluteTime:
-          type: datetime
-  blockedBy:
-    type: list
-    tn_role: blockedBy
-    items:
-      type: object
-      fields:
-        uid:
-          type: link
-          required: true
-        reltype:
-          type: string
-        gap:
-          type: string
-  complete_instances:
-    type: list
-    tn_role: completeInstances
-    items:
-      type: date
-  skipped_instances:
-    type: list
-    tn_role: skippedInstances
-    items:
-      type: date
-  icsEventId:
-    type: list
-    tn_role: icsEventId
-    items:
-      type: string
-  googleCalendarEventId:
-    type: string
-    tn_role: googleCalendarEventId
-  linked_zettels:
-    type: list
-    description: "Array of wikilinks to relevant Slipbox atomic research notes."
-    items:
-      type: link
-  project_ref:
-    type: link
-    description: "Wikilink to parent project roadmap in Projects/*/Roadmap.md."
-  googleCalendarExceptionEventId:
-    type: string
-    tn_role: googleCalendarExceptionEventId
-  googleCalendarExceptionOriginalScheduled:
-    type: date
-    tn_role: googleCalendarExceptionOriginalScheduled
-  googleCalendarMovedOriginalDates:
-    type: list
-    tn_role: googleCalendarMovedOriginalDates
-    items:
-      type: date
-  urgency_tier:
-    type: number
-  energy:
-    type: string
-  friction:
-    type: string
-  micro_chunked:
-    type: boolean
-  modality:
-    type: string
-  startedAt:
-    type: datetime
-    description: "ISO 8601 timestamp with explicit local timezone offset when task execution commenced."
-  completedAt:
-    type: datetime
-    description: "ISO 8601 timestamp with explicit local timezone offset when task execution concluded."
-
-x-chrysalis:
-  nlp:
-    triggers:
-      - property_id: "tags"
-        trigger: "#"
-        enabled: true
-      - property_id: "contexts"
-        trigger: "@"
-        enabled: true
-      - property_id: "projects"
-        trigger: "+"
-        enabled: true
-      - property_id: "status"
-        trigger: "*"
-        enabled: false
-      - property_id: "priority"
-        trigger: "!"
-        enabled: false
-x-tasknotes:
-  nlp:
-    triggers:
-      - property_id: "tags"
-        trigger: "#"
-        enabled: true
-      - property_id: "contexts"
-        trigger: "@"
-        enabled: true
-      - property_id: "projects"
-        trigger: "+"
-        enabled: true
-      - property_id: "status"
-        trigger: "*"
-        enabled: false
-      - property_id: "priority"
-        trigger: "!"
-        enabled: false
+        default: []
+        description: "Array of wikilinks to relevant Slipbox atomic research notes"
+      project_ref:
+        type: [string, "null"]
+        description: "Wikilink to parent project roadmap, e.g. [[Projects/<id>/Roadmap]]"
+      deliverable_id:
+        type: [string, "null"]
+        description: "Identifier linking task to deliverable entry in parent roadmap"
+      googleCalendarEventId:
+        type: [string, "null"]
+        description: "TaskNotes Google Calendar event ID for external calendar sync"
+      date_uncertain:
+        type: boolean
+        default: false
+        description: "True if deliverable has an ambiguous deadline or is TBD"
+      startedAt:
+        type: [string, "null"]
+        format: date-time
+        description: "Timestamp when focus session commenced"
+      completedAt:
+        type: [string, "null"]
+        format: date-time
+        description: "Timestamp when task was marked done"
+collection:
+  display:
+    name_field: title
+  read_defaults:
+    status: todo
+    priority: normal
+    urgency_tier: 2
+    modality: analytical
+    timeEstimate: 45
+    energy: medium
+    friction: medium
+    micro_chunked: false
+    date_uncertain: false
+    tags: ["task"]
+    linked_zettels: []
+  links:
+    project_ref:
+      target_type: project
+      validate_exists: false
+    linked_zettels[]:
+      target_type: zettel
+      validate_exists: false
+lifecycle:
+  on_create:
+    set:
+      dateCreated: { now: true }
+      dateModified: { now: true }
+  on_update:
+    set:
+      dateModified: { now: true }
 ---
 
-# Task
+# Task Model
 
-This type definition describes the data schema for tasks managed by
-[TaskNotes](https://github.com/callumalpass/tasknotes), an Obsidian plugin
-for note-based task management.
+This type defines execution tasks managed by Chrysalis and compatible with Obsidian TaskNotes.
+Tasks reside strictly in `chrysalis/Tasks/**/*.md`.
 
-It conforms to [mdbase-spec](https://github.com/callumalpass/mdbase-spec) v0.2.0,
-a specification for typed markdown collections.
-
-TaskNotes also adds a non-standard `tn_role` field annotation on schema
-fields. This maps each field to its TaskNotes semantic role so custom
-frontmatter field names can still be interpreted consistently.
-The status field also includes `tn_completed_values`, listing
-which status values count as completed.
-
-This source schema is maintained by Chrysalis. TaskNotes-compatible `tn_role`,
-`tn_completed_values`, and `x-tasknotes` annotations are retained for interoperability.
-Plugin-generated settings are inputs for review, not authority to overwrite this file.
-Preserve the framework version, archived status, telemetry timestamps, knowledge
-links, and `x-chrysalis` metadata when reconciling plugin changes. Run the framework
-schema regression tests before accepting a regenerated schema into source.
+## Behavioral Rules:
+1. **Filename Convention**: `chrysalis/Tasks/{YYYYMMDD}-{slug}.md`. Date prefix uses `due` date if present, or `dateCreated` date if `due` is null.
+2. **Cognitive Alignment**: Tasks are categorized by cognitive modality (`analytical`, `kinetic`, `synthesis`, `administrative`) to align with ultradian rhythm windows during staging and calibration.
+3. **Inert Scheduling**: When out-of-horizon deliverables are extracted, `scheduled` remains `null`.
+4. **Calendar Sync**: External calendar synchronization is owned by TaskNotes via `googleCalendarEventId`. Chrysalis sets this field to `null` on creation.
+5. **Time Estimation**: `timeEstimate` specifies estimated execution duration as a number of minutes.

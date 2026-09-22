@@ -13,8 +13,8 @@ domain: development
 
 ## Preamble: Separation of Spheres (Runtime vs. Development)
 Chrysalis operates across two strictly segregated functional domains:
-1. **The Runtime Sphere (`vault/chrysalis/System/`, `vault/chrysalis/Tasks/` or `System/`, `chrysalis/Tasks/`):** The private, local execution substrate of daily life focus, chronotype rhythms, task execution, and personal memory. All runtime state files containing personal data are strictly quarantined from public version control. Governed by the **Runtime Constitution** ([`System/Runtime-Constitution.md`](../System/Runtime-Constitution.md)).
-2. **The Development Sphere (`vault-git/Development/`):** The engineering and architecture substrate governing open-source framework design, skill authoring, recursive self-improvement (`/evolve`), and codebase maintenance. Governed by this Development Constitution.
+1. **The Runtime Sphere (`chrysalis/System/`, `chrysalis/TaskNotes/Tasks/` or `System/`, `TaskNotes/Tasks/`):** The private, local execution substrate of daily life focus, chronotype rhythms, task execution, and personal memory. All runtime state files containing personal data are strictly quarantined from public version control. Governed by the **Runtime Constitution** ([`System/Runtime-Constitution.md`](../System/Runtime-Constitution.md)).
+2. **The Development Sphere (`Development/` in the source repository):** The engineering and architecture substrate governing open-source framework design, skill authoring, recursive self-improvement (`/evolve`), and codebase maintenance. Governed by this Development Constitution.
 
 The root **Master Constitution** ([`AGENTS.md`](../AGENTS.md)) serves as the unified single source of truth across both spheres for autonomous AI agent platforms.
 
@@ -27,21 +27,21 @@ The Chrysalis codebase is hosted on a public GitHub repository (`tama-gucci/chry
 
 ### 1. Quarantined Personal Substrates
 The following paths are designated as strictly private and MUST NEVER be tracked by git or pushed to GitHub:
-* **Personal Tasks & Archives:** `chrysalis/Tasks/*.md` and `TaskNotes/Tasks/*.md` (except `example-task.md`) and `chrysalis/Archive/*.md` / `TaskNotes/Archive/*.md`.
-* **Live System Memory & Roadmaps:** `System/Life-Roadmap.md`, `System/Scheduling-Memory.md`, `System/System-Health.md`, and `System/Changelog.md`.
-* **Daily Focus & Journal Notes:** All daily notes matching `YYYY-MM-DD*.md` and `chrysalis/Daily/*.md`.
+* **Personal Tasks & Archives:** `chrysalis/TaskNotes/Tasks/*.md`, `TaskNotes/Tasks/*.md`, and `chrysalis/Tasks/*.md` (except `example-task.md`), and task archive (`chrysalis/TaskNotes/Archive/*.md`, `TaskNotes/Archive/*.md`, `chrysalis/Archive/*.md`).
+* **Live System Memory & Roadmaps:** `System/Life-Roadmap.md`, `System/Memory.md`, `System/System-Health.md`, `System/Changelog.md`.
+* **Daily Focus & Journal Notes:** All daily notes matching `YYYY-MM-DD*.md` and `chrysalis/Daily/*.md` / `TaskNotes/Daily/*.md`.
 * **Personal Projects & Slipbox Thoughts:** `Projects/*` (except `Projects/README.md` and `Projects/_templates/**`) and `Slipbox/*` (except `Slipbox/README.md` and `Slipbox/_templates/**`).
 * **Personal Workstation Telemetry:** `System/Environment/*.md` manifests (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`) and private workstation configurations.
-* **Local Databases, Virtual Environments & Build Artifacts:** `Nexus/` SQLite databases, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, `apps/gateway/.venv/`, `apps/gateway/venv/`, `apps/mobile/.dart_tool/`, `apps/mobile/build/`, `*.token.json`, `*credentials*.json`, `*.env`, `*.db`, `*.sqlite*`, and private keys.
+* **Local Databases, Virtual Environments & Build Artifacts:** `Nexus/` SQLite databases, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, `*.token.json`, `*credentials*.json`, `*.env`, `*.db`, `*.sqlite*`, and private keys.
 
 ### 2. Mandatory 1-to-1 Public Template Matrix
 Every file type that contains personal runtime information MUST provide an exact, sanitized template in public version control:
 * `System/Life-Roadmap.md` $\to$ `System/_templates/Life-Roadmap.template.md`
-* `System/Scheduling-Memory.md` $\to$ `System/_templates/Scheduling-Memory.template.md`
+* `System/Memory.md` $\to$ `System/_templates/Memory.template.md`
 * `System/System-Health.md` $\to$ `System/_templates/System-Health.template.md`
 * `System/Changelog.md` $\to$ `System/_templates/Changelog.template.md`
 * `Daily Notes (YYYY-MM-DD.md)` $\to$ `System/_templates/Daily-Note.template.md`
-* `chrysalis/Tasks/*.md` $\to$ `chrysalis/_templates/Task-Template.md` & `example-task.md`
+* `chrysalis/TaskNotes/Tasks/*.md` $\to$ `_templates/Task-Template.md` & `example-task.md`
 * `Projects/*/Roadmap.md` $\to$ `Projects/_templates/Project-Template.md`
 * `Slipbox/*.md` $\to$ `Slipbox/_templates/Slipbox-Template.md`
 * `System/Environment/*.md` $\to$ `System/Environment/_templates/System-Manifest-Template.md`
@@ -50,7 +50,7 @@ Every file type that contains personal runtime information MUST provide an exact
 All public code, documentation, examples, and skill runbooks must strictly use synthetic/mock values:
 * Names: `Jane Doe`, `Alex Developer` (never real names).
 * Emails: `user@example.com` (never personal email addresses).
-* Filesystem Paths: Relative paths (`vault/...`, `vault-git/...`) or home-relative (`~/vault`). Never machine-specific absolute user paths like `/home/<username>/...` or `C:\Users\<username>\...`.
+* Filesystem Paths: Relative paths (`chrysalis/...`, `source/...`) or home-relative (`~/chrysalis`). Never machine-specific absolute user paths like `/home/<username>/...` or `C:\Users\<username>\...`.
 * Hostnames: `station-node`, `dev-laptop` (never personal machine hostnames).
 
 ### 4. Default-Deny Git Architecture
@@ -59,21 +59,21 @@ All public code, documentation, examples, and skill runbooks must strictly use s
 ---
 
 ## Article II: Development Organization & Directory Structure
-All development-specific assets reside exclusively within `vault-git/Development/` and tracked application packages:
+All development-specific assets reside exclusively within `Development/` in the source repository:
 
 * **`AGENTS.md`:** Root Master Constitution unifying Runtime and Development Spheres for autonomous AI agents.
 * **`Development/Development-Constitution.md` (This File):** Constitutional laws of engineering, PII hygiene, and RSI.
-* **`Development/ROADMAP.md`:** Strategic capability roadmap and architectural horizon tracking.
 * **`Development/README.md`:** Developer guide, architecture orientation, and git workflow.
 * **`Development/scripts/`:** Developer utility scripts, PII linters, git boundary verifiers, and setup helpers.
 * **`Development/skills/`:** Modular development-only agent skills (`audit-dev`, `evolve`), registered into Antigravity via `.agent/skills.json`.
-* **`apps/gateway/`:** Ambient Chrysalis Gateway daemon (Python FastAPI on port `8765`), implementing `BaseOrchestratorBridge` for pluggable agents (Antigravity reference, OpenClaw, Hermes OS, local LLMs) and Cloudflare Zero-Trust Tunnel configuration.
-* **`apps/mobile/`:** Flutter prototype with local task storage and Android share intake. Health Connect has a native bridge; calendar export integration and Wear OS remain unfinished. See [STATUS.md](../STATUS.md).
+* **`contracts/`:** Formal runtime and collection contracts (`agent-runtime.contract.md`, `mdbase-collection.contract.md`).
+* **`_types/`:** Authoritative JSON Schema Draft 2020-12 data schemas (`task.md`, `project.md`, `source.md`, `zettel.md`).
+* **`helpers/`:** Deterministic helper utilities (`mdbase_helper.py`) providing CAS concurrency, validation, and provenance tracking.
 
 ### Architectural Invariants in Development
-1. **Port Coexistence Invariant:** Port `8080` is reserved exclusively for the `chrysalis-obsidian` plugin API; Port `8765` is dedicated to the Ambient Chrysalis Gateway daemon. Port collisions between Obsidian and Chrysalis are strictly prohibited.
-2. **Hardware Portability:** A dedicated gateway host is optional. Keep device specifications, resource budgets, and deployment profiles in private environment manifests. Distinguish tested platforms from planned support in STATUS.md.
-3. **Pluggable Modular Orchestrator Interface:** The gateway and mobile clients must remain decoupled from any single LLM or agent implementation via the `IntelligenceEngine` abstract contract and `BaseOrchestratorBridge` adapter architecture.
+1. **Pure AI Agent Framework:** Chrysalis operates directly on an mdbase v0.3 Markdown database collection. All operations are mediated by formal runtime contracts.
+2. **Decoupled User Interfaces:** User interfaces (Obsidian with TaskNotes plugin, Google Calendar) and candidate AI integrations (Gemini Spark, Claude Desktop) are decoupled client applications, not internal framework daemons.
+3. **Hardware Portability & Local Authority:** The local Markdown files are the authoritative truth. Operations do not depend on cloud daemons or persistent background services.
 
 ---
 
@@ -84,7 +84,7 @@ System growth and autonomous capability expansion occur exclusively via the `/ev
 2. **Mandatory Snapshot Rollback Anchor:** Prior to modifying any existing skill file in `.agent/skills/` or `Development/skills/`, the agent MUST write a timestamped backup copy to `.agent/skills/.backup/<skill>_<timestamp>.md`.
 3. **Constitutional Pre-Commit Linter:** Every proposed modification to skills, workflows, or schemas must be verified against:
    * Explicit local timezone offset compliance (`"-05:00"`).
-   * File substrate single source of truth (`vault/`).
+   * File substrate single source of truth (`chrysalis/`).
    * Mandatory physical disk mutation (Anti-Simulation Law).
    * Zero-Leak PII compliance (no personal paths or strings).
    * Dynamic state multiplier bounds clamped strictly to $[0.20, 2.00]$.

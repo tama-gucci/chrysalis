@@ -1,19 +1,19 @@
 ---
 name: project
-description: "Project staging and lifecycle integration engine: guides conversational intake for new emergent projects, synthesizes standardized project roadmaps in Projects/, and orchestrates promotion into Life-Roadmap.md and Scheduling-Memory.md."
+description: "Project staging and lifecycle integration engine: guides conversational intake for new emergent projects, synthesizes standardized project roadmaps in Projects/, and orchestrates promotion into Life-Roadmap.md and System/Memory.md."
 trigger: "/project"
 domain: runtime
 reads:
   - "Projects/*/Roadmap.md"
   - "Projects/_templates/Project-Template.md"
   - "System/Life-Roadmap.md"
-  - "System/Scheduling-Memory.md"
+  - "System/Memory.md"
   - "Dashboard.md"
 writes:
   - "Projects/*/Roadmap.md"
   - "System/Life-Roadmap.md"
-  - "System/Scheduling-Memory.md"
-  - "chrysalis/Tasks/*.md"
+  - "System/Memory.md"
+  - "chrysalis/TaskNotes/Tasks/*.md"
 ---
 
 > Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
@@ -38,7 +38,7 @@ graph TD
 
     P2 --> PillarSelect{"Pillar or Track Selection"}
     PillarSelect --> PillarInject["Inject Milestone into Life-Roadmap.md"]
-    PillarInject --> TagSync["Register Tags in tag_registry & Scheduling-Memory.md"]
+    PillarInject --> TagSync["Register Tags in tag_registry & System/Memory.md"]
     TagSync --> HorizonIngest["Materialize 14-Day Horizon Chrysalis Tasks"]
     HorizonIngest --> MarkActive["Update Project status: active"]
 ```
@@ -127,7 +127,7 @@ Promote an incubating or staged project into active strategic execution:
    * Append a new milestone under the target Pillar (e.g. `### Milestone M1.6: <Project Title> (<Timeline>)`).
    * Insert the objective, horizon window, and key results checklist annotated with `#pillar-X/<subtag>`.
    * **Tag Registry Synchronization:** Ensure all project tags are registered under the respective pillar in `tag_registry` in frontmatter.
-2. Update `System/Scheduling-Memory.md`:
+2. Update `System/Memory.md`:
    * For any new tags, initialize `tag_multipliers` at baseline `1.00`.
    * Initialize `inferred_task_pool.learning_weights` at baseline `1.00`.
 
@@ -140,12 +140,12 @@ Promote an incubating or staged project into active strategic execution:
 
 ### Step 4: 14-Day Horizon Task Note Materialization (Hypergraph Linked)
 1. Scan the project's milestones for deliverables falling within the next 14 calendar days.
-2. If any imminent deliverables do not yet have corresponding `.md` task notes in `chrysalis/Tasks/` (or `TaskNotes/Tasks/`):
-   * Materialize task notes in `chrysalis/Tasks/YYYYMMDD-<slug>.md` (or `TaskNotes/Tasks/YYYYMMDD-<slug>.md`) strictly conforming to the Universal Chrysalis Task Frontmatter Schema:
+2. If any imminent deliverables do not yet have corresponding `.md` task notes in `chrysalis/TaskNotes/Tasks/`:
+   * Materialize task notes in `chrysalis/TaskNotes/Tasks/YYYYMMDD-<slug>.md` strictly conforming to the Universal Chrysalis Task Frontmatter Schema:
      - `status: todo`, `scheduled: null`, explicit local timezone `"-05:00"`
      - `project_ref: "[[Projects/{{project_slug}}/Roadmap]]"`
      - `linked_zettels: ["[[related-zettel-id]]"]` (extracted from Section 3 of parent project roadmap)
-     - `googleCalendarEventId: null` (ready for Model C Android calendar sync)
+     - `googleCalendarEventId: null` (ready for TaskNotes Google Calendar sync)
 
 ### Step 5: Verification & Ledger Reporting
 1. Execute `/doctor --integrity` to verify zero broken links, schema compliance, and tag registry alignment.

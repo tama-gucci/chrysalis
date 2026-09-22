@@ -1,80 +1,83 @@
-# Capability status
+# Chrysalis Capability Status (mdbase v0.3 Agent Framework)
 
-Reviewed against source on 2026-09-16 (B00 and B01 local checks; broader review remains dated below). This file is the implementation reference; design aspirations belong in Development/ROADMAP.md. Test counts are run results, not permanent completion percentages.
+Reviewed against source on 2026-09-22. This document is the authoritative ground-truth implementation reference for the Chrysalis mdbase v0.3 AI Agent Framework.
 
-| Capability | State | Evidence / limitation |
-| --- | --- | --- |
-| Markdown task and project framework | Implemented | Schemas, templates, agent runbooks, runtime checks |
-| Calendar feed import | Implemented with correctness gaps | Timezone/recurrence and invalid-refresh preservation defects reproduced; see the 2026-09-15 review |
-| Note/project/task linking | Implemented | Tag and wikilink matching; not a semantic inference engine |
-| Runtime deployment | Implemented | Allowlist, preview, snapshots, local-edit detection, rollback |
-| Obsidian task plugin | Vendored prototype | Compiled bundle; full plugin source and release pipeline absent |
-| Dataview dashboard | Implemented, dependency required | Install/enable Dataview in each vault |
-| Android share intake | Implemented prototype | Kotlin receiver and Dart staging; physical-device rehearsal required |
-| Local mobile task persistence | Implemented | SQLite cache and local Markdown provider |
-| Mobile schedule view | Implemented preview | Does not establish persisted calendar reservations or conflict-free external scheduling |
-| Google Drive mobile provider | Library only | Authentication and startup wiring unfinished |
-| Android Health Connect | Native bridge present | Reads only when available and permission is already granted; no fabricated startup telemetry |
-| Native calendar export | Interface/coordinator only | Android calendar handler and application integration unfinished |
-| Gateway Antigravity adapter | Prototype | Real process launch path; deployment-specific CLI compatibility still needs verification |
-| OpenClaw / Hermes adapters | Unimplemented | Return unavailable |
-| Direct cloud/on-device AI | Unimplemented | Returns unavailable |
-| Offline mailbox | Local queue with preservation defect | Malformed contents can be overwritten; no automatic consumer or cross-device delivery guarantee |
-| Audio/PDF knowledge ingestion | Agent-assisted workflow / planned automation | No ingest_payload.py pipeline; capture does not imply transcription or synthesis |
-| Wear OS, QR pairing, evening triage UI | Planned | Dedicated implementations absent |
-| Gateway installer / standalone plugin distribution | Planned | No release packaging pipeline |
-| Background framework development | Local validation implemented; runner planned | One-command local checks and candidate privacy audit verified in a fresh worktree; scheduler, dispatcher and hosted CI remain pending |
+---
 
-## Validation boundaries
+## 1. Framework Core (mdbase v0.3)
 
-Python framework tests cover scripts, file conventions, and synthetic scenarios. Gateway tests use explicit simulation and mocked failure cases. Flutter tests exercise application logic and widgets. Static analysis and an APK build do not replace a phone-to-vault-to-agent rehearsal.
+| Capability | State | Evidence / Implementation Reference |
+| :--- | :--- | :--- |
+| **Collection Manifest (`mdbase.yaml`)** | **Implemented** | `mdbase.yaml` specifies `spec_version: "0.3.0"`, Draft 2020-12, types and contracts folders. |
+| **Type Schemas (`_types/*.md`)** | **Implemented** | `_types/task.md`, `project.md`, `zettel.md`, `source.md` adhering strictly to JSON Schema Draft 2020-12 and `kind: mdbase.type`. |
+| **Agent Runtime Contract** | **Implemented** | `contracts/agent-runtime.contract.md` (8-stage lifecycle, 9 discrete actions, approval gate, 22 diagnostic codes). |
+| **Collection & Path Contract** | **Implemented** | `contracts/mdbase-collection.contract.md` (tripartite model, record identities, wikilinks matrix, 14-day horizon). |
+| **Persistent Agent Memory** | **Implemented** | `System/Memory.md` and public template `System/_templates/Memory.template.md` (deterministic preferences, modality baselines, bounded multiplier learning). |
+| **Validation & CAS Helpers** | **Implemented** | `helpers/mdbase_helper.py` (atomic CAS mutations via `fcntl.flock`, `compute_revision`, `validate_record`, `check_semantic_duplicate`, `reconcile_syllabus`). |
+| **Operational Workflow Runbooks** | **Implemented** | `chrysalis/Workflows/01-capture.md` through `08-continuation.md`. |
+| **Local Python Test Harness** | **Implemented** | Standalone validation harness in `tests/harness/validation_harness.py`, unit/integration tests in `tests/test_validation_harness.py`. |
+| **Synthetic Worked Scenario & Failure Suite** | **Implemented** | Synthetic syllabus v1, v2 revised, transcript, prompt injection (`fixtures/`), end-to-end runner in `tests/test_worked_scenario.py`, 6 negative tests in `tests/test_failure_modes.py`. |
+| **Staged Vault Migration Plan** | **Implemented** | Non-destructive migration plan in `docs/staged-migration-plan.md`. |
 
-Use the live diagnostic output to judge runtime state. Zero schema errors can coexist with overdue tasks, missing UI dependencies, stale calendars, and incomplete integrations.
+---
 
-## Verification on 2026-09-12
+## 2. Retained Subsystems & Invariants
 
-- Framework: 132 tests passed.
-- Gateway: 11 tests passed using explicit simulation and controlled failure cases.
-- Mobile: Dart analysis passed. Flutter tests could not start because the Windows ARM64 native C++ compiler toolchain is missing. No new APK was built or tested on a phone.
-- Repository privacy scanner passed; this does not replace review before publishing.
+| Capability | State | Evidence / Implementation Reference |
+| :--- | :--- | :--- |
+| **Tripartite Hypergraph Model** | **Implemented** | Zettels $\leftrightarrow$ Roadmaps $\leftrightarrow$ Tasks linked via `[[WikiLinks]]`. |
+| **Zero-Leak PII Privacy Enforcement** | **Implemented** | Default-deny `.gitignore`, verified via `Development/scripts/candidate_audit.py` and `pii-scanner.sh`. |
+| **Anti-Simulation Law** | **Implemented** | Mandatory physical disk mutation; verified via automated test suites. |
+| **1:1 Public Template Matrix** | **Implemented** | Sanitized templates in `_templates/`, `System/_templates/`, `Projects/_templates/`, `Slipbox/_templates/`. |
+| **Explicit Local Timezone Invariant** | **Implemented** | RFC 3339 timestamps strictly require explicit offset (e.g. `"-05:00"`). |
+| **Out-of-Horizon Retention** | **Implemented** | Master roadmaps retain 100% of deliverables; tasks $>14$ days remain inert (`scheduled: null`). |
+| **Uncertain Date Modeling** | **Implemented** | Modeled cleanly via `date_uncertain: true` and `due: null`. |
+| **Passive Untrusted Text Security** | **Implemented** | Quarantined via `<untrusted_document_payload>` tags and delimiter escaping. |
 
-## Android device verification on 2026-09-13
+---
 
-- Built and installed the current debug APK on a physical Android device.
-- Fixed duplicate local storage initialization that caused an Android file watcher assertion during startup. Added and ran a standalone regression check for repeated initialization and file persistence.
-- Captured a synthetic task through the app UI; verified its Markdown file and its reappearance after a full app restart.
-- Delivered synthetic text through Android ACTION_SEND; verified inbox contents persisted after restart. Image, audio, PDF, and multi-file shares remain untested on-device.
-- Fixed the timeline heading overflow and visually checked the corrected layout on-device. Changed Dart files passed analysis.
-- Verified phone-to-gateway WebSocket connection and HTTP command/response through ADB USB forwarding. The actual gateway used an intentionally unavailable backend and returned its expected error on the phone; no agent action or simulation was executed.
-- Remaining: Obsidian/task synchronization, production connection setup and authentication, connection-state updates after disconnect, real agent execution, and Health Connect/calendar permission workflows. The earlier desktop Flutter test toolchain limitation remains.
+## 3. Retired Subsystems (Historical Reference)
 
-## Engineering review on 2026-09-15
+| Subsystem | Previous Role | Retirement Rationale |
+| :--- | :--- | :--- |
+| **`apps/gateway/`** | FastAPI REST/WebSocket daemon on port 8765 | Retired; core framework operates directly on local mdbase Markdown files. |
+| **`apps/mobile/`** | Custom Flutter cross-platform mobile client | Retired; mobile access provided by Obsidian Mobile / candidate runtime agents. |
+| **Vendored Obsidian Plugin Bundle** | 5.2 MB pre-compiled `main.js` in `.obsidian/` | Retired; community TaskNotes plugin installed directly by users. |
+| **Autonomous 3 AM Cron** | Background night-time task mutations | Retired; runtimes execute interactively with human approval. |
+| **Static Candidate Task Pools** | `quick_wins` and `deep_work` lists in YAML | Retired; replaced by dynamic mdbase queries. |
+| **Continuous Multiplier Decay** | Exponential time-decay loops in background | Retired; replaced by deterministic per-session feedback rule in `System/Memory.md`. |
 
-Reviewed `main` at `cfa92e8` plus the preserved uncommitted changes; this is not a released snapshot. See [the complete review](Development/REVIEW-2026-09-15.md) for evidence, source references and priorities.
+---
 
-- Framework: 133 passed, 3 failed out of 136. Failures concern the current task schema.
-- Gateway: 11 passed with 2 dependency deprecation warnings after an approved run outside the restricted sandbox; fixtures use explicit emulation and controlled failures.
-- Flutter analysis: no issues. Flutter tests: 101 passed, 2 failed because hybrid transport expectations still use the legacy mailbox path.
-- Standalone local-storage initialization regression: passed.
-- Synthetic probes reproduced calendar YAML corruption, loss of cached commitments on invalid HTTP 200 input, timezone/recurrence errors, doctor false-success results, malformed mailbox overwrite, archived-task scheduling, and missing start time on direct completion.
-- Doctor success alone is not a runtime-readiness gate. Calendar import is implemented with known correctness gaps; mobile calibration remains a preview without verified persisted planning.
-- No new APK build, physical-device test, real backend execution or personal-vault inspection occurred in this review. No application repair, persistent automation, commit, push or deployment was performed.
+## 4. Deferred Integrations (Clearly Labeled Future Phases)
 
-## B00 baseline verification on 2026-09-16
+| Integration | Candidate Architecture | Current Disposition |
+| :--- | :--- | :--- |
+| **Gemini Spark Cloud MCP** | Hosted MCP adapter at `mcp.mdbase.dev` | **DEFERRED** to candidate runtime integration phase; local disk authority is primary. |
+| **TaskNotes Google Calendar Sync** | Two-way OAuth 2.0 calendar sync via TaskNotes | **DEFERRED** to community plugin runtime; Chrysalis initializes `googleCalendarEventId: null`. |
+| **`mdbase connect` Daemon & Relay** | Inbound request listener (`crates/connect-cli`) | **DEFERRED**; local filesystem is authoritative for framework execution. |
+| **Wear OS Smartwatch Client** | Standalone wearable client | **DEFERRED** / parked in backlog. |
 
-The local checkpoint containing this entry restores the task schema's framework fields and corrects mailbox destination notices and tests while preserving the earlier working state. New regression coverage protects framework metadata, plugin annotations, configured destinations and legacy-event preservation.
+---
 
-- Framework: 138 passed; gateway: 11 passed with two dependency deprecation warnings.
-- Flutter analysis: no issues; Flutter tests: 108 passed; affected calendar fixture tests passed again after synthetic-address normalization.
-- Standalone storage initialization regression: passed.
-- Independent staged-candidate review: no actionable introduced B00 findings. Complete candidate privacy audit and staged whitespace checks passed; details in [the handoff](Development/HANDOFF.md#b00-starting-version-repair--2026-09-16).
-- This establishes a local source test baseline. The earlier calendar, diagnostic, malformed-mailbox, scheduling and synchronization findings remain open. No new device rehearsal, real backend execution, hosted CI, background routine or runtime deployment was performed.
+## 5. Verification Records
 
-## B01 local checks verification on 2026-09-16
+### Milestone 3 Verification (2026-09-22)
+- **Pytest Full Suite**: `.venv/bin/pytest tests/` $\to$ **260 tests passed cleanly** (0 failures, 0 errors, 91 subtests passed).
+- **Core Unittest Suite**: `.venv/bin/python -m unittest discover -t . -s tests` $\to$ **260 tests passed cleanly**.
+- **Local Validation Harness**: `.venv/bin/python tests/harness/validation_harness.py -c .` $\to$ **Exit code 0** (0 errors, 0 warnings).
+- **Privacy Scanner**: `bash Development/scripts/pii-scanner.sh` $\to$ **passed: true, 0 findings**.
+- **Candidate Privacy Audit**: `python3 Development/scripts/candidate_audit.py` $\to$ **passed: true, 0 findings**.
+- **Worked Scenario Suite**: Full 8-stage lifecycle executed in `tests/test_worked_scenario.py` with physical disk verification.
+- **Critical Failure Mode Suite**: 6 negative tests executed in `tests/test_failure_modes.py` with unapproved action blocked, schema violation rejection, CAS conflict, injection neutralization, duplicate deduplication, and revised syllabus diffing.
 
-`python3 Development/scripts/check.py` now runs all required local checks with individual logs and a nonzero overall result on any failure. Setup installs the tested Python pins and enforces the mobile dependency lock. Candidate privacy scans both staged blobs and tracked/eligible-untracked working files. A separate trusted-controller invocation rejects candidate replacements of its required policy.
+### Milestone 2 Verification (2026-09-22)
+- **Pytest Milestone Suite**: 81 tests passed cleanly in 0.36s.
+- **Schema Conformance**: Verified `_types/*.md` against JSON Schema Draft 2020-12 using `jsonschema.Draft202012Validator`.
+- **CAS Concurrency**: Verified `apply_cas_mutation` atomic writes and stale revision rejection.
+- **Provenance & Deduplication**: Verified SHA-256 duplicate detection and syllabus reconciliation diffing.
 
-- Fresh worktree setup and full checker passed: framework 152, gateway 11 (two dependency deprecation warnings), Flutter 108, clean Flutter analysis, standalone storage regression and candidate privacy/stability checks.
-- An intentionally failing framework test produced overall exit 1 while remaining suites ran. A replacement candidate checker was rejected before test execution. Synthetic failures were removed and the final fresh run passed.
-- Separate review identified and verified the repair of a credential-helper quarantine omission; final staged review and `/audit-dev` passed before the local checkpoint.
-- B01's local milestone is complete. Hosted GitHub checks are unimplemented/unverified and remain pending; no background execution, integration service, publishing or runtime deployment was enabled.
+### Milestone 1 Verification (2026-09-22)
+- **Framework Unittests**: 152 tests passed cleanly.
+- **Contracts Implemented**: `contracts/agent-runtime.contract.md` and `contracts/mdbase-collection.contract.md`.
+- **Persistent Agent Memory**: Implemented `System/Memory.md` and `System/_templates/Memory.template.md`.

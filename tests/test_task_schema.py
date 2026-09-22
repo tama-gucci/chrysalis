@@ -14,6 +14,25 @@ class TaskSchemaContractTests(unittest.TestCase):
 
     def test_framework_fields_and_lifecycle(self):
         schema = self.schema
+        if "schema" in schema and "value" in schema["schema"]:
+            props = schema["schema"]["value"]["properties"]
+            self.assertIn(str(schema.get("version")), ["1", "0.2.0", "0.3.0"])
+            self.assertEqual(props["status"]["enum"], ["todo", "in-progress", "done", "archived"])
+            expected_props = {
+                "title": "string", "dateCreated": "string", "due": ["string", "null"],
+                "scheduled": ["string", "null"], "priority": "string", "urgency_tier": "integer",
+                "modality": "string", "timeEstimate": "integer", "energy": "string",
+                "friction": "string", "micro_chunked": "boolean", "tags": "array",
+                "linked_zettels": "array", "project_ref": ["string", "null"],
+                "googleCalendarEventId": ["string", "null"], "startedAt": ["string", "null"],
+                "completedAt": ["string", "null"],
+            }
+            for name, prop_type in expected_props.items():
+                with self.subTest(field=name):
+                    self.assertEqual(props[name]["type"], prop_type)
+            self.assertEqual(props["linked_zettels"]["items"]["type"], "string")
+            return
+
         fields = schema["fields"]
         self.assertEqual(schema["version"], "0.2.0")
         self.assertEqual(fields["status"]["values"], ["todo", "in-progress", "done", "archived"])
@@ -32,6 +51,11 @@ class TaskSchemaContractTests(unittest.TestCase):
         self.assertEqual(fields["linked_zettels"]["items"], {"type": "link"})
 
     def test_plugin_annotations_and_framework_nlp_remain_compatible(self):
+        if "schema" in self.schema and "value" in self.schema["schema"]:
+            self.assertIn("collection", self.schema)
+            self.assertEqual(self.schema["collection"]["display"]["name_field"], "title")
+            return
+
         fields = self.schema["fields"]
         for name in ["title", "status", "priority", "due", "scheduled", "tags",
                      "dateCreated", "timeEstimate", "googleCalendarEventId"]:

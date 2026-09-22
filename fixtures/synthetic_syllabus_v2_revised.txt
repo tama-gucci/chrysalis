@@ -1,0 +1,50 @@
+================================================================================
+COLLEGE OF ENGINEERING — DEPARTMENT OF COMPUTER SCIENCE
+CS 410: ADVANCED DISTRIBUTED SYSTEMS & CONSENSUS ALGORITHMS
+FALL SEMESTER 2026 — REVISED COURSE SCHEDULE (OCTOBER UPDATE)
+================================================================================
+
+ANNOUNCEMENT FROM PROF. VANCE (Issued: 2026-09-24):
+  Due to scheduled campus cluster network maintenance and student feedback,
+  the schedule has been revised:
+  1. Lab 1 deadline is extended by 5 days.
+  2. The Midterm Examination has been CANCELLED and replaced by continuous evaluation.
+  3. Homework 2 has been added to reinforce Paxos vs. Raft trade-offs.
+
+REVISED DELIVERABLES LIST:
+--------------------------------------------------------------------------------
+1. Problem Set 1: Vector Clocks and Distributed State
+   - Due Date: 2026-09-27 23:59:00-05:00
+   - Status: UNCHANGED
+   - Deliverable ID: cs410-ps1
+
+2. Lab 1: Raft Consensus RPC Skeleton
+   - Due Date: 2026-10-09 23:59:00-05:00 [MODIFIED: Extended from 2026-10-04]
+   - Status: MODIFIED
+   - Deliverable ID: cs410-lab1
+   - Modality: Analytical | Urgency Tier: 3 | Est Duration: 180 min
+
+3. Homework 2: Multi-Paxos vs. Raft Comparative Analysis
+   - Due Date: 2026-10-18 23:59:00-05:00 [ADDED: New Deliverable]
+   - Status: ADDED
+   - Deliverable ID: cs410-hw2
+   - Scope: Written comparative analysis of leader election overhead and log compaction.
+   - Modality: Synthesis | Urgency Tier: 2 | Est Duration: 90 min
+
+4. Final Distributed KV-Store Project
+   - Due Date: 2026-12-10 23:59:00-05:00
+   - Status: UNCHANGED
+   - Deliverable ID: cs410-final-proj
+
+[NOTE: Deliverable 'cs410-midterm' (Midterm Examination) has been DROPPED from
+the syllabus and will not take place.]
+================================================================================
+
+# MOCKED REASONING & EXTERNAL EFFECTS LABELS:
+# [MOCKED_REASONING: SYLLABUS_RECONCILIATION]: Reconcile syllabus diffs deliverables against active roadmap:
+#   - modified: cs410-lab1 (due date pushed to 2026-10-09)
+#   - added: cs410-hw2 (new deliverable due 2026-10-18)
+#   - dropped: cs410-midterm (archived from deliverables ledger)
+#   - unchanged: cs410-ps1, cs410-final-proj
+# [MOCKED_REASONING: IN_PLACE_TASK_UPDATE]: Existing task for cs410-lab1 updated in-place via CAS; zero duplicate task files created.
+# [MOCKED_EXTERNAL_EFFECT: NOTIFICATION_BROADCAST]: Simulated notification broadcast to student LMS queue.

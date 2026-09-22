@@ -64,9 +64,9 @@ Use `python3 Development/scripts/check.py` for the complete local checks, includ
 
 ### Step 1: Git Tracked Files Quarantine Linter
 Inspect both candidate inventories and verify that **ZERO** candidate files match any quarantined personal path:
-* **Personal Tasks:** Any file in `chrysalis/Tasks/` or `TaskNotes/Tasks/` other than `example-task.md`.
-* **Archived Tasks:** Any file in `chrysalis/Archive/` or `TaskNotes/Archive/`.
-* **Personal System State:** `System/Life-Roadmap.md`, `System/Scheduling-Memory.md`, `System/System-Health.md`, `System/Changelog.md`.
+* **Personal Tasks:** Any file in `chrysalis/TaskNotes/Tasks/`, `TaskNotes/Tasks/`, or `chrysalis/Tasks/` other than `example-task.md`.
+* **Archived Tasks:** Any file in `chrysalis/TaskNotes/Archive/`, `TaskNotes/Archive/`, or `chrysalis/Archive/`.
+* **Personal System State:** `System/Life-Roadmap.md`, `System/Memory.md` (and legacy `System/Scheduling-Memory.md`), `System/System-Health.md`, `System/Changelog.md`.
 * **Daily Notes:** Any file matching `^[0-9]{4}-[0-9]{2}-[0-9]{2}.*\.md$`.
 * **Personal Projects:** Any file in `Projects/` except `Projects/README.md` and `Projects/_templates/**`.
 * **Personal Slipbox Notes:** Any file in `Slipbox/` except `Slipbox/README.md` and `Slipbox/_templates/**`.
@@ -83,7 +83,7 @@ git rm --cached <path>
 Execute a deep regex scan across candidate text files, including new JavaScript and CSS. Exact existing upstream artifacts listed by path and SHA-256 in `candidate_audit.py` are preserved provenance exceptions; any changed artifact fails until separately reviewed. Recognized PNG/ICO image assets are not text scans. Other unknown binary contents fail:
 1. **Machine-Specific Absolute Paths:**
    * Look for `/home/[a-zA-Z0-9_-]+` or `C:\\Users\\[a-zA-Z0-9_-]+`.
-   * Ensure any file references use relative paths (e.g. `../doctor/SKILL.md` or `chrysalis/...`) rather than machine-bound `file:///home/...`.
+   * Ensure any file references use relative paths (e.g. `.agent/skills/doctor/SKILL.md` or `chrysalis/...`) rather than machine-bound `file:///home/...`.
 2. **Personal Email Addresses:**
    * Scan for email patterns (`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`).
    * Permitted exceptions: addresses in reserved example.com, example.org and example.net domains. The exact existing Dataview manifest is a hash-bound exception for public upstream author attribution. Do not add personal addresses to an exception list.
@@ -127,7 +127,7 @@ Coordinate system capability expansion and recursive self-improvement:
 3. Prune obsolete backup snapshots older than 30 days if storage maintenance is requested.
 
 ### Step 4: Friction Analysis & Delegation to `/evolve`
-1. Read `System/Scheduling-Memory.md` for tags with multipliers $> 1.40$ or stalled workflows.
+1. Read `System/Memory.md` for tags with multipliers $> 1.40$ or stalled workflows.
 2. If operational friction is detected, formulate a hypothesis and delegate to `/evolve --rsi`.
 
 ---

@@ -1,6 +1,6 @@
 # Chrysalis development: a beginner's architectural guide
 
-Written for someone learning software development while using Antigravity and Codex. Reviewed against the source checkout and migration evidence on **2026-09-14**. This is a teaching guide; [HANDOFF.md](HANDOFF.md) carries the current task and [STATUS.md](../STATUS.md) carries capability evidence.
+Written for someone learning software development while using Antigravity and Codex. Broad source/migration review: **2026-09-14**. Interactive versus background agent guidance updated **2026-09-18**. This is a teaching guide; [HANDOFF.md](HANDOFF.md) carries the current task, [STATUS.md](../STATUS.md) carries capability evidence, and [TESTING.md](TESTING.md) carries current validation instructions.
 
 You do not need to understand the whole repository before making a useful change. You do need to know which folder you are editing, what behavior you intend to change, and how you will check it. This guide builds those skills in that order.
 
@@ -24,9 +24,9 @@ Most workstation examples use **Bash**, a Linux command interpreter. If your ter
 
 ### Chrysalis as a personal system
 
-Chrysalis organizes personal work around ordinary files: tasks, notes, project roadmaps, scheduling information, and instructions for agents. Most of its human-readable data is Markdown. The mobile app and optional gateway add interfaces to that file-based system.
+Chrysalis organizes personal work around ordinary files: tasks, notes, project roadmaps, scheduling information, and instructions for agents. Most of its human-readable data is Markdown conforming to the mdbase v0.3 collection specification. External tools like Obsidian with the community TaskNotes plugin provide visualization and calendar sync, while autonomous AI agents execute structured operations under formal runtime contracts.
 
-A **framework** is a collection of conventions and reusable components. It gives you a structure within which features fit. Chrysalis is not currently a single polished application that installs every integration automatically. It is a repository of working utilities, templates, agent instructions, a mobile prototype, and a gateway prototype, with clear gaps still to close.
+A **framework** is a collection of conventions, schemas, contracts, and reusable components. Chrysalis is purely an open, provider-independent AI agent framework operating on an mdbase v0.3 Markdown database collection. Previous bespoke prototypes (such as custom mobile clients and gateway servers) have been retired in favor of direct local file operations and standard community tools.
 
 ### The development framework around Chrysalis
 
@@ -34,8 +34,8 @@ Your development setup combines:
 
 | Part | What it does | Beginner's comparison |
 | --- | --- | --- |
-| Antigravity | Reads and edits source, runs tools, helps implement features | A coding collaborator at the workbench |
-| Codex | Reviews changes, investigates bugs, refactors, and evaluates architecture | A second collaborator checking the design and work |
+| Antigravity | Default for interactive implementation, debugging, refactoring, architecture and checks | Your everyday coding collaborator at the workbench |
+| Codex | Selected second opinions or difficult reviews; fixed reviewer in the automated background loop | A specialist whose limited time you reserve for selected work |
 | Git | Records source history and compares versions | A detailed project history with named checkpoints |
 | Shared Markdown documents | Carry rules, decisions, results, and next steps | A notebook both collaborators can read |
 | Tests and analysis tools | Check specific behaviors and code problems | Repeatable inspections |
@@ -44,7 +44,7 @@ Your development setup combines:
 
 An **IDE**, or integrated development environment, puts an editor, file browser, terminal, and development tools together. An **agentic** IDE also lets an AI use tools and modify files. A **CLI**, or command-line interface, offers functionality through a terminal. Codex CLI can do engineering work without a desktop IDE window.
 
-The roles of Antigravity and Codex are working preferences, not technical restrictions. Either can change code when asked. The benefit of separate roles is that implementation and review become distinct steps with recorded evidence.
+The fixed provider split applies only to automated background development. Most interactive work can stay in Antigravity, and independent review can use a separate Gemini agent or invocation. Codex is optional for selected interactive second opinions. Either provider can change code when assigned; the implementing invocation cannot approve its own candidate. See the current [role policy](AGENT-WORKFLOW.md#agent-roles-and-usage).
 
 ### Two uses of the word “agent”
 
@@ -79,7 +79,7 @@ The arrow from source to runtime is a deliberate deployment. It is not a live fo
 | Reviewed release checkout | A specific approved source revision on the server | Supply files for deployment |
 | Recovery archive | Old source snapshot, patches, private transfer manifests | Recover from a mistake |
 
-Names such as `vault-git`, `chrysalis`, or `release-source` describe a folder's role in an example. The actual folder name is not what makes it a source repository. Its contents, Git history, and selected purpose do.
+Use one active local source repository outside the synchronized personal vault. Its contents, Git history, and explicitly selected purpose identify it; no adjacent source copy is required.
 
 ### Why a second source-looking folder can be correct
 
@@ -102,21 +102,24 @@ The following tree highlights responsibilities. It omits many files so the main 
 ```text
 source-checkout/
   AGENTS.md                       Starting instructions for engineering agents
-  ARCHITECTURE.md                  Ownership, layout, deployment boundaries
+  ARCHITECTURE.md                 Ownership, layout, deployment boundaries
   STATUS.md                       Implemented versus unfinished capabilities
   README.md                       General project entry point
+  mdbase.yaml                     mdbase v0.3 collection specification
   .git/                           Git's internal history and metadata
   .gitignore                      What new files Git normally ignores
   _types/                         Definitions of structured Markdown data
     task.md                       Task schema
+  contracts/                      Standard runtime & tool contracts (agent-runtime.contract.md)
+  helpers/                        Python mdbase v0.3 interaction utilities (mdbase_helper.py)
   Development/
-    BEGINNERS-GUIDE.md             This guide
+    BEGINNERS-GUIDE.md            This guide
     Development-Constitution.md   Engineering and privacy rules
-    AGENT-WORKFLOW.md              How agents share work
-    HANDOFF.md                     Current engineering state and next task
-    WORKSTATION-SETUP.md            Recreating the development environment
-    TESTING.md                     Validation procedures and limits
-    ROADMAP.md                     Future directions
+    AGENT-WORKFLOW.md             How agents share work
+    HANDOFF.md                    Current engineering state and next task
+    WORKSTATION-SETUP.md          Recreating the development environment
+    TESTING.md                    Validation procedures and limits
+    ROADMAP.md                    Future directions
     scripts/                      Setup, context, privacy, export helpers
     _templates/                   Reusable hook configuration examples
     skills/                       Engineering runbooks, including audit-dev
@@ -124,10 +127,10 @@ source-checkout/
     scripts/                      Runtime utilities, including doctor and updater support
     _templates/                   Sanitized examples of private runtime files
     Orchestrators/                Runtime orchestration documentation
-  .agent/skills/                  Runtime agent runbooks
-  apps/
-    mobile/                       Flutter/Dart app and native platform code
-    gateway/                      Python HTTP/WebSocket service
+  .agent/skills/                  Runtime agent runbooks (doctor, audit, calibrate, plan, etc.)
+  apps/                           Retired historical prototypes
+    mobile/                       Flutter/Dart app (retired)
+    gateway/                      Python HTTP/WebSocket service (retired)
   tests/                          Framework tests, including synthetic integration checks
   .obsidian/                      Selected Obsidian configuration and vendored assets
   chrysalis/                      Reusable task templates, views, workflows, example task
@@ -194,95 +197,87 @@ Runtime utilities include diagnostic checks, calendar importing, and graph linki
 
 The repository describes `/audit-dev` as a development skill. This is a request to the agent, not a Bash program named `/audit-dev`. If a client has not registered it as a slash command, ask the agent to read and follow `Development/skills/audit-dev/SKILL.md` explicitly. Registration and execution support differ between clients.
 
-### 5.3 The mobile app has several layers
+### 5.3 The Chrysalis Hypergraph Continuum & Tripartite Model
 
-The app is written primarily in **Dart**, using **Flutter** to create its user interface. Android-specific features use native Kotlin code. You can understand most tasks by locating the layer involved:
+Chrysalis unifies knowledge, planning, and execution into an interconnected Markdown hypergraph linked via `[[WikiLinks]]`:
 
-| Layer | Main paths | Responsibility |
-| --- | --- | --- |
-| Startup and composition | `apps/mobile/lib/main.dart` | Creates and connects the major objects |
-| Presentation | `lib/presentation/screens/`, `lib/presentation/widgets/` | Displays information and accepts user input |
-| Domain | `lib/domain/models/`, `lib/domain/parser/`, `lib/domain/services/` | Represents tasks and implements application rules |
-| Database | `lib/data/database/` | SQLite tables, cached notes, mutation journal |
-| Storage | `lib/data/storage/` | Reads and writes through a selected storage provider |
-| Synchronization | `lib/data/sync/vault_synchronizer.dart` | Coordinates the database with the selected provider |
-| Transport | `lib/transport/` | Communicates with a gateway or stores a queued intent |
-| Native Android | `android/app/src/main/kotlin/` | Receives Android shares and connects to platform capabilities |
+1. **Atomic Zettelkasten Knowledge (`Slipbox/*.md`):** Permanent notes, literature insights, mental models, and architectural proposals (`#chrysalis`).
+2. **Strategic Roadmaps (`Projects/*/Roadmap.md`):** Long-term project roadmaps, deliverables, and milestones linking back to reference Zettels.
+3. **Granular Execution Substrate (`chrysalis/TaskNotes/Tasks/*.md`):** Actionable task notes conforming strictly to the mdbase v0.3 schema (`_types/task.md`), with temporal schedules and links to parent projects (`project_ref`) and research notes (`linked_zettels`).
+4. **Temporal Calendar Blocks:** Focus blocks and calendar slots synchronized bi-directionally via Obsidian and the community TaskNotes plugin (`googleCalendarEventId`).
 
-The `lib/` paths in this table are relative to `apps/mobile/`.
+Autonomous agents navigate this hypergraph bidirectionally: scanning `Slipbox/` to ground active tasks, linking background research to execution notes, and surfacing knowledge directly in focus sessions.
 
-A **model** such as `TaskNote` represents data in code. A **parser** turns text into that representation, or serializes the representation back into text. A **service** performs a related group of operations. A **provider** supplies a particular implementation behind an interface: local files, in-memory test storage, or another storage mechanism.
+### 5.4 Concurrency, CAS, and Exact-Document Authority (ADR 0006)
 
-`main.dart` is the composition point. It creates persistent storage, initializes the synchronizer, loads tasks, initializes transport, and supplies these objects to the interface. A class existing elsewhere in the repository does not mean startup uses it. Always inspect the wiring.
+Chrysalis eliminates external task databases, cloud synchronizers, and background daemon processes. The plain Markdown files in the vault are the sole source of truth.
 
-### 5.4 Follow one task through local persistence
+To prevent race conditions between human edits in Obsidian and autonomous agent modifications, Chrysalis uses **Compare-And-Swap (CAS)** concurrency control based on SHA-256 document revisions, filesystem-level advisory locking (`fcntl.flock`), and atomic file replacement (`os.replace` via `helpers/mdbase_helper.py`).
 
 ```mermaid
-%% diagram: persistence
-flowchart LR
-  U[User saves a task] --> S[VaultSynchronizer]
-  S --> D[SQLite cached note]
-  S --> J[Mutation journal]
-  J --> P[Selected storage provider]
-  P --> M[Local Markdown file]
-  M --> W[File observation and later ingestion]
-  W --> D
-  M -. External synchronization not wired at startup .-> V[Server's personal vault]
+%% diagram: mdbase-cas-persistence
+flowchart TD
+  A[AI Agent / Process] -->|1. Read document & compute SHA-256| R[Local Markdown File]
+  A -->|2. Prepare mutation & specify expected_revision| H[helpers/mdbase_helper.py]
+  H -->|3. Acquire file lock fcntl.flock| L[Advisory Lock]
+  H -->|4. Verify current disk hash == expected_revision| C{Revision matches?}
+  C -->|Yes| W[Write temp file & atomic os.replace]
+  W --> R
+  C -->|No: Concurrent modification detected| F[Reject mutation: Concurrency Error]
+  W -->|Release lock| L
 ```
 
-**SQLite** is a database stored in a local file. **Drift** is the Dart database layer used by the app. The database helps the interface query and display tasks. Markdown remains the intended portable task representation.
+Every document mutation reads the exact file, computes its current SHA-256 hash, applies structured frontmatter or body transformations, and writes back through an atomic replacement. If another process modified the file in the interim, the mutation is safely rejected, preventing data loss.
 
-The **mutation journal** records pending changes that need to reach the storage provider. In the current implementation, `saveTask` updates the cache, adds a journal entry, and attempts to drain the journal into storage. Startup also resets abandoned in-flight entries and attempts a drain. This gives the app a record of work to perform; it does not establish a complete cross-device conflict-resolution system.
+### 5.5 Passive Untrusted Text Security & Ingestion Pipeline
 
-For the current app startup, the selected provider is `LocalVaultStorageProvider`. Consequently, “remote” in a synchronizer method name can mean “the provider side of the cache,” even when those files are on the same device. Do not infer internet synchronization from a method name.
+When ingesting external inputs (such as syllabi, lecture transcripts, web clippings, or emails), autonomous agents must never pass untrusted text directly into reasoning prompts without isolation.
 
-The Google Drive provider has code and tests, but authenticated startup integration is unfinished. A task saved on a phone is therefore not automatically a task saved in the server's Obsidian vault. Keep those two outcomes separate in test reports.
+External text is strictly quarantined within `<untrusted_document_payload>` tags with delimiter neutralization. The agent parses the payload passively:
+1. Extract candidate tasks and deliverables.
+2. Validate all frontmatter against `_types/task.md` rules (explicit local timezone offset, recognized modality, valid status).
+3. Query the user for explicit approval before persisting tasks to `chrysalis/TaskNotes/Tasks/`.
 
-### 5.5 Capture and share intake are another path
+Simulation without disk mutation is prohibited; writing without human approval is equally prohibited.
 
-When Android shares content with the app, native code receives the share and preserves access to its contents. Dart services stage the material in the local inbox. The local intake path is `chrysalis/Inbox/` beneath the selected app vault.
+### 5.6 Provider-Independent Agent Runtime Lifecycle
 
-Text capture and selected device interactions have prior evidence in `STATUS.md`. Image, audio, PDF, and multiple-item behavior still require the specific device checks recorded there. Receiving a PDF does not mean its contents were interpreted. Saving audio does not mean transcription ran. Intake, interpretation, and task creation are distinct stages.
+Chrysalis reasoning agents (Google Antigravity, local LLMs, or other frontier models) execute an 8-stage operational lifecycle defined in `contracts/agent-runtime.contract.md`:
 
-### 5.6 Transport is separate from storage
+```text
+Capture -> Extract -> Review -> Organize -> Plan -> Act -> Outcome Verification -> Continuation
+```
 
-The app can save a task without successfully contacting an agent. Transport concerns messages and commands sent toward an orchestrator; storage concerns files and cached notes.
+- **Capture & Extract:** Collect inputs into the intake buffer and parse structured candidates.
+- **Review & Organize:** Filter against `Life-Roadmap.md` priorities, assign tags and modalities, and inject starter wedges.
+- **Plan:** Execute two-stage planning (`/plan --stage` for evening staging, `/plan --calibrate` for morning check-in and timeblock shifts).
+- **Act & Verify:** Execute mutations gated by human approval, then verify frontmatter and disk state.
 
-`HybridOrchestratorTransport` tries the ambient gateway. If unavailable, it can buffer intent through `SubstrateMailboxClient`. A queued event has an identifier and pending state. It is a request awaiting further handling, not proof that the requested action happened.
+External applications (Obsidian desktop/mobile with TaskNotes plugin, Google Calendar) serve as user interfaces and synchronization layers, completely decoupled from agent reasoning.
 
-The mailbox currently writes to its configured `mailboxPath`, whose default is `chrysalis/System/Inbox/events.json`. It can read the legacy `System/Inbox/events.json` if the selected file is absent. These mailbox paths are different from the shared-content inbox `chrysalis/Inbox/`. The path mismatch in the current hybrid tests and status messages is an active repair item.
+### 5.7 Retired Historical Prototypes (`apps/gateway/` and `apps/mobile/`)
 
-There is no verified automatic mailbox consumer delivering and executing every queued event on the personal server. A “buffered” status must not be presented as “task completed.”
+Earlier iterations of Chrysalis explored a bespoke Flutter mobile application (`apps/mobile/`) and a local Python/FastAPI daemon (`apps/gateway/` on port 8765). These components have been **retired**:
 
-### 5.7 The gateway is an optional network service
+- Chrysalis now operates directly on local mdbase v0.3 Markdown files via standard agent tools and `helpers/mdbase_helper.py`, eliminating the need for a running daemon process.
+- The UI role is fulfilled by Obsidian with the community TaskNotes plugin, eliminating the need for a separate Flutter mobile app.
 
-The gateway uses Python and **FastAPI**, a framework for HTTP APIs. An **API** is a defined way for programs to communicate. **HTTP** supports requests and responses; **WebSocket** supports an ongoing connection for messages.
+The historical source code is retained under `apps/` exclusively for regression verification:
 
-The gateway source is under `apps/gateway/`. Important entry points include:
-
-| File | What to inspect there |
+| File | Historical role |
 | --- | --- |
-| `main.py` | Application creation, route registration, liveness endpoint |
-| `config.py` | Host, port, optional authentication, adapter executable, simulation setting |
-| `routers/orchestrator.py` | Command, status, and WebSocket routes |
-| `orchestrator_bridge.py` | Interface to a concrete agent backend and unavailable/simulated behavior |
-| `tests/test_gateway.py` | Controlled tests of requests and failure behavior |
+| `apps/gateway/main.py` | FastAPI application creation and routing |
+| `apps/gateway/config.py` | Host, port, simulation settings |
+| `apps/gateway/orchestrator_bridge.py` | Agent backend bridge interface |
+| `apps/gateway/tests/test_gateway.py` | Gateway regression tests |
+| `apps/mobile/lib/` | Flutter app source |
+| `apps/mobile/test/` | Flutter test suite |
 
-The default bind address is loopback, `127.0.0.1`, on port `8765`. Loopback refers to the machine running the process. The Obsidian plugin's API uses a different port, `8080`. Sharing a machine does not make these the same service.
+### 5.8 External UI & Community Tools Interoperability
 
-`GET /health` reports that the gateway can answer its liveness route. It does not execute an agent or verify personal task synchronization. The orchestrator status route offers additional adapter information, but even an executable-presence check is not a successful end-to-end action.
+Obsidian with the community TaskNotes plugin provides the interactive UI, visual task boards, and two-way Google Calendar synchronization.
 
-The gateway's Antigravity bridge is a prototype that constructs commands for an agent executable. Its compatibility with the current installed agent, authentication, working directory, and intended runtime context must be verified separately. Installing Antigravity desktop for engineering does not prove this bridge works.
-
-An optional token check exists. Without a configured token, the code permits requests. Exposing the service beyond its local development connection requires an explicit deployment design covering authentication and transport security. A local successful request is not that design.
-
-The OpenClaw and Hermes bridge classes return unavailable. Explicit test simulation is labeled as simulated. Neither should be described as a working real agent backend.
-
-### 5.8 Native features and integration boundaries
-
-Health Connect has an Android bridge and Dart integration. It requires support and authorization; startup does not invent biometric readings. The calendar feature has Dart interfaces and coordination code, but the native Android calendar handler and full integration remain unfinished. A schedule displayed in the app is not proof of an event written into a calendar.
-
-Direct cloud AI, on-device AI, watch features, pairing, and release packaging have unfinished portions. Check the capability table before turning an architectural possibility into a user-facing promise.
+Task notes adhere to standard TaskNotes properties (`googleCalendarEventId`, `status`, `priority`). When Obsidian syncs a task to Google Calendar, it populates `googleCalendarEventId` in the task note's YAML frontmatter. Autonomous agents read and preserve this property without needing direct Google Calendar API integration.
 
 ## 6. How the two engineering agents share context
 
@@ -296,7 +291,7 @@ sequenceDiagram
   participant You
   participant A as Antigravity
   participant F as Shared files and Git
-  participant C as Codex
+  participant C as Independent reviewer
   You->>A: Define behavior, scope, and acceptance checks
   A->>F: Read instructions and current state
   A->>F: Implement, validate, update handoff
@@ -348,15 +343,14 @@ A good handoff is portable because a human can read it. If either IDE changes, y
 
 | Tool | Why it is present |
 | --- | --- |
-| Git | Source history, differences, branches, worktrees |
-| Python | Framework scripts, gateway, context helper |
-| Python virtual environment | Isolates this checkout's Python dependencies |
-| Flutter and its bundled Dart SDK | Analyze, test, run, and build the mobile app |
-| JDK | Runs Java-based Android build tools |
-| Android SDK | Android platforms, build tools, device tools |
-| NDK, CMake, Clang, Ninja | Native compilation needed by dependencies and Linux/Android builds |
+| Linux (x86_64) & Bash | Primary OS and script runtime environment |
+| Python 3.14+ | Core mdbase v0.3 framework scripts, validation harness, test runner |
+| Python virtual environment (`.venv`) | Isolates checkout Python dependencies (`pytest`, `pyyaml`, `cerberus`, `jsonschema`) |
+| Git & ripgrep | Version control, diffing, boundary scanning, and pattern search |
+| Antigravity & Codex | Autonomous agent interfaces used for engineering |
+| Flutter & Dart SDK | *(Historical)* Used only for regression testing retired `apps/mobile/` code |
+| JDK & Android SDK | *(Historical)* Used only for historical Android build verification |
 | direnv | Loads reviewed project-local environment settings |
-| Antigravity and Codex | Agent interfaces used for engineering |
 
 An **SDK**, or software development kit, supplies tools and libraries for a platform. A **compiler** transforms source into another form that can run. A **dependency** is another package your program uses. A **package manager** downloads and organizes those packages.
 
@@ -379,12 +373,12 @@ Do not set `CHRYSALIS_VAULT_PATH` to your personal installation in an ordinary e
 From the source root, the development bootstrap is:
 
 ```bash
-bash Development/scripts/setup-dev.sh --mobile
+bash Development/scripts/setup-dev.sh
 ```
 
-This command creates a local Python environment if needed, installs the declared framework and gateway dependencies, and runs Flutter dependency resolution. It checks for required executables first. It refuses a linked or unexpected `.venv` and refuses personal vault/memory environment overrides.
+This command creates a local Python environment if needed, installs the declared framework dependencies, and prepares the testing environment. It checks for required executables first. It refuses a linked or unexpected `.venv` and refuses personal vault/memory environment overrides.
 
-Without `--mobile`, it prepares the Python side only. It does not install operating-system packages, accept Android licenses, create a personal vault, launch services, or deploy files. The repository's root `bootstrap.sh` is for runtime initialization; it is not this development bootstrap.
+Passing `--mobile` is optional and only necessary if you intend to run regression checks against the retired `apps/mobile/` Flutter code. The repository's root `bootstrap.sh` is for runtime initialization; it is not this development bootstrap.
 
 ### Dependencies and reproducibility
 
@@ -530,7 +524,7 @@ Antigravity is the normal implementation choice in this workflow. Let it finish 
 
 ### Step 5: Move into review
 
-Stop or pause the implementation agent's writing. Open Codex in the same checkout, give it the review prompt from section 11, and have it inspect the files and untracked additions. You do not need to transfer source files when both agents use the same folder.
+Stop or pause the implementation agent's writing. Start a separate read-only Gemini review session, or use Codex when selected for this review. Give it the review prompt from section 11 and have it inspect the files and untracked additions. You do not need to transfer source files when both agents use the same folder. The automated background loop retains its separate Codex reviewer.
 
 ### Step 6: Close the session with evidence
 
@@ -540,7 +534,7 @@ The final state should explain what changed, which checks passed or failed, whet
 
 ### Plan before a structural change
 
-For a larger task, ask Codex to identify the affected layers, current behavior, proposed interfaces, test strategy, and migration impact. An **interface** describes how components call one another. A **contract** describes what they can expect: inputs, outputs, errors, side effects, and compatibility.
+For a larger interactive task, ask Antigravity to identify the affected layers, current behavior, proposed interfaces, test strategy, and migration impact. Bring a focused decision to Codex when you want another perspective. An **interface** describes how components call one another. A **contract** describes what they can expect: inputs, outputs, errors, side effects, and compatibility.
 
 A **refactor** changes internal structure while intending to preserve behavior. It still needs tests because the intention can be wrong. An **architectural change** changes responsibility or relationships between components, such as selecting a new storage provider. Such a change should also update the durable architecture documentation when accepted.
 
@@ -552,7 +546,7 @@ Ask the implementation agent to preserve unrelated dirty files. Those files may 
 
 ### Review the actual change
 
-Use this prompt in Codex:
+Use this prompt in a separate Gemini review session, or in Codex when selected:
 
 > Review the saved implementation described in Development/HANDOFF.md. Inspect the complete relevant diff and new files, and compare them with the recorded baseline. Check correctness, compatibility, data preservation, test quality, and whether status messages match actual behavior. Report actionable findings with paths and evidence. Do not edit during this review. State which validation you personally ran and which results came from the handoff.
 
@@ -617,91 +611,64 @@ A **test** runs code with controlled inputs and checks an expected outcome. A **
 | Privacy scan | Known forbidden patterns or paths were not detected | Complete absence of sensitive information |
 | Runtime diagnostic | The checked installation passes its diagnostic rules | Real agent execution and all synchronization guarantees |
 
-### Framework tests
+### Primary framework tests
 
 From the source root:
 
 ```bash
-.venv/bin/python -m unittest discover -t . -s tests
+.venv/bin/pytest tests/
+python3 tests/harness/validation_harness.py -c .
+python3 Development/scripts/candidate_audit.py
+bash Development/scripts/pii-scanner.sh
 ```
 
-This selects the checkout's Python and discovers tests beneath `tests/`. The suite includes schema checks and synthetic tests of utilities and repository conventions. A failing assertion often names a missing field or an unexpected result.
+This executes the primary mdbase v0.3 test suite:
+- `.venv/bin/pytest tests/`: 259+ tests covering schema enforcement, CAS locking, frontmatter contracts, and helper libraries.
+- `validation_harness.py`: Validates all collection manifests against `mdbase.yaml`.
+- `candidate_audit.py`: Validates candidate task frontmatter rules and timezones.
+- `pii-scanner.sh`: Validates boundary and zero-leak PII invariants.
 
-### Gateway tests
+### Historical prototype regression tests
 
-From the source root:
+Earlier iterations included a FastAPI gateway (`apps/gateway/`) and a Flutter mobile app (`apps/mobile/`). These are retained as historical prototypes:
 
 ```bash
-.venv/bin/python -m pytest apps/gateway/tests -q
+# Gateway regression suite
+.venv/bin/pytest apps/gateway/tests -q
+
+# Mobile Flutter regression suite (requires Flutter SDK)
+cd apps/mobile && flutter test
 ```
 
-These tests use controlled requests, simulated or unavailable backends, and failure cases. Passing them does not prove that your server's real agent can execute a personal command.
-
-### Flutter analysis and tests
-
-From `apps/mobile`:
-
-```bash
-flutter analyze
-flutter test
-```
-
-For a targeted mailbox check in that same directory:
-
-```bash
-flutter test test/transport/hybrid_orchestrator_transport_test.dart
-```
-
-The standalone storage initialization check uses the resolved package configuration:
-
-```bash
-dart --packages=.dart_tool/package_config.json test/data/local_vault_initialization_check.dart
-```
-
-For an Android debug build:
-
-```bash
-flutter build apk --debug
-```
-
-Flutter's command reference explains the distinction between running, building, testing, and analysis. These are different commands because they establish different things. [Official Flutter CLI reference](https://docs.flutter.dev/reference/flutter-cli).
+Passing these tests verifies that historical prototypes remain regression-free; they are not part of the daily mdbase v0.3 AI agent workflow.
 
 ### Read a failure before changing code
 
 Identify the first meaningful error, the test name, expected behavior, and actual behavior. A missing SDK is an environment problem. A failed assertion after tests start is usually a behavior or expectation problem. A dependency warning is not automatically a failed test.
 
-For the current mailbox failures, the tests look for one path while the implementation writes another. The repair must account for both intended storage behavior and visible status text. Merely replacing expectations until the output turns green can preserve a user-facing bug.
-
-Run focused checks while developing. Run the broader affected suites before a checkpoint. Do not repeatedly rebuild an APK for a documentation-only edit. Conversely, changing Android configuration needs more evidence than a Markdown link check.
+Run focused checks while developing. Run the broader affected suites before a checkpoint.
 
 ### Record the result precisely
 
-“Tests passed” is incomplete. Write the command, the relevant count or outcome, and the environment. If two tests failed, report those failures. If a command could not start, say that it was blocked rather than passed. Preserve useful logs privately when needed; do not publish raw logs without reviewing their contents.
+“Tests passed” is incomplete. Write the command, the relevant count or outcome, and the environment. If any tests failed, report those failures. If a command could not start, say that it was blocked rather than passed. Preserve useful logs privately when needed; do not publish raw logs without reviewing their contents.
 
 ## 14. A small manual experiment using synthetic data
 
-An automated test is usually the best first check. Sometimes you need to see the desktop interface. On a configured Linux workstation, you can create a disposable vault for one run.
+Chrysalis operates directly on local Markdown notes. You can test agent workflows against a disposable temporary directory without touching personal runtime data.
 
-**Location: source root. Shell: Bash. This creates temporary synthetic app data and runs the Linux app.**
+**Location: source root. Shell: Bash. This creates a temporary synthetic directory with sample tasks.**
 
 ```bash
 testVault=$(mktemp -d -t chrysalis-demo-XXXXXX)
 printf 'Synthetic vault: %s\n' "$testVault"
-cd apps/mobile
-env CHRYSALIS_VAULT_PATH="$testVault" flutter run -d linux
+mkdir -p "$testVault/TaskNotes/Tasks"
+cp chrysalis/example-task.md "$testVault/TaskNotes/Tasks/2026-09-22-sample-task.md"
+python3 helpers/mdbase_helper.py --vault "$testVault" list
 ```
 
-The environment setting applies to the launched process. Enter only invented tasks such as “Review the sample project plan.” Inspect the generated files to connect the interface with the storage architecture. The temporary directory may contain a database as well as Markdown.
+In daily use, Obsidian with the community TaskNotes plugin opens the vault folder directly, rendering task boards and synchronizing with Google Calendar, while AI reasoning agents read and modify tasks directly.
 
-Stop the app when finished. Record the printed directory if you want to inspect it later. Delete it only after confirming it is the synthetic directory you created. Do not replace the variable with the personal vault path to “make the test realistic.”
-
-This exercise requires a detected Linux desktop target and a working native toolchain. If Flutter reports an environment problem, resolve that first; do not interpret the absence of a launched window as a failing task-persistence contract.
-
-### Testing an Android connection
-
-The mobile README documents an isolated USB gateway test using an unavailable backend. Read that procedure when needed. `adb reverse` forwards a port over an authorized USB connection; it does not configure a permanent production network route. Android does not inherit arbitrary environment variables from the host's terminal, so the debug gateway URL can be supplied at build time. Credentials are not embedded by that setup.
-
-Do not copy a host's `127.0.0.1` URL into a phone and assume it points to the host. Loopback is local to each device unless an explicit forwarding mechanism connects it.
+*(Historical Note)* In earlier versions, a Linux Flutter prototype could be launched with `env CHRYSALIS_VAULT_PATH="$testVault" flutter run -d linux`. Since the mobile client has been retired in favor of Obsidian + TaskNotes, this manual test is preserved only for historical interest.
 
 ## 15. Parallel work and Git worktrees
 
@@ -760,7 +727,7 @@ No scan can prove that every personal reference has been removed. For example, a
 
 **Deployment** installs a selected version into a running or daily-use environment. It is distinct from editing, saving, committing, pushing, and building.
 
-Your workstation is where development and review happen. Your server retains the personal installation. A reviewed release checkout on the server supplies the exact source revision you intend to install. Keep it separate from an old dirty recovery checkout.
+Your local source repository is where development and review happen. The personal installation may live in synchronized storage. Prepare a vetted release package from the exact reviewed source revision you intend to install. A separate release checkout on another host is optional; it is not a second place for active development. Keep recovery archives outside the active workspace.
 
 ### Understand the updater's scope
 
@@ -768,15 +735,17 @@ Your workstation is where development and review happen. Your server retains the
 
 The allowlist includes `Development/`, so reusable development documentation can be installed as framework documentation. Its presence in a runtime vault does not make that vault the engineering source. Installed documents remain snapshots.
 
-Mobile application source is not an APK installer. Updating the vault does not build or install the phone app. Gateway source and service processes also have their own lifecycle; applying vault files does not automatically upgrade or restart the service.
+The updater currently does not consult Git ignore rules during its recursive Development selection. A clean ordinary `git status` does not prove that ignored private feedback or other unrelated files are absent. Build and inspect an explicit release package that contains only the intended distributable files; use that package as `--source`.
+
+Retired historical prototypes such as the mobile application (`apps/mobile/`) and gateway daemon (`apps/gateway/`) are excluded from the updater allowlist entirely and are never deployed to personal vaults.
 
 ### A release procedure, explained
 
 1. Finish the source change and code review on the workstation.
 2. Run the required validation and privacy audit.
 3. Create a source commit identifying the reviewed result.
-4. Transfer or fetch that revision into a dedicated release checkout on the server.
-5. Verify the release checkout's commit and intended contents.
+4. Select that revision locally, or optionally transfer it to a dedicated release checkout on another host.
+5. Prepare a vetted release package from that revision and inspect its complete contents, excluding private and unrelated files.
 6. Preview the updater's effects on the explicit target vault.
 7. Inspect conflicts and changed files before applying the same revision.
 8. Run the read-only runtime diagnostic and rehearse the affected workflow.
@@ -786,22 +755,23 @@ GitHub can transport a reviewed revision, but a push is not a deployment trigger
 
 ### Example commands for a future reviewed release
 
-**Shell: PowerShell on a Windows runtime server. Example paths are synthetic and must be replaced with the actual reviewed release and personal vault paths. These commands are not a request to deploy the currently failing working tree.**
+**Shell: PowerShell on a Windows host. Example paths are synthetic and must be replaced with the selected source, prepared release package and personal vault paths. These commands are not a request to deploy an unreviewed working tree.**
 
 ```powershell
 $releaseSourcePath = 'C:\Chrysalis\release-source'
+$releasePackagePath = 'C:\Chrysalis\reviewed-package'
 $personalVaultPath = 'C:\Chrysalis\vault'
 git -C $releaseSourcePath status --short
 git -C $releaseSourcePath rev-parse HEAD
-python "$releaseSourcePath/update.py" --source $releaseSourcePath --target $personalVaultPath --dry-run
+python "$releaseSourcePath/update.py" --source $releasePackagePath --target $personalVaultPath --dry-run
 ```
 
-The first two commands inspect source state. The final command previews changes without applying them. Stop and inspect that preview. A conflict is a reason to reconcile ownership, not a reason to remove deployment history.
+The Git commands inspect source state; they do not audit ignored files or create the package. Prepare and inspect the package before running the final command, which previews changes without applying them. Stop and inspect that preview. A conflict is a reason to reconcile ownership, not a reason to remove deployment history.
 
 Only at the deliberate apply stage, using that same reviewed source:
 
 ```powershell
-python "$releaseSourcePath/update.py" --source $releaseSourcePath --target $personalVaultPath
+python "$releaseSourcePath/update.py" --source $releasePackagePath --target $personalVaultPath
 python "$releaseSourcePath/System/scripts/doctor.py" --vault $personalVaultPath --read-only
 ```
 
@@ -869,30 +839,23 @@ The shared Markdown workflow is still usable manually. Check the current directo
 
 For Antigravity's remote authentication, use its documented SSH OAuth flow rather than copying another machine's credentials. A remote timeout does not establish that the desktop client is broken. [Official Antigravity installation and authentication guide](https://antigravity.google/docs/cli/install/).
 
-## 20. The transition's verified state and unfinished work
+## 20. The framework's verified state and ongoing roadmap
 
-This section summarizes the migration evidence available when this guide was written. Test suites were not rerun merely to write the guide. Future engineering changes require fresh checks appropriate to their scope.
+This section summarizes the verified test baseline for the mdbase v0.3 AI agent framework:
 
-| Area | Evidence as of this guide |
+| Area | Current verified state |
 | --- | --- |
-| Source recovery | History, dirty changes, eligible untracked files, and deletions were transferred and verified |
-| Workstation environment | Python, Flutter/Dart, Android, and Linux native tooling were configured |
-| Android artifact | Debug APK built on the workstation |
-| Framework suite | 133 of 136 passed; three schema-contract failures remain |
-| Gateway suite | 11 passed, with dependency deprecation warnings |
-| Flutter analysis | Passed |
-| Flutter test suite | 101 passed; two mailbox-path expectation failures remain |
-| Standalone storage regression | Passed |
-| Codex | Authenticated, read shared context, startup hook execution observed |
-| Antigravity desktop | User-supplied report read shared context and matched Git state |
-| Antigravity hook | Installed configuration; actual execution unverified |
-| Full two-agent implementation/review cycle | Pending |
-| Runtime deployment rehearsal | Pending; personal runtime not changed by migration |
-| Continuous runtime service operation | Not established by migration |
+| Core agent framework | Conforms to mdbase v0.3 specification (`mdbase.yaml`, `_types/task.md`) |
+| Concurrency model | SHA-256 CAS file locking (`fcntl.flock`) and atomic replaces |
+| Python test suite | 259 passed, 1 skipped (optional jsonschema check) via `.venv/bin/pytest tests/` |
+| Collection schema validation | Passed via `python3 tests/harness/validation_harness.py -c .` |
+| Candidate audit | Passed via `python3 Development/scripts/candidate_audit.py` |
+| Zero-leak PII boundary | Passed via `bash Development/scripts/pii-scanner.sh` |
+| Retired gateway suite | 11 passed via `.venv/bin/pytest apps/gateway/tests -q` |
+| Codex & Antigravity hooks | Documented and configured in `.codex/` and `.agents/` |
+| External UI interoperability | Obsidian + TaskNotes plugin integration |
 
-The schema repair must account for fields beyond the three failed assertions: `linked_zettels`, `project_ref`, and Chrysalis NLP metadata were also removed in the dirty diff. The mailbox repair must account for actual writes and truthful status messages, not just the failing expectations.
-
-The next implementation brief is in `HANDOFF.md`. This beginner guide pauses that work to explain it; it does not repair those failures or authorize their deployment.
+The next implementation brief is in `HANDOFF.md`.
 
 ## 21. Reusable prompts for common situations
 
