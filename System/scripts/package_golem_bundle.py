@@ -32,7 +32,9 @@ def create_golem_bundle(output_path: Path):
         "contracts",
         "_contracts",
         "_templates",
-        "chrysalis/Workflows",
+        "TaskNotes/Workflows",
+        "TaskNotes/Views",
+        "TaskNotes/_templates",
         "System/_templates",
         "tests/harness",
     ]

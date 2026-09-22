@@ -134,7 +134,7 @@ class EngineValidator:
                     return name
 
         # Well-known path heuristics
-        if "chrysalis/Tasks" in norm_path or "chrysalis/TaskNotes/Tasks" in norm_path or "Tasks/" in norm_path or norm_path.startswith("Tasks/"):
+        if "TaskNotes/Tasks" in norm_path or "chrysalis/Tasks" in norm_path or "chrysalis/TaskNotes/Tasks" in norm_path or "Tasks/" in norm_path or norm_path.startswith("Tasks/"):
             return "task"
         if "Projects" in norm_path and norm_path.endswith("Roadmap.md"):
             return "project"

@@ -42,7 +42,7 @@ Chrysalis is an open, provider-independent AI Agent Framework operating on an **
 │                                ▼                                 │
 │                     ┌──────────────────────────────┐             │
 │                     │       EXECUTION TASKS        │             │
-│                     │  chrysalis/TaskNotes/Tasks/  │             │
+│                     │  TaskNotes/Tasks/            │             │
 │                     │  - 14-day horizon            │             │
 │                     │  - Modality baselines        │             │
 │                     └──────────────────────────────┘             │
@@ -81,7 +81,7 @@ Chrysalis is an open, provider-independent AI Agent Framework operating on an **
 Chrysalis operates across three strictly segregated spheres:
 
 1. **Framework Boundary (Source Repository)**:
-   - Owns collection manifests (`mdbase.yaml`), JSON Schema Draft 2020-12 type definitions (`_types/*.md`), runtime contracts (`contracts/`), templates (`_templates/`, `System/_templates/`), operational workflows (`chrysalis/Workflows/`), and deterministic Python helpers (`helpers/mdbase_helper.py`).
+   - Owns collection manifests (`mdbase.yaml`), JSON Schema Draft 2020-12 type definitions (`_types/*.md`), runtime contracts (`contracts/`), templates (`_templates/`, `System/_templates/`), operational workflows (`TaskNotes/Workflows/`), and deterministic Python helpers (`helpers/mdbase_helper.py`).
 2. **Runtime Agent Boundary (AI Reasoning Engine)**:
    - An executing AI model (Google Antigravity, Claude, OpenAI Codex, Gemini Spark, local LLMs) supplying cognitive reasoning. The agent ingests context, formulates structured action proposals, waits for human approval, and invokes database operations strictly conforming to framework contracts.
 3. **External Applications Boundary (UI & Transports)**:
@@ -107,7 +107,7 @@ The core data substrate unifies four collections into an interconnected hypergra
 | **Ingestion Sources** | `Sources/{source_id}.md` | `_types/source.md` | Immutable raw document metadata, SHA-256 digests, provenance tracking, and content-addressed deduplication. |
 | **Knowledge Zettels** | `Slipbox/{YYYYMMDDHHmmss}-{slug}.md` | `_types/zettel.md` | Atomic Zettelkasten claims and technical mental models with 14-digit local timestamp identifiers. |
 | **Project Roadmaps** | `Projects/{project_id}/Roadmap.md` | `_types/project.md` | Strategic project initiatives containing master deliverable ledgers, milestone horizons, and course syllabi mappings. |
-| **Execution Tasks** | `chrysalis/TaskNotes/Tasks/{YYYYMMDD}-{slug}.md` | `_types/task.md` | Concrete execution units categorized by cognitive modality and scheduled into ultradian focus blocks. |
+| **Execution Tasks** | `TaskNotes/Tasks/{YYYYMMDD}-{slug}.md` | `_types/task.md` | Concrete execution units categorized by cognitive modality and scheduled into ultradian focus blocks. |
 
 ### Hypergraph Linkage Invariants:
 - **Tasks $\to$ Projects**: Every task generated from a project links to its parent roadmap via `project_ref: "[[Projects/<id>/Roadmap]]"` and specifies `deliverable_id`.
@@ -167,7 +167,7 @@ To protect autonomous AI agents from indirect prompt injection, ingested documen
 
 | Component | Status | Disposition Rationale |
 | :--- | :--- | :--- |
-| **Tripartite Hypergraph** (`Slipbox/`, `Projects/`, `chrysalis/TaskNotes/Tasks/`) | **Retained** | Core architectural foundation connecting knowledge to action. |
+| **Tripartite Hypergraph** (`Slipbox/`, `Projects/`, `TaskNotes/Tasks/`) | **Retained** | Core architectural foundation connecting knowledge to action. |
 | **Zero-Leak PII Law & Scanner** | **Retained** | Absolute privacy invariant protecting personal data from public Git tracking. |
 | **Anti-Simulation Law** | **Retained** | Mandatory physical disk mutation; chat output alone never mutates state. |
 | **1:1 Public Template Matrix** | **Retained** | Sanitized public templates in `_templates/` and `System/_templates/`. |

@@ -62,19 +62,21 @@ From the source checkout, you can run the unified multi-check runner:
 python3 Development/scripts/check.py
 ```
 
-This runs candidate privacy checks, pinned dependency checks, the framework suite, and historical baseline regression tests. Every check has a named PASS/FAIL result and a separate log in `/tmp/chrysalis-check-*/`.
+This runs candidate privacy checks, pinned dependency checks, the framework suite, and mdbase Layer 1-3 validation. Every check has a named PASS/FAIL result and a separate log in `/tmp/chrysalis-check-*/`.
 
 ---
 
-## 4. Retired Historical Prototypes (`apps/gateway/` & `apps/mobile/`)
+## 4. Retired Historical Prototypes (`archive/deprecated-apps`)
 
-The bespoke Flutter mobile application (`apps/mobile/`) and FastAPI daemon (`apps/gateway/`) have been **formally retired**. The core framework operates directly on local Markdown files without daemon processes or custom mobile clients.
+The bespoke Flutter mobile application (`apps/mobile/`) and FastAPI daemon (`apps/gateway/`) have been **formally retired and archived** to the `archive/deprecated-apps` git branch. The `main` branch contains strictly what is required to run the redesigned mdbase v0.3 Chrysalis AI agent framework.
 
-Their code and tests remain in `apps/` solely for historical regression verification:
-- Gateway test suite: `.venv/bin/pytest apps/gateway/tests/test_gateway.py -q`
-- Mobile test suite: `cd apps/mobile && flutter test` (requires optional Flutter SDK toolchain)
+The core framework operates directly on local Markdown files without daemon processes or custom mobile clients. Mobile and desktop interaction is provided natively by Obsidian with the community TaskNotes plugin, Google Calendar synchronization, and candidate AI runtime agents (Gemini Spark, Google Antigravity, local LLMs).
 
-These legacy components are not required for framework development, runtime agent execution, or vault deployment.
+If historical inspection of the retired Flutter or FastAPI prototypes is ever needed, check out the remote branch:
+```bash
+git fetch origin archive/deprecated-apps
+git checkout archive/deprecated-apps
+```
 
 ---
 

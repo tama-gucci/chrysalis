@@ -1,5 +1,36 @@
 # Current engineering handoff
 
+## Framework Streamlining: TaskNotes Migration & Deprecated Apps Archival — 2026-09-22
+
+**Agent**: Antigravity (Framework Architect & Delivery Worker)  
+**Workspaces**: Primary (`source/chrysalis`, branch `main`) & Worktree (`source/chrysalis-agent-framework`, branch `redesign/mdbase-agent-framework`)  
+**Status**: All User Requirements Completed, Verified, and Ready to Sync  
+
+### 1. Key Accomplishments & Deliverables
+1. **Archival of Deprecated Substrates (`apps/`)**:
+   - Preserved full git history of the retired Flutter mobile application (`apps/mobile/`) and FastAPI gateway daemon (`apps/gateway/`) on dedicated remote branch `archive/deprecated-apps`.
+   - Executed `git rm -rf apps` from `main` to ensure the primary branch strictly houses only what is required to execute the redesigned mdbase v0.3 AI agent framework.
+2. **Substrate Renaming (`chrysalis/` -> `TaskNotes/`)**:
+   - Renamed root directory `chrysalis/` to `TaskNotes/` via `git mv chrysalis TaskNotes`.
+   - `TaskNotes/` now houses `Tasks/example-task.md`, `Workflows/` (01-08 + legacy runbooks), `Views/`, and `_templates/Task-Template.md`.
+   - Updated `.gitignore` to whitelist `/TaskNotes/`, `/TaskNotes/Views/**`, `/TaskNotes/Workflows/**`, `/TaskNotes/_templates/**`, and `/TaskNotes/Tasks/example-task.md`, while maintaining strict quarantine over personal task notes (`/TaskNotes/Tasks/*`, `/TaskNotes/Archive/**`, `/TaskNotes/Daily/**`).
+3. **Documentation & Contract Modernization**:
+   - Updated `README.md`, `ARCHITECTURE.md`, `STATUS.md`, `_contracts/task.contract.md`, `_types/task.md`, `contracts/agent-runtime.contract.md`, `contracts/mdbase-collection.contract.md`, `docs/golem-deployment-and-spark-test-guide.md`, `docs/spark-agent-system-prompt.md`, `System/scripts/package_golem_bundle.py`, and `System/scripts/setup_golem.ps1` to reflect `TaskNotes/` and the archival of `apps/`.
+   - Cleaned up `Development/BEGINNERS-GUIDE.md`, `Development/TESTING.md`, `Development/WORKSTATION-SETUP.md`, `Development/scripts/setup-dev.sh`, `Development/scripts/check.py`, and `update.py` to remove deprecated mobile/gateway requirements and toolchains.
+   - Removed deprecated `Development/scripts/dev_tools.py`.
+4. **Test Suite Adaptation & Local Check Alignment**:
+   - Updated test suites (`tests/test_mdbase_v03_milestone2.py`, `tests/e2e/test_tier1_features.py`, `tests/e2e/test_tier2_boundaries.py`, `tests/harness/engine_validator.py`, `tests/test_contracts_and_memory.py`, `tests/test_deployment.py`, `update.py`) to validate `TaskNotes/` paths.
+   - Streamlined `Development/scripts/check.py` to run candidate privacy, dependency locks, pip consistency, pytest framework discovery, and validation harness without external Flutter dependencies.
+
+### 2. Verification Receipts
+- **Candidate Privacy Audit (`candidate_audit.py`)**: **PASS (0 findings)**.
+- **PII Boundary Scanner (`pii-scanner.sh`)**: **PASS (0 findings)**.
+- **Pytest Suite (`.venv/bin/pytest tests/`)**: **259 passed, 1 skipped in 6.41s** (0 errors, 0 failures).
+- **Validation Harness (`python3 tests/harness/validation_harness.py -c .`)**: **PASS on Layers 1, 2, and 3** (0 errors, 0 warnings).
+- **Local Check Suite (`python3 Development/scripts/check.py`)**: **Overall: PASS** (all checks passed in ~9s).
+
+---
+
 ## Golem Deployment Automation & Gemini Spark Direct Integration Testing — 2026-09-22
 
 **Agent**: Antigravity (Implementation & Delivery Worker)  

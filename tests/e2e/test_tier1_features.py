@@ -349,13 +349,16 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         [F5-T1-02] Every runtime state file must have an exact sanitized public template counterpart.
         Authoritative Source: AGENTS.md Part II § 2 Mandatory 1-to-1 Public Template Matrix.
         """
+        task_tmpl = REPO_ROOT / "TaskNotes" / "_templates" / "Task-Template.md"
+        if not task_tmpl.exists():
+            task_tmpl = REPO_ROOT / "chrysalis" / "_templates" / "Task-Template.md"
         required_templates = [
             REPO_ROOT / "System" / "_templates" / "Life-Roadmap.template.md",
             REPO_ROOT / "System" / "_templates" / "Scheduling-Memory.template.md",
             REPO_ROOT / "System" / "_templates" / "System-Health.template.md",
             REPO_ROOT / "System" / "_templates" / "Changelog.template.md",
             REPO_ROOT / "System" / "_templates" / "Daily-Note.template.md",
-            REPO_ROOT / "chrysalis" / "_templates" / "Task-Template.md",
+            task_tmpl,
             REPO_ROOT / "Projects" / "_templates" / "Project-Template.md",
             REPO_ROOT / "Slipbox" / "_templates" / "Slipbox-Template.md",
             REPO_ROOT / "System" / "Environment" / "_templates" / "System-Manifest-Template.md",
@@ -521,11 +524,13 @@ class TestTier1FeatureCoverage(unittest.TestCase):
 
     def test_f8_01_public_tasknotes_validate_schema(self):
         """
-        [F8-T1-01] chrysalis/Tasks/example-task.md must strictly validate against universal task frontmatter schema.
+        [F8-T1-01] TaskNotes/Tasks/example-task.md must strictly validate against universal task frontmatter schema.
         Authoritative Source: PROJECT.md § Feature Inventory F8; AGENTS.md § Universal Chrysalis Task Frontmatter Schema.
         """
-        task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
-        self.assertTrue(task_path.exists(), "chrysalis/Tasks/example-task.md must exist")
+        task_path = REPO_ROOT / "TaskNotes" / "Tasks" / "example-task.md"
+        if not task_path.exists():
+            task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
+        self.assertTrue(task_path.exists(), "TaskNotes/Tasks/example-task.md must exist")
         fm, _ = read_frontmatter(task_path)
         required_fields = [
             "title", "status", "due", "priority", "urgency_tier",
@@ -542,7 +547,9 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         [F8-T1-02] Frontmatter timestamps in public task notes must use explicit local timezone offsets (e.g. -05:00).
         Authoritative Source: AGENTS.md § 1 Vault Substrate & Core System Invariants.
         """
-        task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
+        task_path = REPO_ROOT / "TaskNotes" / "Tasks" / "example-task.md"
+        if not task_path.exists():
+            task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
         fm, _ = read_frontmatter(task_path)
         created = str(fm.get("dateCreated") or fm.get("created") or "")
         self.assertTrue(
@@ -555,7 +562,9 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         [F8-T1-03] Tags in example-task.md must exist in the Life-Roadmap template tag registry.
         Authoritative Source: doctor/SKILL.md § Check 3 (Life-Roadmap Tag Registry Validation).
         """
-        task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
+        task_path = REPO_ROOT / "TaskNotes" / "Tasks" / "example-task.md"
+        if not task_path.exists():
+            task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
         roadmap_tmpl = REPO_ROOT / "System" / "_templates" / "Life-Roadmap.template.md"
         task_fm, _ = read_frontmatter(task_path)
         roadmap_fm, _ = read_frontmatter(roadmap_tmpl)

@@ -62,10 +62,10 @@ Chrysalis/
 │   ├── Life-Roadmap.md         <-- Seeded with 2026-09-22 start date
 │   ├── Memory.md               <-- User profile & chronotype baselines
 │   └── System-Health.md
-├── chrysalis/
-│   ├── TaskNotes/
-│   │   ├── Tasks/              <-- All task notes live here
-│   │   └── Archive/
+├── TaskNotes/
+│   ├── Tasks/              <-- All task notes live here
+│   ├── Archive/
+│   ├── Views/
 │   └── Workflows/
 │       ├── 01-capture.md
 │       ├── ...
@@ -199,7 +199,7 @@ In Gemini Spark, paste a class syllabus snippet inside an untrusted block:
 1. Spark parses the payload safely and presents the extracted deliverables.
 2. Upon approval, Spark calls `mdbase_create_record` to create:
    - `Projects/arch-1301/Roadmap.md` with structured deliverables ledger.
-   - Task notes in `chrysalis/TaskNotes/Tasks/` linked via `project_ref: "[[Projects/arch-1301/Roadmap]]"`.
+   - Task notes in `TaskNotes/Tasks/` linked via `project_ref: "[[Projects/arch-1301/Roadmap]]"`.
 
 ### Stage 6: Compare-and-Swap (CAS) Conflict Test
 1. In Obsidian on Golem, open the task note created in Stage 3 and manually edit its description or body.
@@ -222,5 +222,5 @@ In Gemini Spark, paste a class syllabus snippet inside an untrusted block:
 | :--- | :--- | :--- |
 | Spark reports `Tool call timed out` | Golem is asleep or daemon disconnected from relay | Verify `mdbase connect status` in PowerShell. Check power settings to ensure Golem doesn't sleep while plugged in. |
 | `409 Conflict: Revision mismatch` | Note was modified concurrently in Obsidian | Spark must call `mdbase_read_record` to obtain the latest `revision = sha256(...)` before issuing `mdbase_update_record`. |
-| Task created but missing from TaskNotes view | TaskNotes folder setting mismatch | In Obsidian Settings $\to$ TaskNotes, ensure the tasks directory is set to `chrysalis/TaskNotes/Tasks`. |
+| Task created but missing from TaskNotes view | TaskNotes folder setting mismatch | In Obsidian Settings $\to$ TaskNotes, ensure the tasks directory is set to `TaskNotes/Tasks`. |
 | Frontmatter schema error in `doctor.py` | Unexpected frontmatter key | Verify all keys adhere to `_types/task.md`. Extra properties are strictly rejected under JSON Schema 2020-12 `additionalProperties: false`. |

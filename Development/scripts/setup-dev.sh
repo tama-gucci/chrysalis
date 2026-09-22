@@ -2,14 +2,8 @@
 # Prepare a source checkout; never initialize or deploy a personal vault.
 set -euo pipefail
 
-mobile=false
-case "${1:-}" in
-  '') ;;
-  --mobile) mobile=true ;;
-  *) printf 'Usage: bash Development/scripts/setup-dev.sh [--mobile]\n' >&2; exit 2 ;;
-esac
-if (( $# > 1 )); then
-  printf 'Only --mobile is supported.\n' >&2
+if (( $# > 0 )); then
+  printf 'Usage: bash Development/scripts/setup-dev.sh\n' >&2
   exit 2
 fi
 if [[ -n "${CHRYSALIS_VAULT_PATH:-}" || -n "${CHRYSALIS_MEMORY_PATH:-}" ]]; then
@@ -26,9 +20,6 @@ if [[ "$(git rev-parse --show-toplevel)" != "$repository" ]]; then
   exit 1
 fi
 python3 -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 14) else "Use Python 3.14 for the pinned local environment")'
-if $mobile; then
-  flutter_bin="$(python3 Development/scripts/dev_tools.py)"
-fi
 if [[ -L .venv || ( -e .venv && ! -f .venv/pyvenv.cfg ) ]]; then
   printf 'Refusing an unexpected or linked .venv directory.\n' >&2
   exit 1
@@ -40,8 +31,5 @@ if [[ ! -x .venv/bin/python ]]; then
   printf 'The existing .venv is not a usable Linux environment. Recreate it locally.\n' >&2
   exit 1
 fi
-.venv/bin/python -m pip install -r requirements.txt -r apps/gateway/requirements.txt -r Development/requirements.lock
-if $mobile; then
-  (cd apps/mobile && "$flutter_bin" pub get --enforce-lockfile)
-fi
+.venv/bin/python -m pip install -r requirements.txt -r Development/requirements.lock
 printf '%s\n' 'Ready. Validate with:' 'python3 Development/scripts/check.py'

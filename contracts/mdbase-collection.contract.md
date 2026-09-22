@@ -54,7 +54,7 @@ All records across the four collections strictly adhere to deterministic filesys
 
 | Collection Domain | Canonical Path Pattern | Path Glob (`match.path_glob`) | Naming Convention & RegEx | Primary Identity | Uniqueness Scope |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Tasks** | `chrysalis/Tasks/{YYYYMMDD}-{title-slug}.md` | `chrysalis/Tasks/**/*.md` | `^[0-9]{8}-[a-z0-9-]+(\.md)?$` | File Path / Title | Collection |
+| **Tasks** | `TaskNotes/Tasks/{YYYYMMDD}-{title-slug}.md` | `TaskNotes/Tasks/**/*.md` | `^[0-9]{8}-[a-z0-9-]+(\.md)?$` | File Path / Title | Collection |
 | **Project Roadmaps** | `Projects/{project_id}/Roadmap.md` | `Projects/**/Roadmap.md` | `^Projects/[a-z0-9-]+/Roadmap\.md$` | `project_id` | Collection |
 | **Knowledge Zettels** | `Slipbox/{YYYYMMDDHHmmss}-{slug}.md` | `Slipbox/**/*.md` | `^[0-9]{14}(-[a-z0-9-]+)?(\.md)?$` | `id` | Collection |
 | **Ingestion Sources** | `Sources/{source_id}.md` | `Sources/**/*.md` | `^[a-z0-9-]+(\.md)?$` | `id` & `sha256` | Collection (both) |
@@ -63,7 +63,7 @@ All records across the four collections strictly adhere to deterministic filesys
 1. **Case Sensitivity & Character Set**: Filenames use lowercase alphanumeric characters and single hyphens (`[a-z0-9-]`). No spaces, underscores, or uppercase characters in newly generated filenames.
 2. **Task Date Prefix**: The 8-digit date prefix `YYYYMMDD` on task files corresponds to `due` date if known, or `dateCreated` if `due` is null, ensuring chronological sorting in directory views.
 3. **Zettel Timestamp ID**: The 14-digit local timestamp prefix `YYYYMMDDHHmmss` guarantees collision-free chronological indexing. An optional descriptive kebab-case slug may be appended.
-4. **Project Roadmap Singularity**: Each project folder under `Projects/` MUST contain exactly one authoritative `Roadmap.md`. Granular execution tasks reside in `chrysalis/Tasks/` and link back to the project.
+4. **Project Roadmap Singularity**: Each project folder under `Projects/` MUST contain exactly one authoritative `Roadmap.md`. Granular execution tasks reside in `TaskNotes/Tasks/` and link back to the project.
 5. **Collection Escaping Prohibition**: No path may contain path traversal tokens (`..`). Resolved paths must remain within the collection root.
 
 ---
@@ -78,7 +78,7 @@ kind: mdbase.type
 name: task
 version: 1
 match:
-  path_glob: "chrysalis/Tasks/**/*.md"
+  path_glob: "TaskNotes/Tasks/**/*.md"
 schema:
   dialect: json-schema-2020-12
   value:
@@ -484,7 +484,7 @@ All relationships across the Chrysalis Hypergraph are declared using standard Ma
 | **Task** | `project_ref` | Single link | `project` | `[[Projects/<id>/Roadmap]]` | Target's `deliverables[].task_ref` |
 | **Task** | `linked_zettels` | Array of links | `zettel` | `[[<zettel_id>]]` | Zettel backlinks query |
 | **Project** | `source_ref` | Single link | `source` | `[[Sources/<source_id>]]` | Source's `extracted_projects[]` |
-| **Project** | `deliverables[].task_ref` | Single link | `task` | `[[chrysalis/Tasks/<slug>]]` | Task's `project_ref` |
+| **Project** | `deliverables[].task_ref` | Single link | `task` | `[[TaskNotes/Tasks/<slug>]]` | Task's `project_ref` |
 | **Project** | `linked_zettels` | Array of links | `zettel` | `[[<zettel_id>]]` | Zettel's `project_ref` |
 | **Zettel** | `source_ref` | Single link | `source` | `[[Sources/<source_id>]]` | Source's `extracted_zettels[]` |
 | **Zettel** | `project_ref` | Single link | `project` | `[[Projects/<id>/Roadmap]]` | Project's `linked_zettels[]` |
@@ -492,7 +492,7 @@ All relationships across the Chrysalis Hypergraph are declared using standard Ma
 | **Source** | `supersedes` | Single link | `source` | `[[Sources/<older_id>]]` | Provenance lineage chain |
 | **Source** | `extracted_projects`| Array of links | `project` | `[[Projects/<id>/Roadmap]]` | Project's `source_ref` |
 | **Source** | `extracted_zettels` | Array of links | `zettel` | `[[<zettel_id>]]` | Zettel's `source_ref` |
-| **Source** | `extracted_tasks` | Array of links | `task` | `[[chrysalis/Tasks/<slug>]]` | Task traceability |
+| **Source** | `extracted_tasks` | Array of links | `task` | `[[TaskNotes/Tasks/<slug>]]` | Task traceability |
 
 ### 5.2 Root-Escaping Protection
 Wikilinks must never reference paths outside the collection root. Any link containing `../` that resolves outside the collection boundary is rejected with `link_target_escapes_collection`.
@@ -525,7 +525,7 @@ In the mdbase v0.3 write pipeline, lifecycle hooks execute strictly before JSON 
 - **Dual-Tier Retention Architecture**:
   1. **Master Ledger**: `Projects/<id>/Roadmap.md` retains 100% of deliverables across the entire project horizon in its `deliverables` frontmatter array.
   2. **Active Planning Window**: The default planning horizon is 14 days (defined in `System/Memory.md`).
-  3. **Near-Term Deliverables**: Deliverables due within 14 days materialize as active tasks in `chrysalis/Tasks/` with `status: todo`.
+  3. **Near-Term Deliverables**: Deliverables due within 14 days materialize as active tasks in `TaskNotes/Tasks/` with `status: todo`.
   4. **Out-of-Horizon Deliverables**: Deliverables due $> 14$ days in the future remain inert (`scheduled: null`, `urgency_tier: 1`). They are filtered out of daily calendar schedules.
 
 ### 8.2 Uncertain Date Modeling (`date_uncertain: true`, `due: null`)
@@ -549,7 +549,7 @@ When an updated course syllabus is submitted:
 2. Extract deliverables from new syllabus.
 3. Compare against existing `deliverables` in `Projects/<id>/Roadmap.md`:
    - **Modified Deliverables**: If `due` or `title` has changed, update roadmap ledger and update existing task note via CAS `if_revision`.
-   - **New Deliverables**: Append to roadmap ledger; if due within 14 days, materialize new task note in `chrysalis/Tasks/`.
+   - **New Deliverables**: Append to roadmap ledger; if due within 14 days, materialize new task note in `TaskNotes/Tasks/`.
    - **Dropped Deliverables**: If an existing deliverable is missing from new syllabus, set `status: archived` in roadmap ledger and archive existing task note (never delete).
 4. Update roadmap `source_ref`, `source_checksum`, and `last_updated`.
 

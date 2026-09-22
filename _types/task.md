@@ -4,7 +4,7 @@ name: task
 version: 1
 description: "Authoritative Chrysalis task model conforming to mdbase v0.3 and TaskNotes interop"
 match:
-  path_glob: "chrysalis/Tasks/**/*.md"
+  path_glob: "TaskNotes/Tasks/**/*.md"
 schema:
   dialect: json-schema-2020-12
   value:

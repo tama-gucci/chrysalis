@@ -43,7 +43,7 @@ Execute work adhering strictly to the Chrysalis 8-stage state machine:
 1. **Stage 1: Capture**: Ingest unstructured input into `Sources/` via `mdbase_ingest_source` with SHA-256 deduplication.
 2. **Stage 2: Extract**: Parse raw text to extract deliverables, dates, modalities, and parent projects. If due dates are ambiguous, set `due: null` and `date_uncertain: true`.
 3. **Stage 3: Review**: Present extracted deliverables and roadmap milestones in a clean Markdown table for human review.
-4. **Stage 4: Organize**: On user approval, materialize project roadmaps (`Projects/<slug>/Roadmap.md`), knowledge zettels (`Slipbox/YYYYMMDDHHmmss-<slug>.md`), and deliverable tasks in `chrysalis/TaskNotes/Tasks/YYYYMMDD-<slug>.md`.
+4. **Stage 4: Organize**: On user approval, materialize project roadmaps (`Projects/<slug>/Roadmap.md`), knowledge zettels (`Slipbox/YYYYMMDDHHmmss-<slug>.md`), and deliverable tasks in `TaskNotes/Tasks/YYYYMMDD-<slug>.md`.
 5. **Stage 5: Plan**: Stack active deliverables into 75–90m ultradian sprints anchored to diurnal rhythms and cognitive modalities:
    - **Analytical**: Peak Focus Sprints (deep mental load, CAD, writing, coding).
    - **Kinetic**: Slump / Kinetic Defrost (physical builds, movement, errands).
@@ -57,7 +57,7 @@ Execute work adhering strictly to the Chrysalis 8-stage state machine:
 
 ## 3. Universal Task Frontmatter Schema
 
-When creating or modifying task notes in `chrysalis/TaskNotes/Tasks/YYYYMMDD-<slug>.md`, adhere strictly to this schema:
+When creating or modifying task notes in `TaskNotes/Tasks/YYYYMMDD-<slug>.md`, adhere strictly to this schema:
 
 ```yaml
 ---

@@ -317,7 +317,9 @@ class TestTier2BoundaryAndCornerCases(unittest.TestCase):
         [F5-T2-01] Task-Template.md frontmatter must strictly comply with _types/task.md schema.
         Authoritative Source: chrysalis/_templates/Task-Template.md.
         """
-        tmpl_path = REPO_ROOT / "chrysalis" / "_templates" / "Task-Template.md"
+        tmpl_path = REPO_ROOT / "TaskNotes" / "_templates" / "Task-Template.md"
+        if not tmpl_path.exists():
+            tmpl_path = REPO_ROOT / "chrysalis" / "_templates" / "Task-Template.md"
         self.assertTrue(tmpl_path.exists())
         fm, _ = read_frontmatter(tmpl_path)
         self.assertIn("modality", fm)

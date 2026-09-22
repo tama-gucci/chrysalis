@@ -64,9 +64,11 @@ $requiredDirs = @(
     "$VaultPath\System",
     "$VaultPath\System\_templates",
     "$VaultPath\System\scripts",
-    "$VaultPath\chrysalis\TaskNotes\Tasks",
-    "$VaultPath\chrysalis\TaskNotes\Archive",
-    "$VaultPath\chrysalis\Workflows",
+    "$VaultPath\TaskNotes\Tasks",
+    "$VaultPath\TaskNotes\Archive",
+    "$VaultPath\TaskNotes\Workflows",
+    "$VaultPath\TaskNotes\Views",
+    "$VaultPath\TaskNotes\_templates",
     "$VaultPath\Projects\_templates",
     "$VaultPath\Slipbox\_templates",
     "$VaultPath\Sources"
@@ -103,9 +105,12 @@ if (Test-Path "$RepoRoot\contracts\agent-runtime.contract.md") {
 }
 
 # Copy Workflows
-if (Test-Path "$RepoRoot\chrysalis\Workflows") {
-    Copy-Item "$RepoRoot\chrysalis\Workflows\*.md" "$VaultPath\chrysalis\Workflows\" -Force
-    Write-Host "  Copied: chrysalis/Workflows/*.md" -ForegroundColor Green
+if (Test-Path "$RepoRoot\TaskNotes\Workflows") {
+    Copy-Item "$RepoRoot\TaskNotes\Workflows\*.md" "$VaultPath\TaskNotes\Workflows\" -Force
+    Write-Host "  Copied: TaskNotes/Workflows/*.md" -ForegroundColor Green
+} elseif (Test-Path "$RepoRoot\chrysalis\Workflows") {
+    Copy-Item "$RepoRoot\chrysalis\Workflows\*.md" "$VaultPath\TaskNotes\Workflows\" -Force
+    Write-Host "  Copied: chrysalis/Workflows/*.md -> TaskNotes/Workflows/" -ForegroundColor Green
 }
 
 # Seed Life-Roadmap.md

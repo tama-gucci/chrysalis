@@ -47,6 +47,7 @@ ENGINE_FILES = [
     "Slipbox/README.md",
     "System/Runtime-Constitution.md",
     "System/Environment/Environment-Index.md",
+    "TaskNotes/Tasks/example-task.md",
     "chrysalis/Tasks/example-task.md",
 ]
 
@@ -60,6 +61,9 @@ ENGINE_DIRS = [
     "System/_templates",
     "Projects/_templates",
     "Slipbox/_templates",
+    "TaskNotes/_templates",
+    "TaskNotes/Views",
+    "TaskNotes/Workflows",
     "chrysalis/_templates",
     "chrysalis/Views",
     "chrysalis/Workflows",
@@ -67,6 +71,7 @@ ENGINE_DIRS = [
 
 PROTECTED_PATHS = [
     "System/Life-Roadmap.md",
+    "System/Memory.md",
     "System/Scheduling-Memory.md",
     "System/System-Health.md",
     "System/Changelog.md",
@@ -238,7 +243,7 @@ def deployment_plan(source, target, *, plugins=False):
         destination = destination_relative(target, relative)
         dst = safe_path(target, destination)
         # Existing settings belong to this installation, even on first deploy.
-        if relative in {".gitignore", ".agent/skills.json", "chrysalis/Tasks/example-task.md"} and dst.exists():
+        if relative in {".gitignore", ".agent/skills.json", "TaskNotes/Tasks/example-task.md", "chrysalis/Tasks/example-task.md"} and dst.exists():
             continue
         before = fingerprint(dst)
         after = fingerprint(safe_path(source, relative))

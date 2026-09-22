@@ -100,7 +100,7 @@ class TestContractsAndMemory(unittest.TestCase):
             self.assertIn(f"name: {t}", body, f"Collection contract must define type {t}")
 
         # Tripartite and source path globs
-        self.assertIn("chrysalis/Tasks/**/*.md", body)
+        self.assertTrue("TaskNotes/Tasks/**/*.md" in body or "chrysalis/Tasks/**/*.md" in body)
         self.assertIn("Projects/**/Roadmap.md", body)
         self.assertIn("Slipbox/**/*.md", body)
         self.assertIn("Sources/**/*.md", body)

@@ -14,7 +14,6 @@ import tempfile
 import time
 
 from candidate_audit import audit, candidates, identities, repository
-from dev_tools import flutter
 
 ENVIRONMENT_CHECK = """import importlib.metadata as metadata
 from pathlib import Path
@@ -33,9 +32,8 @@ print("Python and dependency pins match")
 TRUSTED_ROOT = Path(__file__).resolve().parents[2]
 POLICY_FILES = (
     'Development/scripts/check.py', 'Development/scripts/candidate_audit.py',
-    'Development/scripts/dev_tools.py', 'Development/scripts/pii-scanner.sh',
-    'Development/scripts/setup-dev.sh', 'Development/requirements.lock',
-    'Development/skills/audit-dev/SKILL.md',
+    'Development/scripts/pii-scanner.sh', 'Development/scripts/setup-dev.sh',
+    'Development/requirements.lock', 'Development/skills/audit-dev/SKILL.md',
 )
 
 
@@ -46,7 +44,7 @@ def policy_issues(root):
             path = root / name
             if path.is_symlink() or not path.is_file() or path.read_bytes() != (TRUSTED_ROOT / name).read_bytes():
                 issues.append(f'Protected check policy differs: {name}; review and update the trusted controller separately.')
-        for pattern in ('tests/**/test_*.py', 'apps/gateway/tests/test_*.py', 'apps/mobile/test/**/*test.dart'):
+        for pattern in ('tests/**/test_*.py',):
             for source in TRUSTED_ROOT.glob(pattern):
                 relative = source.relative_to(TRUSTED_ROOT)
                 if not (root / relative).is_file():
@@ -112,34 +110,19 @@ def main():
             raise ValueError('Candidate privacy failed; inspect the report before executing candidate tests.')
         python = root / '.venv/bin/python'
         if (root / '.venv').is_symlink() or not python.is_file():
-            raise ValueError('Run bash Development/scripts/setup-dev.sh --mobile in this checkout first.')
-        flutter_bin = flutter(root)
-        dart = flutter_bin.parent / 'cache/dart-sdk/bin/dart'
+            raise ValueError('Run bash Development/scripts/setup-dev.sh in this checkout first.')
         env = os.environ.copy()
         env['PYTHONNOUSERSITE'] = '1'
         for key in ('PYTHONPATH', 'PYTHONHOME', 'PYTHONOPTIMIZE', 'PYTEST_ADDOPTS', 'PYTEST_PLUGINS'):
             env.pop(key, None)
-        env['PATH'] = str(flutter_bin.parent) + os.pathsep + env.get('PATH', '')
         checks = [
             ('dependencies', [str(python), '-c', ENVIRONMENT_CHECK, str(TRUSTED_ROOT / 'Development/requirements.lock')], root, 60),
             ('pip-consistency', [str(python), '-m', 'pip', 'check'], root, 60),
-            ('flutter-version', [str(flutter_bin), '--version', '--machine'], root, 120),
             ('framework', [str(python), '-m', 'unittest', 'discover', '-t', '.', '-s', 'tests'], root, 300),
-            ('gateway', [str(python), '-m', 'pytest', 'apps/gateway/tests', '-q'], root, 60),
-            ('flutter-analysis', [str(flutter_bin), 'analyze', '--no-pub'], root / 'apps/mobile', 300),
-            ('flutter-tests', [str(flutter_bin), 'test', '--no-pub', '--reporter', 'expanded'], root / 'apps/mobile', 600),
-            ('storage-regression', [str(dart), '--packages=.dart_tool/package_config.json', 'test/data/local_vault_initialization_check.dart'], root / 'apps/mobile', 60),
+            ('validation-harness', [str(python), 'tests/harness/validation_harness.py', '-c', '.'], root, 60),
         ]
         for name, command, cwd, timeout in checks:
             result = run_check(name, command, cwd, directory, timeout, env)
-            if name == 'flutter-version' and result['passed']:
-                try:
-                    version = json.loads(Path(result['log']).read_text())
-                    if version.get('flutterVersion') != '3.47.2' or not version.get('dartSdkVersion', '').startswith('3.13.2'):
-                        raise ValueError('Expected Flutter 3.47.2 with Dart 3.13.2')
-                except ValueError as error:
-                    result.update(passed=False, exit_code=1, detail=str(error))
-                    print(f'FAIL flutter-version: {error}', flush=True)
             results.append(result)
         final = identities(root, candidates(root))
         unchanged = final == initial['fingerprints']

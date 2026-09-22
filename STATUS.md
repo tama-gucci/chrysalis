@@ -14,7 +14,7 @@ Reviewed against source on 2026-09-22. This document is the authoritative ground
 | **Collection & Path Contract** | **Implemented** | `contracts/mdbase-collection.contract.md` (tripartite model, record identities, wikilinks matrix, 14-day horizon). |
 | **Persistent Agent Memory** | **Implemented** | `System/Memory.md` and public template `System/_templates/Memory.template.md` (deterministic preferences, modality baselines, bounded multiplier learning). |
 | **Validation & CAS Helpers** | **Implemented** | `helpers/mdbase_helper.py` (atomic CAS mutations via `fcntl.flock`, `compute_revision`, `validate_record`, `check_semantic_duplicate`, `reconcile_syllabus`). |
-| **Operational Workflow Runbooks** | **Implemented** | `chrysalis/Workflows/01-capture.md` through `08-continuation.md`. |
+| **Operational Workflow Runbooks** | **Implemented** | `TaskNotes/Workflows/01-capture.md` through `08-continuation.md`. |
 | **Local Python Test Harness** | **Implemented** | Standalone validation harness in `tests/harness/validation_harness.py`, unit/integration tests in `tests/test_validation_harness.py`. |
 | **Synthetic Worked Scenario & Failure Suite** | **Implemented** | Synthetic syllabus v1, v2 revised, transcript, prompt injection (`fixtures/`), end-to-end runner in `tests/test_worked_scenario.py`, 6 negative tests in `tests/test_failure_modes.py`. |
 | **Staged Vault Migration Plan** | **Implemented** | Non-destructive migration plan in `docs/staged-migration-plan.md`. |
@@ -40,8 +40,8 @@ Reviewed against source on 2026-09-22. This document is the authoritative ground
 
 | Subsystem | Previous Role | Retirement Rationale |
 | :--- | :--- | :--- |
-| **`apps/gateway/`** | FastAPI REST/WebSocket daemon on port 8765 | Retired; core framework operates directly on local mdbase Markdown files. |
-| **`apps/mobile/`** | Custom Flutter cross-platform mobile client | Retired; mobile access provided by Obsidian Mobile / candidate runtime agents. |
+| **`apps/gateway/`** | FastAPI REST/WebSocket daemon on port 8765 | Archived on `archive/deprecated-apps`; core framework operates directly on local mdbase Markdown files. |
+| **`apps/mobile/`** | Custom Flutter cross-platform mobile client | Archived on `archive/deprecated-apps`; mobile access provided by Obsidian Mobile / candidate runtime agents. |
 | **Vendored Obsidian Plugin Bundle** | 5.2 MB pre-compiled `main.js` in `.obsidian/` | Retired; community TaskNotes plugin installed directly by users. |
 | **Autonomous 3 AM Cron** | Background night-time task mutations | Retired; runtimes execute interactively with human approval. |
 | **Static Candidate Task Pools** | `quick_wins` and `deep_work` lists in YAML | Retired; replaced by dynamic mdbase queries. |

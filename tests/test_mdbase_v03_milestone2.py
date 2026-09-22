@@ -171,7 +171,9 @@ class TestPortableAgentWorkflows(unittest.TestCase):
         ]
         for filename, stage, lifecycle_state, req_approval in expected_stages:
             with self.subTest(workflow=filename):
-                wf_path = REPO_ROOT / "chrysalis" / "Workflows" / filename
+                wf_path = REPO_ROOT / "TaskNotes" / "Workflows" / filename
+                if not wf_path.exists():
+                    wf_path = REPO_ROOT / "chrysalis" / "Workflows" / filename
                 self.assertTrue(wf_path.exists(), f"Workflow {filename} must exist")
                 fm, body = parse_frontmatter(wf_path.read_text(encoding="utf-8"))
                 self.assertEqual(fm.get("type"), "agent_workflow")

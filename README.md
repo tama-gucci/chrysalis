@@ -9,7 +9,7 @@ Markdown notes with YAML frontmatter are the authoritative database records. AI 
 ## Core Capabilities
 
 - **mdbase v0.3 Markdown Database Substrate**: Authoritative collection configuration (`mdbase.yaml`), JSON Schema Draft 2020-12 type definitions (`_types/*.md`), and data contracts (`_contracts/`).
-- **Tripartite Knowledge-Execution Continuum**: Living bidirectional hypergraph linking atomic research notes (`Slipbox/`), strategic course and project roadmaps (`Projects/`), and granular execution tasks (`chrysalis/TaskNotes/Tasks/`) via `[[WikiLinks]]`.
+- **Tripartite Knowledge-Execution Continuum**: Living bidirectional hypergraph linking atomic research notes (`Slipbox/`), strategic course and project roadmaps (`Projects/`), and granular execution tasks (`TaskNotes/Tasks/`) via `[[WikiLinks]]`.
 - **Exact-Document Authority & CAS Concurrency**: Document bytes on disk are authoritative; document revisions are strictly `sha256(bytes)`. Mutations enforce Compare-And-Swap (`if_revision`), failing closed against concurrent modifications.
 - **Provider-Independent Agent Runtime Contract**: Standardized 8-stage state machine (`contracts/agent-runtime.contract.md`) with explicit preconditions, structured input/output envelopes, and error handling.
 - **Mandatory Human Approval Gate**: Air-gapped confirmation requirement before any physical disk mutation or scheduling action is executed.
@@ -28,7 +28,7 @@ $$\text{Capture} \longrightarrow \text{Extract} \longrightarrow \text{Review} \l
 1. **Capture**: Raw document ingestion into `Sources/` with cryptographic SHA-256 provenance and duplicate detection.
 2. **Extract**: Passive text analysis isolating deliverables, milestones, concepts, and relationships.
 3. **Review**: Human-in-the-loop review of extracted deliverables, uncertain dates, and proposed structure.
-4. **Organize**: Structuring into the Tripartite Continuum: `Projects/**/Roadmap.md`, `Slipbox/**/*.md`, and `chrysalis/TaskNotes/Tasks/**/*.md`.
+4. **Organize**: Structuring into the Tripartite Continuum: `Projects/**/Roadmap.md`, `Slipbox/**/*.md`, and `TaskNotes/Tasks/**/*.md`.
 5. **Plan**: Two-stage focus scheduling (Staging and Calibration) pairing cognitive modalities with 75–90m ultradian focus sprints.
 6. **Act**: Atomic filesystem mutation with CAS `if_revision` validation and exclusive file locking.
 7. **Record Outcomes**: Verification of disk persistence and deterministic memory updates in `System/Memory.md`.
@@ -97,8 +97,9 @@ chrysalis/
 │   ├── synthetic_syllabus_v2_revised.txt
 │   ├── synthetic_transcript.txt
 │   └── synthetic_prompt_injection.txt
-├── chrysalis/
-│   ├── Tasks/                # Active execution task notes (or TaskNotes/Tasks/ under runtime vault)
+├── TaskNotes/
+│   ├── Tasks/                # Active execution task notes
+│   ├── Views/                # TaskNotes Obsidian database views (.base)
 │   └── Workflows/            # Operational workflow definitions (01-capture to 08-continuation)
 ├── Projects/                 # Project roadmaps and deliverable master ledgers
 ├── Slipbox/                  # Atomic Zettelkasten research notes

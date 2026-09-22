@@ -99,20 +99,29 @@ helpers/**/*.pyc
 # Private feedback stays local; only sanitized engineering summaries are public.
 /Development/feedback/
 
-# 7. Whitelist Chrysalis & Legacy TaskNotes Views, Workflows, Templates & Example Task ONLY
-!/chrysalis/
+# 7. Whitelist TaskNotes Views, Workflows, Templates & Example Task ONLY
+!/TaskNotes/
+/TaskNotes/*
+!/TaskNotes/Views/
+!/TaskNotes/Views/**
+!/TaskNotes/Workflows/
+!/TaskNotes/Workflows/**
+!/TaskNotes/_templates/
+!/TaskNotes/_templates/**
+!/TaskNotes/Tasks/
+/TaskNotes/Tasks/*
+!/TaskNotes/Tasks/example-task.md
+/TaskNotes/Archive/
+/TaskNotes/Archive/**
+/TaskNotes/Daily/
+/TaskNotes/Daily/**
+
+# Legacy / Runtime Vault chrysalis/ subfolder (quarantined personal substrates)
+/chrysalis/
 /chrysalis/*
-!/chrysalis/Views/
-!/chrysalis/Views/**
-!/chrysalis/Workflows/
-!/chrysalis/Workflows/**
-!/chrysalis/_templates/
-!/chrysalis/_templates/**
-!/chrysalis/Tasks/
 /chrysalis/Tasks/*
-!/chrysalis/Tasks/example-task.md
-/chrysalis/Archive/
 /chrysalis/Archive/**
+/chrysalis/Daily/**
 
 # 8. Whitelist Public Project & Slipbox Templates/READMEs ONLY
 !/Projects/
@@ -150,40 +159,10 @@ helpers/**/*.pyc
 !/.obsidian/plugins/**/connector.js
 !/.obsidian/plugins/**/sqlite3.wasm
 
-# 10. Whitelist Mobile Client & Ambient Gateway Application Substrates
-!/apps/
-/apps/*
-!/apps/mobile/
-/apps/mobile/.dart_tool/
-/apps/mobile/.flutter-plugins
-/apps/mobile/.flutter-plugins-dependencies
-/apps/mobile/build/
-/apps/mobile/.pub-cache/
-/apps/mobile/.pub/
-/apps/mobile/.idea/
-/apps/mobile/**/*.iml
-/apps/mobile/android/.gradle/
-/apps/mobile/android/local.properties
-/apps/mobile/android/**/build/
-/apps/mobile/ios/Pods/
-/apps/mobile/ios/.symlinks/
-/apps/mobile/ios/Flutter/Flutter.framework
-/apps/mobile/ios/Flutter/Flutter.podspec
-/apps/mobile/ios/Flutter/Generated.xcconfig
-/apps/mobile/ios/Flutter/flutter_export_environment.sh
-/apps/mobile/ios/Flutter/ephemeral/
-/apps/mobile/ios/Flutter/app.framework
-/apps/mobile/linux/flutter/ephemeral/
-/apps/mobile/windows/flutter/ephemeral/
-/apps/mobile/macos/Flutter/ephemeral/
-/apps/mobile/macos/Flutter/flutter_export_environment.sh
-/apps/mobile/macos/Flutter/GeneratedPluginRegistrant.swift
-!/apps/gateway/
-/apps/gateway/.venv/
-/apps/gateway/venv/
-/apps/gateway/**/__pycache__/
-/apps/gateway/**/*.pyc
-/apps/gateway/.pytest_cache/
+# 10. Archived / Deprecated Application Substrates (Strictly Denied on Main)
+/apps/
+/apps/**
+
 
 # 11. Catch-all: Explicitly Deny Secrets, OS Cruft, and Sync Conflicts Everywhere
 *.env

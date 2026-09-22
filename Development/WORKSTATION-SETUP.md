@@ -17,8 +17,8 @@ Chrysalis is an open, provider-independent AI agent framework operating on an **
 - **Bash** and standard core utilities
 - **ripgrep** (`rg`) for fast boundary and text scanning
 
-### Note on Retired Historical Prototypes (`apps/gateway/` & `apps/mobile/`)
-The bespoke Flutter mobile application (`apps/mobile/`) and FastAPI daemon (`apps/gateway/`) have been **formally retired**. The core framework operates directly on local Markdown files without daemon processes or custom mobile clients. You do NOT need Flutter SDK, Dart SDK, Android Studio, or C++ build tools for core Chrysalis development. Their code and tests are preserved in `apps/` solely for historical regression verification.
+### Note on Retired Historical Prototypes (`archive/deprecated-apps`)
+The bespoke Flutter mobile application (`apps/mobile/`) and FastAPI daemon (`apps/gateway/`) have been **formally retired and archived** to branch `archive/deprecated-apps`. The `main` branch contains strictly what is required to run the redesigned mdbase v0.3 Chrysalis AI agent framework. You do NOT need Flutter SDK, Dart SDK, Android Studio, or C++ build tools for Chrysalis development. If needed for historical reference, the retired apps are preserved on `archive/deprecated-apps`.
 
 ## Standard Verification Commands
 

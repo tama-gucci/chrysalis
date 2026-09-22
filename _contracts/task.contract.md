@@ -9,8 +9,8 @@ description: "Authoritative data contract for Chrysalis execution tasks in mdbas
 # Task Data Contract
 
 ## 1. Scope and Identity
-This contract governs all execution tasks located in `chrysalis/Tasks/**/*.md`.
-- **Identity Pattern**: `chrysalis/Tasks/{YYYYMMDD}-{slug}.md`.
+This contract governs all execution tasks located in `TaskNotes/Tasks/**/*.md` (or runtime `chrysalis/TaskNotes/Tasks/**/*.md`).
+- **Identity Pattern**: `TaskNotes/Tasks/{YYYYMMDD}-{slug}.md`.
 - **Target Type**: `task` conforming to `_types/task.md`.
 
 ## 2. Lifecycle State Transitions

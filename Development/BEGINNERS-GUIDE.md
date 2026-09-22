@@ -128,12 +128,9 @@ source-checkout/
     _templates/                   Sanitized examples of private runtime files
     Orchestrators/                Runtime orchestration documentation
   .agent/skills/                  Runtime agent runbooks (doctor, audit, calibrate, plan, etc.)
-  apps/                           Retired historical prototypes
-    mobile/                       Flutter/Dart app (retired)
-    gateway/                      Python HTTP/WebSocket service (retired)
+  TaskNotes/                      Reusable task templates, views, workflows, example task
   tests/                          Framework tests, including synthetic integration checks
   .obsidian/                      Selected Obsidian configuration and vendored assets
-  chrysalis/                      Reusable task templates, views, workflows, example task
   update.py                       Framework deployment and rollback
 ```
 
@@ -255,23 +252,13 @@ Capture -> Extract -> Review -> Organize -> Plan -> Act -> Outcome Verification 
 
 External applications (Obsidian desktop/mobile with TaskNotes plugin, Google Calendar) serve as user interfaces and synchronization layers, completely decoupled from agent reasoning.
 
-### 5.7 Retired Historical Prototypes (`apps/gateway/` and `apps/mobile/`)
+### 5.7 Retired Historical Prototypes (`archive/deprecated-apps`)
 
-Earlier iterations of Chrysalis explored a bespoke Flutter mobile application (`apps/mobile/`) and a local Python/FastAPI daemon (`apps/gateway/` on port 8765). These components have been **retired**:
+Earlier iterations of Chrysalis explored a bespoke Flutter mobile application (`apps/mobile/`) and a local Python/FastAPI daemon (`apps/gateway/` on port 8765). These components have been **formally retired and archived** to branch `archive/deprecated-apps`:
 
 - Chrysalis now operates directly on local mdbase v0.3 Markdown files via standard agent tools and `helpers/mdbase_helper.py`, eliminating the need for a running daemon process.
 - The UI role is fulfilled by Obsidian with the community TaskNotes plugin, eliminating the need for a separate Flutter mobile app.
-
-The historical source code is retained under `apps/` exclusively for regression verification:
-
-| File | Historical role |
-| --- | --- |
-| `apps/gateway/main.py` | FastAPI application creation and routing |
-| `apps/gateway/config.py` | Host, port, simulation settings |
-| `apps/gateway/orchestrator_bridge.py` | Agent backend bridge interface |
-| `apps/gateway/tests/test_gateway.py` | Gateway regression tests |
-| `apps/mobile/lib/` | Flutter app source |
-| `apps/mobile/test/` | Flutter test suite |
+- The `main` branch contains strictly what is required to run the redesigned mdbase v0.3 framework. Historical source code and tests for the gateway and mobile client are preserved on the remote branch `archive/deprecated-apps`.
 
 ### 5.8 External UI & Community Tools Interoperability
 
@@ -348,8 +335,6 @@ A good handoff is portable because a human can read it. If either IDE changes, y
 | Python virtual environment (`.venv`) | Isolates checkout Python dependencies (`pytest`, `pyyaml`, `cerberus`, `jsonschema`) |
 | Git & ripgrep | Version control, diffing, boundary scanning, and pattern search |
 | Antigravity & Codex | Autonomous agent interfaces used for engineering |
-| Flutter & Dart SDK | *(Historical)* Used only for regression testing retired `apps/mobile/` code |
-| JDK & Android SDK | *(Historical)* Used only for historical Android build verification |
 | direnv | Loads reviewed project-local environment settings |
 
 An **SDK**, or software development kit, supplies tools and libraries for a platform. A **compiler** transforms source into another form that can run. A **dependency** is another package your program uses. A **package manager** downloads and organizes those packages.
@@ -358,11 +343,11 @@ The versions verified during transition are recorded in `HANDOFF.md`. Future ins
 
 ### PATH and environment variables
 
-When you type `flutter`, the shell searches directories listed in `PATH`. If it cannot find the executable, you may see “command not found” even though the SDK exists elsewhere on disk.
+When you type `python3`, the shell searches directories listed in `PATH`. If it cannot find the executable, you may see “command not found” even though the binary exists elsewhere on disk.
 
-An **environment variable** is a named setting a process receives when it starts. Examples include `JAVA_HOME`, `ANDROID_HOME`, and `CHRYSALIS_VAULT_PATH`. A program launched from one terminal may receive different settings from a program launched through the desktop menu.
+An **environment variable** is a named setting a process receives when it starts. Examples include `PATH` and `CHRYSALIS_VAULT_PATH`. A program launched from one terminal may receive different settings from a program launched through the desktop menu.
 
-The local `.envrc` is executable shell configuration used by direnv. Inspect it before allowing it. In the prepared checkout it selects the SDKs and the checkout's `.venv`. It is intentionally not public source. `direnv allow .` approves that configuration for the directory; it is not a command to download SDKs.
+The local `.envrc` is executable shell configuration used by direnv. Inspect it before allowing it. In the prepared checkout it selects the checkout's `.venv`. It is intentionally not public source. `direnv allow .` approves that configuration for the directory; it is not a command to download SDKs.
 
 Do not set `CHRYSALIS_VAULT_PATH` to your personal installation in an ordinary engineering shell. When a manual test needs a vault, explicitly point it at a synthetic temporary directory for that test process.
 
@@ -378,13 +363,11 @@ bash Development/scripts/setup-dev.sh
 
 This command creates a local Python environment if needed, installs the declared framework dependencies, and prepares the testing environment. It checks for required executables first. It refuses a linked or unexpected `.venv` and refuses personal vault/memory environment overrides.
 
-Passing `--mobile` is optional and only necessary if you intend to run regression checks against the retired `apps/mobile/` Flutter code. The repository's root `bootstrap.sh` is for runtime initialization; it is not this development bootstrap.
+The repository's root `bootstrap.sh` is for runtime initialization; it is not this development bootstrap.
 
 ### Dependencies and reproducibility
 
-`pubspec.yaml` declares mobile requirements. `pubspec.lock` records resolved package versions. Keep the lockfile unless a dependency change is intentional. Python requirement files currently use version ranges rather than a complete environment lock, so fresh installations may resolve differently over time.
-
-If a setup step unexpectedly changes a tracked file, inspect the diff. During migration, Flutter regenerated plugin lists to include `jni`. That was recorded instead of hidden. Reproducibility means being able to explain the tools and inputs behind a result.
+`requirements.txt` and `Development/requirements.lock` declare the pinned Python environment. Keep the lockfile unless a dependency change is intentional. Reproducibility means being able to explain the tools and inputs behind a result.
 
 ## 8. Learn the terminal without memorizing everything
 
@@ -404,7 +387,7 @@ git log -5 --oneline
 
 `pwd` means “print working directory.” `ls` lists files. `cd` changes directory. `..` means the parent directory. `.` means the current directory. `~` means your home directory. Quotes keep a path with spaces together.
 
-For example, `cd apps/mobile` works from the source root. It fails from your home directory unless an `apps/mobile` folder exists there. When unsure, run `pwd` before the next command.
+For example, `cd tests` works from the source root. It fails from your home directory unless a `tests` folder exists there. When unsure, run `pwd` before the next command.
 
 `Ctrl+C` generally interrupts a foreground command. It does not necessarily undo files that the command already changed. If a build or agent was interrupted, inspect Git state and the relevant outputs before retrying.
 
@@ -415,7 +398,7 @@ Some output includes a suggested command. Read it before running it. Do not copy
 | Example | Where it belongs |
 | --- | --- |
 | `git status --short` | Terminal |
-| `flutter analyze` | Terminal in `apps/mobile` |
+| `.venv/bin/pytest tests/` | Terminal in repository root |
 | “Read the handoff and review this diff” | Agent conversation |
 | `/hooks` | Codex CLI's interactive input |
 | “Read and follow the audit-dev skill” | Agent conversation |
@@ -630,21 +613,13 @@ This executes the primary mdbase v0.3 test suite:
 
 ### Historical prototype regression tests
 
-Earlier iterations included a FastAPI gateway (`apps/gateway/`) and a Flutter mobile app (`apps/mobile/`). These are retained as historical prototypes:
+### Historical prototype archival
 
-```bash
-# Gateway regression suite
-.venv/bin/pytest apps/gateway/tests -q
-
-# Mobile Flutter regression suite (requires Flutter SDK)
-cd apps/mobile && flutter test
-```
-
-Passing these tests verifies that historical prototypes remain regression-free; they are not part of the daily mdbase v0.3 AI agent workflow.
+Earlier iterations included a FastAPI gateway and a Flutter mobile app. These have been formally retired and preserved on the `archive/deprecated-apps` branch, keeping the `main` branch streamlined exclusively for the mdbase v0.3 agent framework.
 
 ### Read a failure before changing code
 
-Identify the first meaningful error, the test name, expected behavior, and actual behavior. A missing SDK is an environment problem. A failed assertion after tests start is usually a behavior or expectation problem. A dependency warning is not automatically a failed test.
+Identify the first meaningful error, the test name, expected behavior, and actual behavior. A missing tool is an environment problem. A failed assertion after tests start is usually a behavior or expectation problem. A dependency warning is not automatically a failed test.
 
 Run focused checks while developing. Run the broader affected suites before a checkpoint.
 
@@ -662,7 +637,7 @@ Chrysalis operates directly on local Markdown notes. You can test agent workflow
 testVault=$(mktemp -d -t chrysalis-demo-XXXXXX)
 printf 'Synthetic vault: %s\n' "$testVault"
 mkdir -p "$testVault/TaskNotes/Tasks"
-cp chrysalis/example-task.md "$testVault/TaskNotes/Tasks/2026-09-22-sample-task.md"
+cp TaskNotes/Tasks/example-task.md "$testVault/TaskNotes/Tasks/2026-09-22-sample-task.md"
 python3 helpers/mdbase_helper.py --vault "$testVault" list
 ```
 
@@ -737,7 +712,7 @@ The allowlist includes `Development/`, so reusable development documentation can
 
 The updater currently does not consult Git ignore rules during its recursive Development selection. A clean ordinary `git status` does not prove that ignored private feedback or other unrelated files are absent. Build and inspect an explicit release package that contains only the intended distributable files; use that package as `--source`.
 
-Retired historical prototypes such as the mobile application (`apps/mobile/`) and gateway daemon (`apps/gateway/`) are excluded from the updater allowlist entirely and are never deployed to personal vaults.
+Retired historical prototypes such as the mobile application and gateway daemon have been archived to branch `archive/deprecated-apps`, are excluded from the updater allowlist entirely, and are never deployed to personal vaults.
 
 ### A release procedure, explained
 
@@ -851,7 +826,6 @@ This section summarizes the verified test baseline for the mdbase v0.3 AI agent 
 | Collection schema validation | Passed via `python3 tests/harness/validation_harness.py -c .` |
 | Candidate audit | Passed via `python3 Development/scripts/candidate_audit.py` |
 | Zero-leak PII boundary | Passed via `bash Development/scripts/pii-scanner.sh` |
-| Retired gateway suite | 11 passed via `.venv/bin/pytest apps/gateway/tests -q` |
 | Codex & Antigravity hooks | Documented and configured in `.codex/` and `.agents/` |
 | External UI interoperability | Obsidian + TaskNotes plugin integration |
 
@@ -979,9 +953,9 @@ The next implementation brief is in `HANDOFF.md`.
 These are optional exercises, not a request to modify the current unfinished implementation.
 
 1. **Orient without editing.** Run the read-only Git commands and explain the branch, HEAD, and dirty state in your own words. Compare your explanation with an agent's report.
-2. **Trace one field.** Pick `status` and locate it in the task schema, Dart model, parser, and tests. Explain why the components must agree.
-3. **Trace one saved task.** Read `saveTask` in the synchronizer. Identify the cache update, journal entry, and provider write. Explain why that does not prove phone-to-server delivery.
-4. **Understand one failure.** Read a mailbox test and identify the expected path. Compare it with the client default and visible status text. Describe the inconsistency before proposing a fix.
+2. **Trace one field.** Pick `status` and locate it in `_types/task.md`, `_contracts/task.contract.md`, `contracts/agent-runtime.contract.md`, and tests. Explain why the components must agree.
+3. **Trace one saved task.** Read `helpers/mdbase_helper.py` task creation and validation. Identify the frontmatter formatting, CAS revision check, and file atomic write.
+4. **Understand one lifecycle flow.** Trace the 8-stage runtime lifecycle (`contracts/agent-runtime.contract.md`) from ingest to scheduled timeblock.
 5. **Practice a handoff.** Ask an agent for a read-only explanation, then save a sanitized summary of evidence and unanswered questions in an appropriate engineering note.
 6. **Complete a real review cycle.** Use the bounded repair from the current handoff, have one agent implement and the other review, and record what each independently verified.
 7. **Practice deployment on synthetic data first.** After source validation, ask for an updater rehearsal using an explicitly disposable target. Inspect what the allowlist includes before planning a personal runtime promotion.
@@ -990,6 +964,6 @@ You are ready for more independent work when you can explain which directory own
 
 ## 24. Where to verify details later
 
-Repository behavior is grounded in [ARCHITECTURE.md](../ARCHITECTURE.md), [STATUS.md](../STATUS.md), [the current handoff](HANDOFF.md), [the agent workflow](AGENT-WORKFLOW.md), and [the workstation runbook](WORKSTATION-SETUP.md). Use [TESTING.md](TESTING.md) for broader validation and [the mobile README](../apps/mobile/README.md) for the isolated USB procedure.
+Repository behavior is grounded in [ARCHITECTURE.md](../ARCHITECTURE.md), [STATUS.md](../STATUS.md), [the current handoff](HANDOFF.md), [the agent workflow](AGENT-WORKFLOW.md), and [the workstation runbook](WORKSTATION-SETUP.md). Use [TESTING.md](TESTING.md) for broader validation.
 
 The source files named throughout the guide explain current implementation. Product documentation explains supported client behavior, but installed versions and account configuration still need local verification. When a behavior changes, update the guide and handoff with the new evidence rather than silently treating a dated result as current.
