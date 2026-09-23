@@ -80,7 +80,7 @@ You can seed the vault on Golem using either:
 - **Option A (Git)**:
   ```powershell
   cd $env:USERPROFILE\Documents
-  git clone -b redesign/mdbase-agent-framework https://github.com/tama-gucci/chrysalis.git Chrysalis
+  git clone https://github.com/tama-gucci/chrysalis.git Chrysalis
   ```
 - **Option B (PowerShell Setup Helper)**: Run `setup_golem.ps1` (see Section 6) which automatically scaffolds folders and copies the schemas.
 
@@ -176,7 +176,7 @@ In Gemini Spark, type:
 *Pass Criteria*:
 1. Spark presents a confirmation prompt showing the task parameters.
 2. Click **Confirm** in the Gemini UI.
-3. Check Golem disk: `$env:USERPROFILE\Documents\Chrysalis\chrysalis\TaskNotes\Tasks\YYYYMMDD-review-acc-cad-assignment.md` exists with valid YAML frontmatter (`status: todo`, `modality: analytical`, `scheduled: null`, timezone `-05:00`).
+3. Check Golem disk: `$env:USERPROFILE\Documents\Chrysalis\TaskNotes\Tasks\YYYYMMDD-review-acc-cad-assignment.md` exists with valid YAML frontmatter (`status: todo`, `modality: analytical`, `scheduled: null`, timezone `-05:00`).
 
 ### Stage 4: TaskNotes & Calendar Sync Verification
 1. Open **Obsidian** on Golem (or mobile synced to Golem).
