@@ -84,49 +84,61 @@ foreach ($dir in $requiredDirs) {
 # 3. Deploying Configuration & Schemas
 Write-Host "`n[3/5] Deploying mdbase v0.3 Schemas, Workflows & Contracts..." -ForegroundColor Yellow
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RepoRoot = Resolve-Path "$ScriptDir\..\.."
+$RepoRoot = (Resolve-Path "$ScriptDir\..\..").Path
 
-# Copy mdbase.yaml
-if (Test-Path "$RepoRoot\mdbase.yaml") {
-    Copy-Item "$RepoRoot\mdbase.yaml" "$VaultPath\mdbase.yaml" -Force
-    Write-Host "  Copied: mdbase.yaml" -ForegroundColor Green
+$isSelfVault = $false
+try {
+    $ResolvedVault = (Resolve-Path -Path $VaultPath -ErrorAction SilentlyContinue)
+    if ($ResolvedVault -and ($ResolvedVault.Path -eq $RepoRoot)) {
+        $isSelfVault = $true
+    }
+} catch {
+    $isSelfVault = $false
 }
 
-# Copy _types
-if (Test-Path "$RepoRoot\_types") {
-    Copy-Item "$RepoRoot\_types\*.md" "$VaultPath\_types\" -Force
-    Write-Host "  Copied: _types/*.md (task, project, zettel, source schemas)" -ForegroundColor Green
-}
+if ($isSelfVault) {
+    Write-Host "  Vault directory is the repository checkout ($VaultPath)." -ForegroundColor Green
+    Write-Host "  Schemas, workflows, and contracts already in place; skipping copy." -ForegroundColor Gray
+} else {
+    # Copy mdbase.yaml
+    if (Test-Path "$RepoRoot\mdbase.yaml") {
+        Copy-Item "$RepoRoot\mdbase.yaml" "$VaultPath\mdbase.yaml" -Force
+        Write-Host "  Copied: mdbase.yaml" -ForegroundColor Green
+    }
 
-# Copy _contracts
-if (Test-Path "$RepoRoot\contracts\agent-runtime.contract.md") {
-    Copy-Item "$RepoRoot\contracts\agent-runtime.contract.md" "$VaultPath\_contracts\" -Force
-    Write-Host "  Copied: _contracts/agent-runtime.contract.md" -ForegroundColor Green
-}
+    # Copy _types
+    if (Test-Path "$RepoRoot\_types") {
+        Copy-Item "$RepoRoot\_types\*.md" "$VaultPath\_types\" -Force
+        Write-Host "  Copied: _types/*.md (task, project, zettel, source schemas)" -ForegroundColor Green
+    }
 
-# Copy Workflows
-if (Test-Path "$RepoRoot\TaskNotes\Workflows") {
-    Copy-Item "$RepoRoot\TaskNotes\Workflows\*.md" "$VaultPath\TaskNotes\Workflows\" -Force
-    Write-Host "  Copied: TaskNotes/Workflows/*.md" -ForegroundColor Green
-} elseif (Test-Path "$RepoRoot\chrysalis\Workflows") {
-    Copy-Item "$RepoRoot\chrysalis\Workflows\*.md" "$VaultPath\TaskNotes\Workflows\" -Force
-    Write-Host "  Copied: chrysalis/Workflows/*.md -> TaskNotes/Workflows/" -ForegroundColor Green
-}
+    # Copy _contracts
+    if (Test-Path "$RepoRoot\contracts\agent-runtime.contract.md") {
+        Copy-Item "$RepoRoot\contracts\agent-runtime.contract.md" "$VaultPath\_contracts\" -Force
+        Write-Host "  Copied: _contracts/agent-runtime.contract.md" -ForegroundColor Green
+    }
 
-# Seed Life-Roadmap.md
-if (Test-Path "$RepoRoot\System\Life-Roadmap.md") {
-    Copy-Item "$RepoRoot\System\Life-Roadmap.md" "$VaultPath\System\Life-Roadmap.md" -Force
-    Write-Host "  Seeded: System/Life-Roadmap.md (Pre-configured for 2026-09-22)" -ForegroundColor Green
-} elseif (Test-Path "$RepoRoot\System\_templates\Life-Roadmap.template.md") {
-    Copy-Item "$RepoRoot\System\_templates\Life-Roadmap.template.md" "$VaultPath\System\Life-Roadmap.md" -Force
-    Write-Host "  Seeded: System/Life-Roadmap.md (from template)" -ForegroundColor Green
-}
+    # Copy Workflows
+    if (Test-Path "$RepoRoot\TaskNotes\Workflows") {
+        Copy-Item "$RepoRoot\TaskNotes\Workflows\*.md" "$VaultPath\TaskNotes\Workflows\" -Force
+        Write-Host "  Copied: TaskNotes/Workflows/*.md" -ForegroundColor Green
+    }
 
-# Seed Memory.md
-if (-not (Test-Path "$VaultPath\System\Memory.md")) {
-    if (Test-Path "$RepoRoot\System\_templates\Memory.template.md") {
-        Copy-Item "$RepoRoot\System\_templates\Memory.template.md" "$VaultPath\System\Memory.md" -Force
-        Write-Host "  Seeded: System/Memory.md (from template)" -ForegroundColor Green
+    # Seed Life-Roadmap.md
+    if (Test-Path "$RepoRoot\System\Life-Roadmap.md") {
+        Copy-Item "$RepoRoot\System\Life-Roadmap.md" "$VaultPath\System\Life-Roadmap.md" -Force
+        Write-Host "  Seeded: System/Life-Roadmap.md (Pre-configured for 2026-09-22)" -ForegroundColor Green
+    } elseif (Test-Path "$RepoRoot\System\_templates\Life-Roadmap.template.md") {
+        Copy-Item "$RepoRoot\System\_templates\Life-Roadmap.template.md" "$VaultPath\System\Life-Roadmap.md" -Force
+        Write-Host "  Seeded: System/Life-Roadmap.md (from template)" -ForegroundColor Green
+    }
+
+    # Seed Memory.md
+    if (-not (Test-Path "$VaultPath\System\Memory.md")) {
+        if (Test-Path "$RepoRoot\System\_templates\Memory.template.md") {
+            Copy-Item "$RepoRoot\System\_templates\Memory.template.md" "$VaultPath\System\Memory.md" -Force
+            Write-Host "  Seeded: System/Memory.md (from template)" -ForegroundColor Green
+        }
     }
 }
 
@@ -136,9 +148,9 @@ $harnessScript = "$RepoRoot\tests\harness\validation_harness.py"
 if (Test-Path $harnessScript) {
     python $harnessScript -c $VaultPath
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "  Harness Status: 🟢 100% PASS (Zero errors, zero warnings)" -ForegroundColor Green
+        Write-Host "  Harness Status: [PASS] 100% PASS (Zero errors, zero warnings)" -ForegroundColor Green
     } else {
-        Write-Host "  Harness Status: 🔴 Validation reported issues. Review output above." -ForegroundColor Red
+        Write-Host "  Harness Status: [FAIL] Validation reported issues. Review output above." -ForegroundColor Red
     }
 } else {
     Write-Host "  Harness script not found at: $harnessScript (Skipping validation check)" -ForegroundColor DarkYellow
@@ -158,7 +170,7 @@ if ($RegisterDaemonTask) {
         try {
             Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings -User $env:USERNAME -RunLevel Highest -Force | Out-Null
             Start-ScheduledTask -TaskName $TaskName
-            Write-Host "  Registered & Started Scheduled Task: $TaskName" -ForegroundColor Green
+            Write-Host "  Registered and Started Scheduled Task: $TaskName" -ForegroundColor Green
             Write-Host "  Configured: Unlimited execution time (PT0S) and battery operation permitted." -ForegroundColor Gray
         } catch {
             Write-Host "  Failed to register scheduled task: $_. Please run PowerShell as Administrator." -ForegroundColor Red
@@ -172,6 +184,6 @@ Write-Host "`n================================================================="
 Write-Host "  Chrysalis Vault Ready on Golem!                                 " -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host "Next Steps:" -ForegroundColor White
-Write-Host "1. Pair your collection:  cd `"$VaultPath`"; mdbase connect init" -ForegroundColor Gray
+Write-Host "1. Pair your collection:  cd '$VaultPath'; mdbase connect init" -ForegroundColor Gray
 Write-Host "2. Connect Gemini Spark:  Configure endpoint https://mcp.mdbase.dev/v1/mcp/<grant-id>" -ForegroundColor Gray
 Write-Host "3. Follow the test guide: docs/golem-deployment-and-spark-test-guide.md" -ForegroundColor Gray
