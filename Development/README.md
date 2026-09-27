@@ -1,6 +1,6 @@
 # Developing while using Chrysalis (mdbase v0.3)
 
-Edit the framework in the selected local source repository, use the personal runtime vault (`chrysalis/`) for daily operations, and promote changes through the updater. [ARCHITECTURE.md](../ARCHITECTURE.md) defines ownership and [STATUS.md](../STATUS.md) records capability maturity.
+Edit the framework in the selected local source repository, use the personal runtime vault for daily operations, and promote changes through the updater. [ARCHITECTURE.md](../ARCHITECTURE.md) defines ownership and [STATUS.md](../STATUS.md) records capability maturity.
 
 New to the project? Start with the [beginner architecture and development guide](BEGINNERS-GUIDE.md), which explains the source/runtime boundary, agent handoffs, Git, testing, and controlled deployment.
 
@@ -8,7 +8,7 @@ Run `python3 Development/scripts/check.py` for local checks. See [Testing](TESTI
 
 For a separate Linux development workstation, follow [Workstation setup](WORKSTATION-SETUP.md). Antigravity and Codex share the [agent workflow](AGENT-WORKFLOW.md) and [current handoff](HANDOFF.md).
 
-To set up automation with limited development experience, follow the [step-by-step background development guide](BACKGROUND-DEVELOPMENT.md). Technical details remain in the [engineering reference](BACKGROUND-DEVELOPMENT-REFERENCE.md), [prioritized backlog](BACKLOG.md), and [2026-09-15 source review](REVIEW-2026-09-15.md).
+- Historical development-runner material is retained in [BACKGROUND-DEVELOPMENT.md](BACKGROUND-DEVELOPMENT.md); it is paused and does not define current work.
 
 ## Daily workflow
 
@@ -16,7 +16,7 @@ Use Antigravity for interactive engineering, including debugging, refactoring, a
 
 To report friction or suggest an architectural change, use the [plain-language feedback process](FEEDBACK.md).
 
-1. Open the personal runtime vault (`chrysalis/`) in Obsidian and select it explicitly for life operations.
+1. Open the personal runtime vault in Obsidian and select it explicitly for life operations.
 2. Make framework changes in the source repository. Tests use synthetic data in temporary sandboxes.
 3. Run the validation checks relevant to the changed subsystem.
 4. Prepare a vetted release package, then preview and deploy it with explicit package and personal vault paths. No GitHub push is needed to try a change locally.

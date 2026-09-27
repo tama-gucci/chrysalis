@@ -1,24 +1,26 @@
 ---
 title: "Imperative Task Title"
-status: todo # Allowed values: todo, in-progress, done, archived
+status: todo
 dateCreated: "{{TIMESTAMP}}"
-created: "{{TIMESTAMP}}" # Backward-compatible alias
 due: "{{DUE_DATE}}"
-scheduled: null # Format: "YYYY-MM-DDTHH:mm:ss{{TIMEZONE_OFFSET}}" or null
-priority: normal # Allowed values: urgent, high, normal, low
-urgency_tier: 2 # Scale: 1 (Lowest) to 4 (Highest)
-modality: analytical # Allowed values: analytical, kinetic, synthesis, administrative
-timeEstimate: 45 # In minutes (baseline duration * active tag multiplier)
-energy: medium # Allowed values: high, medium, low
-friction: medium # Allowed values: high, medium, low
-micro_chunked: false # Boolean: true if a 3-step Starter Wedge has been injected
+scheduled: null
+priority: normal
+urgency_tier: 2
+modality: analytical
+timeEstimate: 45
+energy: medium
+friction: medium
+micro_chunked: false
 tags:
-  - template
-  # - task (injected when materialized)
-  # - pillar-X/subtag
-linked_zettels: [] # Array of wikilinks to relevant Slipbox research notes, e.g. ["[[20260901-modular-engine]]"]
-project_ref: null # Wikilink to parent project roadmap, e.g. "[[Projects/chrysalis-architecture/Roadmap]]"
-googleCalendarEventId: null # Android CalendarContract event ID for Model C calendar sync
+  - task
+  - "{{PILLAR_TAG}}/subtag"
+linked_zettels: []
+project_ref: null
+deliverable_id: null
+googleCalendarEventId: null
+date_uncertain: false
+startedAt: null
+completedAt: null
 ---
 
 # Imperative Task Title

@@ -5,9 +5,8 @@ An orchestrator reads the selected vault, follows AGENTS.md and operational runb
 | Adapter | Implementation |
 | --- | --- |
 | Interactive file-capable agent | Operational runbooks and file contracts |
-| Antigravity gateway | Prototype process adapter; installed CLI compatibility must be verified |
+| Antigravity (Google Antigravity) | Operational agent runtime; executes modular skills over Markdown files |
 | OpenClaw / Hermes | Reserved adapters returning unavailable |
-| Mobile direct cloud/edge AI | Reserved adapter returning unavailable |
 
 Calendar ingestion uses the configured iCal feed. Native calendar export and automatic mailbox consumption remain unfinished. See STATUS.md and ARCHITECTURE.md at the installation root.
 

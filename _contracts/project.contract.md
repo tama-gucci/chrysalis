@@ -1,9 +1,14 @@
 ---
 kind: mdbase.contract
+contract_type: record
 id: project-contract
 version: "0.3.0"
-target_type: project
+x-target-type: project
 description: "Authoritative data contract for Chrysalis project roadmaps and master deliverable ledgers"
+record_schema:
+  dialect: json-schema-2020-12
+  value:
+    type: object
 ---
 
 # Project Roadmap Data Contract
@@ -23,11 +28,11 @@ Each project roadmap is the absolute single source of truth for all deliverables
   - `due`: ISO date string `YYYY-MM-DD` or `null` if uncertain.
   - `date_uncertain`: Boolean indicating whether deadline is TBD.
   - `status`: Lifecycle state (`todo`, `in-progress`, `done`, `archived`).
-  - `task_ref`: Wikilink to materialized task note in `chrysalis/Tasks/`, or `null` if out-of-horizon.
+  - `task_ref`: Wikilink to materialized task note in `TaskNotes/Tasks/`, or `null` if out-of-horizon.
   - `tier`: Urgency tier (1=Low, 2=Normal, 3=High, 4=Imminent/Critical).
 
 ## 3. Horizon Partitioning ($H=14$ Days)
-- **Active Window**: Deliverables with `due <= today + 14d` (or `date_uncertain: true`) materialize as individual tasks in `chrysalis/Tasks/`.
+- **Active Window**: Deliverables with `due <= today + 14d` (or `date_uncertain: true`) materialize as individual tasks in `TaskNotes/Tasks/`.
 - **Inert Window**: Deliverables with `due > today + 14d` remain recorded in the roadmap's master ledger with `task_ref: null`. They do not clutter the daily task views.
 
 ## 4. Syllabus Revision Reconciliation

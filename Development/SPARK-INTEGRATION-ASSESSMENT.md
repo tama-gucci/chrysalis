@@ -30,7 +30,7 @@ flowchart TD
 ### Flow Lifecycle:
 1. **User Request**: The user interacts with Gemini Spark (web or mobile) using natural language or uploaded documents.
 2. **Context & Ingestion**: Spark parses external inputs under passive untrusted text quarantine (`<untrusted_document_payload>`).
-3. **Plan Formulation**: Spark drafts record operations (e.g. deliverable extraction, task creation in `chrysalis/TaskNotes/Tasks/`) adhering to `contracts/agent-runtime.contract.md`.
+3. **Plan Formulation**: Spark drafts record operations (e.g. deliverable extraction, task creation in `TaskNotes/Tasks/`) adhering to `contracts/agent-runtime.contract.md`.
 4. **Approval Gate**: Gemini prompts the user for explicit write confirmation in the Spark interface.
 5. **Mutation**: Spark invokes `create_record` or `update_record` with Compare-And-Swap (`if_revision`) validation.
 6. **Persistence**: The record is written directly to disk in the local collection. The community TaskNotes plugin detects updates, renders them in agenda/board views, and harmonizes calendar events.

@@ -8,7 +8,7 @@ Executes the comprehensive 6-point system integrity diagnostic suite:
 3. Strategic Tag Registry Validator (Life-Roadmap.md)
 4. Graph & Wikilink Resolution Linter (Roadmaps, Zettels, Tasks)
 5. Skill Protocol & Dependency Linter (.agent/skills and Development/skills)
-6. Dynamic State & Multiplier Sanity Check (Scheduling-Memory.md, [0.20, 2.00])
+6. Dynamic State & Multiplier Sanity Check (Memory.md, [0.20, 2.00])
 
 Outputs live diagnostic reports and records findings in System/System-Health.md.
 """
@@ -21,9 +21,9 @@ from datetime import datetime, date
 from pathlib import Path
 
 try:
-    from .vault_paths import resolve_vault_root, vault_path
+    from .vault_paths import resolve_vault_root, vault_path, runtime_memory_path
 except ImportError:
-    from vault_paths import resolve_vault_root, vault_path
+    from vault_paths import resolve_vault_root, vault_path, runtime_memory_path
 from typing import Dict, Any, List, Tuple, Optional
 import yaml
 
@@ -33,8 +33,8 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-TIMEZONE_OFFSET_PATTERN = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[+\-][0-9]{2}:[0-9]{2}$")
-RAW_UTC_PATTERN = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")
+TIMEZONE_OFFSET_PATTERN = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?[+\-][0-9]{2}:[0-9]{2}$")
+RAW_UTC_PATTERN = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?Z$")
 
 def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
     """Extracts YAML frontmatter and markdown body."""
@@ -122,7 +122,7 @@ class ChrysalisDoctor:
 
     def check_2_timezone_compliance(self):
         """Check 2: Timezone & Temporal Compliance Linter."""
-        timestamp_keys = ["dateCreated", "created", "scheduled", "startedAt", "completedAt"]
+        timestamp_keys = ["dateCreated", "created", "dateModified", "scheduled", "startedAt", "completedAt"]
         total_ts = 0
         valid_ts = 0
         overdue_tasks = []
@@ -135,14 +135,21 @@ class ChrysalisDoctor:
                 if task_file.name.startswith("."):
                     continue
                 try:
-                    fm, _ = read_frontmatter(task_file)
+                    raw_text = task_file.read_text(encoding="utf-8")
+                    fm, _ = parse_frontmatter(raw_text)
                     for k in timestamp_keys:
                         val = fm.get(k)
                         if val:
                             total_ts += 1
                             val_str = str(val).strip()
-                            if RAW_UTC_PATTERN.match(val_str):
-                                self.errors.append(f"[Timezone] {task_file.name} has raw UTC 'Z' timestamp in {k}: {val_str}")
+                            raw_utc_match = re.search(
+                                rf"^\s*{re.escape(k)}\s*:\s*(['\"]?[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}T[0-9:.]+Z['\"]?)\s*(?:#.*)?$",
+                                raw_text,
+                                re.M,
+                            )
+                            if RAW_UTC_PATTERN.match(val_str) or raw_utc_match:
+                                bad_val = raw_utc_match.group(1) if raw_utc_match else val_str
+                                self.errors.append(f"[Timezone] {task_file.name} has raw UTC 'Z' timestamp in {k}: {bad_val}")
                             elif TIMEZONE_OFFSET_PATTERN.match(val_str):
                                 valid_ts += 1
                             elif len(val_str) == 10 and val_str.count("-") == 2:
@@ -177,15 +184,9 @@ class ChrysalisDoctor:
 
     def check_3_tag_registry(self):
         """Check 3: Strategic Tag Registry Validator."""
-        roadmap_path = None
-        for candidate in [
-            self.vault_root / "chrysalis" / "System" / "Life-Roadmap.md",
-            self.vault_root / "System" / "Life-Roadmap.md",
-            self.repo_root / "System" / "_templates" / "Life-Roadmap.template.md"
-        ]:
-            if candidate.exists():
-                roadmap_path = candidate
-                break
+        roadmap_path = vault_path(self.vault_root, "System/Life-Roadmap.md")
+        if not roadmap_path.exists() and self.vault_root.resolve() == self.repo_root:
+            roadmap_path = self.repo_root / "System/_templates/Life-Roadmap.template.md"
 
         registered_tags = set()
         if roadmap_path:
@@ -288,7 +289,7 @@ class ChrysalisDoctor:
     def check_5_skills_integrity(self):
         """Check 5: Skill Protocol & Dependency Linter."""
         skill_files = []
-        for root in [self.repo_root, self.vault_root]:
+        for root in [self.repo_root, self.vault_root, self.vault_root / "TaskNotes", self.vault_root / "chrysalis"]:
             for p in list((root / ".agent" / "skills").glob("*/SKILL.md")) + list((root / "Development" / "skills").glob("*/SKILL.md")):
                 if p not in skill_files and p.exists():
                     skill_files.append(p)
@@ -313,64 +314,47 @@ class ChrysalisDoctor:
 
     def check_6_dynamic_state_multipliers(self):
         """Check 6: Dynamic State & Multiplier Sanity Check ([0.20, 2.00])."""
-        mem_path = None
-        for candidate in [
-            self.vault_root / "chrysalis" / "System" / "Scheduling-Memory.md",
-            self.vault_root / "System" / "Scheduling-Memory.md",
-            self.repo_root / "System" / "_templates" / "Scheduling-Memory.template.md"
-        ]:
-            if candidate.exists():
-                mem_path = candidate
-                break
-
+        errors_before = len(self.errors)
         multiplier_count = 0
-        out_of_bounds = []
-        if mem_path:
-            try:
-                fm, _ = read_frontmatter(mem_path)
-                tag_mults = fm.get("tag_multipliers", {})
-                if isinstance(tag_mults, dict):
-                    for k, v in tag_mults.items():
-                        multiplier_count += 1
-                        try:
-                            val = float(v)
-                            if val < 0.20 or val > 2.00:
-                                out_of_bounds.append((f"tag_multiplier:{k}", val))
-                        except Exception:
-                            out_of_bounds.append((f"tag_multiplier:{k}", v))
-
-                weights = fm.get("inferred_task_pool", {}).get("learning_weights", {})
-                if isinstance(weights, dict):
-                    for k, v in weights.items():
-                        multiplier_count += 1
-                        try:
-                            val = float(v)
-                            if val < 0.20 or val > 2.00:
-                                out_of_bounds.append((f"learning_weight:{k}", val))
-                        except Exception:
-                            out_of_bounds.append((f"learning_weight:{k}", v))
-            except Exception as e:
-                self.errors.append(f"[Multiplier Sanity] Failed to parse {mem_path.name}: {e}")
-
-        if out_of_bounds:
-            for k, v in out_of_bounds:
-                self.errors.append(f"[Multiplier Invariant] {k}={v} is outside strict bounds [0.20, 2.00]")
-
-        status = "PASS" if not out_of_bounds else "FAIL"
+        missing = False
+        try:
+            mem_path = runtime_memory_path(self.vault_root)
+            if not mem_path.exists() and self.vault_root.resolve() == self.repo_root:
+                mem_path = self.repo_root / "System/_templates/Memory.template.md"
+            missing = not mem_path.exists()
+            fm, _ = read_frontmatter(mem_path)
+            # Current modality defaults and legacy maps share the same bounds.
+            maps = {
+                "modality_default": {key: value.get("multiplier")
+                                     for key, value in fm.get("cognitive_modality_defaults", {}).items()},
+                "dynamic_multiplier": fm.get("dynamic_multipliers", {}),
+                "tag_multiplier": fm.get("tag_multipliers", {}),
+                "learning_weight": fm.get("inferred_task_pool", {}).get("learning_weights", {}),
+            }
+            for label, values in maps.items():
+                for key, value in values.items():
+                    multiplier_count += 1
+                    try:
+                        valid = not isinstance(value, bool) and 0.20 <= float(value) <= 2.00
+                    except (TypeError, ValueError):
+                        valid = False
+                    if not valid:
+                        self.errors.append(f"[Multiplier Invariant] {label}:{key}={value} is outside strict bounds [0.20, 2.00]")
+        except (ValueError, TypeError, AttributeError, OSError) as exc:
+            self.errors.append(f"[Multiplier Sanity] Cannot validate runtime memory: {exc}")
+        failed = len(self.errors) > errors_before
+        if missing:
+            self.warnings.append("[Multiplier Sanity] Runtime memory is missing")
         self.check_results["6_multipliers"] = {
             "name": "6. Dynamic State & Multipliers",
-            "status": "🟢 PASS" if status == "PASS" else "🔴 FAIL",
-            "details": f"All {multiplier_count} multipliers strictly within [0.20, 2.00]"
+            "status": "🔴 FAIL" if failed else ("🟡 WARN" if missing else "🟢 PASS"),
+            "details": f"Checked {multiplier_count} multipliers against [0.20, 2.00]",
         }
 
     def update_system_health_ledger(self):
         """Writes diagnostic report to System/System-Health.md."""
         tz_offset = "-05:00"
-        mem_file = None
-        for candidate in [vault_path(self.vault_root, "System/Scheduling-Memory.md")]:
-            if candidate.exists():
-                mem_file = candidate
-                break
+        mem_file = runtime_memory_path(self.vault_root)
         if mem_file:
             try:
                 content = mem_file.read_text(encoding="utf-8")

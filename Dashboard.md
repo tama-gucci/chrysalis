@@ -9,8 +9,7 @@ Requires the Dataview plugin enabled in this vault. Task lists remain available 
 
 > [!abstract] System State & Energy Profile
 > **Phase:** Pillar 1 (Core Foundation & Systems Setup)  
-> **Diurnal Rhythm:** Diurnally calibrated focus blocks relative to $T_{\text{wake}}$ (Peak Sprints • Slump/Defrost • Recovery)  
-> **Vault Path:** `chrysalis/`
+> **Diurnal Rhythm:** Diurnally calibrated focus blocks relative to $T_{\text{wake}}$ (Peak Sprints • Slump/Defrost • Recovery)
 
 ---
 
@@ -23,7 +22,7 @@ TABLE
     energy as "Energy",
     due as "Due Date",
     file.folder as "Folder"
-FROM "chrysalis/TaskNotes/Tasks" OR "TaskNotes/Tasks" OR "chrysalis/Tasks"
+FROM "TaskNotes/Tasks"
 WHERE status = "todo" AND file.name != "example-task"
 SORT urgency_tier DESC, priority DESC, due ASC
 ```
@@ -37,7 +36,7 @@ TABLE
     scheduled as "Scheduled Block",
     priority as "Priority",
     energy as "Energy"
-FROM "chrysalis/TaskNotes/Tasks" OR "TaskNotes/Tasks" OR "chrysalis/Tasks"
+FROM "TaskNotes/Tasks"
 WHERE scheduled != null AND date(scheduled).day = date(today).day AND date(scheduled).month = date(today).month AND date(scheduled).year = date(today).year AND status != "done" AND status != "archived"
 SORT scheduled ASC
 ```
@@ -50,7 +49,7 @@ TABLE
     pillar as "Pillar",
     status as "Status",
     horizon_window as "Horizon Window"
-FROM "chrysalis/Projects" OR "Projects"
+FROM "Projects"
 WHERE type = "project_roadmap"
 SORT pillar ASC
 ```
@@ -63,7 +62,7 @@ TABLE
     dateCreated as "Created",
     tags as "Domain Tags",
     aliases as "Aliases"
-FROM "chrysalis/Slipbox" OR "Slipbox"
+FROM "Slipbox"
 WHERE type = "permanent-note" OR contains(tags, "zettel")
 SORT dateCreated DESC
 LIMIT 10
@@ -76,7 +75,7 @@ LIMIT 10
 TABLE
     title as "Completed Task",
     file.mtime as "Archived Date"
-FROM "chrysalis/Archive" OR "TaskNotes/Archive"
+FROM "TaskNotes/Archive"
 SORT file.mtime DESC
 LIMIT 10
 ```

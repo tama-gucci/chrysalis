@@ -140,23 +140,16 @@ collection:
     linked_zettels[]:
       target_type: zettel
       validate_exists: false
-lifecycle:
-  on_create:
-    set:
-      dateCreated: { now: true }
-      dateModified: { now: true }
-  on_update:
-    set:
-      dateModified: { now: true }
+lifecycle: {}
 ---
 
 # Task Model
 
 This type defines execution tasks managed by Chrysalis and compatible with Obsidian TaskNotes.
-Tasks reside strictly in `chrysalis/Tasks/**/*.md`.
+Tasks reside strictly in `TaskNotes/Tasks/**/*.md`.
 
 ## Behavioral Rules:
-1. **Filename Convention**: `chrysalis/Tasks/{YYYYMMDD}-{slug}.md`. Date prefix uses `due` date if present, or `dateCreated` date if `due` is null.
+1. **Filename Convention**: `TaskNotes/Tasks/{YYYYMMDD}-{slug}.md`. Date prefix uses `due` date if present, or `dateCreated` date if `due` is null.
 2. **Cognitive Alignment**: Tasks are categorized by cognitive modality (`analytical`, `kinetic`, `synthesis`, `administrative`) to align with ultradian rhythm windows during staging and calibration.
 3. **Inert Scheduling**: When out-of-horizon deliverables are extracted, `scheduled` remains `null`.
 4. **Calendar Sync**: External calendar synchronization is owned by TaskNotes via `googleCalendarEventId`. Chrysalis sets this field to `null` on creation.

@@ -15,7 +15,7 @@ description: "Authoritative contract governing agent lifecycle states, input/out
 This contract defines the provider-independent interface between any executing runtime agent (Google Antigravity, Claude, OpenAI Codex, Gemini Spark, or local LLMs) and the Chrysalis mdbase v0.3 Markdown database collection.
 
 ### 1.1 Separation of Spheres and System Boundaries
-- **Framework Boundary**: Owns collection manifests (`mdbase.yaml`), type definitions (`_types/*.md`), lifecycle rules, runtime contracts (`contracts/*.contract.md`), public templates (`System/_templates/`), and deterministic validation helpers.
+- **Framework Boundary**: Owns collection manifests (`mdbase.yaml`), type definitions (`_types/*.md`), lifecycle rules, runtime contracts (`contracts/*.contract.md`), operational workflow runbooks (`System/Workflows/*.md`), public templates (`System/_templates/`), and deterministic validation helpers.
 - **Runtime Agent Boundary**: Supplies reasoning, parses user intent, queries collection records, formulates structured plans, and invokes permitted database operations strictly through standardized envelopes.
 - **External Applications Boundary**: External interfaces (Obsidian, TaskNotes, Google Calendar, mobile clients) provide user interaction and visualization. They are strictly decoupled from core framework execution.
 - **Strict Personal Focus Scope**: Chrysalis is strictly scoped to personal knowledge and execution. It prohibits building general-purpose agent daemons, replacement database engines, or proprietary cloud task managers.
@@ -273,7 +273,7 @@ All runtime requests adhere strictly to the **JSON Schema Draft 2020-12** specif
   "properties": {
     "path": {
       "type": "string",
-      "pattern": "^(TaskNotes/Tasks|chrysalis/Tasks|Projects|Slipbox|Sources)/.*\\.md$",
+      "pattern": "^(TaskNotes/Tasks|Projects|Slipbox|Sources)/.*\\.md$",
       "description": "Target relative path within collection"
     },
     "type": {

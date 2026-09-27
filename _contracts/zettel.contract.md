@@ -1,9 +1,14 @@
 ---
 kind: mdbase.contract
+contract_type: record
 id: zettel-contract
 version: "0.3.0"
-target_type: zettel
+x-target-type: zettel
 description: "Authoritative data contract for Chrysalis atomic research notes and Slipbox knowledge in mdbase v0.3"
+record_schema:
+  dialect: json-schema-2020-12
+  value:
+    type: object
 ---
 
 # Knowledge Zettel Data Contract

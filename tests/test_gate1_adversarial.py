@@ -96,7 +96,7 @@ class TestGate1Adversarial(unittest.TestCase):
         # 2. Valid input envelope
         valid_input = {
             "action": "create_record",
-            "parameters": {"path": "chrysalis/Tasks/cs410-hw1.md", "frontmatter": {"title": "HW1"}},
+            "parameters": {"path": "TaskNotes/Tasks/cs410-hw1.md", "frontmatter": {"title": "HW1"}},
             "context": {
                 "session_id": "sess_20260922_001",
                 "timestamp": "2026-09-22T10:00:00-05:00",
@@ -114,7 +114,7 @@ class TestGate1Adversarial(unittest.TestCase):
         # 4. Adversarial context: injected control property
         adversarial_context_input = {
             "action": "create_record",
-            "parameters": {"path": "chrysalis/Tasks/cs410-hw1.md", "frontmatter": {"title": "HW1"}},
+            "parameters": {"path": "TaskNotes/Tasks/cs410-hw1.md", "frontmatter": {"title": "HW1"}},
             "context": {
                 "session_id": "sess_20260922_001",
                 "timestamp": "2026-09-22T10:00:00-05:00",
@@ -128,7 +128,7 @@ class TestGate1Adversarial(unittest.TestCase):
         # 5. Valid output envelope
         valid_output = {
             "valid": True,
-            "result": {"path": "chrysalis/Tasks/cs410-hw1.md", "revision": "a" * 64},
+            "result": {"path": "TaskNotes/Tasks/cs410-hw1.md", "revision": "a" * 64},
             "diagnostics": [],
         }
         self.assertEqual(list(v_out.iter_errors(valid_output)), [])
@@ -418,17 +418,17 @@ class TestGate1Adversarial(unittest.TestCase):
             return {"valid": True, "claimed_paths": list(claimed)}
 
         # Violation Case: Agent claims scheduling without tool execution
-        violating_text = "I have updated the file chrysalis/Tasks/cs410-hw1.md with scheduled timestamp."
+        violating_text = "I have updated the file TaskNotes/Tasks/cs410-hw1.md with scheduled timestamp."
         res_viol = verify_simulation(violating_text, [])
         self.assertFalse(res_viol["valid"])
         self.assertEqual(res_viol["diagnostic"]["code"], "simulation_prohibited")
 
         # Compliant Case 1: Agent executed tool
-        res_ok1 = verify_simulation(violating_text, ["chrysalis/Tasks/cs410-hw1.md"])
+        res_ok1 = verify_simulation(violating_text, ["TaskNotes/Tasks/cs410-hw1.md"])
         self.assertTrue(res_ok1["valid"])
 
         # Compliant Case 2: Agent submitted proposal
-        proposal_text = "Plan proposal: I propose to update chrysalis/Tasks/cs410-hw1.md. Please confirm."
+        proposal_text = "Plan proposal: I propose to update TaskNotes/Tasks/cs410-hw1.md. Please confirm."
         res_ok2 = verify_simulation(proposal_text, [])
         self.assertTrue(res_ok2["valid"])
 

@@ -11,7 +11,7 @@ Objective: Maintain an authoritative engineering roadmap for the Chrysalis mdbas
 │ PHASE 1: MDBASE V0.3 FOUNDATION & CORE CONTRACTS                       │
 │  [M1] Product Purpose, Architecture & Shared Contracts   ──► [DONE]     │
 │  [M2] Database Foundation & Portable Workflows           ──► [DONE]     │
-│  [M3] Local Validation Harness, Scenarios & Migration    ──► [ACTIVE]   │
+│  [M3] Local Validation Harness, Scenarios & Migration    ──► [DONE]     │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
@@ -97,7 +97,7 @@ Objective: Maintain an authoritative engineering roadmap for the Chrysalis mdbas
 
 ### A03: Obsidian View Template Suite
 - **Status**: **PROPOSED**
-- **Scope**: Provide public sanitized Dataview and Kanban view templates in `chrysalis/Views/` optimized for the mdbase v0.3 task schema.
+- **Scope**: Provide public sanitized Dataview and Kanban view templates in `Views/` optimized for the mdbase v0.3 task schema.
 
 ---
 

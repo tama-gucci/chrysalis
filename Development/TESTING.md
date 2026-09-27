@@ -16,7 +16,7 @@ Runs all unit, contract, integration, and scenario tests:
 This suite covers:
 - **Layer 1 (Syntax & Schemas)**: `_types/*.md` conformance to JSON Schema Draft 2020-12, RFC 3339 timestamp offsets (`"-05:00"`), and rejection of unknown fields.
 - **Layer 2 (mdbase v0.3 Engine)**: Collection indexing, `mdbase.yaml` manifests, atomic CAS concurrency (`if_revision`), advisory locking (`fcntl.flock`), temporary file replacement (`os.replace`), and semantic deduplication.
-- **Layer 3 (Framework Workflows & Security)**: Provider-independent 8-stage agent lifecycle (`contracts/agent-runtime.contract.md`), 14-day cognitive planning horizon, passive untrusted text defense (`<untrusted_document_payload>` quarantine and delimiter escaping), tripartite hypergraph linking (`Slipbox/` $\leftrightarrow$ `Projects/` $\leftrightarrow$ `chrysalis/TaskNotes/Tasks/`), worked end-to-end scenario (`tests/test_worked_scenario.py`), and 6 critical failure mode tests (`tests/test_failure_modes.py`).
+- **Layer 3 (Framework Workflows & Security)**: Provider-independent 8-stage agent lifecycle (`contracts/agent-runtime.contract.md`), 14-day cognitive planning horizon, passive untrusted text defense (`<untrusted_document_payload>` quarantine and delimiter escaping), tripartite hypergraph linking (`Slipbox/` $\leftrightarrow$ `Projects/` $\leftrightarrow$ `TaskNotes/Tasks/`), worked end-to-end scenario (`tests/test_worked_scenario.py`), and 6 critical failure mode tests (`tests/test_failure_modes.py`).
 
 ### B. Standalone 3-Layer Validation Harness
 A zero-cloud-dependency validation harness verifying the collection and hypergraph:

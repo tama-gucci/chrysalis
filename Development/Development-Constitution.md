@@ -13,7 +13,7 @@ domain: development
 
 ## Preamble: Separation of Spheres (Runtime vs. Development)
 Chrysalis operates across two strictly segregated functional domains:
-1. **The Runtime Sphere (`chrysalis/System/`, `chrysalis/TaskNotes/Tasks/` or `System/`, `TaskNotes/Tasks/`):** The private, local execution substrate of daily life focus, chronotype rhythms, task execution, and personal memory. All runtime state files containing personal data are strictly quarantined from public version control. Governed by the **Runtime Constitution** ([`System/Runtime-Constitution.md`](../System/Runtime-Constitution.md)).
+1. **The Runtime Sphere (`System/`, `TaskNotes/Tasks/`):** The private, local execution substrate of daily life focus, chronotype rhythms, task execution, and personal memory. All runtime state files containing personal data are strictly quarantined from public version control. Governed by the **Runtime Constitution** ([`System/Runtime-Constitution.md`](../System/Runtime-Constitution.md)).
 2. **The Development Sphere (`Development/` in the source repository):** The engineering and architecture substrate governing open-source framework design, skill authoring, recursive self-improvement (`/evolve`), and codebase maintenance. Governed by this Development Constitution.
 
 The root **Master Constitution** ([`AGENTS.md`](../AGENTS.md)) serves as the unified single source of truth across both spheres for autonomous AI agent platforms.
@@ -27,10 +27,10 @@ The Chrysalis codebase is hosted on a public GitHub repository (`tama-gucci/chry
 
 ### 1. Quarantined Personal Substrates
 The following paths are designated as strictly private and MUST NEVER be tracked by git or pushed to GitHub:
-* **Personal Tasks & Archives:** `chrysalis/TaskNotes/Tasks/*.md`, `TaskNotes/Tasks/*.md`, and `chrysalis/Tasks/*.md` (except `example-task.md`), and task archive (`chrysalis/TaskNotes/Archive/*.md`, `TaskNotes/Archive/*.md`, `chrysalis/Archive/*.md`).
+* **Personal Tasks, Archives & Obsidian Plugin Workflows:** `TaskNotes/Tasks/*.md` (except `example-task.md`), task archive (`TaskNotes/Archive/*.md`), and personal Obsidian TaskNotes Workflows plugin files (`TaskNotes/Workflows/*` except `README.md`).
 * **Live System Memory & Roadmaps:** `System/Life-Roadmap.md`, `System/Memory.md`, `System/System-Health.md`, `System/Changelog.md`.
-* **Daily Focus & Journal Notes:** All daily notes matching `YYYY-MM-DD*.md` and `chrysalis/Daily/*.md` / `TaskNotes/Daily/*.md`.
-* **Personal Projects & Slipbox Thoughts:** `Projects/*` (except `Projects/README.md` and `Projects/_templates/**`) and `Slipbox/*` (except `Slipbox/README.md` and `Slipbox/_templates/**`).
+* **Daily Focus & Journal Notes:** All daily notes matching `YYYY-MM-DD*.md` and `Daily/*.md` / `TaskNotes/Daily/*.md`.
+* **Personal Projects, Slipbox Thoughts & Translated Sources:** `Projects/*` (except `Projects/README.md` and `Projects/_templates/**`), `Slipbox/*` (except `Slipbox/README.md` and `Slipbox/_templates/**`), and `Sources/*` (except `Sources/README.md`).
 * **Personal Workstation Telemetry:** `System/Environment/*.md` manifests (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`) and private workstation configurations.
 * **Local Databases, Virtual Environments & Build Artifacts:** `Nexus/` SQLite databases, `.conversations/`, `.workspaces/`, `.obsidian/plugins/*/data/`, `*.token.json`, `*credentials*.json`, `*.env`, `*.db`, `*.sqlite*`, and private keys.
 
@@ -41,17 +41,19 @@ Every file type that contains personal runtime information MUST provide an exact
 * `System/System-Health.md` $\to$ `System/_templates/System-Health.template.md`
 * `System/Changelog.md` $\to$ `System/_templates/Changelog.template.md`
 * `Daily Notes (YYYY-MM-DD.md)` $\to$ `System/_templates/Daily-Note.template.md`
-* `chrysalis/TaskNotes/Tasks/*.md` $\to$ `_templates/Task-Template.md` & `example-task.md`
+* `TaskNotes/Tasks/*.md` $\to$ `_templates/Task-Template.md` & `example-task.md`
 * `Projects/*/Roadmap.md` $\to$ `Projects/_templates/Project-Template.md`
 * `Slipbox/*.md` $\to$ `Slipbox/_templates/Slipbox-Template.md`
+* `Sources/*.md` $\to$ `_templates/Source-Template.md`
 * `System/Environment/*.md` $\to$ `System/Environment/_templates/System-Manifest-Template.md`
 
 ### 3. Synthetic Placeholder Standard
 All public code, documentation, examples, and skill runbooks must strictly use synthetic/mock values:
 * Names: `Jane Doe`, `Alex Developer` (never real names).
 * Emails: `user@example.com` (never personal email addresses).
-* Filesystem Paths: Relative paths (`chrysalis/...`, `source/...`) or home-relative (`~/chrysalis`). Never machine-specific absolute user paths like `/home/<username>/...` or `C:\Users\<username>\...`.
+* Filesystem Paths: Relative paths (`TaskNotes/...`, `source/...`) or home-relative (`~/vault`). Never machine-specific absolute user paths like `/home/<username>/...` or `C:\Users\<username>\...`.
 * Hostnames: `station-node`, `dev-laptop` (never personal machine hostnames).
+* **Life Roadmap & Milestone Anonymization Invariant:** All placeholder examples, documentation tables, skill runbooks, and test cases must ALWAYS be synthetic and anonymized, and must NEVER be derived from or mirror the user's actual personal Life Roadmap, private milestones, institutions, educational/vocational entities, employer names, or personal projects. Examples must use purely generic or technical concepts (e.g., "Compiler Engineering", "Distributed Key-Value Store", "Algorithmic Trading Engine", "Library Modernization").
 
 ### 4. Default-Deny Git Architecture
 `.gitignore` must strictly maintain a default-deny (`/*`) posture. No whole-directory whitelisting is permitted without rigorous constitutional review.
@@ -67,6 +69,7 @@ All development-specific assets reside exclusively within `Development/` in the 
 * **`Development/scripts/`:** Developer utility scripts, PII linters, git boundary verifiers, and setup helpers.
 * **`Development/skills/`:** Modular development-only agent skills (`audit-dev`, `evolve`), registered into Antigravity via `.agent/skills.json`.
 * **`contracts/`:** Formal runtime and collection contracts (`agent-runtime.contract.md`, `mdbase-collection.contract.md`).
+* **`System/Workflows/`:** Portable 8-stage AI agent lifecycle workflow runbooks (`01-capture.md` through `08-continuation.md`).
 * **`_types/`:** Authoritative JSON Schema Draft 2020-12 data schemas (`task.md`, `project.md`, `source.md`, `zettel.md`).
 * **`helpers/`:** Deterministic helper utilities (`mdbase_helper.py`) providing CAS concurrency, validation, and provenance tracking.
 
@@ -84,10 +87,11 @@ System growth and autonomous capability expansion occur exclusively via the `/ev
 2. **Mandatory Snapshot Rollback Anchor:** Prior to modifying any existing skill file in `.agent/skills/` or `Development/skills/`, the agent MUST write a timestamped backup copy to `.agent/skills/.backup/<skill>_<timestamp>.md`.
 3. **Constitutional Pre-Commit Linter:** Every proposed modification to skills, workflows, or schemas must be verified against:
    * Explicit local timezone offset compliance (`"-05:00"`).
-   * File substrate single source of truth (`chrysalis/`).
+   * File substrate single source of truth (vault filesystem).
    * Mandatory physical disk mutation (Anti-Simulation Law).
    * Zero-Leak PII compliance (no personal paths or strings).
    * Dynamic state multiplier bounds clamped strictly to $[0.20, 2.00]$.
+   * Synthetic placeholder & roadmap anonymization compliance (no real user milestones, institutions, or personal projects).
 4. **Rollback Guarantee:** If a modified skill produces degraded behavior, the agent must immediately restore the previous snapshot via `/evolve --rollback <skill>`.
 5. **Formal Changelog Auditing:** All mutations and architectural proposals must be recorded in `System/Changelog.md`.
 

@@ -6,7 +6,7 @@ Implementation status lives in [STATUS.md](../STATUS.md). The engineering backlo
 
 - Complete mdbase v0.3 core foundation, type schemas, and portable workflows.
 - Establish the zero-cloud local test harness and verify 8-stage lifecycle execution with real disk mutations.
-- Validate non-destructive staged migration from legacy layouts to `chrysalis/TaskNotes/Tasks/` in the personal runtime vault (`chrysalis/`).
+- Validate non-destructive staged migration from legacy layouts to `TaskNotes/Tasks/` in the personal runtime vault.
 - Prove one complete input (syllabus/transcript ingestion) → extracted task/zettel → plan → completion cycle.
 - Enforce passive untrusted text quarantine (`<untrusted_document_payload>`) and prompt injection neutralization.
 

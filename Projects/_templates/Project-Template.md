@@ -1,34 +1,34 @@
 ---
 type: project_roadmap
-project_id: "{{project_slug}}"
-title: "{{Project Title}}"
-pillar: "{{pillar_tag}}" # e.g. pillar-1, unassigned, staged
-status: "active" # staged, active, paused, complete, archived
+project_id: "{{PROJECT_SLUG}}"
+title: "{{PROJECT_TITLE}}"
+status: active
+pillar: "{{PILLAR_TAG}}"
 horizon_window: "YYYY-MM-DD → YYYY-MM-DD"
-last_updated: "2026-09-01T18:25:00-05:00"
+last_updated: "{{TIMESTAMP}}"
+source_ref: null
+source_checksum: null
 tags:
-  - "{{pillar_tag}}/subtag"
+  - "{{PILLAR_TAG}}"
+linked_zettels: []
+deliverables:
+  - id: "deliverable-1"
+    title: "Initial Milestone Deliverable"
+    due: "YYYY-MM-DD"
+    date_uncertain: false
+    status: todo
+    task_ref: null
+    tier: 2
 ---
 
-# 🚀 {{Project Title}}
+# 🚀 {{PROJECT_TITLE}}
 
 ## 1. Project Objective & Scope
-Brief description of the objective, dependencies, and exit criteria.
+Overview of objectives, milestone boundaries, and exit criteria.
 
----
+## 2. Master Deliverable Ledger
+- [ ] **deliverable-1**: Initial Milestone Deliverable (Due: YYYY-MM-DD)
 
-## 2. Deliverables & Milestone Breakdown
-
-### Milestone 1: Setup & Initialization
-- [ ] Deliverable item 1 (`#tag`)
-- [ ] Deliverable item 2 (`#tag`)
-
-### Milestone 2: Core Execution
-- [ ] Deliverable item 3 (`#tag`)
-
----
-
-## 3. Reference Files & Contacts
-<!-- Grounded in the Chrysalis Hypergraph: Bidirectional links to Slipbox/*.md research notes -->
-- [[Related-Zettel-Note]] # Research / mental model grounding this deliverable
-- [[Related-Resource-Note]]
+## 3. Reference Files & Slipbox Grounding
+- Provenance Source: [[Sources/{{SOURCE_ID}}]] (Original binary stored in Google Drive)
+- [[Slipbox-Research-Note]]

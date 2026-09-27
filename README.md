@@ -1,6 +1,6 @@
 # Chrysalis: AI Agent Framework on mdbase v0.3
 
-Chrysalis is an open, provider-independent AI Agent Framework operating on an **mdbase v0.3** Markdown database substrate. It defines the formal contracts, schemas, lifecycle rules, and deterministic helpers for how an autonomous AI agent ingests unstructured information, organizes knowledge, manages projects and deliverables, plans focused actions, maintains durable memory, and records verified outcomes in plain Markdown files.
+Chrysalis is an open, provider-independent AI agent framework operating on an **mdbase v0.3** Markdown database collection. It defines the formal contracts, schemas, lifecycle rules, and deterministic helpers for how an autonomous AI agent ingests unstructured information, organizes knowledge, manages projects and deliverables, plans focused actions, maintains durable memory, and records verified outcomes in plain Markdown files.
 
 Markdown notes with YAML frontmatter are the authoritative database records. AI agents (Google Antigravity, Claude, OpenAI Codex, Gemini Spark, or local LLMs) supply reasoning and execute operations strictly through standardized runtime contracts. External tools (Obsidian, TaskNotes, Google Calendar) provide optional visualization and interface layers.
 
@@ -78,7 +78,7 @@ python3 tests/harness/validation_harness.py --collection .
 ## Repository Structure
 
 ```text
-chrysalis/
+.
 ├── mdbase.yaml               # Authoritative mdbase v0.3 collection manifest
 ├── _types/                   # JSON Schema 2020-12 type definitions
 │   ├── task.md               # Execution tasks schema & TaskNotes interop
@@ -100,12 +100,13 @@ chrysalis/
 ├── TaskNotes/
 │   ├── Tasks/                # Active execution task notes
 │   ├── Views/                # TaskNotes Obsidian database views (.base)
-│   └── Workflows/            # Operational workflow definitions (01-capture to 08-continuation)
+│   └── Workflows/            # Reserved for Obsidian TaskNotes Workflows plugin
 ├── Projects/                 # Project roadmaps and deliverable master ledgers
 ├── Slipbox/                  # Atomic Zettelkasten research notes
 ├── Sources/                  # Ingested raw documents & provenance records
 ├── System/
 │   ├── Memory.md             # Persistent agent memory & active horizons
+│   ├── Workflows/            # Operational workflow definitions (01-capture to 08-continuation)
 │   └── _templates/           # System state templates
 ├── Development/              # Engineering protocols, backlog, and handoffs
 └── tests/                    # Local validation harness, scenarios, and test suites

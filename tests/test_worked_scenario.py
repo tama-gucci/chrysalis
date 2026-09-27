@@ -2,7 +2,7 @@
 tests/test_worked_scenario.py
 Comprehensive 8-stage end-to-end worked scenario test suite for Chrysalis mdbase v0.3.
 Verifies complete lifecycle with physical disk persistence across Sources/, Projects/,
-chrysalis/Tasks/, and Slipbox/, out-of-horizon retention, and hypergraph link integrity.
+TaskNotes/Tasks/, and Slipbox/, out-of-horizon retention, and hypergraph link integrity.
 Compatible with pytest and python -m unittest.
 """
 
@@ -47,7 +47,7 @@ class TestWorkedScenario8StageLifecycle(unittest.TestCase):
         (self.sandbox / "System").mkdir(parents=True)
         (self.sandbox / "Sources").mkdir(parents=True)
         (self.sandbox / "Projects" / "cs410").mkdir(parents=True)
-        (self.sandbox / "chrysalis" / "Tasks").mkdir(parents=True)
+        (self.sandbox / "TaskNotes" / "Tasks").mkdir(parents=True)
         (self.sandbox / "Slipbox").mkdir(parents=True)
 
         # 2. Copy authoritative configuration and types
@@ -196,8 +196,8 @@ class TestWorkedScenario8StageLifecycle(unittest.TestCase):
             "extracted_projects": ["[[Projects/cs410/Roadmap]]"],
             "extracted_zettels": [],
             "extracted_tasks": [
-                "[[chrysalis/Tasks/20260927-cs410-ps1]]",
-                "[[chrysalis/Tasks/20261004-cs410-lab1]]",
+                "[[TaskNotes/Tasks/20260927-cs410-ps1]]",
+                "[[TaskNotes/Tasks/20261004-cs410-lab1]]",
             ],
         }
         source_doc = serialize_record(source_fm, quarantined_syllabus)
@@ -211,7 +211,7 @@ class TestWorkedScenario8StageLifecycle(unittest.TestCase):
                 "due": "2026-09-27",
                 "date_uncertain": False,
                 "status": "todo",
-                "task_ref": "[[chrysalis/Tasks/20260927-cs410-ps1]]",
+                "task_ref": "[[TaskNotes/Tasks/20260927-cs410-ps1]]",
                 "tier": 2,
             },
             {
@@ -220,7 +220,7 @@ class TestWorkedScenario8StageLifecycle(unittest.TestCase):
                 "due": "2026-10-04",
                 "date_uncertain": False,
                 "status": "todo",
-                "task_ref": "[[chrysalis/Tasks/20261004-cs410-lab1]]",
+                "task_ref": "[[TaskNotes/Tasks/20261004-cs410-lab1]]",
                 "tier": 3,
             },
             {
@@ -264,7 +264,7 @@ class TestWorkedScenario8StageLifecycle(unittest.TestCase):
             t_due = d["due"]
             t_slug = d["id"]
             due_clean = t_due.replace("-", "")
-            task_path = f"chrysalis/Tasks/{due_clean}-{t_slug}.md"
+            task_path = f"TaskNotes/Tasks/{due_clean}-{t_slug}.md"
             task_fm = {
                 "type": "task",
                 "title": d["title"],
@@ -323,11 +323,11 @@ class TestWorkedScenario8StageLifecycle(unittest.TestCase):
         # ---------------------------------------------------------------------
         self.assertTrue((self.sandbox / "Sources" / "cs410-syllabus-v1.md").is_file())
         self.assertTrue((self.sandbox / "Projects" / "cs410" / "Roadmap.md").is_file())
-        self.assertTrue((self.sandbox / "chrysalis" / "Tasks" / "20260927-cs410-ps1.md").is_file())
-        self.assertTrue((self.sandbox / "chrysalis" / "Tasks" / "20261004-cs410-lab1.md").is_file())
+        self.assertTrue((self.sandbox / "TaskNotes" / "Tasks" / "20260927-cs410-ps1.md").is_file())
+        self.assertTrue((self.sandbox / "TaskNotes" / "Tasks" / "20261004-cs410-lab1.md").is_file())
 
         # Verify task file count strictly equals 2 (zero out-of-horizon task files created)
-        task_files = list((self.sandbox / "chrysalis" / "Tasks").glob("*.md"))
+        task_files = list((self.sandbox / "TaskNotes" / "Tasks").glob("*.md"))
         self.assertEqual(len(task_files), 2, "Only near-term deliverables must create task notes")
 
         # Verify explicit timezone offset invariant on all written files

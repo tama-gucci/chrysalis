@@ -1,9 +1,14 @@
 ---
 kind: mdbase.contract
+contract_type: record
 id: source-contract
 version: "0.3.0"
-target_type: source
+x-target-type: source
 description: "Authoritative data contract for Chrysalis raw document provenance and ingestion sources in mdbase v0.3"
+record_schema:
+  dialect: json-schema-2020-12
+  value:
+    type: object
 ---
 
 # Ingestion Source Data Contract

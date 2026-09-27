@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Chrysalis OS - Single-Folder Substrate Migration Utility
-Encapsulates Chrysalis into a dedicated subfolder (default: 'chrysalis/')
+Chrysalis AI Agent Framework - Single-Folder Substrate Migration Utility
+Encapsulates Chrysalis into a dedicated subfolder (default: 'TaskNotes/')
 inside any arbitrary user-named Obsidian vault.
 
 Handles:
-- Folder restructuring (Tasks, Archive, Daily, Views, Workflows, Projects, Slipbox, System, _types, _templates)
-- Moving daily notes (YYYY-MM-DD*.md) from vault root into chrysalis/Daily/
+- Folder restructuring (Tasks, Archive, Daily, Views, Projects, Slipbox, System, System/Workflows, _types, _templates)
+- Moving daily notes (YYYY-MM-DD*.md) from vault root into TaskNotes/Daily/
 - Backward compatibility: Unprivileged Windows NTFS Directory Junction (mklink /J) or Unix symlink
 - Antigravity IDE root trampolines (.agent/skills.json)
 - Obsidian plugin configurations (.obsidian/plugins/tasknotes/data.json, daily-notes.json)
@@ -20,6 +20,7 @@ import re
 import shutil
 import argparse
 import subprocess
+import yaml
 from pathlib import Path
 
 if sys.platform == "win32":
@@ -31,11 +32,12 @@ if sys.platform == "win32":
 
 def print_header():
     print("=" * 65)
-    print("  Chrysalis OS - Single-Folder Substrate Encapsulation Engine  ")
+    print("  Chrysalis AI Agent Framework: Substrate Encapsulation Engine ")
     print("=" * 65)
 
 def create_directory_structure(vault_root: Path, folder_name: str, dry_run: bool = False):
     """Creates the target encapsulated directory structure."""
+    require_legacy_layout(vault_root, folder_name)
     target_base = vault_root / folder_name
     subdirs = [
         target_base / "Tasks",
@@ -43,12 +45,14 @@ def create_directory_structure(vault_root: Path, folder_name: str, dry_run: bool
         target_base / "Daily",
         target_base / "Views",
         target_base / "Workflows",
+        target_base / "Sources",
         target_base / "Projects" / "_templates",
         target_base / "Slipbox" / "_templates",
         target_base / "System" / "_templates",
         target_base / "System" / "scripts",
         target_base / "System" / "Environment" / "_templates",
         target_base / "System" / "Orchestrators",
+        target_base / "System" / "Workflows",
         target_base / "_types",
         target_base / "_templates",
         target_base / ".agent" / "skills",
@@ -64,7 +68,7 @@ def create_directory_structure(vault_root: Path, folder_name: str, dry_run: bool
 
 def move_path(src: Path, dst: Path, dry_run: bool = False):
     """Move file or directory from src to dst safely."""
-    if not src.exists():
+    if not src.exists() or src.resolve() == dst.resolve():
         return False
     if dry_run:
         print(f"  [dry-run] Move: {src.name} -> {dst}")
@@ -86,113 +90,82 @@ def move_path(src: Path, dst: Path, dry_run: bool = False):
     print(f"  [OK] Moved: {src.name} -> {dst}")
     return True
 
+def require_legacy_layout(vault_root: Path, folder_name: str):
+    """This utility predates mdbase collection paths; never split a collection."""
+    if any(path.exists() for path in (vault_root / "mdbase.yaml", vault_root / folder_name / "mdbase.yaml")):
+        raise ValueError("mdbase collections use the canonical split layout; follow docs/staged-migration-plan.md instead of encapsulating them")
+
+
+def validate_move(src: Path, dst: Path):
+    """Check the entire move before changing any files in a subtree."""
+    if not src.exists() or src.resolve() == dst.resolve() or not dst.exists():
+        return
+    if src.is_dir() and dst.is_dir():
+        for item in src.iterdir():
+            validate_move(item, dst / item.name)
+    else:
+        raise FileExistsError(f"Migration conflict: {dst}; existing files are never overwritten")
+
+
 def migrate_substrates(vault_root: Path, folder_name: str, dry_run: bool = False):
-    """Migrate scattered root directories and files into folder_name/."""
-    target_base = vault_root / folder_name
-    print(f"\n[2/6] Migrating Vault Substrates into {folder_name}/...")
-
-    # 1. TaskNotes contents
-    legacy_tasknotes = vault_root / "TaskNotes"
-    if legacy_tasknotes.exists() and not legacy_tasknotes.is_symlink():
-        # Move Tasks
-        legacy_tasks = legacy_tasknotes / "Tasks"
-        if legacy_tasks.exists():
-            for task_file in legacy_tasks.glob("*.md"):
-                move_path(task_file, target_base / "Tasks" / task_file.name, dry_run=dry_run)
-            if not dry_run:
-                try:
-                    legacy_tasks.rmdir()
-                except OSError:
-                    pass
-
-        # Move Archive
-        legacy_archive = legacy_tasknotes / "Archive"
-        if legacy_archive.exists():
-            for arch_file in legacy_archive.glob("*.md"):
-                move_path(arch_file, target_base / "Archive" / arch_file.name, dry_run=dry_run)
-            if not dry_run:
-                try:
-                    legacy_archive.rmdir()
-                except OSError:
-                    pass
-
-        # Move Views
-        legacy_views = legacy_tasknotes / "Views"
-        if legacy_views.exists():
-            for view_file in legacy_views.glob("*.base"):
-                move_path(view_file, target_base / "Views" / view_file.name, dry_run=dry_run)
-            if not dry_run:
-                try:
-                    legacy_views.rmdir()
-                except OSError:
-                    pass
-
-        # Move Workflows
-        legacy_workflows = legacy_tasknotes / "Workflows"
-        if legacy_workflows.exists():
-            for wf_file in legacy_workflows.glob("*.md"):
-                move_path(wf_file, target_base / "Workflows" / wf_file.name, dry_run=dry_run)
-            if not dry_run:
-                try:
-                    legacy_workflows.rmdir()
-                except OSError:
-                    pass
-
-        # Move _templates
-        legacy_templates = legacy_tasknotes / "_templates"
-        if legacy_templates.exists():
-            for tmpl_file in legacy_templates.glob("*.md"):
-                move_path(tmpl_file, target_base / "_templates" / tmpl_file.name, dry_run=dry_run)
-            if not dry_run:
-                try:
-                    legacy_templates.rmdir()
-                except OSError:
-                    pass
-
-        # Attempt to clean up empty legacy TaskNotes directory
-        if not dry_run:
-            try:
-                legacy_tasknotes.rmdir()
-                print("  [OK] Cleaned up legacy TaskNotes root folder.")
-            except OSError:
-                print("  ! Notice: Legacy TaskNotes directory still contains non-migrated files.")
-
-    # 2. System directory
-    root_system = vault_root / "System"
-    if root_system.exists() and root_system != target_base / "System":
-        move_path(root_system, target_base / "System", dry_run=dry_run)
-
-    # 3. Projects directory
-    root_projects = vault_root / "Projects"
-    if root_projects.exists() and root_projects != target_base / "Projects":
-        move_path(root_projects, target_base / "Projects", dry_run=dry_run)
-
-    # 4. Slipbox directory
-    root_slipbox = vault_root / "Slipbox"
-    if root_slipbox.exists() and root_slipbox != target_base / "Slipbox":
-        move_path(root_slipbox, target_base / "Slipbox", dry_run=dry_run)
-
-    # 5. _types directory
-    root_types = vault_root / "_types"
-    if root_types.exists() and root_types != target_base / "_types":
-        move_path(root_types, target_base / "_types", dry_run=dry_run)
-
-    # 6. Dashboard.md
-    root_dashboard = vault_root / "Dashboard.md"
-    if root_dashboard.exists():
-        move_path(root_dashboard, target_base / "Dashboard.md", dry_run=dry_run)
-
-    # 7. Root Daily Notes (format: YYYY-MM-DD*.md)
+    """Move a legacy layout after checking all conflicts; preserve user workflows."""
+    require_legacy_layout(vault_root, folder_name)
+    target = vault_root / folder_name
+    tasknotes = vault_root / "TaskNotes"
+    moves = []
+    redundant = []
+    if tasknotes.exists() and not tasknotes.is_symlink():
+        if tasknotes != target:
+            moves.extend((tasknotes / name, target / name)
+                         for name in ("Tasks", "Archive", "Daily", "Inbox", "Views", "_templates"))
+        for workflow in (tasknotes / "Workflows").glob("*.md"):
+            text = workflow.read_text(encoding="utf-8")
+            parts = text.split("---", 2)
+            metadata = yaml.safe_load(parts[1]) if text.startswith("---\n") and len(parts) == 3 else {}
+            is_agent = isinstance(metadata, dict) and metadata.get("type") == "agent_workflow"
+            if is_agent:
+                copies = [vault_root / "System/Workflows" / workflow.name,
+                          target / "System/Workflows" / workflow.name]
+                existing = [path for path in copies if path.exists()]
+                if existing:
+                    if any(path.read_bytes() != workflow.read_bytes() for path in existing):
+                        raise FileExistsError(f"Migration conflict: {workflow.name}; workflow copies differ")
+                    redundant.append(workflow)
+                else:
+                    moves.append((workflow, copies[1]))
+            elif tasknotes != target:
+                moves.append((workflow, target / "Workflows" / workflow.name))
+    moves.extend((vault_root / name, target / name)
+                 for name in ("System", "Projects", "Slipbox", "Sources", "_types", ".agent/skills", "Dashboard.md"))
     daily_pattern = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}.*\.md$")
-    for item in vault_root.iterdir():
-        if item.is_file() and daily_pattern.match(item.name):
-            move_path(item, target_base / "Daily" / item.name, dry_run=dry_run)
+    moves.extend((path, target / "Daily" / path.name) for path in vault_root.iterdir()
+                 if path.is_file() and daily_pattern.match(path.name))
+    for src, dst in moves:
+        validate_move(src, dst)
+    print(f"\n[2/6] Migrating Vault Substrates into {folder_name}/...")
+    for src, dst in moves:
+        move_path(src, dst, dry_run=dry_run)
+    for path in redundant:
+        if dry_run:
+            print(f"  [dry-run] Remove byte-identical workflow copy: {path.name}")
+        else:
+            path.unlink()
+    if not dry_run and tasknotes != target and tasknotes.is_dir() and not tasknotes.is_symlink():
+        for path in (tasknotes / "Workflows", tasknotes):
+            try:
+                path.rmdir()
+            except OSError:
+                pass
 
 def setup_backward_compatibility(vault_root: Path, folder_name: str, dry_run: bool = False):
     """Establishes an unprivileged junction (Windows) or symlink (Unix) for TaskNotes."""
     print(f"\n[3/6] Setting Up Backward Compatibility Alias...")
     legacy_tasknotes = vault_root / "TaskNotes"
     target_base = vault_root / folder_name
+
+    if legacy_tasknotes.resolve() == target_base.resolve():
+        print("  [OK] Target folder is TaskNotes; no compatibility alias needed.")
+        return
 
     if legacy_tasknotes.exists():
         if legacy_tasknotes.is_symlink() or (hasattr(os.path, "isjunction") and os.path.isjunction(legacy_tasknotes)):
@@ -252,7 +225,7 @@ status: active
 ---
 
 # Chrysalis Vault Trampoline
-This vault encapsulates the Chrysalis Operating System inside `{folder_name}/`.
+This vault encapsulates the Chrysalis AI Agent Framework inside `{folder_name}/`.
 
 The master constitution is located at:
 - **Master Constitution:** [`{folder_name}/AGENTS.md`]({folder_name}/AGENTS.md)
@@ -361,7 +334,7 @@ def update_dashboard_queries(vault_root: Path, folder_name: str, dry_run: bool =
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Chrysalis OS - Single-Folder Substrate Migration Engine",
+        description="Chrysalis AI Agent Framework - Single-Folder Substrate Migration Engine",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     default_vault = Path(__file__).resolve().parent.parent.parent
@@ -374,7 +347,7 @@ def main():
     parser.add_argument(
         "--folder-name",
         type=str,
-        default="chrysalis",
+        default="TaskNotes",
         help="Target encapsulation subfolder name (default: %(default)s)"
     )
     parser.add_argument(

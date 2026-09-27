@@ -17,13 +17,6 @@ production_runtime:
     hyper_v_home_assistant_gb: 4 # 4GB dedicated to Home Assistant VM
     chrysalis_operational_memory_gb: 12 # 12GB operational memory for Chrysalis & agents
     manifest: "[[System/Environment/{{server_hostname}}|{{server_hostname}}.md]]"
-  gateway:
-    daemon: "apps/gateway (FastAPI)"
-    port: 8765 # Chrysalis Ambient Gateway port
-    obsidian_chrysalis_port: 8080 # chrysalis-obsidian plugin port
-    tunnel: "Cloudflare Zero-Trust Tunnel"
-    bridge: "Pluggable Orchestrator Bridge (BaseOrchestratorBridge)"
-  intelligence_mode: "option_a_gateway" # option_a_gateway (Golem) or option_b_mobile_native (Edge)
   storage_substrate:
     provider: "{{storage_provider}}" # e.g., google_drive, icloud, syncthing
     central_host_type: "cloud_synced_substrate"
@@ -65,10 +58,8 @@ development_pipeline:
 client_topology:
   sync_model: "Multi-device concurrent sync via {{storage_provider}}"
   client_apps:
-    obsidian: "Desktop and tablet Obsidian vault with chrysalis-obsidian (Port 8080)"
-    mobile: "Android smartphone Flutter client with Model C calendar sync"
-    wearable: "Standalone circular Wear OS smartwatch companion (384x384 OLED)"
-  devices: "Concurrently active mobile, wearable, tablet, and desktop clients"
+    obsidian: "Desktop and tablet Obsidian vault with community TaskNotes plugin"
+  devices: "Concurrently active tablet and desktop clients"
 
 timezone:
   explicit_offset: "{{timezone_offset}}" # e.g., -05:00

@@ -148,12 +148,12 @@ class TestChallengerGate1Adversarial(unittest.TestCase):
             "../secret.md",
             "../../etc/passwd",
             "Projects/../../outside.md",
-            "chrysalis/Tasks/../../../outside.md",
+            "TaskNotes/Tasks/../../../outside.md",
             "/etc/shadow",
             "/root/.ssh/id_rsa",
             "Projects/%2e%2e/secret.md",
-            "chrysalis/Tasks/..\\..\\outside.md",
-            "chrysalis/Tasks/task-1.md\x00.evil",
+            "TaskNotes/Tasks/..\\..\\outside.md",
+            "TaskNotes/Tasks/task-1.md\x00.evil",
         ]
 
         for payload in adversarial_escape_payloads:
@@ -165,11 +165,11 @@ class TestChallengerGate1Adversarial(unittest.TestCase):
         """Verify legitimate relative collection paths are accepted and normalized."""
         valid_paths = [
             ("Projects/cs410/Roadmap.md", "Projects/cs410/Roadmap.md"),
-            ("chrysalis/Tasks/hw1-task.md", "chrysalis/Tasks/hw1-task.md"),
+            ("TaskNotes/Tasks/hw1-task.md", "TaskNotes/Tasks/hw1-task.md"),
             ("Slipbox/20260922100000-note.md", "Slipbox/20260922100000-note.md"),
             ("Sources/cs410-syllabus.md", "Sources/cs410-syllabus.md"),
-            ("./chrysalis/Tasks/hw1-task.md", "chrysalis/Tasks/hw1-task.md"),
-            ("chrysalis//Tasks///hw1-task.md", "chrysalis/Tasks/hw1-task.md"),
+            ("./TaskNotes/Tasks/hw1-task.md", "TaskNotes/Tasks/hw1-task.md"),
+            ("TaskNotes//Tasks///hw1-task.md", "TaskNotes/Tasks/hw1-task.md"),
         ]
 
         for raw, expected in valid_paths:

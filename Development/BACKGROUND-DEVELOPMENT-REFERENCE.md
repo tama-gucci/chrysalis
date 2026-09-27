@@ -1,3 +1,5 @@
+> Historical / paused: this document describes the pre-redesign development runner and retired application work. Its commands and backlog are not current execution instructions. Use [AGENT-WORKFLOW.md](AGENT-WORKFLOW.md), [BACKLOG.md](BACKLOG.md), and [STATUS.md](../STATUS.md) for current work.
+
 # Background development — engineering reference
 
 For numbered setup steps and copy-and-paste instructions, use the [beginner walkthrough](BACKGROUND-DEVELOPMENT.md). This document retains the technical design and optional deployment choices.
@@ -8,7 +10,7 @@ The [automated background role policy](AGENT-WORKFLOW.md#automated-background-de
 
 Use the personal vault to pursue the Life Roadmap. Let a development process turn a small, prioritized engineering backlog into tested improvements. Review a short digest and the decisions that change how the product works. Routine investigation, implementation, tests, review feedback, and release preparation should proceed within a standing scope.
 
-Start with one scheduled developer, automated checks, a separate review pass, and a stable release channel. Add concurrency only when one complete loop works reliably. The [review](REVIEW-2026-09-15.md) explains the current defects; the [backlog](BACKLOG.md) supplies the work.
+Start with one scheduled developer, automated checks, a separate review pass, and a stable release channel. Add concurrency only when one complete loop works reliably. The [review](archive/REVIEW-2026-09-15.md) explains the current defects; the [backlog](BACKLOG.md) supplies the work.
 
 **Current state:** the review, backlog, and prompt templates exist. No scheduler, background worker, CI workflow, automatic merge policy, or deployment job was enabled by this review. Application defects remain open.
 

@@ -85,10 +85,7 @@ collection:
     linked_zettels[]:
       target_type: zettel
       validate_exists: false
-lifecycle:
-  on_create:
-    set:
-      dateCreated: { now: true }
+lifecycle: {}
 ---
 
 # Knowledge Zettel Model

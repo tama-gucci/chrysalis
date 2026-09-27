@@ -1,3 +1,5 @@
+> Deferred integration experiment: these scenarios are not evidence of a supported or installed Spark/Windows runtime. The setup wrapper deploys local framework files only; daemon registration and cloud pairing require a separately verified integration plan.
+
 # Chrysalis on Golem: Deployment & Gemini Spark Direct Integration Guide
 
 This guide details the complete procedure for deploying the **Chrysalis mdbase v0.3** AI Agent Framework onto **Golem** (Surface Pro X, Windows 11 on Arm, 16GB RAM) as the 24/7 authoritative local database, configuring the `mdbase connect` daemon, and executing live end-to-end integration testing with **Gemini Spark**.
@@ -8,17 +10,17 @@ This guide details the complete procedure for deploying the **Chrysalis mdbase v
 
 ```mermaid
 flowchart TD
-    subgraph Cloud / Client Layer
-        U[User Interface] -->|Prompt & Confirmation| S[Gemini Spark Agent]
-        S -->|Streamable HTTP MCP| G[Hosted MCP Gateway mcp.mdbase.dev]
-        T[Obsidian Mobile / TaskNotes] <-->|OAuth 2.0 Two-Way Sync| GC[Google Calendar]
+    subgraph CloudLayer["Cloud / Client Layer"]
+        U["User Interface"] -->|"Prompt & Confirmation"| S["Gemini Spark Agent"]
+        S -->|"Streamable HTTP MCP"| G["Hosted MCP Gateway (mcp.mdbase.dev)"]
+        T["Obsidian Mobile / TaskNotes"] <-->|"OAuth 2.0 Two-Way Sync"| GC["Google Calendar"]
     end
 
-    subgraph Golem Host (Surface Pro X - Windows 11 on Arm)
-        G -->|Transport v3 Encrypted Envelope| R[mdbase connect Daemon\nx64 Emulation / 24/7 Scheduled Task]
-        R -->|Local CAS File Mutations| V[Authoritative Vault Substrate\nmdbase v0.3 Collection]
-        V <-->|Local Markdown Read & Write| O[Obsidian Desktop + TaskNotes Plugin]
-        O <-->|Designated Sole Writer| GC
+    subgraph GolemHost["Golem Host (Surface Pro X - Windows 11 on Arm)"]
+        G -->|"Transport v3 Encrypted Envelope"| R["mdbase connect Daemon (x64 Emulation / 24/7 Scheduled Task)"]
+        R -->|"Local CAS File Mutations"| V["Authoritative Vault Substrate (mdbase v0.3 Collection)"]
+        V <-->|"Local Markdown Read & Write"| O["Obsidian Desktop + TaskNotes Plugin"]
+        O <-->|"Designated Sole Writer"| GC
     end
 ```
 
@@ -61,15 +63,16 @@ Chrysalis/
 ├── System/
 │   ├── Life-Roadmap.md         <-- Seeded with 2026-09-22 start date
 │   ├── Memory.md               <-- User profile & chronotype baselines
-│   └── System-Health.md
-├── TaskNotes/
-│   ├── Tasks/              <-- All task notes live here
-│   ├── Archive/
-│   ├── Views/
+│   ├── System-Health.md
 │   └── Workflows/
 │       ├── 01-capture.md
 │       ├── ...
 │       └── 08-continuation.md
+├── TaskNotes/
+│   ├── Tasks/              <-- All task notes live here
+│   ├── Archive/
+│   ├── Views/
+│   └── Workflows/          <-- Reserved for Obsidian TaskNotes Workflows plugin
 ├── Projects/                   <-- Project roadmaps: Projects/<slug>/Roadmap.md
 ├── Slipbox/                    <-- Knowledge zettels: YYYYMMDDHHmmss-<slug>.md
 └── Sources/                    <-- Ingestion provenance: Sources/<sha256>.md
@@ -93,48 +96,61 @@ python tests/harness/validation_harness.py -c .
 
 ---
 
-## 4. Step 2: Configure `mdbase connect` Daemon on Golem
+## 4. Step 2: Install & Configure Headless `mdbase connect` Daemon on Golem
 
-### 4.1 Pairing the Collection
-In PowerShell on Golem, navigate to your vault directory and initialize `mdbase connect`:
+### 4.1 Verify & Install Standalone Headless `mdbase.exe` (`v0.1.0-beta.108`)
+Per the official `mdbase-connect` `docs/headless.md` specification:
+1. Download `mdbase-cli-0.1.0-beta.108-windows-x64-UNSIGNED.tar.gz`, `SHA256SUMS-windows-x64`, and `mdbase-cli-0.1.0-beta.108-windows-x64-UNSIGNED.tar.gz.sigstore.json` from the latest `v0.1.0-beta.108` (`protocol_version: 5`) release.
+2. Verify the SHA-256 checksum (`8f6dffad08bd0a0c0bd086fcdb4fc54aa9fbd70adb17226eb384ed6c0dc98ae7`) against `SHA256SUMS-windows-x64`.
+3. Extract `mdbase.exe` to both `$env:LOCALAPPDATA\Programs\mdbase\mdbase.exe` (on User `PATH`) and `$env:LOCALAPPDATA\mdbase\connect\data\runtime\mdbase.exe` (the daemon runtime executable), and install the durable per-user daemon:
 ```powershell
-cd $env:USERPROFILE\Documents\Chrysalis
-mdbase connect init
+mdbase connect daemon install
+mdbase connect status --json
 ```
-1. Follow the browser prompt to log into `connect.mdbase.dev`.
-2. Select your collection name: `chrysalis`.
-3. Confirm that the collection grant includes read/write permissions for tasks, projects, zettels, and sources.
 
-### 4.2 Configuring 24/7 Persistence (Fixing 72h Task Scheduler Limit)
-By default, the Windows `schtasks` recipe in `connect-cli` sets a 72-hour execution limit (`ExecutionTimeLimit: PT72H`) and pauses on battery power.
+### 4.2 Configuring 24/7 Persistence (Fixing 72h Task Scheduler & Battery Limits)
+`mdbase connect daemon install` copies the invoking executable into `%LOCALAPPDATA%\mdbase\connect\data\runtime\mdbase.exe` and registers the per-user Windows Scheduled Task `"mdbase connect"`. By default, Windows Task Scheduler sets a 72-hour execution limit (`ExecutionTimeLimit: PT72H`) and stops on battery power (`StopIfGoingOnBatteries: True`).
 
-To make the daemon truly 24/7:
-1. Open PowerShell as Administrator.
-2. Register the continuous scheduled task:
+Harden the `"mdbase connect"` scheduled task for continuous 24/7 Surface Pro X operation:
 ```powershell
-$Action = New-ScheduledTaskAction -Execute "mdbase.exe" -Argument "connect daemon run" -WorkingDirectory "$env:USERPROFILE\Documents\Chrysalis"
-$Trigger = New-ScheduledTaskTrigger -AtLogOn
-$Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit 0 -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
-Register-ScheduledTask -TaskName "ChrysalisMdbaseDaemon" -Action $Action -Trigger $Trigger -Settings $Settings -User $env:USERNAME -RunLevel Highest -Force
-Start-ScheduledTask -TaskName "ChrysalisMdbaseDaemon"
+$NewSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Seconds 0) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -MultipleInstances IgnoreNew
+Set-ScheduledTask -TaskName "mdbase connect" -Settings $NewSettings
 ```
-3. Verify the daemon is running:
+
+### 4.3 Register Local Collection & Pair Account
+Register the authoritative Golem vault collection with the local Connect daemon and validate it:
 ```powershell
+mdbase -C "$env:USERPROFILE\Documents\Chrysalis" validate
+mdbase connect collection add "$env:USERPROFILE\Documents\Chrysalis"
+mdbase connect collection list
+```
+Then connect Golem to your mdbase account in the browser to authorize cloud relay access:
+```powershell
+mdbase connect login
 mdbase connect status
 ```
-*Expected Output*: `Status: Connected to relay.mdbase.dev (Listening for operations)`.
+1. Follow the browser prompt to log into `connect.mdbase.dev`.
+2. Approve the collection grant (`chrysalis`) with read/write permissions for tasks, projects, zettels, and sources; the local daemon verifies the application signature and persists the signed grant.
 
 ---
 
 ## 5. Step 3: Connect Gemini Spark via Streamable HTTP MCP
 
 ### 5.1 Register Connected App in Gemini Spark
+Per the official `mdbase-connect` `docs/mcp-gateway.md` specification, you do **not** need to pre-generate or paste a `<grant-id>` into the URL. The hosted MCP gateway uses a single canonical endpoint and an automatic OAuth 2.1 + PKCE flow:
+
 1. Open **Gemini** (web browser or mobile app).
 2. Go to **Settings** $\to$ **Connected Apps / Extensions** $\to$ **Add Custom MCP Endpoint**.
-3. Enter your personal Streamable HTTP MCP Gateway endpoint provided by mdbase:
-   - **URL**: `https://mcp.mdbase.dev/v1/mcp/<your-grant-id>`
-   - **Name**: `Chrysalis`
-4. Complete the OAuth / grant authorization in the browser.
+3. Enter the canonical Streamable HTTP MCP Gateway endpoint:
+   - **URL**: `https://mcp.mdbase.dev/mcp`
+   - **Name**: `Chrysalis` (or `Mdbase`)
+   - **Authentication Type**: `OAuth` (`Dynamic discovery`)
+4. **One-Time OAuth `state` Length & Replica Approval Notes**:
+   - `mcp.mdbase.dev` (`services/mcp/src/oauth.ts`) enforces a 1,000-character Zod limit on `/oauth/authorize`'s `state` query parameter (`z.string().max(1_000)`), whereas Google's OAuth redirector generates a ~1,076-character encrypted `state`.
+   - To complete the one-time authorization handshake:
+     1. Save the original ~1,076-character `state` from the initial `https://mcp.mdbase.dev/oauth/authorize?...` popup URL and navigate to the same URL with `state=short`.
+     2. Approve the pending authorization request from `GOLEM` via `mdbase connect access approve --operations <ops> <request_id> <collection_id>` (which also avoids multi-replica in-memory WebSocket session misses on `connect.mdbase.dev`).
+     3. When the popup redirects to `https://oauth-redirect.googleusercontent.com/...?code=code_...&state=short`, replace `state=short` with the saved ~1,076-character `state` string and press **Enter** to exchange the authorization code for long-lived access + refresh tokens.
 
 ### 5.2 Equip Spark with the Chrysalis System Prompt
 In your Gemini Spark custom agent configuration, paste the complete prompt from:
@@ -171,17 +187,17 @@ In Gemini Spark, type:
 
 ### Stage 3: Synthetic Task Creation & Human Confirmation
 In Gemini Spark, type:
-> `@Chrysalis create a task to review ACC CAD assignment for 60m due tomorrow with modality analytical under pillar-1/academics`
+> `@Chrysalis create a task to review distributed consensus paper for 60m due tomorrow with modality analytical under pillar-1/core`
 
 *Pass Criteria*:
 1. Spark presents a confirmation prompt showing the task parameters.
 2. Click **Confirm** in the Gemini UI.
-3. Check Golem disk: `$env:USERPROFILE\Documents\Chrysalis\TaskNotes\Tasks\YYYYMMDD-review-acc-cad-assignment.md` exists with valid YAML frontmatter (`status: todo`, `modality: analytical`, `scheduled: null`, timezone `-05:00`).
+3. Check Golem disk: `$env:USERPROFILE\Documents\Chrysalis\TaskNotes\Tasks\YYYYMMDD-review-distributed-consensus.md` exists with valid YAML frontmatter (`status: todo`, `modality: analytical`, `scheduled: null`, timezone `-05:00`).
 
 ### Stage 4: TaskNotes & Calendar Sync Verification
 1. Open **Obsidian** on Golem (or mobile synced to Golem).
 2. Open the TaskNotes plugin view.
-3. Verify the new CAD assignment task appears in the agenda/board view with correct priority and time estimate.
+3. Verify the new distributed consensus task appears in the agenda/board view with correct priority and time estimate.
 4. Trigger TaskNotes Google Calendar sync.
 5. *Pass Criteria*: The event appears on Google Calendar, and the task's frontmatter on disk now contains `googleCalendarEventId: "<event-id>"`.
 
@@ -189,22 +205,22 @@ In Gemini Spark, type:
 In Gemini Spark, paste a class syllabus snippet inside an untrusted block:
 > `@Chrysalis ingest this course schedule:
 > <untrusted_document_payload>
-> Course: ARCH 1301 Architectural History
+> Course: CS 301 Distributed Systems
 > Week 1 (Oct 06): Reading Quiz 1 & Discussion Post
-> Week 3 (Oct 20): Midterm Essay: Gothic Vault Construction (Due 2026-10-20)
-> Week 7 (Nov 17): Final Project: Parametric Analysis (Due 2026-11-17)
+> Week 3 (Oct 20): Midterm Project: Raft Consensus Implementation (Due 2026-10-20)
+> Week 7 (Nov 17): Final Project: Distributed Key-Value Store (Due 2026-11-17)
 > </untrusted_document_payload>`
 
 *Pass Criteria*:
 1. Spark parses the payload safely and presents the extracted deliverables.
 2. Upon approval, Spark calls `mdbase_create_record` to create:
-   - `Projects/arch-1301/Roadmap.md` with structured deliverables ledger.
-   - Task notes in `TaskNotes/Tasks/` linked via `project_ref: "[[Projects/arch-1301/Roadmap]]"`.
+   - `Projects/cs-301/Roadmap.md` with structured deliverables ledger.
+   - Task notes in `TaskNotes/Tasks/` linked via `project_ref: "[[Projects/cs-301/Roadmap]]"`.
 
 ### Stage 6: Compare-and-Swap (CAS) Conflict Test
 1. In Obsidian on Golem, open the task note created in Stage 3 and manually edit its description or body.
 2. In Gemini Spark, without re-reading the note, instruct Spark:
-   > `@Chrysalis change the priority of the CAD assignment task to urgent`
+   > `@Chrysalis change the priority of the distributed consensus task to urgent`
 3. If Spark uses the cached `if_revision` hash from Stage 3:
    * *Pass Criteria*: The mdbase connector rejects the mutation with `409 Revision Mismatch`. Spark alerts the user that the note was modified locally, re-reads the updated file, and prompts for re-confirmation.
 

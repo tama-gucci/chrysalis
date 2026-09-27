@@ -4,50 +4,55 @@ description: "Master two-stage focus scheduling engine: Protocol 1 (Staging Mode
 trigger: "/plan"
 domain: runtime
 reads:
+  - "Sources/*.md"
   - "System/Memory.md"
   - "System/Life-Roadmap.md"
   - "Projects/*/Roadmap.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "Slipbox/*.md"
+  - "TaskNotes/Tasks/*.md"
   - ".agent/skills/audit/SKILL.md"
+  - ".agent/skills/ingest/SKILL.md"
 writes:
   - "System/Memory.md"
   - "System/Life-Roadmap.md"
   - "Projects/*/Roadmap.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "TaskNotes/Tasks/*.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
 
 
 # /plan (Master Focus Scheduling & Bio-Cognitive Diurnal Engine)
 
+> **Stage 5 Lifecycle Alignment (`System/Workflows/05-plan.md`):** `/plan` executes immediately after `/ingest` (`System/Workflows/01-capture.md` through `04-organize.md`, aligned with `/project` and `/zettel`), taking newly materialized 14-day deliverable tasks (`TaskNotes/Tasks/YYYYMMDD-<slug>.md` with `project_ref` and `linked_zettels`) and stacking them into bio-cognitive ultradian focus sprints while keeping `date_uncertain: true, due: null` items unscheduled for deadline clarification.
+
 ## Protocol 1: Staging Mode (`/plan --stage` or `/stage`)
-Triggered during the evening workflow (`/evening`) to construct tomorrow's prototype schedule.
+Triggered during the evening workflow (`/evening` after `/audit` and `/ingest --drive`) or after interactive `/ingest` to construct tomorrow's prototype schedule.
 
 ### Step 1: Schedule Addition & Context Query
 Initiate the conversation by prompting the user:
-> *"Is there anything in particular you'd like included in tomorrow's schedule, or any new developments to note? (e.g., ebike maintenance, personal errand, or focus preference)"*
+> *"Is there anything in particular you'd like included in tomorrow's schedule, or any new developments to note? (e.g., lab equipment setup, personal errand, or focus preference)"*
 
 ### Step 2: Intent Processing, Roadmap Sync & Modality Classification
 Upon receiving the user's natural language response:
 1. **Roadmap Context Ingestion:** If the user's response introduces new project developments, shifting priorities, or new constraints, update `Life-Roadmap.md` and relevant `Projects/*/Roadmap.md` (or delegate to `/audit --mutate`).
 2. **Task Materialization & Cognitive Modality Classification:**
-   * If the user requested a specific task that does not yet exist in `chrysalis/TaskNotes/Tasks/`:
+   * If the user requested a specific task that does not yet exist in `TaskNotes/Tasks/`:
      * Classify **Cognitive Modality**:
-       - `analytical`: Deep mental load, convergent logic (CAD drafting, legal/academic writing, problem sets).
-       - `kinetic`: Physical/mechanical movement, low mental load (ebike repairs, physical builds, errands, cleaning).
-       - `synthesis`: Creative/divergent pattern recognition (Zettelkasten notes, portfolio layouts, design ideation).
-       - `administrative`: Low-friction forms, portal checks, emails.
-     * Create the task note in `chrysalis/TaskNotes/Tasks/YYYYMMDD-<slug>.md` with complete YAML frontmatter (`dateCreated`, `created`, `priority`, `urgency_tier`, `modality`, `status: todo`, `scheduled: null`).
+       - `analytical`: Deep mental load, convergent logic (systems architecture, technical writing, complex debugging).
+       - `kinetic`: Physical/mechanical movement, low mental load (hardware assembly, workspace organization, physical filing).
+       - `synthesis`: Creative/divergent pattern recognition (Zettelkasten notes, system architecture diagrams, design ideation).
+       - `administrative`: Low-friction forms, documentation updates, emails.
+     * Create the task note in `TaskNotes/Tasks/YYYYMMDD-<slug>.md` with complete YAML frontmatter (`dateCreated`, `created`, `priority`, `urgency_tier`, `modality`, `status: todo`, `scheduled: null`).
 3. **Priority Arbitration Hierarchy (Life Roadmap Primary):**
    * **`Life-Roadmap.md` active milestone deliverables remain the primary source of daily priority.**
    * **Case A (Active Roadmap Milestone Present):** The analytical roadmap deliverable is assigned as the **Anchor Task (Peak Focus Sprints)**. The user's requested item is paired to its natural cognitive window: kinetic items into **Slump / Kinetic Defrost** ($+06:30 \to +08:15$), synthesis items into **Recovery Focus** ($+08:30 \to +10:30$).
    * **Case B (No Imminent Roadmap Deadlines):** If there are no urgent roadmap deadlines, the user's requested item *can* be elevated to the **Anchor Task**.
-    * **Case C (No Additions Specified):** Assemble the prototype entirely from the active roadmap milestone tasks and `inferred_task_pool`.
-4. **Dynamic Calendar Synchronization (Model C OS Bridge & Cache Ingestion):**
+    * **Case C (No Additions Specified):** Assemble the prototype entirely from the active roadmap milestone tasks and eligible unscheduled task notes queried from the collection.
+4. **Optional Read-Only Calendar Input (iCal Cache):**
    * Ingest external calendar commitments for tomorrow from the configured private iCal feed (`fetch_ical.py`) into `calendar_sync.cached_events` in `System/Memory.md`. Do not assume that the unfinished native mobile calendar bridge provides commitments.
-   * Parse all external calendar commitments (e.g., CAD certification studio/online classes).
-   * For events with physical locations (e.g., studio classrooms), allocate an automatic 30-minute transition/travel buffer before and after.
+   * Parse all external calendar commitments (e.g., team architecture syncs, lab sessions, recurring workshops).
+   * For events with physical locations (e.g., onsite facilities, research labs, client offices), allocate an automatic 30-minute transition/travel buffer before and after.
    * Save parsed events to `calendar_sync.staged_events_tomorrow` in `System/Memory.md`.
 5. **Record Intent:** Save any user context or notes to `prototype_schedule.staged_user_intent` in `System/Memory.md`.
 
@@ -59,12 +64,12 @@ Upon receiving the user's natural language response:
    * **Decompression Buffer (15m):** $T_{\text{wake}} + 02:45 \to T_{\text{wake}} + 03:00$ *(Screen-free biological reset, walk, stretch)*
    * **Peak Focus — Sprint 2 (75m):** $T_{\text{wake}} + 03:00 \to T_{\text{wake}} + 04:30$ *(Anchor Task completion or secondary analytical sprint)*
    * **Slump Window (75m):** $T_{\text{wake}} + 06:30 \to T_{\text{wake}} + 07:45$ *(Low-mental admin, passive learning, rest)*
-   * **Kinetic Defrost Block (30m):** $T_{\text{wake}} + 07:45 \to T_{\text{wake}} + 08:15$ *(Physical movement / ebike tuning to exit slump and elevate dopamine)*
+   * **Kinetic Defrost Block (30m):** $T_{\text{wake}} + 07:45 \to T_{\text{wake}} + 08:15$ *(Physical movement / workspace reset to exit slump and elevate dopamine)*
    * **Recovery Focus Window (120m):** $T_{\text{wake}} + 08:30 \to T_{\text{wake}} + 10:30$ *(Synthesis, Zettelkasten notes, portfolio curation)*
 
 2. **Calendar Conflict Resolution:**
    * Overlay any external calendar events staged for tomorrow.
-   * If a calendar event intersects with an ultradian window, shift or wrap the focus blocks around the event (e.g. executing analytical sprints prior to evening class, or converting pre-class blocks into light kinetic preparation).
+   * If a calendar event intersects with an ultradian window, shift or wrap the focus blocks around the event (e.g. executing analytical sprints prior to an offsite event, or converting pre-event blocks into light kinetic preparation).
    * External calendar commitments take priority in physical space and time; Chrysalis tasks fill the remaining biological focus bandwidth.
 
 3. **Capacity Guardrails:**
@@ -83,7 +88,7 @@ Upon receiving the user's natural language response:
 | **Peak Focus (Sprint 1)** | `10:30 – 11:45` | Analytical | **Anchor** | `[[roadmap-task]]` | 75m | High |
 | *Decompression Buffer* | `11:45 – 12:00` | *Rest* | *Buffer* | *Screen-free biological reset* | 15m | Low |
 | **Peak Focus (Sprint 2)** | `12:00 – 13:00` | Analytical | **Anchor** | `[[roadmap-task]]` | 60m | High |
-| **Slump / Kinetic Defrost** | `15:30 – 16:45` | Kinetic | **Support 1** | `[[ebike-maintenance]]` | 60m | Low |
+| **Slump / Kinetic Defrost** | `15:30 – 16:45` | Kinetic | **Support 1** | `[[hardware-maintenance]]` | 60m | Low |
 | **Recovery Focus** | `17:30 – 18:30` | Synthesis | **Support 2** | `[[zettel-slipbox]]` | 45m | Med |
 
 ---
@@ -103,7 +108,7 @@ Upon receiving the user's natural language response:
      * Ingest requested changes, re-run Step 2 priority arbitration, update schedule assembly, and re-present table.
    * **Branch 3 (No Response / Asynchronous Inaction):**
      * No artificial countdown timer is enforced; `prototype_schedule.feedback_status` remains `"pending"`.
-     * When the next operational boundary occurs (e.g. morning check-in or nightly audit run without prior user response), the system detects unresolved pending feedback and automatically sets `system_state.pause_state.is_paused: true` (`reason: "unresponsive_nightly_audit"`), freezing tag multiplier decay curves and halting schedule serialization until unpaused.
+     * When the next operational boundary occurs (e.g. morning check-in or nightly audit run without prior user response), the system detects unresolved pending feedback and automatically sets `system_state.pause_state.is_paused: true` (`reason: "unresponsive_nightly_audit"`), preserving learned multipliers and halting schedule serialization until unpaused.
 
 ---
 
@@ -127,12 +132,12 @@ Triggered during the morning workflow (`/morning`) to calibrate the pre-approved
 > [!IMPORTANT]
 > **Tool Execution Mandate:** You MUST actively execute file tool calls (`replace_file_content`) to serialize the scheduled state to disk. Never stop at printing text in chat.
 
-1. **Mutate Task Frontmatter:** Call `replace_file_content` on each scheduled task file in `chrysalis/TaskNotes/Tasks/*.md` to write the resolved local ISO-8601 timestamp:
+1. **Mutate Task Frontmatter:** Call `replace_file_content` on each scheduled task file in `TaskNotes/Tasks/*.md` to write the resolved local ISO-8601 timestamp:
    ```yaml
    scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"
    ```
 2. **Update Memory:** Call `replace_file_content` on `System/Memory.md` to update `morning_checkin.active_today`, `morning_checkin.learned_rhythms`, and `morning_checkin.checkin_history`.
-3. **Populate Daily Note:** Call `replace_file_content` (or create) `chrysalis/Daily/YYYY-MM-DD.md` (or `YYYY-MM-DD.md`) with the calibrated daily schedule table, biomarker telemetry, and task wikilinks.
+3. **Populate Daily Note:** Call `replace_file_content` (or create) `Daily/YYYY-MM-DD.md` (or `YYYY-MM-DD.md`) with the calibrated daily schedule table, biomarker telemetry, and task wikilinks.
 4. **Calendar Export Status:** Native mobile calendar export is not implemented. Persist the approved schedule to task notes and daily memory; do not claim that Android, Google Calendar, or a watch was updated. Keep reference links in task frontmatter.
 
 ### Step 4: Deliver Final Locked Agenda

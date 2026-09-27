@@ -27,7 +27,7 @@ class TestZettelGraphLinker(unittest.TestCase):
         # Create vault directories
         self.slipbox_dir = self.vault_root / "Slipbox"
         self.projects_dir = self.vault_root / "Projects" / "Project_Omega"
-        self.tasks_dir = self.vault_root / "chrysalis" / "Tasks"
+        self.tasks_dir = self.vault_root / "TaskNotes" / "Tasks"
 
         self.slipbox_dir.mkdir(parents=True, exist_ok=True)
         self.projects_dir.mkdir(parents=True, exist_ok=True)
@@ -171,11 +171,11 @@ googleCalendarEventId: null
         self.assertEqual(second_result["projects_updated"], 0)
         self.assertEqual(second_result["tasks_updated"], 0)
 
-    def test_legacy_tasknotes_fallback(self):
-        # Remove chrysalis/Tasks and create TaskNotes/Tasks
+    def test_root_tasks_fallback(self):
+        # Remove TaskNotes/Tasks and test fallback to root Tasks/
         import shutil
         shutil.rmtree(self.tasks_dir)
-        legacy_dir = self.vault_root / "TaskNotes" / "Tasks"
+        legacy_dir = self.vault_root / "Tasks"
         legacy_dir.mkdir(parents=True, exist_ok=True)
 
         task_file = legacy_dir / "legacy-task.md"

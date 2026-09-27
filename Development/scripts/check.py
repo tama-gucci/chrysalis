@@ -64,7 +64,10 @@ def run_check(name, command, cwd, directory, timeout, env):
             try:
                 code = process.wait(timeout=timeout)
             except (subprocess.TimeoutExpired, KeyboardInterrupt):
-                os.killpg(process.pid, signal.SIGKILL)
+                if hasattr(os, 'killpg'):
+                    os.killpg(process.pid, signal.SIGKILL)
+                else:
+                    process.kill()
                 process.wait()
                 output.write('\nCheck interrupted or exceeded its time limit.\n')
                 code = 124

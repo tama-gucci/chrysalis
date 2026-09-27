@@ -458,7 +458,7 @@ def main():
     if args.output:
         out_path = Path(args.output)
     else:
-        # Default relative to chrysalis vault
+        # Default relative to vault root
         script_dir = Path(__file__).resolve().parent
         env_dir = script_dir.parent
         out_path = env_dir / f"{sys_info['system_name']}.md"

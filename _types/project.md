@@ -101,7 +101,7 @@ schema:
               description: "Deliverable completion status"
             task_ref:
               type: [string, "null"]
-              description: "Wikilink to materialized task in chrysalis/Tasks/"
+              description: "Wikilink to materialized task in TaskNotes/Tasks/"
             tier:
               type: integer
               minimum: 1
@@ -126,13 +126,7 @@ collection:
     linked_zettels[]:
       target_type: zettel
       validate_exists: false
-lifecycle:
-  on_create:
-    set:
-      last_updated: { now: true }
-  on_update:
-    set:
-      last_updated: { now: true }
+lifecycle: {}
 ---
 
 # Project Roadmap Model
@@ -142,5 +136,5 @@ Each project lives in `Projects/{project_id}/Roadmap.md`.
 
 ## Master Ledger Architecture:
 1. **Single Source of Truth**: The `deliverables` list retains 100% of semester or project deliverables across the complete timeline.
-2. **Horizon Materialization**: Only deliverables within the active 14-day planning horizon materialize as individual execution tasks in `chrysalis/Tasks/`. Deliverables outside 14 days remain recorded in the roadmap's `deliverables` ledger.
+2. **Horizon Materialization**: Only deliverables within the active 14-day planning horizon materialize as individual execution tasks in `TaskNotes/Tasks/`. Deliverables outside 14 days remain recorded in the roadmap's `deliverables` ledger.
 3. **Reconciliation**: When an updated syllabus is ingested, the diffing algorithm modifies existing deliverables in-place and archives removed deliverables (`status: archived`).

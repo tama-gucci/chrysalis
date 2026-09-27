@@ -186,8 +186,6 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         tracked_files = [line.strip() for line in stdout.splitlines() if line.strip()]
         
         forbidden_substrings = [
-            "chrysalis/Tasks/202",
-            "chrysalis/Archive/",
             "TaskNotes/Tasks/202",
             "TaskNotes/Archive/",
             "System/Life-Roadmap.md",
@@ -350,11 +348,9 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         Authoritative Source: AGENTS.md Part II § 2 Mandatory 1-to-1 Public Template Matrix.
         """
         task_tmpl = REPO_ROOT / "TaskNotes" / "_templates" / "Task-Template.md"
-        if not task_tmpl.exists():
-            task_tmpl = REPO_ROOT / "chrysalis" / "_templates" / "Task-Template.md"
         required_templates = [
             REPO_ROOT / "System" / "_templates" / "Life-Roadmap.template.md",
-            REPO_ROOT / "System" / "_templates" / "Scheduling-Memory.template.md",
+            REPO_ROOT / "System" / "_templates" / "Memory.template.md",
             REPO_ROOT / "System" / "_templates" / "System-Health.template.md",
             REPO_ROOT / "System" / "_templates" / "Changelog.template.md",
             REPO_ROOT / "System" / "_templates" / "Daily-Note.template.md",
@@ -366,16 +362,16 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         for tmpl in required_templates:
             self.assertTrue(tmpl.exists(), f"Required template missing: {tmpl.relative_to(REPO_ROOT)}")
 
-    def test_f5_03_scheduling_memory_template_runtime_keys(self):
+    def test_f5_03_memory_template_runtime_keys(self):
         """
-        [F5-T1-03] Scheduling-Memory.template.md must include all active runtime keys.
+        [F5-T1-03] Memory.template.md must include all active runtime keys.
         Authoritative Source: PROJECT.md § Feature Inventory F5.
         """
-        mem_tmpl = REPO_ROOT / "System" / "_templates" / "Scheduling-Memory.template.md"
-        self.assertTrue(mem_tmpl.exists(), "Scheduling-Memory.template.md must exist")
+        mem_tmpl = REPO_ROOT / "System" / "_templates" / "Memory.template.md"
+        self.assertTrue(mem_tmpl.exists(), "Memory.template.md must exist")
         fm, _ = read_frontmatter(mem_tmpl)
-        for key in ["active_timezone", "dynamic_multipliers", "learned_wake_rhythms", "diurnal_offsets", "candidate_task_pools", "pause_state"]:
-            self.assertIn(key, fm, f"Scheduling-Memory.template.md must include '{key}'")
+        for key in ["schema_version", "user_profile", "cognitive_modality_defaults", "active_horizons", "session_metrics"]:
+            self.assertIn(key, fm, f"Memory.template.md must include '{key}'")
 
     def test_f5_04_active_profile_template_aligns_with_runtime(self):
         """
@@ -528,8 +524,6 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         Authoritative Source: PROJECT.md § Feature Inventory F8; AGENTS.md § Universal Chrysalis Task Frontmatter Schema.
         """
         task_path = REPO_ROOT / "TaskNotes" / "Tasks" / "example-task.md"
-        if not task_path.exists():
-            task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
         self.assertTrue(task_path.exists(), "TaskNotes/Tasks/example-task.md must exist")
         fm, _ = read_frontmatter(task_path)
         required_fields = [
@@ -548,8 +542,6 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         Authoritative Source: AGENTS.md § 1 Vault Substrate & Core System Invariants.
         """
         task_path = REPO_ROOT / "TaskNotes" / "Tasks" / "example-task.md"
-        if not task_path.exists():
-            task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
         fm, _ = read_frontmatter(task_path)
         created = str(fm.get("dateCreated") or fm.get("created") or "")
         self.assertTrue(
@@ -563,8 +555,6 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         Authoritative Source: doctor/SKILL.md § Check 3 (Life-Roadmap Tag Registry Validation).
         """
         task_path = REPO_ROOT / "TaskNotes" / "Tasks" / "example-task.md"
-        if not task_path.exists():
-            task_path = REPO_ROOT / "chrysalis" / "Tasks" / "example-task.md"
         roadmap_tmpl = REPO_ROOT / "System" / "_templates" / "Life-Roadmap.template.md"
         task_fm, _ = read_frontmatter(task_path)
         roadmap_fm, _ = read_frontmatter(roadmap_tmpl)
@@ -638,8 +628,8 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         """
         sandbox = SandboxVault(populate_runtime=True)
         try:
-            task_before = (sandbox.path / "chrysalis" / "Tasks" / "20260903-synthetic-task.md").read_text(encoding="utf-8")
-            archive_before = (sandbox.path / "chrysalis" / "Archive" / "20260901-completed-task.md").read_text(encoding="utf-8")
+            task_before = (sandbox.path / "TaskNotes" / "Tasks" / "20260903-synthetic-task.md").read_text(encoding="utf-8")
+            archive_before = (sandbox.path / "TaskNotes" / "Archive" / "20260901-completed-task.md").read_text(encoding="utf-8")
             
             # Execute dry-run or updater sync into sandbox
             update_py = REPO_ROOT / "update.py"
@@ -649,8 +639,8 @@ class TestTier1FeatureCoverage(unittest.TestCase):
                 "--dry-run"
             ])
             
-            task_after = (sandbox.path / "chrysalis" / "Tasks" / "20260903-synthetic-task.md").read_text(encoding="utf-8")
-            archive_after = (sandbox.path / "chrysalis" / "Archive" / "20260901-completed-task.md").read_text(encoding="utf-8")
+            task_after = (sandbox.path / "TaskNotes" / "Tasks" / "20260903-synthetic-task.md").read_text(encoding="utf-8")
+            archive_after = (sandbox.path / "TaskNotes" / "Archive" / "20260901-completed-task.md").read_text(encoding="utf-8")
             
             self.assertEqual(task_before, task_after, "User active task note must be 100% byte identical")
             self.assertEqual(archive_before, archive_after, "User archive task note must be 100% byte identical")

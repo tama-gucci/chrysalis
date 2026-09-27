@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-Chrysalis OS - Autonomous Bootstrap & Onboarding Installer
+Chrysalis AI Agent Framework - Autonomous Bootstrap & Onboarding Installer
 Detects environment telemetry, initializes templates, seeds timezones,
 and prepares the vault for Obsidian and AI Orchestrators.
 """
 
-import os
-import sys
 import argparse
 import datetime
-import shutil
 from pathlib import Path
+
+try:
+    from .vault_paths import vault_path, runtime_memory_path
+except ImportError:
+    from vault_paths import vault_path, runtime_memory_path
 
 def get_local_timezone_offset():
     """Detect local timezone offset in format '+HH:MM' or '-HH:MM'."""
@@ -28,46 +30,20 @@ def get_iso_timestamp(offset):
 def ensure_directories(vault_root: Path, folder_name: str = None, dry_run: bool = False):
     """Ensure standard Chrysalis folder substrate exists."""
     base = vault_root / folder_name if folder_name else vault_root
+    task_dirs = ("Tasks", "Archive", "Daily", "Inbox", "Views", "Workflows", "_templates")
+    framework_dirs = (
+        "Sources",
+        "Slipbox/_templates", "Projects/_templates", "System/_templates",
+        "System/scripts", "System/Orchestrators", "System/Workflows",
+        "System/Environment/_templates", ".agent/skills", "_types",
+    )
     if folder_name:
-        dirs = [
-            base / "Tasks",
-            base / "Archive",
-            base / "Daily",
-            base / "Inbox",
-            base / "Views",
-            base / "Workflows",
-            base / "_templates",
-            base / "Slipbox" / "_templates",
-            base / "Slipbox",
-            base / "Projects" / "_templates",
-            base / "Projects",
-            base / "System" / "_templates",
-            base / "System" / "scripts",
-            base / "System" / "Orchestrators",
-            base / "System" / "Environment" / "_templates",
-            base / ".agent" / "skills",
-            base / "_types",
-            vault_root / ".agent",
-        ]
+        dirs = [base / relative for relative in (*task_dirs, *framework_dirs)]
+        dirs.append(vault_root / ".agent")
     else:
-        dirs = [
-            vault_root / "chrysalis" / "Tasks",
-            vault_root / "chrysalis" / "Archive",
-            vault_root / "chrysalis" / "Daily",
-            vault_root / "chrysalis" / "Inbox",
-            vault_root / "chrysalis" / "Views",
-            vault_root / "chrysalis" / "Workflows",
-            vault_root / "chrysalis" / "_templates",
-            vault_root / "Slipbox" / "_templates",
-            vault_root / "Slipbox",
-            vault_root / "Projects" / "_templates",
-            vault_root / "System" / "_templates",
-            vault_root / "System" / "scripts",
-            vault_root / "System" / "Orchestrators",
-            vault_root / "System" / "Environment" / "_templates",
-            vault_root / ".agent" / "skills",
-            vault_root / "_types"
-        ]
+        dirs = [vault_path(vault_root, relative) for relative in (*task_dirs, *framework_dirs)
+                if relative != "_templates"]
+        dirs.append(vault_path(vault_root, "Tasks").parent / "_templates")
     if dry_run:
         print(f"  [dry-run] Would verify directory substrate at {base}.")
         return
@@ -76,12 +52,15 @@ def ensure_directories(vault_root: Path, folder_name: str = None, dry_run: bool 
     print(f"  ✓ Directory substrate verified ({base.name}).")
 
 def seed_system_memory(vault_root: Path, offset: str, timestamp: str, folder_name: str = None, force: bool = False, dry_run: bool = False):
-    """Seed System/Scheduling-Memory.md from template if missing."""
+    """Seed new memory without shadowing or converting existing legacy state."""
     base = vault_root / folder_name if folder_name else vault_root
-    mem_path = base / "System" / "Scheduling-Memory.md"
-    template_path = base / "System" / "_templates" / "Scheduling-Memory.template.md"
+    mem_path = runtime_memory_path(base)
+    if mem_path.name == "Scheduling-Memory.md":
+        print("  ✓ Existing legacy memory preserved; migrate its schema separately.")
+        return
+    template_path = vault_path(base, "System/_templates/Memory.template.md")
     if not template_path.exists():
-        template_path = Path(__file__).resolve().parent.parent / "_templates" / "Scheduling-Memory.template.md"
+        template_path = Path(__file__).resolve().parent.parent / "_templates" / "Memory.template.md"
 
     if not mem_path.exists() or force:
         if dry_run:
@@ -95,15 +74,15 @@ def seed_system_memory(vault_root: Path, offset: str, timestamp: str, folder_nam
             mem_path.write_text(content, encoding="utf-8")
             print(f"  ✓ Created {mem_path.relative_to(vault_root)} from template.")
         else:
-            print("  ! Template not found, skipping Scheduling-Memory creation.")
+            print("  ! Template not found, skipping Memory creation.")
     else:
         print(f"  ✓ {mem_path.relative_to(vault_root)} already exists.")
 
 def seed_life_roadmap(vault_root: Path, offset: str, timestamp: str, folder_name: str = None, force: bool = False, dry_run: bool = False):
     """Seed System/Life-Roadmap.md from template if missing."""
     base = vault_root / folder_name if folder_name else vault_root
-    roadmap_path = base / "System" / "Life-Roadmap.md"
-    template_path = base / "System" / "_templates" / "Life-Roadmap.template.md"
+    roadmap_path = vault_path(base, "System/Life-Roadmap.md")
+    template_path = vault_path(base, "System/_templates/Life-Roadmap.template.md")
     if not template_path.exists():
         template_path = Path(__file__).resolve().parent.parent / "_templates" / "Life-Roadmap.template.md"
 
@@ -152,7 +131,7 @@ def ensure_root_trampolines(vault_root: Path, folder_name: str, dry_run: bool = 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Chrysalis OS - Autonomous Bootstrap & Setup Engine",
+        description="Chrysalis AI Agent Framework - Autonomous Bootstrap & Setup Engine",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     default_vault = Path(__file__).resolve().parent.parent.parent
@@ -165,13 +144,13 @@ def main():
     parser.add_argument(
         "--encapsulated",
         action="store_true",
-        help="Encapsulate all Chrysalis files into a single subfolder (default: 'chrysalis')"
+        help="Encapsulate all Chrysalis files into a single subfolder (default: 'TaskNotes')"
     )
     parser.add_argument(
         "--folder-name",
         type=str,
         default=None,
-        help="Explicit subfolder name for encapsulation (e.g. 'chrysalis')"
+        help="Explicit subfolder name for encapsulation (e.g. 'TaskNotes')"
     )
     parser.add_argument(
         "--timezone",
@@ -197,10 +176,13 @@ def main():
 
     folder_name = args.folder_name
     if args.encapsulated and not folder_name:
-        folder_name = "chrysalis"
+        folder_name = "TaskNotes"
+
+    if folder_name and (Path(__file__).resolve().parents[2] / "mdbase.yaml").exists():
+        parser.error("mdbase collections use the canonical System/ and TaskNotes/Tasks/ layout; encapsulation is a legacy-only option")
 
     print("=======================================================")
-    print("  Chrysalis OS - Autonomous Bootstrap & Setup Engine  ")
+    print("  Chrysalis AI Agent Framework: Bootstrap Engine       ")
     print("=======================================================")
     print(f"  Local Timezone Offset: {offset}")
     print(f"  Vault Substrate Path:  {vault_root}")

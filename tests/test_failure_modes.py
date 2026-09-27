@@ -39,7 +39,7 @@ class TestChrysalisCriticalFailureModes(unittest.TestCase):
         (self.sandbox / "_types").mkdir(parents=True)
         (self.sandbox / "Sources").mkdir(parents=True)
         (self.sandbox / "Projects" / "cs410").mkdir(parents=True)
-        (self.sandbox / "chrysalis" / "Tasks").mkdir(parents=True)
+        (self.sandbox / "TaskNotes" / "Tasks").mkdir(parents=True)
         (self.sandbox / "Slipbox").mkdir(parents=True)
 
         shutil.copy(REPO_ROOT / "mdbase.yaml", self.sandbox / "mdbase.yaml")
@@ -57,7 +57,7 @@ class TestChrysalisCriticalFailureModes(unittest.TestCase):
     def test_unapproved_action_blocked(self):
         """Simulates mutation attempt without valid user approval token."""
         proposal_id = "prop_20260922_test01"
-        target_path = self.sandbox / "chrysalis" / "Tasks" / "20260927-unapproved-task.md"
+        target_path = self.sandbox / "TaskNotes" / "Tasks" / "20260927-unapproved-task.md"
         validator = WorkflowValidator()
 
         def simulate_agent_act(approval_token: str, path: Path, content: str):
@@ -88,7 +88,7 @@ class TestChrysalisCriticalFailureModes(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test_schema_violations_rejected(self):
         """Verifies JSON Schema Draft 2020-12 rejects invalid frontmatter with specific codes."""
-        task_path = self.sandbox / "chrysalis" / "Tasks" / "test-task.md"
+        task_path = self.sandbox / "TaskNotes" / "Tasks" / "test-task.md"
 
         # 2a: Missing required field (title missing)
         doc_no_title = serialize_record({
@@ -143,7 +143,7 @@ class TestChrysalisCriticalFailureModes(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test_cas_concurrency_conflict_rejected(self):
         """Verifies conditional write with stale if_revision hash aborts write."""
-        task_path = self.sandbox / "chrysalis" / "Tasks" / "20260927-cas-task.md"
+        task_path = self.sandbox / "TaskNotes" / "Tasks" / "20260927-cas-task.md"
         initial_content = serialize_record({
             "type": "task",
             "title": "Initial Task Title",
@@ -230,7 +230,7 @@ class TestChrysalisCriticalFailureModes(unittest.TestCase):
         self.assertTrue(res_write.valid)
 
         # Step 3: Assert no tasks were deleted and task directory remains intact
-        task_dir = self.sandbox / "chrysalis" / "Tasks"
+        task_dir = self.sandbox / "TaskNotes" / "Tasks"
         self.assertTrue(task_dir.exists())
 
     # -------------------------------------------------------------------------
@@ -298,7 +298,7 @@ class TestChrysalisCriticalFailureModes(unittest.TestCase):
         apply_cas_mutation(roadmap_path, initial_roadmap, if_revision=None)
 
         # Initial task for cs410-lab1
-        lab1_task_path = self.sandbox / "chrysalis" / "Tasks" / "20261004-cs410-lab1.md"
+        lab1_task_path = self.sandbox / "TaskNotes" / "Tasks" / "20261004-cs410-lab1.md"
         initial_lab1_doc = serialize_record({
             "type": "task",
             "title": "Lab 1",
@@ -341,7 +341,7 @@ class TestChrysalisCriticalFailureModes(unittest.TestCase):
         self.assertTrue(res_update.valid)
 
         # Assert no duplicate task file for cs410-lab1 exists
-        matching_tasks = list((self.sandbox / "chrysalis" / "Tasks").glob("*cs410-lab1*.md"))
+        matching_tasks = list((self.sandbox / "TaskNotes" / "Tasks").glob("*cs410-lab1*.md"))
         self.assertEqual(len(matching_tasks), 1, "Exactly one task file must exist for cs410-lab1")
 
 

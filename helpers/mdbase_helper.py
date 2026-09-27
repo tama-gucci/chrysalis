@@ -7,7 +7,11 @@ Conforms strictly to Python 3.10+ standard library and PyYAML.
 import contextlib
 from dataclasses import dataclass, field
 from datetime import date, datetime
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None  # type: ignore
+    import msvcrt
 import hashlib
 import json
 import os
@@ -175,27 +179,56 @@ def compute_revision(document_bytes: bytes) -> str:
     return hashlib.sha256(document_bytes).hexdigest().lower()
 
 
+import threading
+import time
+
+_LOCKS_GUARD = threading.Lock()
+_PATH_LOCKS: Dict[str, threading.Lock] = {}
+
+
 @contextlib.contextmanager
 def _advisory_file_lock(path: Path):
     """
-    Acquires an exclusive POSIX advisory lock via fcntl.flock on a dedicated
-    sibling lockfile (path.with_suffix(path.suffix + ".lock")).
+    Acquires an exclusive advisory lock via in-process threading.Lock plus
+    fcntl.flock (POSIX) or msvcrt.locking (Windows) on a dedicated sibling
+    lockfile (path.with_suffix(path.suffix + ".lock")).
     
     Guarantees cross-thread and cross-process mutual exclusion.
     Lockfile is never unlinked to prevent inode-reallocation race conditions.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     lock_path = path.with_suffix(path.suffix + ".lock")
-    lock_fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o666)
-    try:
-        fcntl.flock(lock_fd, fcntl.LOCK_EX)
-        yield
-    finally:
+    lock_key = str(lock_path.resolve())
+    with _LOCKS_GUARD:
+        thread_lock = _PATH_LOCKS.setdefault(lock_key, threading.Lock())
+
+    with thread_lock:
+        lock_fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o666)
         try:
-            fcntl.flock(lock_fd, fcntl.LOCK_UN)
-        except OSError:
-            pass
-        os.close(lock_fd)
+            if fcntl is not None:
+                fcntl.flock(lock_fd, fcntl.LOCK_EX)
+            else:
+                os.lseek(lock_fd, 0, os.SEEK_SET)
+                if os.fstat(lock_fd).st_size == 0:
+                    os.write(lock_fd, b"\0")
+                while True:
+                    try:
+                        os.lseek(lock_fd, 0, os.SEEK_SET)
+                        msvcrt.locking(lock_fd, msvcrt.LK_NBLCK, 1)
+                        break
+                    except OSError:
+                        time.sleep(0.005)
+            yield
+        finally:
+            try:
+                if fcntl is not None:
+                    fcntl.flock(lock_fd, fcntl.LOCK_UN)
+                else:
+                    os.lseek(lock_fd, 0, os.SEEK_SET)
+                    msvcrt.locking(lock_fd, msvcrt.LK_UNLCK, 1)
+            except OSError:
+                pass
+            os.close(lock_fd)
 
 
 def apply_cas_mutation(
@@ -288,22 +321,29 @@ def apply_cas_mutation(
 
 def check_semantic_duplicate(
     source_bytes: bytes,
-    collection_dir: Union[Path, str]
+    collection_dir: Union[Path, str],
+    source_url: Optional[str] = None
 ) -> Optional[Tuple[str, Path]]:
     """
     Calculates SHA-256 digest of source_bytes and scans Sources/**/*.md
-    to detect existing duplicate records across sessions.
+    to detect existing duplicate records across sessions (by sha256 or source_url).
     Returns (source_id, file_path) if match found, else None.
     """
-    digest = compute_revision(source_bytes)
+    digest = compute_revision(source_bytes) if source_bytes else ""
     sources_dir = Path(collection_dir) / "Sources"
     if not sources_dir.exists():
         return None
 
     for p in sources_dir.rglob("*.md"):
+        if p.name == "README.md":
+            continue
         try:
             fm, _ = parse_frontmatter(p.read_text(encoding="utf-8"))
-            if fm.get("sha256", "").lower() == digest:
+            existing_sha = str(fm.get("sha256") or "").lower()
+            if digest and existing_sha == digest:
+                sid = str(fm.get("id", p.stem))
+                return (sid, p)
+            if source_url and not source_bytes and str(fm.get("source_url") or "") == source_url:
                 sid = str(fm.get("id", p.stem))
                 return (sid, p)
         except Exception:
@@ -757,7 +797,7 @@ def validate_record(
 
     if not resolved_type:
         p_str = str(path_obj).replace("\\", "/")
-        if "chrysalis/Tasks" in p_str or "Tasks/" in p_str:
+        if "TaskNotes/Tasks" in p_str or "Tasks/" in p_str:
             resolved_type = "task"
         elif "Projects" in p_str and path_obj.name == "Roadmap.md":
             resolved_type = "project"

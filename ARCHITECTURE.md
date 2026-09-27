@@ -1,6 +1,6 @@
 # Chrysalis Architecture & System Boundaries
 
-Chrysalis is an open, provider-independent AI Agent Framework operating on an **mdbase v0.3** Markdown database substrate. It defines how an AI agent ingests unstructured information, organizes knowledge, manages projects and deliverables, plans focused actions, maintains durable memory, and records verified outcomes in a structured Markdown database.
+Chrysalis is an open, provider-independent AI agent framework operating on an **mdbase v0.3** Markdown database collection. It defines how an AI agent ingests unstructured information, organizes knowledge, manages projects and deliverables, plans focused actions, maintains durable memory, and records verified outcomes in a structured Markdown database.
 
 ---
 
@@ -81,7 +81,7 @@ Chrysalis is an open, provider-independent AI Agent Framework operating on an **
 Chrysalis operates across three strictly segregated spheres:
 
 1. **Framework Boundary (Source Repository)**:
-   - Owns collection manifests (`mdbase.yaml`), JSON Schema Draft 2020-12 type definitions (`_types/*.md`), runtime contracts (`contracts/`), templates (`_templates/`, `System/_templates/`), operational workflows (`TaskNotes/Workflows/`), and deterministic Python helpers (`helpers/mdbase_helper.py`).
+   - Owns collection manifests (`mdbase.yaml`), JSON Schema Draft 2020-12 type definitions (`_types/*.md`), runtime contracts (`contracts/`), templates (`_templates/`, `System/_templates/`), operational workflows (`System/Workflows/`), and deterministic Python helpers (`helpers/mdbase_helper.py`).
 2. **Runtime Agent Boundary (AI Reasoning Engine)**:
    - An executing AI model (Google Antigravity, Claude, OpenAI Codex, Gemini Spark, local LLMs) supplying cognitive reasoning. The agent ingests context, formulates structured action proposals, waits for human approval, and invokes database operations strictly conforming to framework contracts.
 3. **External Applications Boundary (UI & Transports)**:
@@ -94,7 +94,9 @@ Chrysalis is strictly scoped to personal knowledge, deliverable roadmaps, and co
 - Utilizing proprietary cloud task managers or external closed databases.
 
 #### Separation of Source Repository and Personal Runtime Vault
-Use Chrysalis in the personal runtime vault (`chrysalis/`); edit the reusable framework in the source repository outside cloud synchronization. Tests use temporary synthetic sandboxes. Personal tasks, settings, and private notes stay in the runtime vault (`chrysalis/`).
+Use Chrysalis in the personal runtime vault; edit the reusable framework in the source repository outside cloud synchronization. Tests use temporary synthetic sandboxes. Personal tasks, settings, and private notes stay in the runtime vault.
+
+New mdbase deployments use the collection root for `System/`, `Projects/`, `Slipbox/`, schemas and contracts, with tasks in `TaskNotes/Tasks/`. `System/Workflows/` contains portable agent runbooks; `TaskNotes/Workflows/` is private plugin configuration. Runtime helpers can read existing encapsulated `TaskNotes/` and legacy `chrysalis/` layouts, rejecting ambiguous duplicate resources. This compatibility does not convert a legacy vault into an mdbase collection. The old encapsulation installer cannot preserve mdbase collection-relative paths and refuses mdbase restructuring; follow `docs/staged-migration-plan.md` instead.
 
 ---
 
@@ -178,7 +180,7 @@ To protect autonomous AI agents from indirect prompt injection, ingested documen
 | **Validation Helpers** (`helpers/mdbase_helper.py`) | **Redesigned** | Python stdlib + PyYAML helper providing schema checks, CAS, and syllabus diffing. |
 | **FastAPI Server Daemon** (`apps/gateway/`) | **Retired** | Port 8765 daemon retired; core framework operates directly on local Markdown files. |
 | **Custom Mobile Client** (`apps/mobile/`) | **Retired** | Flutter app retired; mobile access provided by Obsidian Mobile / native recorders. |
-| **Vendored Obsidian Binary Bundle** | **Retired** | 5.2 MB pre-compiled bundle retired; users install community TaskNotes directly. |
+| **Vendored Obsidian Binary Bundle** | **Retired** | 5.8 MB bundle in `.obsidian/plugins/chrysalis-obsidian/` removed; users install community TaskNotes directly. |
 | **Autonomous 3 AM Background Cron** | **Retired** | Background night-time mutations retired; execution is interactive and human-gated. |
 | **Static Candidate Task Pools** | **Retired** | Static YAML lists retired in favor of dynamic mdbase queries. |
 | **Gemini Spark Cloud MCP Relay** | **Deferred** | Hosted MCP gateway (`mcp.mdbase.dev`) deferred to candidate integration phase. |

@@ -30,4 +30,5 @@ Overview of objectives, milestone boundaries, and exit criteria.
 - [ ] **deliverable-1**: Initial Milestone Deliverable (Due: YYYY-MM-DD)
 
 ## 3. Reference Files & Slipbox Grounding
+- Provenance Source: [[Sources/{{SOURCE_ID}}]] (Original binary stored in Google Drive)
 - [[Slipbox-Research-Note]]

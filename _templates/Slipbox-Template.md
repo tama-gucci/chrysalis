@@ -1,4 +1,5 @@
 ---
+type: zettel
 id: "{{ZETTEL_ID}}"
 title: "{{TITLE}}"
 dateCreated: "{{TIMESTAMP}}"

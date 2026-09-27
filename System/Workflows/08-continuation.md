@@ -22,7 +22,7 @@ Format the standardized `AgentActionOutput` JSON envelope conforming to `contrac
 {
   "valid": true,
   "result": {
-    "path": "chrysalis/Tasks/{YYYYMMDD}-{slug}.md",
+    "path": "TaskNotes/Tasks/{YYYYMMDD}-{slug}.md",
     "revision": "a1b2c3d4...64hex",
     "mutations_executed": 3
   },

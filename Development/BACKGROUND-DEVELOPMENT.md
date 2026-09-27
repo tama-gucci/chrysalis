@@ -1,3 +1,5 @@
+> Historical / paused: this document describes the pre-redesign development runner and retired application work. Its commands and backlog are not current execution instructions. Use [AGENT-WORKFLOW.md](AGENT-WORKFLOW.md), [BACKLOG.md](BACKLOG.md), and [STATUS.md](../STATUS.md) for current work.
+
 # Set up background development: a beginner's guide
 
 This guide shows you how to have Antigravity and Codex improve Chrysalis while you spend your time using your personal vault.
@@ -81,7 +83,7 @@ Complete the starting-version repair described as B00 in Development/BACKLOG.md.
 
 Follow Development/AGENT-WORKFLOW.md: use Antigravity for implementation and a separate Codex invocation for review. Verify the CLI connection before handing work over.
 
-Preserve existing work. Recheck and fix the task-schema and mailbox-contract failures from Development/REVIEW-2026-09-15.md. Run the required tests and privacy checks.
+Preserve existing work. Recheck and fix the task-schema and mailbox-contract failures from Development/archive/REVIEW-2026-09-15.md. Run the required tests and privacy checks.
 
 Use a separate review agent or review invocation to check the exact changes. Address its findings. After review and /audit-dev pass, save the intended source changes as a local Git commit and update Development/HANDOFF.md.
 
@@ -275,4 +277,4 @@ That alternative needs its own verified setup; this guide does not claim it is a
 
 Open the Chrysalis source project and paste the message in **Step 1**. Complete one step at a time.
 
-The detailed design is retained in [the engineering reference](BACKGROUND-DEVELOPMENT-REFERENCE.md). The agent can use [the backlog](BACKLOG.md) and [source review](REVIEW-2026-09-15.md) for technical details while you follow this guide.
+The detailed design is retained in [the engineering reference](BACKGROUND-DEVELOPMENT-REFERENCE.md). The agent can use [the backlog](BACKLOG.md) and [source review](archive/REVIEW-2026-09-15.md) for technical details while you follow this guide.

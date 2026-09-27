@@ -37,7 +37,7 @@ The migration engine is governed by four core safety invariants:
 │ STAGE 1: COLLECTION ROOT & TYPE SCHEMA DEPLOYMENT                       │
 │ - Deploy mdbase.yaml to vault root                                      │
 │ - Deploy _types/ (task.md, project.md, zettel.md, source.md)            │
-│ - Deploy _contracts/ and _templates/                                    │
+│ - Deploy _contracts/, _templates/, and System/Workflows/                │
 │ - Create Sources/ directory for ingestion provenance                    │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │
@@ -52,7 +52,7 @@ The migration engine is governed by four core safety invariants:
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ STAGE 3: TASK NOTES NORMALIZATION (chrysalis/TaskNotes/Tasks/**/*.md)   │
+│ STAGE 3: TASK NOTES NORMALIZATION (TaskNotes/Tasks/**/*.md)              │
 │ - Normalize filename: YYYYMMDD-{slug}.md                                │
 │ - Map frontmatter properties (created -> dateCreated, local offset)     │
 │ - Set date_uncertain: true if due is ambiguous                          │
@@ -79,8 +79,8 @@ The migration engine is governed by four core safety invariants:
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ STAGE 6: OBSIDIAN & TASKNOTES CONFIGURATION HARMONIZATION               │
-│ - Update TaskNotes data.json tasks folder to chrysalis/TaskNotes/Tasks  │
-│ - Update Dashboard.md Dataview queries for "chrysalis/TaskNotes/Tasks"  │
+│ - Update TaskNotes data.json tasks folder to TaskNotes/Tasks             │
+│ - Update Dashboard.md Dataview queries for "TaskNotes/Tasks"             │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │
                                      ▼

@@ -102,10 +102,7 @@ collection:
     supersedes:
       target_type: source
       validate_exists: false
-lifecycle:
-  on_create:
-    set:
-      captured_date: { now: true }
+lifecycle: {}
 ---
 
 # Ingestion Source Model

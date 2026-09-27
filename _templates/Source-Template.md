@@ -1,4 +1,5 @@
 ---
+type: source
 id: "{{SOURCE_ID}}"
 title: "{{DOCUMENT_TITLE}}"
 source_type: syllabus
@@ -19,6 +20,7 @@ extracted_tasks: []
 
 ## Provenance Metadata
 - **Original Filename**: `{{FILENAME}}`
+- **Google Drive / Source URL**: `{{SOURCE_URL}}`
 - **SHA-256 Digest**: `{{SHA256_DIGEST}}`
 - **Ingestion Date**: `{{TIMESTAMP}}`
 

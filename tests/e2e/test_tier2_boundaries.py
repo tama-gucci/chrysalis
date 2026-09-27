@@ -141,20 +141,20 @@ class TestTier2BoundaryAndCornerCases(unittest.TestCase):
         ignored = stdout.splitlines()
         self.assertEqual(len(ignored), 3, f"All workstation manifests should be ignored: {ignored}")
 
-    def test_f2_b06_gitignore_blocks_chrysalis_tasks_and_archive(self):
+    def test_f2_b06_gitignore_blocks_tasknotes_tasks_and_archive(self):
         """
-        [F2-T2-06] .gitignore must block personal tasks and archive under chrysalis/Tasks/*.md and chrysalis/Archive/*.md except example-task.md.
+        [F2-T2-06] .gitignore must block personal tasks and archive under TaskNotes/Tasks/*.md and TaskNotes/Archive/*.md except example-task.md.
         Authoritative Source: AGENTS.md Part II § 1 Quarantined Personal Substrates.
         """
         ret, stdout, _ = run_cmd([
             "git", "check-ignore",
-            "chrysalis/Tasks/" + "20260901-personal-task.md",
-            "chrysalis/Archive/" + "20260901-completed-task.md",
-            "chrysalis/Daily/2026-09-02.md"
+            "TaskNotes/Tasks/" + "20260901-personal-task.md",
+            "TaskNotes/Archive/" + "20260901-completed-task.md",
+            "TaskNotes/Daily/2026-09-02.md"
         ])
-        self.assertEqual(ret, 0, "git check-ignore must recognize personal chrysalis tasks, archive, and daily notes as ignored")
+        self.assertEqual(ret, 0, "git check-ignore must recognize personal TaskNotes tasks, archive, and daily notes as ignored")
         ignored = stdout.splitlines()
-        self.assertEqual(len(ignored), 3, f"All personal chrysalis files should be ignored: {ignored}")
+        self.assertEqual(len(ignored), 3, f"All personal TaskNotes files should be ignored: {ignored}")
 
     # =========================================================================
     # FEATURE F3: Nomenclature & Synthetic Standards Boundaries
@@ -315,11 +315,9 @@ class TestTier2BoundaryAndCornerCases(unittest.TestCase):
     def test_f5_b01_task_template_validates_mdbase_schema(self):
         """
         [F5-T2-01] Task-Template.md frontmatter must strictly comply with _types/task.md schema.
-        Authoritative Source: chrysalis/_templates/Task-Template.md.
+        Authoritative Source: TaskNotes/_templates/Task-Template.md.
         """
         tmpl_path = REPO_ROOT / "TaskNotes" / "_templates" / "Task-Template.md"
-        if not tmpl_path.exists():
-            tmpl_path = REPO_ROOT / "chrysalis" / "_templates" / "Task-Template.md"
         self.assertTrue(tmpl_path.exists())
         fm, _ = read_frontmatter(tmpl_path)
         self.assertIn("modality", fm)
@@ -342,15 +340,16 @@ class TestTier2BoundaryAndCornerCases(unittest.TestCase):
             except Exception as e:
                 self.fail(f"Embedded JSON block in System-Manifest-Template.md is invalid: {e}")
 
-    def test_f5_b03_scheduling_memory_multipliers_within_bounds(self):
+    def test_f5_b03_memory_multipliers_within_bounds(self):
         """
-        [F5-T2-03] Multipliers in Scheduling-Memory.template.md must fall strictly within [0.20, 2.00].
+        [F5-T2-03] Multipliers in Memory.template.md must fall strictly within [0.20, 2.00].
         Authoritative Source: AGENTS.md § 2 Dynamic Memory & Operational State.
         """
-        mem_tmpl = REPO_ROOT / "System" / "_templates" / "Scheduling-Memory.template.md"
+        mem_tmpl = REPO_ROOT / "System" / "_templates" / "Memory.template.md"
         fm, _ = read_frontmatter(mem_tmpl)
-        multipliers = fm.get("dynamic_multipliers", {})
-        for modality, mult in multipliers.items():
+        defaults = fm.get("cognitive_modality_defaults", {})
+        for modality, data in defaults.items():
+            mult = data.get("multiplier", 1.0)
             self.assertGreaterEqual(float(mult), 0.20, f"Multiplier for {modality} below 0.20 minimum")
             self.assertLessEqual(float(mult), 2.00, f"Multiplier for {modality} above 2.00 maximum")
 
@@ -562,12 +561,12 @@ class TestTier2BoundaryAndCornerCases(unittest.TestCase):
                     shutil.copy2(item, dest)
             
             # 2. Corrupt or delete a file in sandbox
-            task_path = sandbox.path / "chrysalis" / "Tasks" / "20260903-synthetic-task.md"
+            task_path = sandbox.path / "TaskNotes" / "Tasks" / "20260903-synthetic-task.md"
             task_original_bytes = task_path.read_bytes()
             task_path.write_text("CORRUPTED BY SIMULATED POWER LOSS", encoding="utf-8")
             
             # 3. Restore from snapshot
-            shutil.copy2(snapshot_dir / "chrysalis" / "Tasks" / "20260903-synthetic-task.md", task_path)
+            shutil.copy2(snapshot_dir / "TaskNotes" / "Tasks" / "20260903-synthetic-task.md", task_path)
             
             # 4. Verify identical
             self.assertEqual(task_path.read_bytes(), task_original_bytes, "Restored file must be byte-identical")
@@ -615,14 +614,14 @@ class TestTier2BoundaryAndCornerCases(unittest.TestCase):
         """
         sandbox = SandboxVault(populate_runtime=True)
         try:
-            tasks_before = len(list((sandbox.path / "chrysalis" / "Tasks").iterdir()))
-            archives_before = len(list((sandbox.path / "chrysalis" / "Archive").iterdir()))
+            tasks_before = len(list((sandbox.path / "TaskNotes" / "Tasks").iterdir()))
+            archives_before = len(list((sandbox.path / "TaskNotes" / "Archive").iterdir()))
             
             update_py = REPO_ROOT / "update.py"
             run_cmd(["python3", str(update_py), "--target", str(sandbox.path), "--dry-run"])
             
-            tasks_after = len(list((sandbox.path / "chrysalis" / "Tasks").iterdir()))
-            archives_after = len(list((sandbox.path / "chrysalis" / "Archive").iterdir()))
+            tasks_after = len(list((sandbox.path / "TaskNotes" / "Tasks").iterdir()))
+            archives_after = len(list((sandbox.path / "TaskNotes" / "Archive").iterdir()))
             
             self.assertEqual(tasks_before, tasks_after, "Active user task count must be preserved")
             self.assertEqual(archives_before, archives_after, "Archived user task count must be preserved")

@@ -8,10 +8,10 @@ reads:
   - ".agent/skills/plan/SKILL.md"
 writes:
   - "System/Memory.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "TaskNotes/Tasks/*.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
 
 
 # /calibrate (Morning Telemetry & Calibration Ingestion Engine)
@@ -35,14 +35,14 @@ writes:
        $$\text{New Rolling Wake} = \text{Current Baseline} + 0.15 \times (T_{\text{wake}} - \text{Current Baseline})$$
      * Set `applied_energy_mode: "sleep_deprived"` for 1–2, or `"optimal"` for 3–5.
      * **MANDATORY TOOL CALL:** Execute `replace_file_content` on `System/Memory.md` to:
-       - Set `system_state.pause_state`: `{ is_paused: false, mode: null, reason: null, paused_at: null, resume_policy: null, resume_target: null, freeze_multiplier_decay: false }`.
+       - Set `system_state.pause_state`: `{ is_paused: false, mode: null, reason: null, paused_at: null, resume_policy: null, resume_target: null }`.
        - Update session metrics and active day check-in with today's date, timestamp, energy level, and energy mode.
   2. **Route to Execution:**
      * If `prototype_schedule.feedback_status` was `"approved"`: Read and execute `.agent/skills/plan/SKILL.md` under **Protocol 2: Calibration & Timeblocking Mode**, passing $T_{\text{wake}}$ and `energy_level`.
      * If `prototype_schedule.feedback_status` was `"pending"` or system was paused: Read and execute `.agent/skills/plan/SKILL.md` under **Protocol 1: Staging Mode**, passing $T_{\text{wake}}$ and `energy_level` to stage today's focus and obtain feedback before locking timestamps.
 * **Case B (User Still Does Not Respond / Inaction):**
   * Retain `system_state.pause_state.is_paused: true`.
-  * Multiplier decay curves remain frozen, and no unapproved timestamps are written to disk.
+  * Learned multipliers remain unchanged, and no unapproved timestamps are written to disk.
 
 ---
 

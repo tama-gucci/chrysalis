@@ -1,15 +1,20 @@
 ---
 kind: mdbase.contract
+contract_type: record
 id: task-contract
 version: "0.3.0"
-target_type: task
+x-target-type: task
 description: "Authoritative data contract for Chrysalis execution tasks in mdbase v0.3"
+record_schema:
+  dialect: json-schema-2020-12
+  value:
+    type: object
 ---
 
 # Task Data Contract
 
 ## 1. Scope and Identity
-This contract governs all execution tasks located in `TaskNotes/Tasks/**/*.md` (or runtime `chrysalis/TaskNotes/Tasks/**/*.md`).
+This contract governs all execution tasks located in `TaskNotes/Tasks/**/*.md`.
 - **Identity Pattern**: `TaskNotes/Tasks/{YYYYMMDD}-{slug}.md`.
 - **Target Type**: `task` conforming to `_types/task.md`.
 

@@ -1,6 +1,6 @@
 # Separate development workstation and runtime vault
 
-Use a native local checkout on the development workstation, outside Google Drive, rclone/FUSE mounts, and personal vault synchronization. Keep the private runtime vault (`chrysalis/`) separate from the development source repository. Git transfers source changes; `update.py` promotes selected framework files into the personal runtime vault.
+Use a native local checkout on the development workstation, outside Google Drive, rclone/FUSE mounts, and personal vault synchronization. Keep the private runtime vault separate from the development source repository. Git transfers source changes; `update.py` promotes selected framework files into the personal runtime vault.
 
 ## Preserve the source before moving
 
@@ -57,16 +57,16 @@ The templates are [antigravity-hooks.template.json](_templates/antigravity-hooks
 
 ## Runtime Vault Deployment
 
-The personal runtime vault (`chrysalis/`) runs directly on local disk, visualized via Obsidian with the community TaskNotes plugin, and operated on by autonomous AI agents governed by `contracts/agent-runtime.contract.md`. There is no background gateway daemon.
+The personal runtime vault runs directly on local disk, visualized via Obsidian with the community TaskNotes plugin, and operated on by autonomous AI agents governed by `contracts/agent-runtime.contract.md`. There is no background gateway daemon.
 
 After a source change has passed review, tests, and `/audit-dev`, preview and apply the deployment using explicit source and target paths:
 
 ```bash
 # Preview changes non-destructively
-python3 update.py --source release-source --target /path/to/chrysalis --dry-run
+python3 update.py --source release-source --target /path/to/vault --dry-run
 
 # Apply deployment to runtime vault
-python3 update.py --source release-source --target /path/to/chrysalis
+python3 update.py --source release-source --target /path/to/vault
 ```
 
 Do not run a blanket directory mirror or deploy directly from a moving development branch. Pause framework-editing agents during deployment. The updater preserves personal state and stores private rollback history in `<vault>/.chrysalis/`. Rollback instructions remain in [README.md](../README.md).

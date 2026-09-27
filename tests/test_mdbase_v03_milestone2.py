@@ -1,7 +1,7 @@
 """
 Comprehensive Test Suite for Milestone 2: Database Foundation & Portable Workflows
 Validates mdbase v0.3.0 collection configuration, _types/ schemas, _contracts/,
-_templates/, chrysalis/Workflows/, and helpers/mdbase_helper.py.
+_templates/, System/Workflows/, and helpers/mdbase_helper.py.
 """
 
 from datetime import date, datetime
@@ -60,7 +60,10 @@ class TestMdbaseYamlConfiguration(unittest.TestCase):
 
         # Verify essential exclusions
         excludes = settings.get("exclude", [])
-        for required_exclude in ["_types", "_contracts", "_templates", ".git", ".agents", "System", "Development", "apps", "tests"]:
+        for required_exclude in [
+            "_types", "_contracts", "_templates", ".git", ".agents",
+            "System", "TaskNotes/Workflows", "Workflows", "Development", "apps", "tests"
+        ]:
             self.assertIn(required_exclude, excludes, f"settings.exclude must contain {required_exclude}")
 
 
@@ -142,8 +145,9 @@ class TestContractsAndTemplates(unittest.TestCase):
                 self.assertTrue(c_path.exists(), f"_contracts/{name} must exist")
                 fm, body = parse_frontmatter(c_path.read_text(encoding="utf-8"))
                 self.assertEqual(fm.get("kind"), "mdbase.contract")
+                self.assertEqual(fm.get("contract_type"), "record")
                 self.assertEqual(fm.get("version"), "0.3.0")
-                self.assertEqual(fm.get("target_type"), target)
+                self.assertEqual(fm.get("x-target-type") or fm.get("target_type"), target)
                 self.assertTrue(len(body.strip()) > 50, "Contract body must contain detailed instructions")
 
     def test_public_templates_exist_and_conform(self):
@@ -156,7 +160,7 @@ class TestContractsAndTemplates(unittest.TestCase):
 
 
 class TestPortableAgentWorkflows(unittest.TestCase):
-    """Tests all 8 portable agent workflows in chrysalis/Workflows/."""
+    """Tests all 8 portable agent workflows in System/Workflows/ and verifies TaskNotes/Workflows/ is reserved for Obsidian."""
 
     def test_eight_workflows_exist_and_conform(self):
         expected_stages = [
@@ -171,10 +175,8 @@ class TestPortableAgentWorkflows(unittest.TestCase):
         ]
         for filename, stage, lifecycle_state, req_approval in expected_stages:
             with self.subTest(workflow=filename):
-                wf_path = REPO_ROOT / "TaskNotes" / "Workflows" / filename
-                if not wf_path.exists():
-                    wf_path = REPO_ROOT / "chrysalis" / "Workflows" / filename
-                self.assertTrue(wf_path.exists(), f"Workflow {filename} must exist")
+                wf_path = REPO_ROOT / "System" / "Workflows" / filename
+                self.assertTrue(wf_path.exists(), f"Workflow {filename} must exist in System/Workflows/")
                 fm, body = parse_frontmatter(wf_path.read_text(encoding="utf-8"))
                 self.assertEqual(fm.get("type"), "agent_workflow")
                 self.assertEqual(fm.get("version"), "1.0.0")
@@ -184,6 +186,24 @@ class TestPortableAgentWorkflows(unittest.TestCase):
                 self.assertIsInstance(fm.get("inputs"), list)
                 self.assertIsInstance(fm.get("outputs"), list)
                 self.assertTrue(len(body.strip()) > 30)
+
+    def test_tasknotes_workflows_reserved_for_obsidian_plugin(self):
+        plugin_wf_dir = REPO_ROOT / "TaskNotes" / "Workflows"
+        self.assertTrue(plugin_wf_dir.is_dir(), "TaskNotes/Workflows/ must exist for the Obsidian TaskNotes Workflows plugin")
+        for md_file in plugin_wf_dir.glob("*.md"):
+            if md_file.name == "README.md":
+                continue
+            fm, _ = parse_frontmatter(md_file.read_text(encoding="utf-8"))
+            self.assertNotEqual(
+                fm.get("type"),
+                "agent_workflow",
+                f"Framework agent workflow {md_file.name} must not reside in TaskNotes/Workflows/",
+            )
+        view_base = REPO_ROOT / "TaskNotes" / "Views" / "workflows.base"
+        self.assertTrue(view_base.is_file())
+        view_text = view_base.read_text(encoding="utf-8")
+        self.assertIn('file.inFolder("TaskNotes/Workflows")', view_text)
+        self.assertIn('note["type"] == "runtime_workflow"', view_text)
 
 
 class TestMdbaseHelper(unittest.TestCase):
@@ -403,7 +423,7 @@ tags:
 ---
 Task details here.
 """
-        res = validate_record("chrysalis/Tasks/example-task.md", task_text)
+        res = validate_record("TaskNotes/Tasks/example-task.md", task_text)
         self.assertTrue(res.valid, f"Expected valid task but got diagnostics: {res.diagnostics}")
 
     def test_validate_record_rejects_utc_z(self):
@@ -415,7 +435,7 @@ dateCreated: "2026-09-22T10:00:00Z"
 ---
 Body
 """
-        res = validate_record("chrysalis/Tasks/example-task.md", task_text)
+        res = validate_record("TaskNotes/Tasks/example-task.md", task_text)
         self.assertFalse(res.valid)
         codes = [d.code for d in res.diagnostics]
         self.assertIn("format_invalid", codes)
@@ -430,7 +450,7 @@ unauthorized_field: "should fail"
 ---
 Body
 """
-        res = validate_record("chrysalis/Tasks/example-task.md", task_text)
+        res = validate_record("TaskNotes/Tasks/example-task.md", task_text)
         self.assertFalse(res.valid)
         codes = [d.code for d in res.diagnostics]
         self.assertIn("schema_additional_properties", codes)
@@ -444,7 +464,7 @@ dateCreated: "2026-09-22T10:00:00-05:00"
 ---
 Body
 """
-        res = validate_record("chrysalis/Tasks/example-task.md", task_text)
+        res = validate_record("TaskNotes/Tasks/example-task.md", task_text)
         self.assertFalse(res.valid)
         codes = [d.code for d in res.diagnostics]
         self.assertIn("schema_min_length", codes)
@@ -458,7 +478,7 @@ dateCreated: "2026-09-22T10:00:00-05:00"
 ---
 Body
 """
-        res = validate_record("chrysalis/Tasks/example-task.md", task_text)
+        res = validate_record("TaskNotes/Tasks/example-task.md", task_text)
         self.assertFalse(res.valid)
         codes = [d.code for d in res.diagnostics]
         self.assertIn("schema_enum", codes)
@@ -579,7 +599,7 @@ dateCreated: "2026-09-22T10:00:00-05:00"
 tags: "not an array"
 ---
 """
-        res = validate_record("chrysalis/Tasks/example.md", content)
+        res = validate_record("TaskNotes/Tasks/example.md", content)
         self.assertFalse(res.valid)
         diags = [d for d in res.diagnostics if d.field == "tags"]
         self.assertTrue(len(diags) > 0)
@@ -595,7 +615,7 @@ dateCreated: "2026-09-22T10:00:00-05:00"
 date_uncertain: "not a boolean"
 ---
 """
-        res = validate_record("chrysalis/Tasks/example.md", content)
+        res = validate_record("TaskNotes/Tasks/example.md", content)
         self.assertFalse(res.valid)
         diags = [d for d in res.diagnostics if d.field == "date_uncertain"]
         self.assertTrue(len(diags) > 0)

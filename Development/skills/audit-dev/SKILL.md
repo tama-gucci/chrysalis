@@ -4,14 +4,14 @@ description: "Comprehensive development & codebase audit suite: enforces the Zer
 trigger: "/audit-dev"
 domain: development
 reads:
-  - "chrysalis/Development/Development-Constitution.md"
-  - "chrysalis/Development/skills/*/*.md"
-  - "chrysalis/.agent/skills/*/*.md"
-  - "chrysalis/System/Changelog.md"
-  - "chrysalis/Slipbox/*.md"
-  - "chrysalis/.gitignore"
+  - "Development/Development-Constitution.md"
+  - "Development/skills/*/*.md"
+  - ".agent/skills/*/*.md"
+  - "System/Changelog.md"
+  - "Slipbox/*.md"
+  - ".gitignore"
 writes:
-  - "chrysalis/Development/scripts/pii-scanner.sh"
+  - "Development/scripts/pii-scanner.sh"
 ---
 
 # /audit-dev (Development & Codebase Integrity Audit Engine)
@@ -64,8 +64,8 @@ Use `python3 Development/scripts/check.py` for the complete local checks, includ
 
 ### Step 1: Git Tracked Files Quarantine Linter
 Inspect both candidate inventories and verify that **ZERO** candidate files match any quarantined personal path:
-* **Personal Tasks:** Any file in `chrysalis/TaskNotes/Tasks/`, `TaskNotes/Tasks/`, or `chrysalis/Tasks/` other than `example-task.md`.
-* **Archived Tasks:** Any file in `chrysalis/TaskNotes/Archive/`, `TaskNotes/Archive/`, or `chrysalis/Archive/`.
+* **Personal Tasks:** Any file in `TaskNotes/Tasks/` other than `example-task.md`.
+* **Archived Tasks:** Any file in `TaskNotes/Archive/`.
 * **Personal System State:** `System/Life-Roadmap.md`, `System/Memory.md` (and legacy `System/Scheduling-Memory.md`), `System/System-Health.md`, `System/Changelog.md`.
 * **Daily Notes:** Any file matching `^[0-9]{4}-[0-9]{2}-[0-9]{2}.*\.md$`.
 * **Personal Projects:** Any file in `Projects/` except `Projects/README.md` and `Projects/_templates/**`.
@@ -83,7 +83,7 @@ git rm --cached <path>
 Execute a deep regex scan across candidate text files, including new JavaScript and CSS. Exact existing upstream artifacts listed by path and SHA-256 in `candidate_audit.py` are preserved provenance exceptions; any changed artifact fails until separately reviewed. Recognized PNG/ICO image assets are not text scans. Other unknown binary contents fail:
 1. **Machine-Specific Absolute Paths:**
    * Look for `/home/[a-zA-Z0-9_-]+` or `C:\\Users\\[a-zA-Z0-9_-]+`.
-   * Ensure any file references use relative paths (e.g. `.agent/skills/doctor/SKILL.md` or `chrysalis/...`) rather than machine-bound `file:///home/...`.
+   * Ensure any file references use relative paths (e.g. `.agent/skills/doctor/SKILL.md` or `TaskNotes/...`) rather than machine-bound `file:///home/...`.
 2. **Personal Email Addresses:**
    * Scan for email patterns (`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`).
    * Permitted exceptions: addresses in reserved example.com, example.org and example.net domains. The exact existing Dataview manifest is a hash-bound exception for public upstream author attribution. Do not add personal addresses to an exception list.
@@ -93,6 +93,9 @@ Execute a deep regex scan across candidate text files, including new JavaScript 
    * Google API Keys: `AIza[0-9A-Za-z_-]{35}`
    * Private Keys: `-----BEGIN [A-Z ]*PRIVATE KEY-----`
    * Generic tokens: `bearer\s+[a-zA-Z0-9_.-]{20,}`
+4. **Synthetic Placeholder & Roadmap Anonymization:**
+   * Verify that public documentation, skill runbooks, examples, and test cases use purely synthetic or generic technical placeholders.
+   * Strictly prohibit any derivation from or mirroring of the user's actual personal Life Roadmap, private milestones, institutions, or personal projects.
 
 *Remediation:* Replace any leaked path or string with synthetic placeholders or relative paths.
 
@@ -114,7 +117,7 @@ The scanner evaluates each candidate view's ignore files in a temporary Git repo
 Coordinate system capability expansion and recursive self-improvement:
 
 ### Step 1: Scan for Unintegrated Feature Notes
-1. Scan `chrysalis/Slipbox/*.md` for notes tagged `#chrysalis` where `integration_status` is missing or `"unintegrated"`.
+1. Scan `Slipbox/*.md` for notes tagged `#chrysalis` where `integration_status` is missing or `"unintegrated"`.
 2. Report newly identified architectural opportunities or user insights to the developer.
 
 ### Step 2: Audit Staged Proposals & Changelog Ledger

@@ -1,56 +1,29 @@
 ---
-id: "{{ZETTEL_ID}}" # Format: YYYYMMDDHHmmss
+type: zettel
+id: "{{ZETTEL_ID}}"
 title: "{{TITLE}}"
-dateCreated: "{{TIMESTAMP}}" # Format: YYYY-MM-DDTHH:mm:ss{{TIMEZONE_OFFSET}}
+dateCreated: "{{TIMESTAMP}}"
 tags:
   - zettel
-  - concept/domain # Or principle/domain for atomic knowledge zettels
-  # - chrysalis # Required for system evolution ideas
-  # - chrysalis/feature # feature, habit, workflow, ui
-integration_status: unintegrated # Required if tagged with chrysalis: unintegrated, staged, integrated
+  - concept/domain
+source_ref: null
+source_checksum: null
+source_url: null
+project_ref: null
+linked_zettels: []
+integration_status: unintegrated
 ---
 
 # {{TITLE}}
 
-<!--
-CHOOSE STRUCTURE BASED ON NOTE TYPE:
-
-=== BRANCH A: CHRYSALIS SYSTEM EVOLUTION IDEA ===
-(Tag with #chrysalis and appropriate subtag. Ingested by /audit and /evolve)
-
-## Concept & Desired Outcome
-[Detailed description of the tool, habit tracker, or workflow concept and why it helps.]
-
-## Proposed Mechanics & Vault Integration
-[Initial ideas on how this could fit into Chrysalis workflows, agent skills, or Dashboard tables.]
-
-## References & Source Inspiration
-- [[Source-or-Link]]
-
-=== BRANCH B: ATOMIC KNOWLEDGE / PRINCIPLE ZETTEL ===
-(Standard domain knowledge, mental models, or technical literature)
-
 ## Core Thesis
-[Concise single-thesis claim or mental model.]
+[Concise single-thesis claim or theoretical mental model]
 
 ## Technical Elaboration & Context
-[Structured explanation, math, or implementation.]
+[Structured explanation, formal logic, or code patterns]
 
 ## Empirical Operational Application
-[How Chrysalis or human daily execution can leverage this principle.]
+[How Chrysalis workflows or daily focus sessions leverage this note]
 
 ## References & Cross-Links
-- [[Related-Note]]
--->
-
-## Concept & Desired Outcome
-Brief description of the insight, hypothesis, or proposed evolution.
-
-## Technical Elaboration & Mechanics
-Structured explanation, architectural design, or operational mechanics.
-
-## Operational Application & Vault Integration
-How Chrysalis daily workflows or human execution leverage this note.
-
-## References & Cross-Links
-- [[Related-Note]]
+- [[Related-Zettel-Note]]

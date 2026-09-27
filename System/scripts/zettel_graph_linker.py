@@ -5,7 +5,7 @@ Chrysalis Autonomous Zettelkasten Hypergraph Linker
 Connects the Chrysalis Tripartite Knowledge-Execution Continuum:
 1. Knowledge Layer: Slipbox/*.md (Zettelkasten atomic insights)
 2. Strategic Layer: Projects/*/Roadmap.md (Section 3: Reference Files & Contacts)
-3. Execution Layer: chrysalis/Tasks/*.md (linked_zettels frontmatter array)
+3. Execution Layer: TaskNotes/Tasks/*.md (linked_zettels frontmatter array)
 
 Can be executed standalone via CLI or invoked programmatically during
 /audit, /evening, or /zettel skill runs.
@@ -177,7 +177,7 @@ class ZettelGraphLinker:
         return projects
 
     def scan_tasks(self) -> List[Dict[str, Any]]:
-        """Scans chrysalis/Tasks/*.md, Tasks/*.md, or legacy TaskNotes/Tasks/*.md for active tasks."""
+        """Scans TaskNotes/Tasks/*.md for active tasks."""
         tasks_dir = None
         for candidate in [vault_path(self.vault_root, "Tasks")]:
             if candidate.exists():

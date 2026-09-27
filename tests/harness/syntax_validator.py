@@ -175,7 +175,7 @@ class SyntaxValidator:
         if not parsed_ok:
             return False, frontmatter, body, diagnostics
 
-        # Check explicit local timezone on any string fields
+        # Check explicit local timezone on any string or unquoted YAML datetime fields
         def _check_tz_in_obj(obj: Any, prefix: str = "") -> None:
             if isinstance(obj, dict):
                 for k, v in obj.items():
@@ -187,6 +187,22 @@ class SyntaxValidator:
                                 severity=DiagnosticSeverity.ERROR,
                                 layer=ValidationLayer.LAYER_1_SYNTAX,
                                 message=f"Field '{current_path}' contains raw UTC 'Z' string '{v}'. Explicit local offset required (e.g. -05:00).",
+                                field=current_path,
+                                path=path_str,
+                                recovery_action=RecoveryAction.FIX_REQUEST
+                            ))
+                    elif isinstance(v, datetime):
+                        m = re.search(
+                            rf"^\s*{re.escape(str(k))}\s*:\s*(['\"]?[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}T[0-9:.]+Z['\"]?)\s*(?:#.*)?$",
+                            raw_text,
+                            re.M,
+                        )
+                        if m:
+                            diagnostics.append(Diagnostic(
+                                code=DiagnosticCode.FORMAT_INVALID,
+                                severity=DiagnosticSeverity.ERROR,
+                                layer=ValidationLayer.LAYER_1_SYNTAX,
+                                message=f"Field '{current_path}' contains unquoted raw UTC 'Z' timestamp '{m.group(1)}'. Explicit local offset required (e.g. -05:00).",
                                 field=current_path,
                                 path=path_str,
                                 recovery_action=RecoveryAction.FIX_REQUEST

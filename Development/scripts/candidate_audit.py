@@ -29,11 +29,14 @@ PATTERNS = {
 EMAIL = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
 PRIVATE_PROBES = (
     'System/Life-Roadmap.md', 'System/Memory.md', 'System/Scheduling-Memory.md', 'System/System-Health.md',
-    'System/Changelog.md', 'chrysalis/System/Memory.md', 'chrysalis/System/Scheduling-Memory.md',
-    'chrysalis/Tasks/private.md', 'TaskNotes/Tasks/private.md',
-    'chrysalis/Archive/private.md', 'TaskNotes/Archive/private.md',
-    'chrysalis/Daily/2026-09-16.md', '2026-09-16.md',
-    'Projects/private/Roadmap.md', 'Slipbox/private.md',
+    'System/Changelog.md', 'TaskNotes/System/Memory.md', 'TaskNotes/System/Scheduling-Memory.md',
+    'TaskNotes/Tasks/private.md', 'chrysalis/Tasks/private.md',
+    'chrysalis/Archive/private.md', 'chrysalis/Projects/private/Roadmap.md',
+    'chrysalis/Slipbox/private.md', 'chrysalis/System/Memory.md',
+    'TaskNotes/Archive/private.md',
+    'TaskNotes/Workflows/private.md',
+    'TaskNotes/Daily/2026-09-16.md', '2026-09-16.md',
+    'Projects/private/Roadmap.md', 'Slipbox/private.md', 'Sources/private.md',
     'System/Environment/station-node.md', '.obsidian/plugins/example/data.json',
     '.obsidian/plugins/obsidian-git/obsidian_askpass.sh',
     '.obsidian/plugins/example/data/cache.json', '.obsidian/plugins/example/runs/run.json',
@@ -59,13 +62,17 @@ def quarantined(path):
     parts = p.parts
     if any(x in parts for x in ('Nexus', '.conversations', '.workspaces', '.venv', 'venv', '__pycache__', '.dart_tool', '.chrysalis', '.backup')):
         return True
-    if re.search(r'(^|/)(chrysalis|TaskNotes)/(Tasks|Archive|Daily)/', path):
-        return path not in ('chrysalis/Tasks/example-task.md', 'TaskNotes/Tasks/example-task.md')
+    if re.search(r'(^|/)(?:TaskNotes|chrysalis)/(Tasks|Archive|Daily)/', path):
+        return path != 'TaskNotes/Tasks/example-task.md'
+    if re.search(r'(^|/)TaskNotes/Workflows/', path):
+        return path != 'TaskNotes/Workflows/README.md'
     if re.search(r'(^|/)System/(Life-Roadmap|Memory|Scheduling-Memory|System-Health|Changelog)\.md$', path):
         return True
     if re.match(r'\d{4}-\d{2}-\d{2}.*\.md$', p.name):
         return True
-    local = path.removeprefix('chrysalis/')
+    local = path.removeprefix('chrysalis/').removeprefix('TaskNotes/')
+    if local.startswith('Sources/'):
+        return True
     if local.startswith(('Projects/', 'Slipbox/')):
         area = local.split('/')[0]
         return local != area + '/README.md' and not local.startswith(area + '/_templates/')

@@ -181,9 +181,9 @@ class TestHypergraphValidator(unittest.TestCase):
                 "project_id": "cs410",
                 "source_ref": "[[Sources/src1]]",
                 "source_checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "deliverables": [{"id": "ps1", "task_ref": "[[chrysalis/Tasks/task-ps1]]"}]
+                "deliverables": [{"id": "ps1", "task_ref": "[[TaskNotes/Tasks/task-ps1]]"}]
             }),
-            ("chrysalis/Tasks/task-ps1.md", {
+            ("TaskNotes/Tasks/task-ps1.md", {
                 "type": "task",
                 "title": "PS 1",
                 "project_ref": "[[Projects/cs410/Roadmap]]",
@@ -202,7 +202,7 @@ class TestHypergraphValidator(unittest.TestCase):
 
     def test_broken_link_detection(self):
         records = [
-            ("chrysalis/Tasks/task1.md", {
+            ("TaskNotes/Tasks/task1.md", {
                 "type": "task",
                 "project_ref": "[[Projects/nonexistent/Roadmap]]"
             })
@@ -214,7 +214,7 @@ class TestHypergraphValidator(unittest.TestCase):
     def test_link_target_type_mismatch(self):
         records = [
             ("Sources/src1.md", {"type": "source", "id": "src1"}),
-            ("chrysalis/Tasks/task1.md", {
+            ("TaskNotes/Tasks/task1.md", {
                 "type": "task",
                 "project_ref": "[[Sources/src1]]"  # Project ref pointing to source
             })

@@ -28,7 +28,7 @@ class CandidateAuditTests(unittest.TestCase):
     def put(self, name, content):
         path = self.root / name
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
+        path.write_text(content, encoding='utf-8', newline='\n')
         return path
 
     def test_clean_candidate_and_index_are_unchanged(self):
@@ -60,9 +60,12 @@ class CandidateAuditTests(unittest.TestCase):
                 self.assertFalse(any(content in f for f in result['findings']))
 
     def test_forced_private_paths_are_rejected(self):
-        for name in ['System/Life-Roadmap.md', 'chrysalis/Tasks/private.md',
+        for name in ['System/Life-Roadmap.md', 'TaskNotes/Tasks/private.md',
+                     'chrysalis/Tasks/private.md', 'chrysalis/Archive/private.md',
+                     'chrysalis/Projects/private/Roadmap.md', 'chrysalis/Slipbox/private.md',
+                     'TaskNotes/Workflows/private.md',
                      'Projects/private/Roadmap.md', '.obsidian/plugins/demo/data.json',
-                     'private.env', 'chrysalis/.chrysalis/private',
+                     'private.env', 'TaskNotes/.chrysalis/private',
                      '.obsidian/plugins/obsidian-git/obsidian_askpass.sh']:
             with self.subTest(name=name):
                 self.put(name, 'synthetic')

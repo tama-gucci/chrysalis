@@ -6,10 +6,10 @@ domain: runtime
 reads:
   - "System/Memory.md"
 writes:
-  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "TaskNotes/Tasks/*.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
 
 
 # /task (Shorthand Task Capture Engine)
@@ -22,19 +22,19 @@ writes:
 2. **Cognitive Modality Inference:**
    * If explicit modality is provided (e.g. `modality:kinetic`), assign it directly.
    * If omitted, infer from nature of task:
-     - `analytical`: CAD, coding, drafting, writing, appeals, coursework.
-     - `kinetic`: repairs, physical builds, hardware, cleaning, fabrication.
-     - `synthesis`: Zettelkasten notes, reading, portfolio review.
-     - `administrative`: student portals, emails, forms, payments.
+     - `analytical`: Deep mental load, code architecture, systems engineering, technical writing.
+     - `kinetic`: Hardware builds, physical assembly, maintenance, workspace organization.
+     - `synthesis`: Zettelkasten notes, research synthesis, system design ideation.
+     - `administrative`: Documentation updates, portal checks, emails, forms.
 3. **Multiplier Resolution & Fallback Rule:**
-   * Read `tag_multipliers` from `System/Memory.md`.
-   * Look up the active multiplier matching the assigned tag (baseline `1.00` fallback).
+   * Read `cognitive_modality_defaults.<modality>.multiplier` from `System/Memory.md`.
+   * Look up the active multiplier matching the assigned modality (baseline `1.00` fallback).
    * Compute effective duration:
      $$\text{timeEstimate} = \text{round}(\text{base\_estimate} \times \text{multiplier})$$
 4. **Zettelkasten Hypergraph Association:**
-   * If `project_ref` is present, scan that project's `## 3. Reference Files & Contacts` section for linked Zettels in `Slipbox/`.
+   * If `project_ref` is present, read that project's `linked_zettels` array and Section 3 reference links to `Slipbox/`; do not depend on an exact heading label.
    * Inject matching Zettel references into `linked_zettels` frontmatter array.
-5. **File Generation:** Create a new file in `chrysalis/TaskNotes/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
+5. **File Generation:** Create a new file in `TaskNotes/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
 
 ```yaml
 ---

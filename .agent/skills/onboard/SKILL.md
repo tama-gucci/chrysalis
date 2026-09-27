@@ -11,10 +11,10 @@ reads:
 writes:
   - "System/Life-Roadmap.md"
   - "System/Memory.md"
-  - "chrysalis/TaskNotes/Tasks/*.md"
+  - "TaskNotes/Tasks/*.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under chrysalis/. For an existing encapsulated vault, resolve the corresponding resource under chrysalis/; never create a competing copy. See ARCHITECTURE.md.
+> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
 
 
 # /onboard (Autonomous Onboarding & Life-Roadmap Engine)
@@ -38,7 +38,7 @@ Prompt the user with the interactive onboarding intake:
 > *"👋 Welcome to Chrysalis! Let's configure your strategic roadmap and daily bio-cognitive focus rhythms.*
 > 
 > *Choose a starter archetype or reply with your personal goals:*
-> 1. 🎓 **Student / Academic:** *Coursework, degree milestones, administrative appeals, exams.*
+> 1. 🎓 **Student / Academic:** *Coursework, research milestones, lab reports, exams.*
 > 2. 💻 **Solo Founder / Developer:** *Product build, technical architecture, launch sprint, revenue.*
 > 3. 🏛️ **Career Switcher / Licensure:** *Certifications, portfolio development, job outreach, credentials.*
 > 4. 🎨 **Creator / Freelancer:** *Client deliverables, content pipeline, audience growth, business admin.*
@@ -70,12 +70,11 @@ When the user selects an archetype or provides their priorities:
 1. **Write `System/Life-Roadmap.md`:**
    * Serialize the compiled frontmatter with valid `tag_registry`, `active_pillar`, and formatted Markdown body.
 2. **Update `System/Memory.md`:**
-   * Update `system_state.active_pillar` to match Pillar 1.
-   * Inject all compiled tags into `tag_multipliers` initialized to baseline `1.00`.
-   * Inject matching tags into `inferred_task_pool.learning_weights` initialized to `1.00`.
-   * Seed the `inferred_task_pool.tasks` with 2–4 starter candidate tasks extracted from Milestone M1.1.
+   * Preserve user preferences and initialize missing `cognitive_modality_defaults` from the public memory template.
+   * Record approved active project links in `active_horizons.active_projects`.
+   * Query project deliverables and actual task notes for planning candidates; do not store a parallel task pool.
 3. **Generate Starter Task Notes:**
-   * If requested, generate 1–2 initial starter task notes in `chrysalis/TaskNotes/Tasks/*.md` adhering strictly to the Universal Chrysalis Task Frontmatter Schema (`status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
+   * If requested, generate 1–2 initial starter task notes in `TaskNotes/Tasks/*.md` adhering strictly to the Universal Chrysalis Task Frontmatter Schema (`status: todo`, `scheduled: null`, `linked_zettels: []`, `project_ref: null`, `googleCalendarEventId: null`).
 
 ---
 
@@ -85,5 +84,5 @@ When the user selects an archetype or provides their priorities:
 2. Verify:
    * **Check #1:** Universal frontmatter schema valid.
    * **Check #2:** Explicit local timezone serialized.
-   * **Check #3:** 100% tag alignment between `Life-Roadmap.md` and `System/Memory.md`.
+   * **Check #3:** Task tags appear in the `Life-Roadmap.md` tag registry, and modality multipliers remain in bounds.
 3. Report final system health to the user and present tomorrow's initial focus schedule.

@@ -50,6 +50,8 @@ helpers/**/*.pyc
 !/System/scripts/**
 !/System/Orchestrators/
 !/System/Orchestrators/**
+!/System/Workflows/
+!/System/Workflows/**
 !/System/_templates/
 !/System/_templates/**
 !/System/Environment/
@@ -83,7 +85,10 @@ helpers/**/*.pyc
 !/Development/HANDOFF.md
 !/Development/WORKSTATION-SETUP.md
 !/Development/BEGINNERS-GUIDE.md
-!/Development/REVIEW-2026-09-15.md
+!/Development/archive/
+/Development/archive/*
+!/Development/archive/HANDOFF-HISTORICAL.md
+!/Development/archive/REVIEW-2026-09-15.md
 !/Development/BACKGROUND-DEVELOPMENT.md
 !/Development/BACKGROUND-DEVELOPMENT-REFERENCE.md
 !/Development/BACKLOG.md
@@ -99,13 +104,14 @@ helpers/**/*.pyc
 # Private feedback stays local; only sanitized engineering summaries are public.
 /Development/feedback/
 
-# 7. Whitelist TaskNotes Views, Workflows, Templates & Example Task ONLY
+# 7. Whitelist TaskNotes Views, Workflows README, Templates & Example Task ONLY
 !/TaskNotes/
 /TaskNotes/*
 !/TaskNotes/Views/
 !/TaskNotes/Views/**
 !/TaskNotes/Workflows/
-!/TaskNotes/Workflows/**
+/TaskNotes/Workflows/*
+!/TaskNotes/Workflows/README.md
 !/TaskNotes/_templates/
 !/TaskNotes/_templates/**
 !/TaskNotes/Tasks/
@@ -115,13 +121,11 @@ helpers/**/*.pyc
 /TaskNotes/Archive/**
 /TaskNotes/Daily/
 /TaskNotes/Daily/**
+/TaskNotes/System/
+/TaskNotes/System/**
 
-# Legacy / Runtime Vault chrysalis/ subfolder (quarantined personal substrates)
+# Legacy runtime remains private even when no longer created.
 /chrysalis/
-/chrysalis/*
-/chrysalis/Tasks/*
-/chrysalis/Archive/**
-/chrysalis/Daily/**
 
 # 8. Whitelist Public Project & Slipbox Templates/READMEs ONLY
 !/Projects/

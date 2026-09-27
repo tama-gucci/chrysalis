@@ -46,6 +46,12 @@ session_metrics:
   total_completed_tasks: 0
   total_focus_hours: 0.0
   consecutive_planned_days: 1
+
+ingestion_config:
+  drive_inbox_folder: "Chrysalis-Media-Locker/01-Inbox"
+  drive_archive_folder: "Chrysalis-Media-Locker/02-Archived-Binaries"
+  auto_ingest_on_nightly_audit: true
+  local_resources_folder_enabled: false
 ---
 
 # Agent Persistent Memory
@@ -62,3 +68,6 @@ session_metrics:
 
 ## Past Session Outcomes Ledger
 <!-- Most recent sessions retained for context window optimization -->
+
+## Optional Interactive Planning State
+The planning runbooks may initialize `prototype_schedule`, `morning_checkin`, `checkin_history`, and `system_state.pause_state` after approval. These are agent-managed extensions, not background services or schema-enforced automation. An absent plan is unapproved; an absent pause state means no recorded manual pause. Preserve unknown existing fields. Task candidates are queried from task notes and project deliverables, not duplicated in memory.

@@ -127,8 +127,9 @@ source-checkout/
     scripts/                      Runtime utilities, including doctor and updater support
     _templates/                   Sanitized examples of private runtime files
     Orchestrators/                Runtime orchestration documentation
+    Workflows/                    Portable 8-stage agent lifecycle workflow runbooks
   .agent/skills/                  Runtime agent runbooks (doctor, audit, calibrate, plan, etc.)
-  TaskNotes/                      Reusable task templates, views, workflows, example task
+  TaskNotes/                      Reusable task templates, views, Obsidian plugin workflows folder, example task
   tests/                          Framework tests, including synthetic integration checks
   .obsidian/                      Selected Obsidian configuration and vendored assets
   update.py                       Framework deployment and rollback
@@ -200,7 +201,7 @@ Chrysalis unifies knowledge, planning, and execution into an interconnected Mark
 
 1. **Atomic Zettelkasten Knowledge (`Slipbox/*.md`):** Permanent notes, literature insights, mental models, and architectural proposals (`#chrysalis`).
 2. **Strategic Roadmaps (`Projects/*/Roadmap.md`):** Long-term project roadmaps, deliverables, and milestones linking back to reference Zettels.
-3. **Granular Execution Substrate (`chrysalis/TaskNotes/Tasks/*.md`):** Actionable task notes conforming strictly to the mdbase v0.3 schema (`_types/task.md`), with temporal schedules and links to parent projects (`project_ref`) and research notes (`linked_zettels`).
+3. **Granular Execution Substrate (`TaskNotes/Tasks/*.md`):** Actionable task notes conforming strictly to the mdbase v0.3 schema (`_types/task.md`), with temporal schedules and links to parent projects (`project_ref`) and research notes (`linked_zettels`).
 4. **Temporal Calendar Blocks:** Focus blocks and calendar slots synchronized bi-directionally via Obsidian and the community TaskNotes plugin (`googleCalendarEventId`).
 
 Autonomous agents navigate this hypergraph bidirectionally: scanning `Slipbox/` to ground active tasks, linking background research to execution notes, and surfacing knowledge directly in focus sessions.
@@ -233,7 +234,7 @@ When ingesting external inputs (such as syllabi, lecture transcripts, web clippi
 External text is strictly quarantined within `<untrusted_document_payload>` tags with delimiter neutralization. The agent parses the payload passively:
 1. Extract candidate tasks and deliverables.
 2. Validate all frontmatter against `_types/task.md` rules (explicit local timezone offset, recognized modality, valid status).
-3. Query the user for explicit approval before persisting tasks to `chrysalis/TaskNotes/Tasks/`.
+3. Query the user for explicit approval before persisting tasks to `TaskNotes/Tasks/`.
 
 Simulation without disk mutation is prohibited; writing without human approval is equally prohibited.
 
@@ -792,7 +793,6 @@ The shared Markdown workflow is still usable manually. Check the current directo
 
 | Symptom | Likely distinction to check | First useful action |
 | --- | --- | --- |
-| `flutter: command not found` | SDK absent versus SDK absent from PATH | Use the prepared project environment; inspect `command -v flutter` |
 | Python cannot import a dependency | Global Python versus checkout environment | Use `.venv/bin/python` and inspect setup completion |
 | Setup rejects vault environment variables | Personal runtime selection leaked into development | Start a clean development shell; remove only the unintended override |
 | Agent reports the wrong branch or files | Wrong checkout or worktree | Compare `pwd`, Git root, branch, and HEAD |
@@ -803,11 +803,6 @@ The shared Markdown workflow is still usable manually. Check the current directo
 | Branch says up to date but there is a large diff | Commits are synchronized; working files are not committed | Review status, tracked diff, and untracked files |
 | Tests cannot start | Toolchain or dependency problem | Read the first environment error before editing application logic |
 | Tests start and an assertion fails | Behavior or contract mismatch | Reproduce the named test and inspect expected versus actual values |
-| APK builds but phone behavior did not change | Old installed artifact or untested native flow | Verify artifact, rebuild when needed, and test the selected device |
-| Phone task is absent from desktop | Local persistence mistaken for external synchronization | Check the configured provider and unfinished Drive integration |
-| Status says buffered | Intent saved but no execution evidence | Inspect the queue contract; do not report the requested action as done |
-| Gateway health is healthy but commands fail | Service liveness versus adapter readiness | Inspect orchestrator status and the real backend error |
-| Connection works over USB but not Wi-Fi | Temporary forwarding versus production routing | Follow a separate authenticated deployment design |
 | Updater reports a local runtime change | Managed file diverged from the prior snapshot | Compare and reconcile the intended change in source |
 | A worktree lacks hooks or `.venv` | Ignored files are local setup | Recreate them for that checkout and review trust |
 | A guide disagrees with a recent result | Dated documentation versus current evidence | Check HANDOFF, STATUS, Git state, and the actual command output |
@@ -875,9 +870,8 @@ The next implementation brief is in `HANDOFF.md`.
 | --- | --- |
 | Agent | An AI system that can use tools and act on a task |
 | API | A defined interface through which programs communicate |
-| APK | An Android application package produced by a build |
 | Architecture | How components divide responsibilities and communicate |
-| Artifact | A saved output, such as an APK, report, or test log |
+| Artifact | A saved output, such as a report or test log |
 | Authentication | Proving an identity to a service |
 | Authorization | Permission for an identity or process to perform an action |
 | Backend | The implementation supplying a service behind an interface |
@@ -897,11 +891,8 @@ The next implementation brief is in `HANDOFF.md`.
 | Diff | A comparison showing changes between versions |
 | Dirty working tree | Saved changes or new files outside the current Git commit |
 | Environment variable | A named setting supplied to a process |
-| FastAPI | Python framework used by the gateway |
 | Fixture | Controlled test data and setup |
-| Flutter | Toolkit used to build the mobile interface and supported desktop targets |
 | Frontmatter | Structured metadata at the beginning of a Markdown file |
-| Gateway | Service receiving client requests and passing them toward a backend |
 | Git | Local version-control system |
 | GitHub | A remote hosting service for Git repositories and collaboration |
 | Handoff | Saved account of current work, evidence, and next steps |
@@ -911,9 +902,7 @@ The next implementation brief is in `HANDOFF.md`.
 | Index/staging area | Selected content for the next Git commit |
 | Integration | Connection between components or external systems |
 | Interface | The methods or messages one component exposes to another |
-| JDK | Java development kit used by Android build tooling |
 | JSON | Structured text format used for messages and configuration |
-| Kotlin | Language used for native Android code in this app |
 | Lockfile | Record of resolved dependency versions |
 | Loopback | Network address referring to the same machine, commonly 127.0.0.1 |
 | Markdown | Plain-text document format used throughout Chrysalis |

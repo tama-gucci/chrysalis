@@ -10,13 +10,14 @@ reads:
   - "System/Changelog.md"
   - "System/Environment/*.md"
   - "System/Orchestrators/*/*.md"
+  - "System/Workflows/*.md"
   - ".agent/skills/*/*.md"
   - "Development/skills/*/*.md"
 writes:
   - "System/Changelog.md"
   - "System/System-Health.md"
   - "System/Orchestrators/*/*.md"
-  - "chrysalis/Workflows/*.md"
+  - "System/Workflows/*.md"
   - "Dashboard.md"
   - ".agent/skills/*/*.md"
   - "Development/skills/*/*.md"
@@ -75,7 +76,7 @@ Execute proactive system growth by scanning unintegrated ideas and formulating a
 
 ### Step 2: Multi-Vector Architectural Brainstorming
 For each unintegrated note, analyze the 5 Chrysalis integration pathways:
-1. **Workflows:** Automated Chrysalis pipelines in `chrysalis/Workflows/`.
+1. **Workflows:** Automated Chrysalis pipelines in `System/Workflows/`.
 2. **Skills:** Modular skill additions, protocol enhancements, or new slash commands in `.agent/skills/`.
 3. **Dashboard UI:** Obsidian Dataview blocks, callouts, or summaries in `Dashboard.md`.
 4. **Operational Memory:** Schema additions or diurnal telemetry expansions in `System/Memory.md`.
@@ -101,15 +102,16 @@ Execute recursive self-improvement on operational skills based on telemetry fric
 2. Review `schedule_refinement_memory.feedback_history` for recurring prompt friction, format overrides, or user complaints.
 
 ### Step 2: Slipbox Knowledge Retrieval
-* Query `chrysalis/Slipbox/*.md` for matching principles (`#concept/*`, `#principle/*`, `#framework/*`) to ground the optimization hypothesis in domain theory.
+* Query `Slipbox/*.md` for matching principles (`#concept/*`, `#principle/*`, `#framework/*`) to ground the optimization hypothesis in domain theory.
 
 ### Step 3: Constitutional Pre-Commit Linter
 Verify that the proposed optimization satisfies all constitutional invariants:
 * Invariant explicit local timezone offset (`"-05:00"`).
-* File substrate single source of truth (`chrysalis/`).
+* File substrate single source of truth (vault filesystem).
 * Mandatory physical disk mutation (anti-simulation law).
 * Dynamic state multiplier bounds clamped to $[0.20, 2.00]$.
 * Feedback gate preserved (no autonomous live changes without user review).
+* Synthetic placeholder & roadmap anonymization compliance (no real user milestones, institutions, or personal projects).
 
 ### Step 4: Snapshot & Mutation
 1. Execute `write_to_file` to snapshot existing skill to `.agent/skills/.backup/<skill>_<timestamp>.md`.

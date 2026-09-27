@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Chrysalis Framework: Upstream Updater Engine
-Safely synchronizes the latest Chrysalis OS framework files, agent skills,
+Safely synchronizes the latest Chrysalis AI Agent Framework files, agent skills,
 workflows, views, and templates from GitHub directly into an active vault.
 Strictly safeguards all personal tasks, roadmaps, daily notes, and telemetry.
 """
@@ -18,6 +18,8 @@ import argparse
 import tempfile
 import subprocess
 from pathlib import Path
+
+from System.scripts.vault_paths import framework_root, vault_path
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -48,14 +50,21 @@ ENGINE_FILES = [
     "System/Runtime-Constitution.md",
     "System/Environment/Environment-Index.md",
     "TaskNotes/Tasks/example-task.md",
-    "chrysalis/Tasks/example-task.md",
+    "TaskNotes/Workflows/README.md",
 ]
 
 ENGINE_DIRS = [
     "_types",
+    "_contracts",
+    "contracts",
+    "_templates",
+    "docs",
+    "helpers",
+    "tests/harness",
     "Development",
     "System/scripts",
     "System/Orchestrators",
+    "System/Workflows",
     "System/Environment/scripts",
     "System/Environment/_templates",
     "System/_templates",
@@ -63,10 +72,6 @@ ENGINE_DIRS = [
     "Slipbox/_templates",
     "TaskNotes/_templates",
     "TaskNotes/Views",
-    "TaskNotes/Workflows",
-    "chrysalis/_templates",
-    "chrysalis/Views",
-    "chrysalis/Workflows",
 ]
 
 PROTECTED_PATHS = [
@@ -92,20 +97,24 @@ def is_protected_target(rel_path_str: str) -> bool:
         return True
     if p.name == "data.json" and ".obsidian" in p.parts:
         return True
-    # Strip optional leading 'chrysalis/' for unified check
+    # Normalize current and legacy layout prefixes for privacy checks
     parts = list(p.parts)
-    if parts and parts[0] == "chrysalis":
+    while parts and parts[0] in {"TaskNotes", "chrysalis"}:
         parts.pop(0)
     norm_p = Path(*parts) if parts else p
     posix_p = norm_p.as_posix()
     orig_posix = p.as_posix()
 
-    # Never touch personal tasks or archive
-    if (posix_p.startswith("TaskNotes/Tasks") or posix_p.startswith("Tasks") or orig_posix.startswith("chrysalis/Tasks")) and norm_p.name != "example-task.md":
+    # Never touch personal tasks, archive, or Obsidian TaskNotes Workflows plugin definitions
+    if (posix_p.startswith("TaskNotes/Tasks") or posix_p.startswith("Tasks")) and norm_p.name != "example-task.md":
         return True
-    if posix_p.startswith("TaskNotes/Archive") or posix_p.startswith("Archive") or orig_posix.startswith("chrysalis/Archive"):
+    if (posix_p.startswith("TaskNotes/Workflows") or posix_p.startswith("Workflows")) and norm_p.name != "README.md":
         return True
-    # Never touch personal projects or slipbox
+    if posix_p.startswith("TaskNotes/Archive") or posix_p.startswith("Archive"):
+        return True
+    # Never touch personal projects, slipbox, or ingested sources
+    if posix_p.startswith("Sources/"):
+        return True
     if posix_p.startswith("Projects/") and not posix_p.startswith("Projects/_templates") and norm_p.name != "README.md":
         return True
     if posix_p.startswith("Slipbox/") and not posix_p.startswith("Slipbox/_templates") and norm_p.name != "README.md":
@@ -151,7 +160,7 @@ def get_commit_info(repo_dir: Path) -> str:
         return "Unknown"
 
 PLUGIN_ASSETS = {"main.js", "manifest.json", "styles.css", "connector.js", "sqlite3.wasm"}
-DEFAULT_PLUGINS = {"chrysalis-obsidian", "dataview", "various-complements"}
+DEFAULT_PLUGINS = {"dataview", "various-complements"}
 STATE_DIRECTORY = ".chrysalis"
 
 
@@ -168,7 +177,40 @@ def safe_path(root: Path, relative: str) -> Path:
 
 
 def fingerprint(path: Path):
-    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+    if not path.is_file():
+        return None
+    raw = path.read_bytes()
+    if path.name == "mdbase.yaml":
+        try:
+            import yaml
+            loaded = yaml.safe_load(raw.decode("utf-8"))
+            if isinstance(loaded, dict):
+                normalized = {k: v for k, v in loaded.items() if k != "x-mdbase-connect"}
+                if isinstance(normalized.get("settings"), dict) and isinstance(normalized["settings"].get("exclude"), list):
+                    normalized["settings"] = dict(normalized["settings"])
+                    normalized["settings"]["exclude"] = [x for x in normalized["settings"]["exclude"] if x != "System"]
+                return hashlib.sha256(json.dumps(normalized, sort_keys=True).encode("utf-8")).hexdigest()
+        except Exception:
+            pass
+    return hashlib.sha256(raw).hexdigest()
+
+
+def merge_mdbase_connect_metadata(src_bytes: bytes, dst_path: Path) -> bytes:
+    if dst_path.name != "mdbase.yaml":
+        return src_bytes
+    try:
+        import yaml
+        src_doc = yaml.safe_load(src_bytes.decode("utf-8"))
+        dst_doc = yaml.safe_load(dst_path.read_text(encoding="utf-8")) if dst_path.is_file() else {}
+        if isinstance(src_doc, dict):
+            if isinstance(dst_doc, dict) and "x-mdbase-connect" in dst_doc:
+                src_doc["x-mdbase-connect"] = dst_doc["x-mdbase-connect"]
+            if isinstance(src_doc.get("settings"), dict) and isinstance(src_doc["settings"].get("exclude"), list):
+                src_doc["settings"]["exclude"] = [x for x in src_doc["settings"]["exclude"] if x != "System"]
+            return yaml.safe_dump(src_doc, sort_keys=False).encode("utf-8")
+    except Exception:
+        pass
+    return src_bytes
 
 
 def atomic_write(path: Path, data: bytes):
@@ -211,6 +253,7 @@ def distribution_files(source: Path, *, plugins=False):
             continue
         for current, dirs, files in os.walk(base, followlinks=False):
             dirs[:] = [d for d in dirs if d not in {"__pycache__", ".backup", ".git", ".pytest_cache"}
+                       and (Path(current) / d).relative_to(source).as_posix() != "Development/archive"
                        and not (Path(current) / d).is_symlink()]
             for name in files:
                 if not name.endswith((".pyc", ".bak", ".tmp", ".log")):
@@ -226,16 +269,20 @@ def distribution_files(source: Path, *, plugins=False):
 
 
 def destination_relative(target, relative):
-    # Preserve existing layouts. Merely having chrysalis/Tasks does not mean
-    # that System, Projects, and Slipbox have been migrated.
-    if (target / "chrysalis/System").is_dir() and not (target / "System").is_dir():
-        first = relative.split("/", 1)[0]
-        if first in {"System", "Projects", "Slipbox", "_types"} or relative in {"Dashboard.md", "mdbase.yaml"}:
-            return "chrysalis/" + relative
+    # Use the same resolver as runtime tools; new names must not create a
+    # second copy of an existing installation's framework or task resources.
+    first = relative.split("/", 1)[0]
+    if first in {"System", "Projects", "Slipbox", "_types", "TaskNotes"} or relative.startswith(".agent/skills/"):
+        return vault_path(target, relative).relative_to(target.resolve()).as_posix()
+    if relative in {"Dashboard.md", "mdbase.yaml"}:
+        return (framework_root(target) / relative).relative_to(target.resolve()).as_posix()
     return relative
 
 
 def deployment_plan(source, target, *, plugins=False):
+    if (source / "mdbase.yaml").is_file():
+        if framework_root(target) != target.resolve() or vault_path(target, "Tasks") != target.resolve() / "TaskNotes/Tasks":
+            raise ValueError("mdbase deployment requires the canonical System/ and TaskNotes/Tasks/ layout; follow docs/staged-migration-plan.md before updating a legacy vault")
     state_file = safe_path(target, STATE_DIRECTORY + "/deployment.json")
     previous = json.loads(state_file.read_text(encoding="utf-8")) if state_file.exists() else {"files": {}}
     changes = []
@@ -243,7 +290,9 @@ def deployment_plan(source, target, *, plugins=False):
         destination = destination_relative(target, relative)
         dst = safe_path(target, destination)
         # Existing settings belong to this installation, even on first deploy.
-        if relative in {".gitignore", ".agent/skills.json", "TaskNotes/Tasks/example-task.md", "chrysalis/Tasks/example-task.md"} and dst.exists():
+        if relative in {".gitignore", ".agent/skills.json"} and dst.exists():
+            continue
+        if relative == "TaskNotes/Tasks/example-task.md" and (dst.exists() or destination in previous.get("files", {})):
             continue
         before = fingerprint(dst)
         after = fingerprint(safe_path(source, relative))
@@ -253,6 +302,53 @@ def deployment_plan(source, target, *, plugins=False):
             raise ValueError(f"Runtime framework file changed locally: {destination}. Reconcile it in the source before deployment.")
         changes.append({"source": relative, "path": destination, "before": before, "after": after})
     return changes, previous
+
+
+def sync_skill_hardlinks(target: Path) -> None:
+    """Expose .agent/skills/<name>/SKILL.md at Skills/<name>/SKILL.md via hardlink for mdbase MCP clients,
+    and generate a combined Skills/bundle/SKILL.md to minimize sequential MCP read tool calls."""
+    src_skills = target / ".agent" / "skills"
+    dst_skills = target / "Skills"
+    if not src_skills.is_dir():
+        return
+    dst_skills.mkdir(parents=True, exist_ok=True)
+    bundle_parts = [
+        "---",
+        "name: bundle",
+        'description: "Auto-generated unified Chrysalis runtime skill bundle (evening, morning, audit, calibrate, plan, task, project, pause, ingest, zettel) to minimize MCP read round-trips."',
+        'trigger: "/bundle"',
+        "domain: runtime",
+        "---",
+        "",
+        "# Chrysalis Unified Runtime Skill Bundle (Auto-Generated from .agent/skills/)",
+        "",
+        "## Universal Gemini Spark Execution Preamble (Authoritative Vault Rules)",
+        "1. **Single-Turn Parallel Read & Write Batching:** Do not fetch individual `Skills/<name>/SKILL.md` files after reading this bundle; all runtime skills (`audit`, `calibrate`, `evening`, `ingest`, `morning`, `pause`, `plan`, `project`, `task`, `zettel`) are included below. When persisting approved mutations, emit all `@Mdbase:create` and `@Mdbase:update` calls in one parallel tool turn.",
+        "2. **Explicit Local Timezone (`-05:00`):** Every ISO timestamp written to frontmatter MUST use the explicit local timezone offset from `System/Memory.md` (`-05:00`), never raw UTC `Z`.",
+        "3. **Google Drive Media Locker (`Chrysalis-Media-Locker/01-Inbox` -> `02-Archived-Binaries`) & Zero Local `Resources/`:** All raw/binary sources live in Google Drive (`ingestion_config.drive_inbox_folder` in `System/Memory.md`). Never create a local `Resources/` folder. During `/evening` or `/audit`, automatically execute `/ingest --drive` (Workflows 01–04 -> `/project` & `/zettel`) before `/plan`. When a user shares a file/snippet in the Spark UI, execute `/ingest` (`--share`) before `/plan`.",
+        "4. **Mandatory Human Approval Gate (`APPROVAL_GATE`):** Always present the proposed schedule or `PlanProposal` review table and wait for user confirmation before executing writes (do not assume a scheduled trigger waives confirmation).",
+    ]
+    for skill_dir in sorted(src_skills.iterdir(), key=lambda p: p.name):
+        if not skill_dir.is_dir() or skill_dir.name.startswith("."):
+            continue
+        src_md = skill_dir / "SKILL.md"
+        if not src_md.is_file():
+            continue
+        dst_dir = dst_skills / skill_dir.name
+        dst_dir.mkdir(parents=True, exist_ok=True)
+        dst_md = dst_dir / "SKILL.md"
+        dst_md.unlink(missing_ok=True)
+        try:
+            os.link(src_md, dst_md)
+        except OSError:
+            shutil.copy2(src_md, dst_md)
+        if skill_dir.name in {"evening", "morning", "audit", "calibrate", "plan", "task", "project", "pause", "ingest", "zettel"}:
+            raw = src_md.read_text(encoding="utf-8")
+            body = raw.split("---", 2)[2].strip() if raw.startswith("---") and raw.count("---") >= 2 else raw
+            bundle_parts.append(f"\n\n---\n## Skill: `{skill_dir.name}` (`.agent/skills/{skill_dir.name}/SKILL.md`)\n\n{body}")
+    bundle_dir = dst_skills / "bundle"
+    bundle_dir.mkdir(parents=True, exist_ok=True)
+    (bundle_dir / "SKILL.md").write_text("\n".join(bundle_parts) + "\n", encoding="utf-8")
 
 
 def sync_engine(src_dir: Path, target_dir: Path, dry_run: bool = False, *, plugins: bool = False) -> tuple[int, list[str]]:
@@ -280,16 +376,15 @@ def sync_engine(src_dir: Path, target_dir: Path, dry_run: bool = False, *, plugi
         for change in changes:
             rel = change["path"]
             src = safe_path(source, change["source"])
-            data = src.read_bytes()
-            if hashlib.sha256(data).hexdigest() != change["after"]:
-                raise ValueError(f"Source changed during deployment: {change['source']}")
-            atomic_write(safe_path(backup, "new/" + rel), data)
             dst = safe_path(target, rel)
+            if fingerprint(src) != change["after"]:
+                raise ValueError(f"Source changed during deployment: {change['source']}")
+            data = merge_mdbase_connect_metadata(src.read_bytes(), dst)
+            atomic_write(safe_path(backup, "new/" + rel), data)
             if change["before"] is not None:
-                original = dst.read_bytes()
-                if hashlib.sha256(original).hexdigest() != change["before"]:
+                if fingerprint(dst) != change["before"]:
                     raise ValueError(f"Target changed during deployment: {rel}")
-                atomic_write(safe_path(backup, "old/" + rel), original)
+                atomic_write(safe_path(backup, "old/" + rel), dst.read_bytes())
         write_json(backup / "manifest.json", manifest)
         applied = []
         try:
@@ -304,6 +399,7 @@ def sync_engine(src_dir: Path, target_dir: Path, dry_run: bool = False, *, plugi
             manifest["status"] = "complete"
             write_json(backup / "manifest.json", manifest)
             write_json(safe_path(target, STATE_DIRECTORY + "/deployment.json"), {"id": release, "files": files})
+            sync_skill_hardlinks(target)
         except Exception:
             for change in reversed(applied):
                 dst = safe_path(target, change["path"])
@@ -385,7 +481,7 @@ def main():
         sys.exit(1)
 
     print("=======================================================")
-    print("   🦋  Chrysalis OS: Framework Upstream Updater        ")
+    print("   🦋  Chrysalis AI Agent Framework: Upstream Updater  ")
     print("=======================================================")
     print(f"Target Vault: {target_path}")
     if args.source:

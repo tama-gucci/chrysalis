@@ -30,11 +30,11 @@ class DeploymentTests(unittest.TestCase):
 
     def test_deploy_rollback_preserves_personal_data_and_settings(self):
         for base in [self.source, self.target]:
-            (base / 'chrysalis/Tasks').mkdir(parents=True)
+            (base / 'TaskNotes/Tasks').mkdir(parents=True)
             (base / '.obsidian/plugins/chrysalis-obsidian').mkdir(parents=True)
-        personal = self.target / 'chrysalis/Tasks/private.md'
+        personal = self.target / 'TaskNotes/Tasks/private.md'
         personal.write_text('my task')
-        (self.source / 'chrysalis/Tasks/private.md').write_text('do not deploy')
+        (self.source / 'TaskNotes/Tasks/private.md').write_text('do not deploy')
         settings = self.target / '.obsidian/plugins/chrysalis-obsidian/data.json'
         settings.write_text('{"private": true}')
         (self.source / '.obsidian/plugins/chrysalis-obsidian/data.json').write_text('{}')
@@ -82,10 +82,59 @@ class DeploymentTests(unittest.TestCase):
     def test_maps_framework_to_existing_encapsulated_layout(self):
         (self.source / 'System/scripts').mkdir(parents=True)
         (self.source / 'System/scripts/example.py').write_text('pass')
-        (self.target / 'chrysalis/System').mkdir(parents=True)
+        (self.source / 'System/Workflows').mkdir(parents=True)
+        (self.source / 'System/Workflows/01-capture.md').write_text('---\ntype: agent_workflow\n---')
+        (self.source / '.agent/skills/task').mkdir(parents=True)
+        (self.source / '.agent/skills/task/SKILL.md').write_text('---\nname: task\ndescription: Task skill\n---')
+        (self.source / 'TaskNotes/Workflows').mkdir(parents=True)
+        (self.source / 'TaskNotes/Workflows/README.md').write_text('# Obsidian Plugin Workflows')
+        (self.source / 'TaskNotes/Views').mkdir(parents=True)
+        (self.source / 'TaskNotes/Views/workflows.base').write_text('view: workflows')
+        (self.target / 'TaskNotes/System').mkdir(parents=True)
+        (self.target / 'TaskNotes/.agent/skills').mkdir(parents=True)
+        (self.target / 'TaskNotes/Workflows').mkdir(parents=True)
+        (self.target / 'TaskNotes/Workflows/private-wf.md').write_text('my plugin workflow')
         update.sync_engine(self.source, self.target)
-        self.assertTrue((self.target / 'chrysalis/System/scripts/example.py').exists())
+        self.assertTrue((self.target / 'TaskNotes/System/scripts/example.py').exists())
+        self.assertTrue((self.target / 'TaskNotes/System/Workflows/01-capture.md').exists())
+        self.assertTrue((self.target / 'TaskNotes/.agent/skills/task/SKILL.md').exists())
+        self.assertTrue((self.target / 'TaskNotes/Workflows/README.md').exists())
+        self.assertTrue((self.target / 'TaskNotes/Views/workflows.base').exists())
+        self.assertEqual((self.target / 'TaskNotes/Workflows/private-wf.md').read_text(), 'my plugin workflow')
         self.assertFalse((self.target / 'System').exists())
+        self.assertFalse((self.target / '.agent/skills').exists())
+
+    def test_vault_path_resolves_workflows_and_system_workflows(self):
+        (self.target / 'TaskNotes/Workflows').mkdir(parents=True)
+        (self.target / 'System/Workflows').mkdir(parents=True)
+        (self.target / '_templates').mkdir(parents=True)
+        (self.target / 'TaskNotes/_templates').mkdir(parents=True)
+        (self.target / '_templates/Task-Template.md').write_text('root template')
+        (self.target / 'TaskNotes/_templates/Task-Template.md').write_text('tasknotes template')
+        self.assertEqual(vault_path(self.target, 'Workflows'), self.target.resolve() / 'TaskNotes/Workflows')
+        self.assertEqual(vault_path(self.target, 'TaskNotes/Workflows'), self.target.resolve() / 'TaskNotes/Workflows')
+        self.assertEqual(vault_path(self.target, 'System/Workflows'), self.target.resolve() / 'System/Workflows')
+        self.assertEqual(vault_path(self.target, 'TaskNotes'), self.target.resolve() / 'TaskNotes')
+        self.assertEqual(vault_path(self.target, '_templates'), self.target.resolve() / '_templates')
+        self.assertEqual(vault_path(self.target, 'TaskNotes/_templates'), self.target.resolve() / 'TaskNotes/_templates')
+        self.assertEqual(vault_path(self.target, '_templates/Task-Template.md'), self.target.resolve() / '_templates/Task-Template.md')
+        self.assertEqual(vault_path(self.target, 'TaskNotes/_templates/Task-Template.md'), self.target.resolve() / 'TaskNotes/_templates/Task-Template.md')
+        (self.target / 'Workflows').mkdir(parents=True)
+        with self.assertRaisesRegex(ValueError, 'Ambiguous'):
+            vault_path(self.target, 'Workflows')
+
+    def test_encapsulated_layout_with_migrated_views_does_not_create_duplicate_tasknotes_views(self):
+        (self.source / 'TaskNotes/Workflows').mkdir(parents=True)
+        (self.source / 'TaskNotes/Workflows/README.md').write_text('# Obsidian Plugin Workflows')
+        (self.source / 'TaskNotes/Views').mkdir(parents=True)
+        (self.source / 'TaskNotes/Views/workflows.base').write_text('view: workflows')
+        (self.target / 'TaskNotes/System').mkdir(parents=True)
+        (self.target / 'TaskNotes/Views').mkdir(parents=True)
+        (self.target / 'TaskNotes/Workflows').mkdir(parents=True)
+        update.sync_engine(self.source, self.target)
+        self.assertTrue((self.target / 'TaskNotes/Views/workflows.base').exists())
+        self.assertTrue((self.target / 'TaskNotes/Workflows/README.md').exists())
+        self.assertEqual(vault_path(self.target, 'Views'), self.target.resolve() / 'TaskNotes/Views')
 
     def test_path_resolution_never_selects_sibling_runtime(self):
         with patch.dict('os.environ', {}, clear=True):
@@ -95,9 +144,131 @@ class DeploymentTests(unittest.TestCase):
             resolve_vault_root(self.root / 'missing')
 
     def test_ambiguous_resource_is_rejected(self):
-        for rel in ['System', 'chrysalis/System']:
+        for rel in ['System', 'TaskNotes/System']:
             directory = self.target / rel
             directory.mkdir(parents=True)
             (directory / 'Scheduling-Memory.md').write_text('state')
         with self.assertRaisesRegex(ValueError, 'Ambiguous'):
             vault_path(self.target, 'System/Scheduling-Memory.md')
+
+    def test_ingest_skill_and_workflow_01_to_04_alignment(self):
+        import yaml
+        repo_root = Path(__file__).resolve().parent.parent
+        ingest_skill = repo_root / '.agent/skills/ingest/SKILL.md'
+        self.assertTrue(ingest_skill.exists())
+        raw = ingest_skill.read_text(encoding='utf-8')
+        fm = yaml.safe_load(raw.split('---', 2)[1])
+        self.assertEqual(fm.get('name'), 'ingest')
+        self.assertEqual(fm.get('trigger'), '/ingest')
+        self.assertIn('Sources/*.md', fm.get('reads', []))
+        self.assertIn('Sources/*.md', fm.get('writes', []))
+        for wf in ('01-capture.md', '02-extract.md', '03-review.md', '04-organize.md'):
+            self.assertIn(f'System/Workflows/{wf}', fm.get('reads', []))
+        self.assertIn('/ingest --drive', (repo_root / '.agent/skills/audit/SKILL.md').read_text(encoding='utf-8'))
+        self.assertIn('/ingest --drive', (repo_root / '.agent/skills/evening/SKILL.md').read_text(encoding='utf-8'))
+        self.assertIn('.agent/skills/ingest/SKILL.md', (repo_root / '.agent/skills/project/SKILL.md').read_text(encoding='utf-8'))
+        self.assertIn('.agent/skills/ingest/SKILL.md', (repo_root / '.agent/skills/zettel/SKILL.md').read_text(encoding='utf-8'))
+        self.assertIn('.agent/skills/ingest/SKILL.md', (repo_root / '.agent/skills/plan/SKILL.md').read_text(encoding='utf-8'))
+
+        mem_tmpl_fm = yaml.safe_load((repo_root / 'System/_templates/Memory.template.md').read_text(encoding='utf-8').split('---', 2)[1])
+        self.assertEqual(mem_tmpl_fm.get('ingestion_config', {}).get('drive_inbox_folder'), 'Chrysalis-Media-Locker/01-Inbox')
+        self.assertTrue(mem_tmpl_fm.get('ingestion_config', {}).get('auto_ingest_on_nightly_audit'))
+        self.assertFalse(mem_tmpl_fm.get('ingestion_config', {}).get('local_resources_folder_enabled'))
+
+    def test_sync_skill_hardlinks_bundles_ingest_and_protects_sources(self):
+        self.assertTrue(update.is_protected_target('Sources/cs341-syllabus.md'))
+        for name in ('ingest', 'zettel', 'audit', 'plan'):
+            sdir = self.source / f'.agent/skills/{name}'
+            sdir.mkdir(parents=True, exist_ok=True)
+            (sdir / 'SKILL.md').write_text(f'---\nname: {name}\ndescription: {name} skill\n---\n# /{name}\nBody for {name}')
+        (self.source / 'TaskNotes/Tasks').mkdir(parents=True, exist_ok=True)
+        (self.source / 'TaskNotes/Tasks/example-task.md').write_text('example')
+        (self.source / '_types').mkdir(parents=True, exist_ok=True)
+        (self.source / '_types/task.md').write_text('---\nkind: mdbase.type\n---')
+        update.sync_engine(self.source, self.target)
+        self.assertTrue((self.target / 'Skills/ingest/SKILL.md').exists())
+        bundle_text = (self.target / 'Skills/bundle/SKILL.md').read_text(encoding='utf-8')
+        self.assertIn('Skill: `ingest`', bundle_text)
+        self.assertIn('Skill: `zettel`', bundle_text)
+        # Deleting example-task.md in runtime must not fail subsequent updates
+        (self.target / 'TaskNotes/Tasks/example-task.md').unlink()
+        (self.source / 'README.md').write_text('v2')
+        count, updated = update.sync_engine(self.source, self.target)
+        self.assertIn('README.md', updated)
+        self.assertFalse((self.target / 'TaskNotes/Tasks/example-task.md').exists())
+
+    def test_workflows_types_and_unquoted_utc_detection(self):
+        import yaml
+        from helpers.mdbase_helper import check_semantic_duplicate
+        from tests.harness.syntax_validator import SyntaxValidator
+        from System.scripts.doctor import ChrysalisDoctor
+
+        repo_root = Path(__file__).resolve().parent.parent
+        # 1. Workflows 01-05 must explicitly reference /ingest and source_url
+        wf01 = (repo_root / 'System/Workflows/01-capture.md').read_text(encoding='utf-8')
+        wf02 = (repo_root / 'System/Workflows/02-extract.md').read_text(encoding='utf-8')
+        wf03 = (repo_root / 'System/Workflows/03-review.md').read_text(encoding='utf-8')
+        wf04 = (repo_root / 'System/Workflows/04-organize.md').read_text(encoding='utf-8')
+        wf05 = (repo_root / 'System/Workflows/05-plan.md').read_text(encoding='utf-8')
+        self.assertIn('source_url', wf01)
+        self.assertIn('/ingest', wf01)
+        self.assertIn('Chrysalis-Media-Locker/01-Inbox', wf01)
+        self.assertIn('/ingest', wf02)
+        self.assertIn('/ingest', wf03)
+        self.assertIn('/project', wf04)
+        self.assertIn('/zettel', wf04)
+        self.assertIn('/plan', wf05)
+
+        # 2. _types/*.md must not have `now: true` in lifecycle (prevents mdbase UTC .sssZ overwrite)
+        for tfile in ('task.md', 'project.md', 'zettel.md', 'source.md'):
+            tfm = yaml.safe_load((repo_root / '_types' / tfile).read_text(encoding='utf-8').split('---', 2)[1])
+            lifecycle = tfm.get('lifecycle', {})
+            self.assertNotIn('now', str(lifecycle), f'{tfile} must not set lifecycle now: true')
+
+        # 3. Unquoted UTC .sssZ timestamps must be caught by both SyntaxValidator and ChrysalisDoctor
+        bad_task = self.target / 'TaskNotes/Tasks/bad-utc.md'
+        bad_task.parent.mkdir(parents=True, exist_ok=True)
+        bad_task.write_text(
+            '---\n'
+            'type: task\n'
+            'title: "Bad UTC Timestamp"\n'
+            'status: todo\n'
+            'dateCreated: "2026-09-25T09:00:00-05:00"\n'
+            'created: "2026-09-25T09:00:00-05:00"\n'
+            'dateModified: 2026-09-25T04:08:03.274Z\n'
+            'due: "2026-09-30"\n'
+            'scheduled: null\n'
+            'priority: normal\n'
+            'urgency_tier: 2\n'
+            'modality: analytical\n'
+            'timeEstimate: 45\n'
+            'energy: medium\n'
+            'friction: medium\n'
+            'micro_chunked: false\n'
+            'tags:\n'
+            '  - task\n'
+            'linked_zettels: []\n'
+            'project_ref: null\n'
+            'googleCalendarEventId: null\n'
+            '---\n\n# Bad UTC Timestamp\n',
+            encoding='utf-8',
+        )
+        sv = SyntaxValidator()
+        _, _, _, issues = sv.validate_syntax_and_schema(bad_task.read_text(encoding='utf-8'), str(bad_task), None)
+        self.assertTrue(any(i.code == 'format_invalid' and "raw UTC 'Z'" in i.message for i in issues), issues)
+
+        doc = ChrysalisDoctor(self.target)
+        doc.check_2_timezone_compliance()
+        self.assertTrue(any("raw UTC 'Z'" in e for e in doc.errors), doc.errors)
+
+        # 4. check_semantic_duplicate must skip Sources/README.md and handle sha256=None safely
+        (self.target / 'Sources').mkdir(parents=True, exist_ok=True)
+        (self.target / 'Sources/README.md').write_text('# Sources\n', encoding='utf-8')
+        (self.target / 'Sources/s1.md').write_text(
+            '---\ntype: source\nid: "s1"\nsha256: null\nsource_url: "https://drive.google.com/file/d/abc/view"\n---\n',
+            encoding='utf-8',
+        )
+        self.assertIsNone(check_semantic_duplicate(None, self.target))
+        dup = check_semantic_duplicate(None, self.target, source_url='https://drive.google.com/file/d/abc/view')
+        self.assertIsNotNone(dup)
+        self.assertEqual(dup[0], 's1')

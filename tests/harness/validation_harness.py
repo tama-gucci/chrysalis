@@ -95,7 +95,7 @@ class ValidationHarness:
             ".git", ".venv", "venv", ".chrysalis", "node_modules",
             "System", "Development", "tests", "fixtures", "docs",
             "_types", "_contracts", "_templates", "apps", "contracts",
-            "Workflows", "Views", ".agent", ".agents"
+            "Workflows", "Views", ".agent", ".agents", "Skills"
         }
         manifest_excludes = set(self.engine_validator.config.get("settings", {}).get("exclude", []) or self.engine_validator.config.get("exclude", []))
         excluded_dirs = default_excludes.union(manifest_excludes)
