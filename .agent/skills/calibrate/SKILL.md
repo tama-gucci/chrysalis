@@ -37,9 +37,10 @@ writes:
      * Calculate updated rolling average wake time:
        $$\text{New Rolling Wake} = \text{Current Baseline} + 0.15 \times (T_{\text{wake}} - \text{Current Baseline})$$
      * Set `applied_energy_mode: "sleep_deprived"` for 1–2, or `"optimal"` for 3–5.
-     * **MANDATORY TOOL CALL:** Execute `replace_file_content` on `System/Memory.md` to:
+     * **MANDATORY TOOL CALL (Local A2 Write):** Execute a physical file edit on `<vault>/System/Memory.md` (`replace_file_content` / `write_to_file` in Antigravity, `apply_patch` / file writes in OpenAI Codex / Claude Code, or `python helpers/mdbase_helper.py --runtime apply-cas-mutation`) to:
        - Set `system_state.pause_state`: `{ is_paused: false, mode: null, reason: null, paused_at: null, resume_policy: null, resume_target: null }`.
        - Update session metrics and active day check-in with today's date, timestamp, energy level, and energy mode.
+       - Validate with `python helpers/mdbase_helper.py --vault "<vault>" validate System/Memory.md`.
   2. **Route to Execution:**
      * If `prototype_schedule.feedback_status` was `"approved"`: Read and execute `.agent/skills/plan/SKILL.md` under **Protocol 2: Calibration & Timeblocking Mode**, passing $T_{\text{wake}}$ and `energy_level`.
      * If `prototype_schedule.feedback_status` was `"pending"` or system was paused: Read and execute `.agent/skills/plan/SKILL.md` under **Protocol 1: Staging Mode**, passing $T_{\text{wake}}$ and `energy_level` to stage today's focus and obtain feedback before locking timestamps.
@@ -51,4 +52,4 @@ writes:
 
 ### 3. Anti-Simulation Invariant (Tool Call Gate)
 > [!CAUTION]
-> **Physical Disk Mutation Mandate:** Outputting text or markdown tables in the chat response does NOT mutate vault state. The agent MUST actively invoke tool calls (`replace_file_content` / `write_to_file`) on disk files. Claiming in text that a timestamp has been locked without executing the tool call to update the task note is a fatal constitutional violation.
+> **Physical Disk Mutation Mandate (`A2`):** Outputting text or markdown tables in the chat response does NOT mutate vault state. The agent MUST actively invoke local file mutation tools (`replace_file_content` / `write_to_file` in Antigravity, `apply_patch` / file writes in OpenAI Codex / Claude Code, or `helpers/mdbase_helper.py`) on `<vault>` files. Claiming in text that a timestamp has been locked without executing the tool call to update the task note is a fatal constitutional violation.

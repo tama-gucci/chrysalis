@@ -185,6 +185,7 @@ def main():
     parser = argparse.ArgumentParser(description="Inspect or import calendar commitments")
     parser.add_argument("date", nargs="?", default=None)
     parser.add_argument("--vault", help="Selected vault root")
+    parser.add_argument("--runtime", action="store_true", help="Resolve active personal runtime vault")
     parser.add_argument("--memory", help="Explicit memory file")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--sync-to-memory", "--sync", dest="sync", action="store_true")
@@ -192,7 +193,7 @@ def main():
     parser.add_argument("--tomorrow", action="store_true")
     args = parser.parse_args()
     if args.sync or args.ical:
-        memory = resolve_memory_path(args.memory, vault=args.vault)
+        memory = resolve_memory_path(args.memory, vault=args.vault, runtime=args.runtime)
         success = sync_to_memory(port=args.port, memory_path=str(memory), force_ical=args.ical)
         sys.exit(0 if success else 1)
     day = args.date or (date.today() + timedelta(days=int(args.tomorrow))).isoformat()

@@ -78,14 +78,13 @@ flowchart TD
 Called automatically by `/audit` during the nightly operational workflow (`/evening`), or directly via `/ingest --drive`:
 
 1. **Resolve Runtime Vault `<vault>` & Google Drive Inbox (`Chrysalis-Media-Locker/01-Inbox`):**
-   * Resolve `<vault>` via `python System/scripts/vault_paths.py --runtime --json`.
-   * Read `ingestion_config.drive_inbox_folder` from `<vault>/System/Memory.md` (defaults to `"Chrysalis-Media-Locker/01-Inbox"`).
+   * Run `python helpers/mdbase_helper.py --runtime drive-inbox` (which resolves `<vault>` via `vault_paths.py --runtime`, reads `ingestion_config.drive_inbox_folder` from `<vault>/System/Memory.md`, lists all already-indexed `<vault>/Sources/*.md` records with their `sha256` and `source_url`, and checks for any local Google Drive desktop mount).
    * Inspect all files currently in `Chrysalis-Media-Locker/01-Inbox` using:
-     1. **Connected Google Drive MCP Server** (in Antigravity, Codex, or Claude Code — query/list files in `Chrysalis-Media-Locker/01-Inbox` and read their contents and webViewLink/`source_url` via the Drive MCP server's tools/resources), OR
-     2. **Local Google Drive Desktop Mount / Synced Folder** (if `Chrysalis-Media-Locker/01-Inbox` is mounted locally on the filesystem).
-   * *Graceful No-Op Fallback:* If the Google Drive MCP server is not yet connected and no local Drive mount is present, or if `Chrysalis-Media-Locker/01-Inbox` is empty, report an informational notice (`0 unindexed files in Chrysalis-Media-Locker/01-Inbox`) and return cleanly so `/audit` and `/evening` continue without error.
+     1. **Connected Google Drive MCP Server** (in Antigravity, OpenAI Codex, or Claude Code — query/list files in `Chrysalis-Media-Locker/01-Inbox` and read their contents and `webViewLink`/`source_url` via the Drive MCP server's tools/resources), OR
+     2. **Local Google Drive Desktop Mount / Synced Folder** (`local_unindexed_files` returned by `python helpers/mdbase_helper.py --runtime drive-inbox`).
+   * *Graceful No-Op Fallback:* If the Google Drive MCP server is not yet connected and no local Drive mount is present, or if `Chrysalis-Media-Locker/01-Inbox` has 0 unindexed files, report an informational notice (`0 unindexed files in Chrysalis-Media-Locker/01-Inbox`) and return cleanly so `/audit` and `/evening` continue without error.
 2. **Deduplication & Lineage Check on `<vault>` (`01-capture.md`):**
-   * Query existing provenance records in `<vault>/Sources/*.md` via `helpers.mdbase_helper.check_semantic_duplicate()` (`python helpers/mdbase_helper.py --vault "<vault>" check-duplicate ...`) or `mdbase -C "<vault>" query --types source`.
+   * Query existing provenance records in `<vault>/Sources/*.md` via `python helpers/mdbase_helper.py --runtime check-duplicate --text "<extracted_text>" --source-url "<drive_url>"` (for Google Drive MCP payloads), `python helpers/mdbase_helper.py --runtime check-duplicate <local_file>` (for local files), or `mdbase -C "<vault>" query --types source`.
    * For each file in the Google Drive inbox:
      * Compute the 64-character lowercase hexadecimal `sha256` digest of its extracted UTF-8 content payload.
      * If a record in `<vault>/Sources/*.md` already matches `sha256` (or `source_url` with unchanged content): emit `duplicate_source_detected` and skip redundant extraction (`is_duplicate: true`).

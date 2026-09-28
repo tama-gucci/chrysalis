@@ -19,9 +19,9 @@ import sys
 from pathlib import Path
 
 try:
-    from .vault_paths import resolve_vault_root, vault_path
+    from .vault_paths import resolve_runtime_vault, resolve_vault_root, vault_path
 except ImportError:
-    from vault_paths import resolve_vault_root, vault_path
+    from vault_paths import resolve_runtime_vault, resolve_vault_root, vault_path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 if sys.platform == "win32":
@@ -445,18 +445,22 @@ class ZettelGraphLinker:
         task_path.write_text("".join(out_lines), encoding="utf-8")
 
 
-def main():
+def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Chrysalis Autonomous Zettelkasten Hypergraph Linker")
     parser.add_argument("--vault", type=str, default=None, help="Path to Chrysalis vault root")
+    parser.add_argument("--runtime", action="store_true", help="Automatically resolve active personal runtime vault")
     parser.add_argument("--dry-run", action="store_true", help="Simulate linking without writing changes to disk")
     parser.add_argument("--sync", action="store_true", help="Execute physical mutations to disk (anti-simulation law)")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     dry_run = args.dry_run or (not args.sync)
 
-    vault_path = Path(args.vault) if args.vault else None
-    linker = ZettelGraphLinker(vault_root=vault_path)
+    if args.runtime:
+        vault_root = resolve_runtime_vault(args.vault)
+    else:
+        vault_root = Path(args.vault) if args.vault else None
+    linker = ZettelGraphLinker(vault_root=vault_root)
     result = linker.link_hypergraph(dry_run=dry_run)
 
     if args.json:
@@ -480,7 +484,9 @@ def main():
             print("\nTask Updates:")
             for t in result["task_details"]:
                 print(f"  • {t['task']}: added {t['added_zettels']} (total: {t['total_zettels']})")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
+

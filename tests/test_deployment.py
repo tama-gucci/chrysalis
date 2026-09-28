@@ -345,6 +345,7 @@ class DeploymentTests(unittest.TestCase):
         self.assertEqual(dup[0], 's1')
 
     def test_a2_access_layer_cli_and_skill_compliance(self) -> None:
+        import json
         import os
         import shutil
         from unittest import mock
@@ -398,7 +399,7 @@ class DeploymentTests(unittest.TestCase):
         roadmap_res = mdbase_helper.validate_record(self.target / "System/Life-Roadmap.md", self.target)
         self.assertTrue(roadmap_res.valid, roadmap_res.diagnostics)
 
-        # 3. mdbase_helper CLI subcommands work end-to-end
+        # 3. mdbase_helper CLI subcommands work end-to-end (including drive-inbox, check-duplicate --text, apply-cas-mutation, reconcile-syllabus)
         self.assertEqual(
             mdbase_helper.main(["--vault", str(self.target), "validate", str(self.target / "System/Memory.md")]),
             0,
@@ -411,19 +412,71 @@ class DeploymentTests(unittest.TestCase):
             mdbase_helper.main(["--vault", str(self.target), "horizon-tasks", "--today", "2026-09-27"]),
             0,
         )
+        self.assertEqual(
+            mdbase_helper.main(["--vault", str(self.target), "drive-inbox"]),
+            0,
+        )
+        self.assertEqual(
+            mdbase_helper.main(
+                [
+                    "--vault",
+                    str(self.target),
+                    "check-duplicate",
+                    "--text",
+                    "Synthetic lecture notes content",
+                    "--source-url",
+                    "https://drive.google.com/file/d/new-file/view",
+                ]
+            ),
+            0,
+        )
+        # Verify apply-cas-mutation CLI mutates frontmatter and validates schema
+        mem_text = (self.target / "System/Memory.md").read_text(encoding="utf-8")
+        mem_fm_raw = mem_text.split("---", 2)[1]
+        expected_hash = mdbase_helper.compute_frontmatter_hash(mem_fm_raw)
+        self.assertEqual(
+            mdbase_helper.main(
+                [
+                    "--vault",
+                    str(self.target),
+                    "apply-cas-mutation",
+                    str(self.target / "System/Memory.md"),
+                    "--expected-hash",
+                    expected_hash,
+                    "--updates-json",
+                    json.dumps({"updated_by": "codex-or-antigravity-agent"}),
+                ]
+            ),
+            0,
+        )
+        self.assertIn(
+            "codex-or-antigravity-agent",
+            (self.target / "System/Memory.md").read_text(encoding="utf-8"),
+        )
 
-        # 4. Verify all runtime skills and workflows have zero Gemini Spark or remote MCP tool calls
-        for skill_md in sorted((repo_root / ".agent/skills").glob("*/SKILL.md")):
+        # Verify zettel_graph_linker CLI accepts --vault and --runtime
+        from System.scripts import zettel_graph_linker
+        with mock.patch("sys.argv", ["zettel_graph_linker.py", "--vault", str(self.target), "--dry-run"]):
+            self.assertEqual(zettel_graph_linker.main(), 0)
+
+        # 4. Verify all 15 runtime and development skills and workflows have A2 Access Layer and zero Antigravity-only tool lock-in
+        all_skills = list(sorted((repo_root / ".agent/skills").glob("*/SKILL.md"))) + list(
+            sorted((repo_root / "Development/skills").glob("*/SKILL.md"))
+        )
+        self.assertEqual(len(all_skills), 15)
+        for skill_md in all_skills:
             text = skill_md.read_text(encoding="utf-8")
             self.assertNotIn("Gemini Spark", text, str(skill_md))
             self.assertNotIn("mdbase_create_record", text, str(skill_md))
             self.assertNotIn("mdbase_update_record", text, str(skill_md))
             self.assertNotIn("mdbase_query_records", text, str(skill_md))
-            if skill_md.parent.name != "update":
-                self.assertIn("A2 Access Layer", text, str(skill_md))
+            self.assertIn("A2", text, str(skill_md))
+            self.assertNotIn("Antigravity developer chat", text, str(skill_md))
 
         for wf_md in sorted((repo_root / "System/Workflows").glob("*.md")):
             text = wf_md.read_text(encoding="utf-8")
             self.assertNotIn("Gemini Spark", text, str(wf_md))
             self.assertNotIn("mdbase_query_records", text, str(wf_md))
+            self.assertIn("A2", text, str(wf_md))
+
 

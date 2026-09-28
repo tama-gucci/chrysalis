@@ -126,10 +126,12 @@ def resolve_runtime_vault(explicit_path=None, *, script_path=__file__) -> Path:
     return candidate
 
 
-def memory_path(explicit_path=None, *, vault=None):
+def memory_path(explicit_path=None, *, vault=None, runtime: bool = False):
     selected = explicit_path or os.environ.get("CHRYSALIS_MEMORY_PATH")
-    return (Path(selected).expanduser().resolve() if selected
-            else runtime_memory_path(resolve_vault_root(vault)))
+    if selected:
+        return Path(selected).expanduser().resolve()
+    root = resolve_runtime_vault(vault) if runtime else resolve_vault_root(vault)
+    return runtime_memory_path(root)
 
 
 def main(argv=None) -> int:

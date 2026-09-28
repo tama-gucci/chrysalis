@@ -40,13 +40,13 @@ This skill is strictly provider- and IDE-agnostic across capable local agents (*
 
 ### 1. Execute Unified Nightly Audit (Including Automated `/ingest --drive`)
 Read and execute `.agent/skills/audit/SKILL.md` under **Protocol 1: Unified Nightly Audit** against `<vault>`:
-* **Pre-Flight Integrity Pass (`/doctor`):** Run `python System/scripts/doctor.py --vault "<vault>"` to verify task schemas, explicit local timezones, tag registries, graph wikilinks, and multiplier bounds.
+* **Pre-Flight Integrity Pass (`/doctor`):** Run `python System/scripts/doctor.py --vault "<vault>"` (or `python System/scripts/doctor.py --runtime`) to verify task schemas, explicit local timezones, tag registries, graph wikilinks, and multiplier bounds.
 * **Task Reconciliation & Multiplier Learning:** Reconcile completed tasks in `<vault>/TaskNotes/Tasks/*.md` and update bounded telemetry multipliers ($[0.20, 2.00]$) in `<vault>/System/Memory.md`.
 * **Automated Google Drive Batch Ingestion (`/ingest --drive`):**
-  * Scan `Chrysalis-Media-Locker/01-Inbox` (`ingestion_config.drive_inbox_folder` in `<vault>/System/Memory.md`) via the **connected Google Drive MCP server** (in Antigravity, Codex, or Claude Code) or **local Google Drive mount**.
+  * Run `python helpers/mdbase_helper.py --runtime drive-inbox` and scan `Chrysalis-Media-Locker/01-Inbox` (`ingestion_config.drive_inbox_folder` in `<vault>/System/Memory.md`) via the **connected Google Drive MCP server** (in Antigravity, OpenAI Codex, or Claude Code) or **local Google Drive mount**.
   * Translate any new or revised source files into formatted Markdown (`<vault>/Sources/*.md`) and execute Workflows `01-capture` through `04-organize` (aligning `/project` and `/zettel`) locally on `<vault>` via the A2 access layer.
   * *Graceful Continuation:* If `Chrysalis-Media-Locker/01-Inbox` has 0 unindexed files or if the Google Drive MCP server / local Drive mount is not currently connected, log an informational notice and proceed directly to 14-day horizon ingestion without halting `/evening`.
-* **14-Day Horizon Ingestion:** Run `python helpers/mdbase_helper.py --vault "<vault>" horizon-tasks` to inspect upcoming 14-day project & roadmap milestones (plus `date_uncertain: true` items) and materialize any missing task notes in `<vault>/TaskNotes/Tasks/`.
+* **14-Day Horizon Ingestion:** Run `python helpers/mdbase_helper.py --vault "<vault>" horizon-tasks` (or `python helpers/mdbase_helper.py --runtime horizon-tasks`) to inspect upcoming 14-day project & roadmap milestones (plus `date_uncertain: true` items) and materialize any missing task notes in `<vault>/TaskNotes/Tasks/`.
 * **Starter Wedges & Auto-Pause Check:** Inject Starter Wedges into stalled tasks and evaluate auto-pause status.
 
 ### 2. Pause & Unresponsive State Gate

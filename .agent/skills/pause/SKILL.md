@@ -38,8 +38,8 @@ writes:
    * **`vacation`:** User is traveling or taking a multi-day break (`until YYYY-MM-DD`).
    * **Unspecified (`/pause`):** If no mode is specified in command arguments, prompt the user or default to `maintenance` for today if immediate pause is requested.
 
-### Step 2: Operational State Mutation (Tool Call)
-Execute `replace_file_content` on `System/Memory.md` to update `system_state.pause_state`:
+### Step 2: Operational State Mutation (Local A2 Write)
+Update `<vault>/System/Memory.md` on disk (via `replace_file_content` / `write_to_file` in Antigravity, `apply_patch` / file writes in OpenAI Codex / Claude Code, or `python helpers/mdbase_helper.py --runtime apply-cas-mutation`) to update `system_state.pause_state`:
 ```yaml
 system_state:
   pause_state:
@@ -54,18 +54,18 @@ system_state:
 * **If `mode == "maintenance"`:** Wipe `prototype_schedule` (`staged_user_intent: null`, `target_date: null`, `feedback_status: "pending"`, `staged_anchor_task: null`, `staged_support_tasks: []`).
 * **If `mode == "rest"`:** Preserve rolling wake rhythms; mark `rest_day: true` in context notes to prevent negative efficiency scoring.
 
-### Step 3: Task Frontmatter Sanitation (Tool Calls)
+### Step 3: Task Frontmatter Sanitation (Local A2 Writes)
 For modes requiring focus de-scheduling (`maintenance`, `rest`, `vacation`):
-1. Scan `TaskNotes/Tasks/*.md` for tasks with `scheduled != null` on today's date.
-2. **MANDATORY TOOL CALL:** Execute `replace_file_content` on each scheduled task file to set:
+1. Scan `<vault>/TaskNotes/Tasks/*.md` for tasks with `scheduled != null` on today's date.
+2. **MANDATORY TOOL CALL (Local A2 Write):** Update each scheduled task file on disk (`replace_file_content` / `write_to_file` / `apply_patch` / `apply_cas_mutation`) to set:
    ```yaml
    scheduled: null
    ```
    *(Tasks remain safely in `status: todo` in the daily backlog without phantom timeblock locks).*
 
-### Step 4: Daily Note Status Annotation (Tool Call)
-If `Daily/YYYY-MM-DD.md` exists for today:
-1. **MANDATORY TOOL CALL:** Execute `replace_file_content` to inject a status callout into the Daily Focus Note:
+### Step 4: Daily Note Status Annotation (Local A2 Write)
+If `<vault>/Daily/YYYY-MM-DD.md` exists for today:
+1. **MANDATORY TOOL CALL (Local A2 Write):** Update the Daily Focus Note on disk (`replace_file_content` / `write_to_file` / `apply_patch`) to inject a status callout:
    ```markdown
    > [!WARNING]
    > **Chrysalis System Status: PAUSED (<Mode>)**
@@ -81,8 +81,8 @@ Output a concise confirmation message in chat:
 
 ## Protocol 2: System Resume (`/resume` or `/unpause`)
 
-### Step 1: State Restoration (Tool Call)
-1. Execute `replace_file_content` on `System/Memory.md` to restore active state:
+### Step 1: State Restoration (Local A2 Write)
+1. Update `<vault>/System/Memory.md` on disk (`replace_file_content` / `write_to_file` in Antigravity, `apply_patch` / file writes in OpenAI Codex / Claude Code, or `python helpers/mdbase_helper.py --runtime apply-cas-mutation`) to restore active state:
    ```yaml
    system_state:
      pause_state:
@@ -110,4 +110,4 @@ Determine appropriate next steps based on local time ($T_{\text{now}}$):
 
 ## Anti-Simulation Invariant
 > [!CAUTION]
-> **Mandatory Tool Call Execution:** Merely claiming that the system is paused or resumed in chat text without executing tool calls (`replace_file_content`) to update `System/Memory.md` and task notes is a fatal constitutional violation.
+> **Mandatory Tool Call Execution (`A2`):** Merely claiming that the system is paused or resumed in chat text without executing physical file mutation tool calls (`replace_file_content` / `write_to_file` in Antigravity, `apply_patch` / file writes in OpenAI Codex / Claude Code, or `helpers/mdbase_helper.py`) to update `<vault>/System/Memory.md` and task notes is a fatal constitutional violation.

@@ -244,9 +244,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "-c", "--collection",
+        "-c", "--collection", "--vault",
+        dest="collection",
         default=".",
         help="Path to mdbase collection root directory."
+    )
+    parser.add_argument(
+        "--runtime",
+        action="store_true",
+        help="Automatically resolve active personal runtime vault."
     )
     parser.add_argument(
         "-p", "--path",
@@ -294,7 +300,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     args = parser.parse_args(argv)
 
-    collection_root = Path(args.collection).resolve()
+    if args.runtime:
+        repo_root = str(Path(__file__).resolve().parents[2])
+        if repo_root not in sys.path:
+            sys.path.insert(0, repo_root)
+        from System.scripts.vault_paths import resolve_runtime_vault
+        explicit = None if args.collection == "." else args.collection
+        collection_root = resolve_runtime_vault(explicit)
+    else:
+        collection_root = Path(args.collection).resolve()
     target_path = Path(args.path).resolve() if args.path else None
 
     # Layer selection

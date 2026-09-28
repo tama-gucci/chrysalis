@@ -67,15 +67,15 @@ All development-specific assets reside exclusively within `Development/` in the 
 * **`Development/Development-Constitution.md` (This File):** Constitutional laws of engineering, PII hygiene, and RSI.
 * **`Development/README.md`:** Developer guide, architecture orientation, and git workflow.
 * **`Development/scripts/`:** Developer utility scripts, PII linters, git boundary verifiers, and setup helpers.
-* **`Development/skills/`:** Modular development-only agent skills (`audit-dev`, `evolve`), registered into Antigravity via `.agent/skills.json`.
+* **`Development/skills/`:** Modular development-only agent skills (`audit-dev`, `evolve`), registered for Google Antigravity, OpenAI Codex, and local coding agents via `.agent/skills.json` and `AGENTS.md`.
 * **`contracts/`:** Formal runtime and collection contracts (`agent-runtime.contract.md`, `mdbase-collection.contract.md`).
 * **`System/Workflows/`:** Portable 8-stage AI agent lifecycle workflow runbooks (`01-capture.md` through `08-continuation.md`).
-* **`_types/`:** Authoritative JSON Schema Draft 2020-12 data schemas (`task.md`, `project.md`, `source.md`, `zettel.md`).
-* **`helpers/`:** Deterministic helper utilities (`mdbase_helper.py`) providing CAS concurrency, validation, and provenance tracking.
+* **`_types/`:** Authoritative JSON Schema Draft 2020-12 data schemas (`task.md`, `project.md`, `source.md`, `zettel.md`, `system_state.md`).
+* **`helpers/`:** Deterministic A2 helper utilities (`mdbase_helper.py`) providing CAS concurrency, validation, duplicate detection, and provenance tracking.
 
 ### Architectural Invariants in Development
-1. **Pure AI Agent Framework:** Chrysalis operates directly on an mdbase v0.3 Markdown database collection. All operations are mediated by formal runtime contracts.
-2. **Decoupled User Interfaces:** User interfaces (Obsidian with TaskNotes plugin, Google Calendar) and AI coding/desktop clients (Google Antigravity, OpenAI Codex, Claude Desktop) are decoupled client applications, not internal framework daemons.
+1. **Pure AI Agent Framework & A2 Access Layer:** Chrysalis operates directly on an mdbase v0.3 Markdown database collection via the A2 local access layer (`vault_paths.py --runtime`, `helpers/mdbase_helper.py`, `mdbase -C <vault>`, `doctor.py`, `tests/harness/validation_harness.py`). All operations are mediated by formal runtime contracts.
+2. **Decoupled User Interfaces:** User interfaces (Obsidian with TaskNotes plugin, Google Calendar) and AI coding/desktop clients (Google Antigravity, OpenAI Codex, Claude Code/Desktop) are decoupled client applications, not internal framework daemons.
 3. **Hardware Portability & Local Authority:** The local Markdown files are the authoritative truth. Operations do not depend on cloud daemons or persistent background services.
 
 ---
@@ -116,4 +116,4 @@ A failure of ANY point in the pre-commit gate immediately blocks commit creation
 
 ## Article V: Substrate Portability & Anti-Simulation Laws
 * **Cross-Platform Compatibility:** Development scripts and tools must remain POSIX-compliant and account for cloud sync filesystems (e.g., avoiding hard filesystem symlinks on FUSE mounts such as Google Drive).
-* **Anti-Simulation Law:** Chat text alone NEVER modifies code, skills, or documentation. All development modifications must be physically persisted to physical disk via tool calls (`replace_file_content` / `write_to_file`).
+* **Anti-Simulation Law:** Chat text alone NEVER modifies code, skills, or documentation. All development modifications must be physically persisted to physical disk via local file mutation tools (`replace_file_content` / `write_to_file` / `apply_patch` / `apply_cas_mutation`).

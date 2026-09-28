@@ -89,7 +89,7 @@ For each unintegrated note, analyze the 5 Chrysalis integration pathways:
 ### Step 4: Formulate Feature Integration Spec
 1. Generate complete code/markdown specifications for the proposed feature or adapter update.
 2. Log proposal in `System/Changelog.md` under `## 💡 Staged Feature Proposals`.
-3. Present the proposal directly in the Antigravity developer chat for interactive feedback and approval.
+3. Present the proposal directly in the active developer session (Google Antigravity, OpenAI Codex, Claude Code, or local CLI) for interactive feedback and approval.
 
 ---
 
@@ -114,7 +114,7 @@ Verify that the proposed optimization satisfies all constitutional invariants:
 * Synthetic placeholder & roadmap anonymization compliance (no real user milestones, institutions, or personal projects).
 
 ### Step 4: Snapshot & Mutation
-1. Execute `write_to_file` to snapshot existing skill to `.agent/skills/.backup/<skill>_<timestamp>.md`.
+1. Write a backup snapshot of the existing skill to `.agent/skills/.backup/<skill>_<timestamp>.md` using local file tools (`write_to_file` / `apply_patch` / filesystem write).
 2. Apply verified optimization to `.agent/skills/<skill>/SKILL.md`.
 3. Record mutation entry in `System/Changelog.md` under `## [Version] - YYYY-MM-DD`.
 
@@ -124,7 +124,7 @@ Verify that the proposed optimization satisfies all constitutional invariants:
 
 If a self-improved skill produces degraded behavior or user rejection:
 1. Locate the most recent backup in `.agent/skills/.backup/<skill>_*.md`.
-2. Restore the backup to `.agent/skills/<skill>/SKILL.md` using `replace_file_content` / `write_to_file`.
+2. Restore the backup to `.agent/skills/<skill>/SKILL.md` using local file tools (`replace_file_content` / `write_to_file` / `apply_patch`).
 3. Log the rollback event in `System/Changelog.md`.
 4. Notify the developer of successful restoration.
 

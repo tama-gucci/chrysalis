@@ -23,8 +23,8 @@ Record focus session outcomes, update dynamic cognitive multipliers bounded in $
    - For completed task with duration telemetry ($T_{\text{actual}} = \text{completedAt} - \text{startedAt}$):
      $$\text{Multiplier}_{\text{new}} = \text{Multiplier}_{\text{current}} + 0.10 \times \left(\frac{T_{\text{actual}}}{T_{\text{estimated}}} - \text{Multiplier}_{\text{current}}\right)$$
    - Clamp multiplier strictly to $[0.20, 2.00]$.
-2. **Update Persistent Memory**:
-   - Update `System/Memory.md` modality multipliers and append session outcome entry to ledger.
+2. **Update Persistent Memory (Local A2 Write)**:
+   - Update `<vault>/System/Memory.md` modality multipliers and append session outcome entry to ledger; validate via `python helpers/mdbase_helper.py --vault "<vault>" validate System/Memory.md`.
 3. **Update Source Ingestion Status**:
-   - Set `Sources/<id>.md` `ingestion_status` from `raw` to `extracted` or `reconciled`.
+   - Set `<vault>/Sources/<id>.md` `ingestion_status` from `raw` to `extracted` or `reconciled`.
 4. **State Transition**: Transition to `08-continuation.md`.

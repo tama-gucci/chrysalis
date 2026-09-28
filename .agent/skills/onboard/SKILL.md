@@ -65,7 +65,7 @@ When the user selects an archetype or provides their priorities:
 ### Step 4: Dual-File System Synchronization (Physical Tool Calls)
 
 > [!CAUTION]
-> **Anti-Simulation Invariant:** The orchestrator MUST execute physical tool calls (`write_to_file` / `replace_file_content`) to persist changes to disk.
+> **Anti-Simulation Invariant (`A2`):** The orchestrator MUST execute physical local file mutations (`write_to_file` / `replace_file_content` in Antigravity, `apply_patch` / file writes in OpenAI Codex / Claude Code, or `helpers/mdbase_helper.py`) to persist changes to `<vault>` on disk.
 
 1. **Write `System/Life-Roadmap.md`:**
    * Serialize the compiled frontmatter with valid `tag_registry`, `active_pillar`, and formatted Markdown body.

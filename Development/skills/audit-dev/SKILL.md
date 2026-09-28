@@ -16,8 +16,8 @@ writes:
 
 # /audit-dev (Development & Codebase Integrity Audit Engine)
 
-## Preamble & Scope
-`/audit-dev` is the primary engineering audit tool of the **Development Sphere**. It ensures that no personal data, machine telemetry, or private information ever leaks to the public GitHub repository (`tama-gucci/chrysalis`), verifies the integrity of the default-deny whitelist, and orchestrates recursive self-improvement (RSI) using `/evolve`.
+## Preamble, Scope & A2 Access Layer
+`/audit-dev` is the primary engineering audit tool of the **Development Sphere**, executed across provider-independent local coding agents (**Google Antigravity**, **OpenAI Codex**, **Claude Code**, or local CLI). It ensures that no personal data, machine telemetry, or private information ever leaks from the personal runtime vault (`python System/scripts/vault_paths.py --runtime --json`) into the public GitHub repository (`tama-gucci/chrysalis`), verifies the integrity of the default-deny whitelist (`python Development/scripts/candidate_audit.py` and `python tests/harness/validation_harness.py -c .`), and orchestrates recursive self-improvement (RSI) using `/evolve`.
 
 ---
 

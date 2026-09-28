@@ -15,7 +15,7 @@ outputs:
 # Workflow 08: Continuation & Envelope Serialization
 
 ## Objective
-Format the standardized `AgentActionOutput` JSON envelope conforming to `contracts/agent-runtime.contract.md`, return execution status to caller, and close session cleanly.
+Format the standardized `AgentActionOutput` JSON envelope conforming to `contracts/agent-runtime.contract.md` across the **A2 Access Layer**, return execution status to caller, and close session cleanly.
 
 ## Envelope Structure:
 ```json

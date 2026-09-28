@@ -34,9 +34,9 @@ Read and execute `.agent/skills/calibrate/SKILL.md`:
 
 ### 2. Response Ingestion & Tool-Gated Execution Routing
 * **Case A (User Responds):**
-  1. **Unpause System & Log Telemetry:** Call `replace_file_content` on `System/Memory.md` to unpause (`is_paused: false`, `mode: null`, `reason: null`, `paused_at: null`, `resume_policy: null`, `resume_target: null`), update `morning_checkin.active_today`, compute rolling wake baseline, and log to `checkin_history`.
+  1. **Unpause System & Log Telemetry (Local A2 Write):** Update `<vault>/System/Memory.md` on disk (via `replace_file_content` / `write_to_file` in Antigravity, `apply_patch` / file writes in OpenAI Codex / Claude Code, or `python helpers/mdbase_helper.py --runtime apply-cas-mutation`) to unpause (`is_paused: false`, `mode: null`, `reason: null`, `paused_at: null`, `resume_policy: null`, `resume_target: null`), update `morning_checkin.active_today`, compute rolling wake baseline, and log to `checkin_history`.
   2. **Route Scheduling Mode:**
-     * **If Pre-Approved (`feedback_status == "approved"`):** Execute `.agent/skills/plan/SKILL.md` under **Protocol 2: Calibration & Timeblocking Mode** to shift diurnal timeblocks, execute tool calls to serialize `scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"` into all scheduled `TaskNotes/Tasks/*.md` notes, and write the calibrated daily focus note `Daily/YYYY-MM-DD.md`.
+     * **If Pre-Approved (`feedback_status == "approved"`):** Execute `.agent/skills/plan/SKILL.md` under **Protocol 2: Calibration & Timeblocking Mode** to shift diurnal timeblocks, execute local A2 file mutations to serialize `scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"` into all scheduled `<vault>/TaskNotes/Tasks/*.md` notes, validate via `python helpers/mdbase_helper.py --vault "<vault>" validate`, and write the calibrated daily focus note `<vault>/Daily/YYYY-MM-DD.md`.
      * **If Previously Paused / Pending:** Execute `.agent/skills/plan/SKILL.md` under **Protocol 1: Staging Mode** using $T_{\text{wake}}$ and energy level to stage today's focus, present the prototype table, and obtain approval before locking timestamps.
 * **Case B (User Still Does Not Respond / Inaction):**
   * Retain `system_state.pause_state.is_paused: true`.
@@ -46,4 +46,4 @@ Read and execute `.agent/skills/calibrate/SKILL.md`:
 
 ### 3. Anti-Simulation Invariant
 > [!CAUTION]
-> **Physical Disk Mutation Mandate:** Outputting text or markdown tables in the chat response does NOT mutate vault state. The agent MUST actively invoke tool calls (`replace_file_content` / `write_to_file`) on disk files. Claiming in text that a timestamp has been locked without executing the tool call to update the task note is a fatal constitutional violation.
+> **Physical Disk Mutation Mandate (`A2`):** Outputting text or markdown tables in the chat response does NOT mutate vault state. The agent MUST actively invoke local file mutation tools (`replace_file_content` / `write_to_file` in Antigravity, `apply_patch` / file writes in OpenAI Codex / Claude Code, or `helpers/mdbase_helper.py`) on `<vault>` files. Claiming in text that a timestamp has been locked without executing the tool call to update the task note is a fatal constitutional violation.

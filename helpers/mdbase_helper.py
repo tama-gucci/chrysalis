@@ -189,6 +189,12 @@ def compute_revision(document_bytes: Union[bytes, str, Path]) -> str:
     return hashlib.sha256(raw).hexdigest().lower()
 
 
+def compute_frontmatter_hash(document_or_fm: Union[bytes, str, Path]) -> str:
+    """Computes SHA-256 hash for CAS frontmatter/document revision checks."""
+    return compute_revision(document_or_fm)
+
+
+
 import threading
 import time
 
@@ -936,9 +942,26 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p_rev = subparsers.add_parser("revision", help="Compute exact ADR 0006 SHA-256 revision of a file")
     p_rev.add_argument("path", help="Vault-relative or absolute path to file")
 
-    p_dup = subparsers.add_parser("check-duplicate", help="Check if a source file or payload already exists in Sources/")
-    p_dup.add_argument("source_file", help="Path to source file to hash and check")
-    p_dup.add_argument("--source-url", default=None, help="Optional source URL")
+    p_dup = subparsers.add_parser("check-duplicate", help="Check if a source file, text payload, or SHA-256 already exists in Sources/")
+    p_dup.add_argument("source_file", nargs="?", default=None, help="Optional path to local source file to hash and check")
+    p_dup.add_argument("--text", default=None, help="Raw text payload fetched via Google Drive MCP server or session")
+    p_dup.add_argument("--sha256", default=None, help="Precomputed 64-char SHA-256 digest")
+    p_dup.add_argument("--stdin", action="store_true", help="Read payload bytes from stdin")
+    p_dup.add_argument("--source-url", default=None, help="Optional Google Drive or web source URL")
+
+    p_drive = subparsers.add_parser("drive-inbox", help="Inspect Chrysalis-Media-Locker/01-Inbox config, indexed Sources/, and any local Google Drive mount")
+
+    p_cas = subparsers.add_parser("apply-cas-mutation", aliases=["cas-write"], help="Execute atomic Compare-And-Swap (CAS) mutation with JSON Schema 2020-12 validation")
+    p_cas.add_argument("path", help="Vault-relative or absolute target file path")
+    p_cas.add_argument("--if-revision", "--expected-hash", dest="if_revision", default=None, help="Expected 64-char SHA-256 revision or frontmatter hash on disk")
+    p_cas.add_argument("--updates-json", default=None, help="JSON object of frontmatter fields to update while preserving the Markdown body")
+    p_cas.add_argument("--create", action="store_true", help="Create a new record (fails if file already exists)")
+    p_cas.add_argument("--content-file", default=None, help="File containing new UTF-8 Markdown content")
+    p_cas.add_argument("--stdin", action="store_true", help="Read new UTF-8 Markdown content from stdin")
+
+    p_rec = subparsers.add_parser("reconcile-syllabus", help="Diff extracted deliverables against an existing Projects/<id>/Roadmap.md")
+    p_rec.add_argument("roadmap_path", help="Vault-relative or absolute path to Roadmap.md")
+    p_rec.add_argument("deliverables_file", help="Path to YAML/JSON file containing extracted deliverables")
 
     p_hor = subparsers.add_parser("horizon-tasks", help="Partition project roadmap deliverables across the 14-day planning horizon")
     p_hor.add_argument("--horizon-days", type=int, default=14)
@@ -1000,12 +1023,186 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0 if rev else 1
 
     if args.command == "check-duplicate":
-        src_path = Path(args.source_file)
-        if not src_path.is_absolute() and not src_path.exists():
-            src_path = vault_root / src_path
-        raw_bytes = src_path.read_bytes()
+        if args.sha256:
+            target_hash = args.sha256.strip().lower()
+            sources_dir = vault_root / "Sources"
+            dup = {"is_duplicate": False, "existing_source_id": None, "existing_path": None, "sha256": target_hash}
+            if sources_dir.is_dir():
+                for src_file in sorted(sources_dir.glob("*.md")):
+                    if src_file.name == "README.md":
+                        continue
+                    try:
+                        fm, _ = parse_frontmatter(src_file.read_text(encoding="utf-8"))
+                    except Exception:
+                        continue
+                    rec_hash = str(fm.get("sha256", "")).lower()
+                    rec_url = fm.get("source_url")
+                    if rec_hash == target_hash or (args.source_url and rec_url and str(rec_url) == str(args.source_url)):
+                        dup = {
+                            "is_duplicate": True,
+                            "existing_source_id": fm.get("id") or src_file.stem,
+                            "existing_path": src_file.relative_to(vault_root).as_posix(),
+                            "sha256": target_hash,
+                        }
+                        break
+            print(json.dumps(dup, indent=2))
+            return 0
+        if args.text is not None:
+            raw_bytes = args.text.encode("utf-8")
+        elif args.stdin:
+            raw_bytes = sys.stdin.buffer.read()
+        elif args.source_file:
+            src_path = Path(args.source_file)
+            if not src_path.is_absolute() and not src_path.exists():
+                src_path = vault_root / src_path
+            raw_bytes = src_path.read_bytes()
+        else:
+            raw_bytes = b""
         dup = check_semantic_duplicate(raw_bytes, vault_root, source_url=args.source_url)
         print(json.dumps(dup, indent=2))
+        return 0
+
+    if args.command == "drive-inbox":
+        mem_file = vault_root / "System" / "Memory.md"
+        ing_cfg: Dict[str, Any] = {}
+        if mem_file.is_file():
+            try:
+                fm, _ = parse_frontmatter(mem_file.read_text(encoding="utf-8"))
+                ing_cfg = fm.get("ingestion_config") or {}
+            except Exception:
+                ing_cfg = {}
+        inbox_rel = ing_cfg.get("drive_inbox_folder", "Chrysalis-Media-Locker/01-Inbox")
+        archive_rel = ing_cfg.get("drive_archive_folder", "Chrysalis-Media-Locker/02-Archived-Binaries")
+
+        indexed_sources = []
+        indexed_hashes: Set[str] = set()
+        indexed_urls: Set[str] = set()
+        sources_dir = vault_root / "Sources"
+        if sources_dir.is_dir():
+            for sf in sorted(sources_dir.glob("*.md")):
+                if sf.name == "README.md":
+                    continue
+                try:
+                    sfm, _ = parse_frontmatter(sf.read_text(encoding="utf-8"))
+                    sh = str(sfm.get("sha256", "")).lower()
+                    su = sfm.get("source_url")
+                    if sh:
+                        indexed_hashes.add(sh)
+                    if su:
+                        indexed_urls.add(str(su))
+                    indexed_sources.append({
+                        "id": sfm.get("id") or sf.stem,
+                        "path": sf.relative_to(vault_root).as_posix(),
+                        "title": sfm.get("title"),
+                        "original_filename": sfm.get("original_filename"),
+                        "sha256": sh or None,
+                        "source_url": su,
+                    })
+                except Exception:
+                    continue
+
+        mount_candidates = []
+        env_locker = os.environ.get("CHRYSALIS_MEDIA_LOCKER_PATH")
+        if env_locker:
+            mount_candidates.append(Path(env_locker).expanduser())
+        home = Path.home()
+        mount_candidates.extend([
+            home / inbox_rel,
+            home / "Google Drive" / "My Drive" / inbox_rel,
+            home / "My Drive" / inbox_rel,
+            Path("G:/My Drive") / inbox_rel,
+        ])
+        local_mount: Optional[Path] = None
+        for mc in mount_candidates:
+            try:
+                if mc.is_dir():
+                    local_mount = mc.resolve()
+                    break
+            except Exception:
+                continue
+
+        local_unindexed = []
+        if local_mount:
+            for item in sorted(local_mount.iterdir()):
+                if item.is_file() and not item.name.startswith("."):
+                    digest = compute_revision(item)
+                    if digest not in indexed_hashes:
+                        local_unindexed.append({
+                            "filename": item.name,
+                            "path": str(item),
+                            "sha256": digest,
+                            "size_bytes": item.stat().st_size,
+                        })
+
+        print(json.dumps({
+            "vault": str(vault_root),
+            "drive_inbox_folder": inbox_rel,
+            "drive_archive_folder": archive_rel,
+            "indexed_sources_count": len(indexed_sources),
+            "indexed_sources": indexed_sources,
+            "local_mount_path": str(local_mount) if local_mount else None,
+            "local_unindexed_files": local_unindexed,
+            "mcp_server_instructions": (
+                f"Query connected Google Drive MCP server for folder '{inbox_rel}', "
+                "skip files matching indexed_sources (by sha256 or source_url), and translate any new files into <vault>/Sources/."
+            ),
+        }, indent=2))
+        return 0
+
+    if args.command in {"apply-cas-mutation", "cas-write"}:
+        target = Path(args.path)
+        if not target.is_absolute():
+            target = vault_root / target
+        effective_rev = args.if_revision
+        if target.exists() and effective_rev:
+            doc_rev = compute_revision(target)
+            raw_text = target.read_text(encoding="utf-8")
+            fm_raw = raw_text.split("---", 2)[1] if raw_text.startswith("---") and raw_text.count("---") >= 2 else ""
+            fm_rev = compute_revision(fm_raw)
+            if effective_rev.lower() == fm_rev.lower():
+                effective_rev = doc_rev
+
+        if args.updates_json:
+            if not target.exists():
+                print(json.dumps({"valid": False, "error": f"Target file not found for --updates-json: {target}"}))
+                return 1
+            raw_text = target.read_text(encoding="utf-8")
+            fm, body = parse_frontmatter(raw_text)
+            updates = json.loads(args.updates_json)
+            if isinstance(updates, dict):
+                fm.update(updates)
+            serialized_fm = yaml.safe_dump(fm, sort_keys=False, allow_unicode=True).strip()
+            new_content = f"---\n{serialized_fm}\n---\n{body}"
+            if effective_rev is None:
+                effective_rev = compute_revision(target)
+        elif args.content_file:
+            new_content = Path(args.content_file).read_text(encoding="utf-8")
+        elif args.stdin:
+            new_content = sys.stdin.read()
+        else:
+            print(json.dumps({"valid": False, "error": "Provide --updates-json, --content-file, or --stdin"}))
+            return 1
+
+        val_res = validate_record(target, new_content, collection_dir=vault_root)
+        if not val_res.valid:
+            print(json.dumps(val_res.to_dict(), indent=2, default=str))
+            return 1
+
+        res = apply_cas_mutation(
+            target,
+            new_content,
+            if_revision=None if args.create else effective_rev,
+        )
+        print(json.dumps(res.to_dict(), indent=2, default=str))
+        return 0 if res.valid else 1
+
+    if args.command == "reconcile-syllabus":
+        rm_path = Path(args.roadmap_path)
+        if not rm_path.is_absolute():
+            rm_path = vault_root / rm_path
+        deliv_text = Path(args.deliverables_file).read_text(encoding="utf-8")
+        diff = reconcile_syllabus(rm_path, deliv_text)
+        print(json.dumps(diff.to_dict(), indent=2, default=str))
         return 0
 
     if args.command == "horizon-tasks":

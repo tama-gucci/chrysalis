@@ -490,10 +490,11 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Import calendar commitments into a selected vault")
     parser.add_argument("--vault", help="Vault root; defaults to this installation")
+    parser.add_argument("--runtime", action="store_true", help="Resolve active personal runtime vault")
     parser.add_argument("--memory", help="Explicit scheduling memory file")
     parser.add_argument("--url", help="Calendar feed URL; prefer private memory or environment configuration")
     args = parser.parse_args()
-    target = resolve_memory_path(args.memory, vault=args.vault)
+    target = resolve_memory_path(args.memory, vault=args.vault, runtime=args.runtime)
     sys.exit(0 if sync_ical(ical_url=args.url, memory_path=str(target)) else 1)
 
 
