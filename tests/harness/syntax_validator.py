@@ -2,7 +2,7 @@
 tests/harness/syntax_validator.py
 Layer 1 Validator: Syntax & JSON Schema Draft 2020-12 Conformance.
 """
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 import re
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -215,6 +215,17 @@ class SyntaxValidator:
                     _check_tz_in_obj(item, current_path)
 
         _check_tz_in_obj(frontmatter)
+
+        def _normalize_dates(obj: Any) -> Any:
+            if isinstance(obj, dict):
+                return {k: _normalize_dates(v) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [_normalize_dates(item) for item in obj]
+            if isinstance(obj, (datetime, date)):
+                return obj.isoformat()
+            return obj
+
+        frontmatter = _normalize_dates(frontmatter)
 
         # Validate against JSON Schema Draft 2020-12 if schema provided
         if schema_dict:
