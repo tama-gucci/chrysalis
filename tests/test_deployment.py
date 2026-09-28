@@ -343,3 +343,87 @@ class DeploymentTests(unittest.TestCase):
         dup = check_semantic_duplicate(None, self.target, source_url='https://drive.google.com/file/d/abc/view')
         self.assertIsNotNone(dup)
         self.assertEqual(dup[0], 's1')
+
+    def test_a2_access_layer_cli_and_skill_compliance(self) -> None:
+        import os
+        import shutil
+        from unittest import mock
+        from System.scripts import vault_paths
+        from helpers import mdbase_helper
+
+        repo_root = Path(__file__).resolve().parents[1]
+        update.sync_engine(self.source, self.target)
+        shutil.copytree(repo_root / "_types", self.target / "_types", dirs_exist_ok=True)
+        (self.target / "System").mkdir(parents=True, exist_ok=True)
+
+        # Seed valid runtime state in self.target
+        (self.target / "System/Life-Roadmap.md").write_text(
+            '---\n'
+            'type: strategic_roadmap\n'
+            'id: "life-roadmap-test"\n'
+            'version: "5.0.0"\n'
+            'status: "active"\n'
+            'timezone_offset: "-05:00"\n'
+            'tag_registry:\n'
+            '  - "pillar-1/setup"\n'
+            '---\n\n# Life Roadmap\n',
+            encoding="utf-8",
+        )
+        (self.target / "System/Memory.md").write_text(
+            '---\n'
+            'type: system_state\n'
+            'schema_version: "1.0.0"\n'
+            'last_updated: "2026-09-27T21:00:00-05:00"\n'
+            'updated_by: "test-agent"\n'
+            'user_profile:\n'
+            '  timezone_offset: "-05:00"\n'
+            'cognitive_modality_defaults:\n'
+            '  analytical:\n'
+            '    baseline_minutes: 90\n'
+            '    energy_level: "high"\n'
+            '    target_window: "peak_sprint_1"\n'
+            '    multiplier: 1.0\n'
+            '---\n\n# Memory\n',
+            encoding="utf-8",
+        )
+
+        # 1. resolve_runtime_vault resolves CHRYSALIS_VAULT_PATH or explicit_path
+        self.assertEqual(vault_paths.resolve_runtime_vault(str(self.target)), self.target.resolve())
+        with mock.patch.dict(os.environ, {"CHRYSALIS_VAULT_PATH": str(self.target)}):
+            self.assertEqual(vault_paths.resolve_runtime_vault(), self.target.resolve())
+
+        # 2. validate_record supports system_state and strategic_roadmap records
+        mem_res = mdbase_helper.validate_record(self.target / "System/Memory.md", self.target)
+        self.assertTrue(mem_res.valid, mem_res.diagnostics)
+        roadmap_res = mdbase_helper.validate_record(self.target / "System/Life-Roadmap.md", self.target)
+        self.assertTrue(roadmap_res.valid, roadmap_res.diagnostics)
+
+        # 3. mdbase_helper CLI subcommands work end-to-end
+        self.assertEqual(
+            mdbase_helper.main(["--vault", str(self.target), "validate", str(self.target / "System/Memory.md")]),
+            0,
+        )
+        self.assertEqual(
+            mdbase_helper.main(["--vault", str(self.target), "list", "--type", "system_state"]),
+            0,
+        )
+        self.assertEqual(
+            mdbase_helper.main(["--vault", str(self.target), "horizon-tasks", "--today", "2026-09-27"]),
+            0,
+        )
+
+        # 4. Verify all runtime skills and workflows have zero Gemini Spark or remote MCP tool calls
+        for skill_md in sorted((repo_root / ".agent/skills").glob("*/SKILL.md")):
+            text = skill_md.read_text(encoding="utf-8")
+            self.assertNotIn("Gemini Spark", text, str(skill_md))
+            self.assertNotIn("mdbase_create_record", text, str(skill_md))
+            self.assertNotIn("mdbase_update_record", text, str(skill_md))
+            self.assertNotIn("mdbase_query_records", text, str(skill_md))
+            if skill_md.parent.name != "update":
+                self.assertIn("A2 Access Layer", text, str(skill_md))
+
+        for wf_md in sorted((repo_root / "System/Workflows").glob("*.md")):
+            text = wf_md.read_text(encoding="utf-8")
+            self.assertNotIn("Gemini Spark", text, str(wf_md))
+            self.assertNotIn("mdbase_query_records", text, str(wf_md))
+

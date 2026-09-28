@@ -76,11 +76,12 @@ flowchart LR
     auto_ingest_on_nightly_audit: true
     local_resources_folder_enabled: false
   ```
-* **Execution Sequence:**
-  1. The agent inspects every file in `Chrysalis-Media-Locker/01-Inbox`.
-  2. Queries `Sources/*.md` via `helpers.mdbase_helper.check_semantic_duplicate()` or `mdbase -C <vault> query --types source` to check `sha256` / `source_url` deduplication (`01-capture.md`).
-  3. Translates each new or revised source file into formatted Markdown (`02-extract.md`), computes syllabus diffs (`03-review.md`), and presents the `PlanProposal` review table at `APPROVAL_GATE`.
-  4. Upon confirmation (`04-organize.md`), serializes `Sources/{source_id}.md`, `Slipbox/YYYYMMDDHHmmss-<slug>.md` (`/zettel`), `Projects/{project_id}/Roadmap.md` (`/project`), and `<=14d` / uncertain `TaskNotes/Tasks/YYYYMMDD-<slug>.md`, archives the binary in `Chrysalis-Media-Locker/02-Archived-Binaries`, and hands off directly to `/plan` (`05-plan.md`).
+* **Execution Sequence (A2 Access Layer + Google Drive MCP):**
+  1. Resolve `<vault>` via `python System/scripts/vault_paths.py --runtime --json`.
+  2. The agent inspects every file in `Chrysalis-Media-Locker/01-Inbox` via the connected **Google Drive MCP server** (in Google Antigravity, OpenAI Codex, or Claude Code) or a local Google Drive desktop mount. If `01-Inbox` is empty or the Google Drive MCP server is not currently connected, `/ingest --drive` logs `0 new files in Chrysalis-Media-Locker/01-Inbox` and proceeds cleanly without blocking `/audit` or `/evening`.
+  3. Queries `<vault>/Sources/*.md` via `python helpers/mdbase_helper.py --vault "<vault>" check-duplicate <file>` (`helpers.mdbase_helper.check_semantic_duplicate()`) or `mdbase -C "<vault>" query --types source` to check `sha256` / `source_url` deduplication (`01-capture.md`).
+  4. Translates each new or revised source file into formatted Markdown (`02-extract.md`), computes syllabus diffs (`03-review.md`), and presents the `PlanProposal` review table at `APPROVAL_GATE`.
+  5. Upon confirmation (`04-organize.md`), serializes `<vault>/Sources/{source_id}.md`, `<vault>/Slipbox/YYYYMMDDHHmmss-<slug>.md` (`/zettel`), `<vault>/Projects/{project_id}/Roadmap.md` (`/project`), and `<=14d` / uncertain `<vault>/TaskNotes/Tasks/YYYYMMDD-<slug>.md`, validates each file via `python helpers/mdbase_helper.py --vault "<vault>" validate <path>`, archives the binary in `Chrysalis-Media-Locker/02-Archived-Binaries`, and hands off directly to `/plan` (`05-plan.md`).
 
 ### Mode 2: User-Directed Direct Share in Agent Session (`/ingest` or `/ingest --share`)
 * **When it Runs:** Triggered whenever you attach a PDF syllabus, research paper, whiteboard photo, or voice memo (or paste raw text/links) directly in the active agent session.

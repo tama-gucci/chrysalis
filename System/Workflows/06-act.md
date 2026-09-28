@@ -17,22 +17,21 @@ outputs:
 # Workflow 06: Approval Gate & Compare-And-Swap Mutation
 
 ## Objective
-Enforce human authorization barrier, verify CAS concurrency hashes, and atomically commit mutations to physical disk.
+Enforce human authorization barrier, verify CAS concurrency hashes via the A2 access layer (`helpers/mdbase_helper.py`), and atomically commit mutations to the resolved local runtime vault (`<vault>`).
 
 ## Protocol Steps
 1. **Approval Verification**:
    - Verify `context.approval_token == proposal_id`.
    - If token is missing or mismatched: abort write immediately with `approval_required`. Zero bytes written to disk.
-2. **CAS Precondition Verification**:
-   - For each target file being updated or deleted:
-     - Read disk bytes: `bytes_on_disk = file_path.read_bytes()`.
-     - Calculate `disk_revision = sha256(bytes_on_disk)`.
+2. **CAS Precondition Verification (`helpers/mdbase_helper.py`)**:
+   - For each target file being updated or deleted in `<vault>`:
+     - Compute `disk_revision` via `python helpers/mdbase_helper.py --vault "<vault>" revision <path>` (`sha256(file_path.read_bytes())`).
      - Assert `if_revision.lower() == disk_revision.lower()`.
      - On mismatch: Abort immediately with `concurrent_modification` and `recovery_action: "Refresh"`.
-3. **Write Execution**:
+3. **Write Execution & Schema Validation (A2 Access Layer)**:
    - Apply write-time lifecycle hooks (`lifecycle.on_create`, `lifecycle.on_update`).
-   - Validate frontmatter against JSON Schema 2020-12 dialect (`additionalProperties: false`).
-   - Execute atomic write via sibling temporary file:
+   - Validate frontmatter against JSON Schema 2020-12 dialect (`additionalProperties: false`) using `python helpers/mdbase_helper.py --vault "<vault>" validate <path>` or `helpers.mdbase_helper.apply_cas_mutation()`.
+   - Execute physical disk mutation via `helpers.mdbase_helper.apply_cas_mutation()` or the active local agent's native file tools (`replace_file_content` / `write_to_file` / `apply_patch`), followed by `python helpers/mdbase_helper.py --vault "<vault>" validate <path>`:
      ```python
      temp_path = target_path.with_suffix(f".tmp.{uuid4().hex}")
      temp_path.write_text(content, encoding="utf-8")

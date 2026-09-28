@@ -19,25 +19,40 @@ writes:
   - "TaskNotes/Tasks/*.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
+> Paths below are relative to the resolved personal runtime vault (`<vault>`). The default layout keeps `System/`, `Projects/`, `Slipbox/`, and `Sources/` at the root and operational task folders under `TaskNotes/`. See `ARCHITECTURE.md`.
 
 
 # /evening (Evening & Midnight Operational Orchestrator)
 
+## A2 Access Layer & Runtime Vault Resolution (Platform-Agnostic)
+
+This skill is strictly provider- and IDE-agnostic across capable local agents (**Google Antigravity**, **OpenAI Codex**, **Claude Code**, and local CLI runtimes) operating on the **A2 Access Layer** (*Direct Local Vault Access + Local Validation & CAS Tooling*):
+
+1. **Resolve `<vault>` (Personal Runtime Vault):**
+   * Run `python System/scripts/vault_paths.py --runtime --json` (or check `$CHRYSALIS_VAULT_PATH` / `$CHRYSALIS_VAULT_ROOT`).
+   * When invoked from the framework git source checkout (where `System/Life-Roadmap.md` is absent), this automatically resolves to the personal runtime vault (`~/Documents/Chrysalis`, e.g. `C:\Users\...\Documents\Chrysalis`). Never mutate tracked synthetic files in the git source checkout during personal life operations.
+2. **Local Vault Reads, Queries & CAS Writes (`A2`):**
+   * Read and mutate `<vault>` directly using standard local file tools (`view_file` / `replace_file_content` / `write_to_file` in Antigravity; `apply_patch` / filesystem writes in Codex/Claude) paired with `helpers/mdbase_helper.py` (`horizon-tasks`, `validate`, `revision`, `apply_cas_mutation`), headless `mdbase -C "<vault>" query/validate`, and `python System/scripts/doctor.py --vault "<vault>"`. Zero background daemons (`mdbase connect`) or cloud mdbase MCP relays (`mcp.mdbase.dev`) are required.
+
+---
+
 ## Execution Protocol
 
 ### 1. Execute Unified Nightly Audit (Including Automated `/ingest --drive`)
-Read and execute `.agent/skills/audit/SKILL.md` under **Protocol 1: Unified Nightly Audit**:
-* Reconcile completed tasks & update bounded telemetry multipliers ($[0.20, 2.00]$).
-* **Automated Google Drive Batch Ingestion (`/ingest --drive`):** Scan the dedicated Google Drive inbox (`Chrysalis-Media-Locker/01-Inbox`), translate all new or revised source files into formatted Markdown (`Sources/*.md`), and execute Workflows `01-capture` through `04-organize` (aligning `/project` and `/zettel`).
-* Ingest 14-day upcoming project & roadmap milestones (plus `date_uncertain: true` items).
-* Inject Starter Wedges into stalled tasks.
-* Maintain candidate task pools and execute auto-pause evaluation.
+Read and execute `.agent/skills/audit/SKILL.md` under **Protocol 1: Unified Nightly Audit** against `<vault>`:
+* **Pre-Flight Integrity Pass (`/doctor`):** Run `python System/scripts/doctor.py --vault "<vault>"` to verify task schemas, explicit local timezones, tag registries, graph wikilinks, and multiplier bounds.
+* **Task Reconciliation & Multiplier Learning:** Reconcile completed tasks in `<vault>/TaskNotes/Tasks/*.md` and update bounded telemetry multipliers ($[0.20, 2.00]$) in `<vault>/System/Memory.md`.
+* **Automated Google Drive Batch Ingestion (`/ingest --drive`):**
+  * Scan `Chrysalis-Media-Locker/01-Inbox` (`ingestion_config.drive_inbox_folder` in `<vault>/System/Memory.md`) via the **connected Google Drive MCP server** (in Antigravity, Codex, or Claude Code) or **local Google Drive mount**.
+  * Translate any new or revised source files into formatted Markdown (`<vault>/Sources/*.md`) and execute Workflows `01-capture` through `04-organize` (aligning `/project` and `/zettel`) locally on `<vault>` via the A2 access layer.
+  * *Graceful Continuation:* If `Chrysalis-Media-Locker/01-Inbox` has 0 unindexed files or if the Google Drive MCP server / local Drive mount is not currently connected, log an informational notice and proceed directly to 14-day horizon ingestion without halting `/evening`.
+* **14-Day Horizon Ingestion:** Run `python helpers/mdbase_helper.py --vault "<vault>" horizon-tasks` to inspect upcoming 14-day project & roadmap milestones (plus `date_uncertain: true` items) and materialize any missing task notes in `<vault>/TaskNotes/Tasks/`.
+* **Starter Wedges & Auto-Pause Check:** Inject Starter Wedges into stalled tasks and evaluate auto-pause status.
 
 ### 2. Pause & Unresponsive State Gate
-Check `system_state.pause_state.is_paused`, `mode`, and `resume_target` in `System/Memory.md`:
+Check `system_state.pause_state.is_paused`, `mode`, and `resume_target` in `<vault>/System/Memory.md`:
 * **Case A (Manual Pause with Evening Re-Entry — e.g. `mode == "maintenance"` or `resume_target == "evening"`):**
-  * Execute `replace_file_content` on `System/Memory.md` to automatically unpause (`is_paused: false`, `mode: null`, `reason: null`, `paused_at: null`, `resume_policy: null`, `resume_target: null`).
+  * Mutate `<vault>/System/Memory.md` on disk (via local file edit tool / `apply_cas_mutation`) to automatically unpause (`is_paused: false`, `mode: null`, `reason: null`, `paused_at: null`, `resume_policy: null`, `resume_target: null`).
   * Greet the user seamlessly with a fresh staging query and proceed directly to Step 3.
 * **Case B (Multi-Day Horizon Pause — e.g. `mode == "vacation"` with future date):**
   * If today's date < `resume_target`, output status (*"🌴 Chrysalis is currently PAUSED on vacation until `<resume_target>`. Run `/resume` anytime to reactivate."*) and halt.
@@ -45,26 +60,26 @@ Check `system_state.pause_state.is_paused`, `mode`, and `resume_target` in `Syst
 * **Case C (Auto-Unresponsive Gate — `mode == "auto_unresponsive"`):**
   * Output the pause notification:
     > *"⚠️ Chrysalis is currently PAUSED because the previous prototype schedule received no feedback. Would you like to unpause the system and stage tomorrow's focus? (Reply 'Unpause' to proceed)."*
-  * Halt execution until the user confirms. Upon unpause confirmation, set `is_paused: false` and proceed to Step 3.
+  * Halt execution until the user confirms. Upon unpause confirmation, set `is_paused: false` in `<vault>/System/Memory.md` and proceed to Step 3.
 * **Case D (Active / Not Paused):** Proceed directly to Step 3.
 
 ### 3. Initiate Staging Mode (Schedule Addition Query, Tool-Gated Materialization & Priority Arbitration)
-Read and execute `.agent/skills/plan/SKILL.md` under **Protocol 1: Staging Mode**:
+Read and execute `.agent/skills/plan/SKILL.md` under **Protocol 1: Staging Mode** on `<vault>`:
 1. Prompt the user for any schedule additions or new developments in natural language:
     > *"🌙 Evening Staging. Is there anything in particular you'd like included in tomorrow's schedule, or any new developments to note? (e.g., lab equipment setup, personal errand, or focus preference)"*
 2. Upon receiving user input:
-   * **Task Materialization (Tool Call):** If the user requests a new task, immediately execute file tool calls to create the task note in `TaskNotes/Tasks/YYYYMMDD-<slug>.md` with full schema frontmatter (`status: todo`, `scheduled: null`).
-   * **Roadmap Updates (Tool Call):** If priorities shifted, execute tool calls on `System/Life-Roadmap.md` and `Projects/*/Roadmap.md`.
-   * **Priority Arbitration:** Arbitrate priority against `Life-Roadmap.md` (active milestones remain primary anchor unless no urgent deadlines exist; user requests are integrated during downtime/slump/recovery windows).
-   * **Prototype Serialization (Tool Call):** Execute `replace_file_content` on `System/Memory.md` to serialize `prototype_schedule` (`staged_user_intent`, `target_date`, `staged_anchor_task`, `staged_support_tasks`, `feedback_status: "pending"`).
+   * **Task Materialization (Local A2 Write):** If the user requests a new task, immediately create the task note in `<vault>/TaskNotes/Tasks/YYYYMMDD-<slug>.md` with full schema frontmatter (`status: todo`, `scheduled: null`) and validate via `python helpers/mdbase_helper.py --vault "<vault>" validate TaskNotes/Tasks/YYYYMMDD-<slug>.md`.
+   * **Roadmap Updates (Local A2 Write):** If priorities shifted, update `<vault>/System/Life-Roadmap.md` and `<vault>/Projects/*/Roadmap.md`.
+   * **Priority Arbitration:** Arbitrate priority against `<vault>/System/Life-Roadmap.md` (active milestones remain primary anchor unless no urgent deadlines exist; user requests are integrated during downtime/slump/recovery windows).
+   * **Prototype Serialization (Local A2 Write):** Update `<vault>/System/Memory.md` on disk to serialize `prototype_schedule` (`staged_user_intent`, `target_date`, `staged_anchor_task`, `staged_support_tasks`, `feedback_status: "pending"`).
    * **Present Prototype Table:** Present the prototype schedule table in chat with clickable task links and candidate gap-fillers.
 3. Evaluate user feedback branch (lifecycle/cycle-boundary driven; no artificial countdown timer):
-   * **Branch A (User Approves):** Execute `replace_file_content` on `System/Memory.md` to set `prototype_schedule.feedback_status: "approved"` and log to `feedback_history`. The schedule is ready for morning `/calibrate`.
-   * **Branch B (User Modifies / Swaps Tasks):** Re-arbitrate priorities, execute tool calls to update `prototype_schedule` in `System/Memory.md`, and re-present the table.
-   * **Branch C (User Does Not Respond / Ignored):** `prototype_schedule.feedback_status` remains `"pending"`. If the operational boundary transitions (e.g., morning check-in or next nightly audit runs without feedback), the system triggers constitutional auto-pause (`is_paused: true`, `reason: "unresponsive_nightly_audit"`) to prevent unapproved schedule drift and preserves learned multipliers curves.
+   * **Branch A (User Approves):** Update `<vault>/System/Memory.md` on disk to set `prototype_schedule.feedback_status: "approved"` and log to `feedback_history`. Run `mdbase -C "<vault>" validate` (or `python helpers/mdbase_helper.py --vault "<vault>" validate System/Memory.md`) to confirm clean collection state. The schedule is ready for morning `/calibrate`.
+   * **Branch B (User Modifies / Swaps Tasks):** Re-arbitrate priorities, update `prototype_schedule` in `<vault>/System/Memory.md`, and re-present the table.
+   * **Branch C (User Does Not Respond / Ignored):** `prototype_schedule.feedback_status` remains `"pending"`. If the operational boundary transitions (e.g., morning check-in or next nightly audit runs without feedback), the system triggers constitutional auto-pause (`is_paused: true`, `reason: "unresponsive_nightly_audit"`) to prevent unapproved schedule drift and preserves learned multiplier curves.
 
 ---
 
 ### 4. Anti-Simulation Invariant
 > [!CAUTION]
-> **Physical Disk Mutation Mandate:** Outputting text or markdown tables in chat never mutates system state. The agent MUST actively execute file tool calls (`replace_file_content` / `write_to_file`) on disk files. Claiming in text that tasks or prototypes have been staged without executing the tool calls to update the task files and `System/Memory.md` is a fatal constitutional violation.
+> **Physical Disk Mutation Mandate:** Outputting text or markdown tables in chat never mutates system state. The agent MUST actively execute physical local file mutations (`replace_file_content` / `write_to_file` in Antigravity, `apply_patch` / file writes in Codex/Claude, or `helpers/mdbase_helper.py`) on `<vault>` files. Claiming in text that tasks or prototypes have been staged without mutating `<vault>/TaskNotes/Tasks/*.md` and `<vault>/System/Memory.md` on disk is a fatal constitutional violation.

@@ -22,10 +22,14 @@ writes:
   - "TaskNotes/Tasks/*.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
+> Paths below are relative to the resolved personal runtime vault (`<vault>`). The default layout keeps `System/`, `Projects/`, `Slipbox/`, and `Sources/` at the root and operational task folders under `TaskNotes/`. See `ARCHITECTURE.md`.
 
 
 # /project (Chrysalis Project Staging & Strategic Integration Engine)
+
+## A2 Access Layer & Runtime Vault Resolution (Platform-Agnostic)
+* **Resolve `<vault>`:** Run `python System/scripts/vault_paths.py --runtime --json` (or use `$CHRYSALIS_VAULT_PATH` / `$CHRYSALIS_VAULT_ROOT`). Never mutate tracked synthetic files in the git source checkout during personal project operations.
+* **Provider-Independent A2 Execution:** Operate directly on `<vault>` across Google Antigravity, OpenAI Codex, Claude Code, and local CLI agents using local file tools (`write_to_file` / `replace_file_content` / `apply_patch`), `helpers/mdbase_helper.py` (`reconcile_syllabus`, `filter_horizon_deliverables`, `validate_record`, `apply_cas_mutation`), and `mdbase -C "<vault>" query/validate`.
 
 ## Supported Commands & Triggers
 * `/project` (or `/project --stage` / `/stage --project`) — Initiates conversational or source-driven (`/ingest`) intake and synthesizes/reconciles a project roadmap in `Projects/<project_id>/Roadmap.md` aligned with `System/Workflows/01-capture.md` through `04-organize.md`.
@@ -56,12 +60,12 @@ graph TD
 Execute project synthesis either when invoked directly by the user in chat or when called by [`/ingest`](../ingest/SKILL.md) during `System/Workflows/01-capture.md` through `04-organize.md`:
 
 ### Step 0: Alignment with `System/Workflows/01-capture.md` – `04-organize.md` & `/ingest`
-* **Zero Local Binary Storage (No `Resources/` Folder):** All original binary/source files live in Google Drive (`Chrysalis-Media-Locker/`) to keep the vault pure Markdown. Never create a `Projects/<project_id>/Resources/` subfolder in the vault. External syllabi, specifications, and handouts are always translated into `Sources/{source_id}.md` via `/ingest` and linked into `Roadmap.md` via `source_ref` and `source_checksum`.
+* **Zero Local Binary Storage (No `Resources/` Folder):** All original binary/source files live in Google Drive (`Chrysalis-Media-Locker/`, read via Google Drive MCP server or local Drive mount) to keep the vault pure Markdown. Never create a `Projects/<project_id>/Resources/` subfolder in the vault. External syllabi, specifications, and handouts are always translated into `<vault>/Sources/{source_id}.md` via `/ingest` and linked into `Roadmap.md` via `source_ref` and `source_checksum`.
 * **Workflows `01`–`04` Execution:**
-  1. **`01-capture`:** Source is quarantined in `Sources/{source_id}.md` with a 64-character hex `sha256`.
+  1. **`01-capture`:** Source is quarantined in `<vault>/Sources/{source_id}.md` with a 64-character hex `sha256`.
   2. **`02-extract`:** 100% of deliverables across the full timeline are extracted into the `deliverables` YAML array (with `due: null, date_uncertain: true` for any TBD or ambiguous dates).
-  3. **`03-review`:** If `Projects/{project_id}/Roadmap.md` already exists, `helpers.mdbase_helper.reconcile_syllabus()` diffs the incoming deliverables against the existing ledger (`added`, `modified`, and `dropped` $\to$ `status: archived`) and presents the `PlanProposal` at `APPROVAL_GATE`.
-  4. **`04-organize`:** Serializes `Projects/{project_id}/Roadmap.md` with bidirectional links to `Sources/{source_id}.md` and `Slipbox/{YYYYMMDDHHmmss}-{slug}.md` (`/zettel`), and partitions tasks via `filter_horizon_deliverables(horizon_days=14)` before `/plan` (`05-plan.md`).
+  3. **`03-review`:** If `<vault>/Projects/{project_id}/Roadmap.md` already exists, `helpers.mdbase_helper.reconcile_syllabus()` diffs the incoming deliverables against the existing ledger (`added`, `modified`, and `dropped` $\to$ `status: archived`) and presents the `PlanProposal` at `APPROVAL_GATE`.
+  4. **`04-organize`:** Serializes `<vault>/Projects/{project_id}/Roadmap.md` locally via the A2 access layer with bidirectional links to `Sources/{source_id}.md` and `Slipbox/{YYYYMMDDHHmmss}-{slug}.md` (`/zettel`), and partitions tasks via `filter_horizon_deliverables(horizon_days=14)` before `/plan` (`05-plan.md`).
 
 ### Step 1: Interactive Scoping & Requirements Intake
 If the user describes an emergent project without an external source document, prompt for or extract the following core parameters:
@@ -73,9 +77,9 @@ If the user describes an emergent project without an external source document, p
 4. **Estimated Horizon Window:** Target date range (`YYYY-MM-DD → YYYY-MM-DD`).
 5. **Master Deliverable Breakdown:** Sequential milestones and concrete deliverables (`id`, `title`, `due`, `date_uncertain`, `tier: 1..4`), estimated modalities (`analytical`, `kinetic`, `synthesis`, `administrative`), and proposed tags.
 
-### Step 2: Directory Scaffolding & Roadmap Generation (Physical Tool Call)
+### Step 2: Directory Scaffolding & Roadmap Generation (Local A2 Write)
 > [!CAUTION]
-> **Anti-Simulation Law:** You MUST execute `write_to_file` / `mdbase_create_record` to physically create `Projects/<project_id>/Roadmap.md` on disk. Never create a `Resources/` subfolder inside `Projects/<project_id>/`.
+> **Anti-Simulation Law (`A2`):** You MUST execute local file creation/mutation (`write_to_file` / `replace_file_content` / `apply_patch` / `helpers.mdbase_helper.apply_cas_mutation()`) to physically create `<vault>/Projects/<project_id>/Roadmap.md` on disk and validate it with `python helpers/mdbase_helper.py --vault "<vault>" validate Projects/<project_id>/Roadmap.md`. Never create a `Resources/` subfolder inside `Projects/<project_id>/`.
 
 1. **Create Project Folder:** `Projects/<project_id>/` (containing `Roadmap.md`; do **not** create `Resources/`).
 2. **Generate Project Roadmap (`Projects/<project_id>/Roadmap.md`):**

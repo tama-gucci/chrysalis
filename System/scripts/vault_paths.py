@@ -83,7 +83,89 @@ def runtime_memory_path(root):
     return legacy if legacy.exists() else current
 
 
+def is_source_repository_checkout(root: Path) -> bool:
+    """Return True if root is the framework git source checkout without personal runtime state."""
+    root = Path(root).resolve()
+    has_git = (root / ".git").exists()
+    has_personal_roadmap = (root / "System" / "Life-Roadmap.md").exists()
+    return has_git and not has_personal_roadmap
+
+
+def resolve_runtime_vault(explicit_path=None, *, script_path=__file__) -> Path:
+    """Resolve the active personal runtime vault across Antigravity, Codex, and CLI sessions.
+
+    Priority order:
+    1. Explicit path argument or CHRYSALIS_VAULT_PATH / CHRYSALIS_VAULT_ROOT env var.
+    2. Current workspace/script root if it contains personal runtime state (System/Life-Roadmap.md).
+    3. Standard personal runtime vault (~/Documents/Chrysalis) when invoked from the source repo checkout.
+    4. Fallback to resolve_vault_root().
+    """
+    selected = (
+        explicit_path
+        or os.environ.get("CHRYSALIS_VAULT_PATH")
+        or os.environ.get("CHRYSALIS_VAULT_ROOT")
+    )
+    if selected:
+        root = Path(selected).expanduser().resolve()
+        if not root.is_dir():
+            raise ValueError(f"Vault directory does not exist: {root}")
+        return root
+
+    candidate = resolve_vault_root(None, script_path=script_path)
+    if not is_source_repository_checkout(candidate):
+        return candidate
+
+    default_personal_vault = Path.home() / "Documents" / "Chrysalis"
+    if default_personal_vault.is_dir() and (
+        (default_personal_vault / "mdbase.yaml").exists()
+        or (default_personal_vault / "System" / "Memory.md").exists()
+        or (default_personal_vault / "System" / "Life-Roadmap.md").exists()
+    ):
+        return default_personal_vault.resolve()
+
+    return candidate
+
+
 def memory_path(explicit_path=None, *, vault=None):
     selected = explicit_path or os.environ.get("CHRYSALIS_MEMORY_PATH")
     return (Path(selected).expanduser().resolve() if selected
             else runtime_memory_path(resolve_vault_root(vault)))
+
+
+def main(argv=None) -> int:
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(
+        description="Resolve Chrysalis vault paths for A2 local agent execution."
+    )
+    parser.add_argument("--vault", default=None, help="Explicit vault root path")
+    parser.add_argument(
+        "--runtime",
+        action="store_true",
+        help="Resolve the active personal runtime vault (e.g. ~/Documents/Chrysalis when run from source)",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output resolved paths as JSON",
+    )
+    args = parser.parse_args(argv)
+    root = resolve_runtime_vault(args.vault) if args.runtime else resolve_vault_root(args.vault)
+    if args.json:
+        payload = {
+            "vault_root": str(root),
+            "memory_path": str(runtime_memory_path(root)),
+            "life_roadmap_path": str(vault_path(root, "System/Life-Roadmap.md")),
+            "tasks_dir": str(vault_path(root, "TaskNotes/Tasks")),
+            "is_source_checkout": is_source_repository_checkout(root),
+        }
+        print(json.dumps(payload, indent=2))
+    else:
+        print(root)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

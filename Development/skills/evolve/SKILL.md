@@ -1,6 +1,6 @@
 ---
 name: evolve
-description: "Development & Architecture IDE Skill (Google Antigravity Only): On-demand capability expansion, 5-vector architectural feature synthesis, and Slipbox-grounded Recursive Self-Improvement (RSI) friction analysis during development and engineering."
+description: "Development & Architecture IDE Skill (Google Antigravity, OpenAI Codex & Local Coding Agents): On-demand capability expansion, 5-vector architectural feature synthesis, and Slipbox-grounded Recursive Self-Improvement (RSI) friction analysis during development and engineering."
 trigger: "/evolve"
 domain: development
 reads:
@@ -25,13 +25,13 @@ writes:
   - "Slipbox/*.md"
 ---
 
-# /evolve (Development Architecture & RSI Engine — Google Antigravity IDE)
+# /evolve (Development Architecture & RSI Engine — Local Coding Agent IDE)
 
 > [!NOTE]
-> **Development Pipeline Boundary:** `/evolve` is an engineering and architecture skill executed on-demand exclusively by **Google Antigravity** on development workstations. It is never executed during automated daily life routines.
+> **Development Pipeline Boundary & A2 Access Layer:** `/evolve` is an engineering and architecture skill executed on-demand in the selected local coding agent (**Google Antigravity**, **OpenAI Codex**, **Claude Code**, or local CLI) on development workstations. Reusable framework skill and workflow edits belong in the source repository (`<source-repo>`) and are deployed to the runtime vault (`<vault>`) via `update.py`, while runtime telemetry (`System/Memory.md`, `Slipbox/*.md`, `System/Changelog.md`) is read from the resolved runtime vault (`python System/scripts/vault_paths.py --runtime --json`).
 
 ## Supported Commands & Triggers
-* `/evolve` — Executes the interactive capability expansion and RSI friction analysis pass in Antigravity.
+* `/evolve` — Executes the interactive capability expansion and RSI friction analysis pass in the active developer session.
 * `/evolve --proactive` — Queries `#chrysalis` notes and synthesizes 5-vector architectural feature integration specs.
 * `/evolve --rsi` — Evaluates operational friction and mutates skill runbooks with pre-commit snapshots.
 * `/evolve --rollback [skill]` — Restores the latest backup snapshot from `.agent/skills/.backup/`.
@@ -40,7 +40,7 @@ writes:
 
 ```mermaid
 graph TD
-    Trigger["/evolve (Antigravity Developer Session)"] --> Mode{Execution Mode}
+    Trigger["/evolve (Local Developer Session)"] --> Mode{Execution Mode}
     Mode -->|"Full / --proactive"| P1["Protocol 1: Proactive Capability Expansion"]
     Mode -->|"--rsi"| P2["Protocol 2: Closed-Loop RSI Friction Analysis"]
     Mode -->|"--rollback"| P3["Protocol 3: Skill Snapshot Rollback"]

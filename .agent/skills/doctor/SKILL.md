@@ -20,14 +20,16 @@ writes:
   - "System/Memory.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
-
+> **A2 Access Layer & Runtime Vault Resolution:**
+> All paths below (`System/...`, `TaskNotes/...`, `Projects/...`, `Slipbox/...`) are relative to the resolved **personal runtime vault** (`<vault>`).
+> 1. Resolve `<vault>` via `python System/scripts/vault_paths.py --runtime --json` (defaulting to `~/Documents/Chrysalis` on Windows/Linux/macOS when invoked from the source repository checkout, or `$CHRYSALIS_VAULT_PATH`).
+> 2. Execute the A2 diagnostic engine directly against `<vault>` via `python System/scripts/doctor.py --vault "<vault>"` (or `python System/scripts/doctor.py --runtime`), plus `mdbase -C "<vault>" validate` and `python tests/harness/validation_harness.py -c "<vault>"`.
 
 # /doctor (Chrysalis System Integrity & Diagnostic Suite)
 
 ## Supported Commands & Triggers
-* `/doctor` — Executes the full 6-point system integrity check and outputs results to `System/System-Health.md`.
-* `/doctor --health` (or `/health`) — Diagnostic overview displaying system health status.
+* `/doctor` — Executes the full 6-point system integrity check (`python System/scripts/doctor.py --vault "<vault>"`) and outputs results to `<vault>/System/System-Health.md`.
+* `/doctor --health` (or `/health`) — Diagnostic overview displaying system health status (`python System/scripts/doctor.py --vault "<vault>" --read-only`).
 * `/doctor --integrity` (or `/integrity`) — Strict invariant validation pass with auto-heal execution.
 
 ```mermaid

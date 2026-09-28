@@ -21,9 +21,9 @@ from datetime import datetime, date
 from pathlib import Path
 
 try:
-    from .vault_paths import resolve_vault_root, vault_path, runtime_memory_path
+    from .vault_paths import resolve_runtime_vault, resolve_vault_root, vault_path, runtime_memory_path
 except ImportError:
-    from vault_paths import resolve_vault_root, vault_path, runtime_memory_path
+    from vault_paths import resolve_runtime_vault, resolve_vault_root, vault_path, runtime_memory_path
 from typing import Dict, Any, List, Tuple, Optional
 import yaml
 
@@ -289,10 +289,14 @@ class ChrysalisDoctor:
     def check_5_skills_integrity(self):
         """Check 5: Skill Protocol & Dependency Linter."""
         skill_files = []
-        for root in [self.repo_root, self.vault_root, self.vault_root / "TaskNotes", self.vault_root / "chrysalis"]:
-            for p in list((root / ".agent" / "skills").glob("*/SKILL.md")) + list((root / "Development" / "skills").glob("*/SKILL.md")):
-                if p not in skill_files and p.exists():
-                    skill_files.append(p)
+        seen_keys = set()
+        for root in [self.vault_root, self.vault_root / "TaskNotes", self.vault_root / "chrysalis", self.repo_root]:
+            for domain_rel in (Path(".agent") / "skills", Path("Development") / "skills"):
+                for p in (root / domain_rel).glob("*/SKILL.md"):
+                    key = (domain_rel.as_posix(), p.parent.name)
+                    if p.exists() and key not in seen_keys:
+                        seen_keys.add(key)
+                        skill_files.append(p)
 
         valid_skills = 0
         for sf in skill_files:
@@ -471,10 +475,11 @@ class ChrysalisDoctor:
 def main():
     parser = argparse.ArgumentParser(description="Chrysalis System Integrity & Diagnostic Suite")
     parser.add_argument("--vault", type=str, default=None, help="Path to Chrysalis vault root")
+    parser.add_argument("--runtime", action="store_true", help="Automatically resolve the active personal runtime vault")
     parser.add_argument("--read-only", action="store_true", help="Check without updating the health ledger")
     args = parser.parse_args()
 
-    vault_root = resolve_vault_root(args.vault)
+    vault_root = resolve_runtime_vault(args.vault) if args.runtime else resolve_vault_root(args.vault)
     doctor = ChrysalisDoctor(vault_root)
     success = doctor.run_all_checks(write_report=not args.read_only)
     sys.exit(0 if success else 1)

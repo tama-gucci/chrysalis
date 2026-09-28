@@ -174,9 +174,19 @@ def serialize_record(frontmatter: Dict[str, Any], body: str = "") -> str:
 # 2. ADR 0006 Exact-Document CAS Revision
 # =========================================================================
 
-def compute_revision(document_bytes: bytes) -> str:
+def compute_revision(document_bytes: Union[bytes, str, Path]) -> str:
     """Computes exact-document revision hash: sha256(document_bytes) as 64 lowercase hex."""
-    return hashlib.sha256(document_bytes).hexdigest().lower()
+    if isinstance(document_bytes, Path):
+        raw = document_bytes.read_bytes()
+    elif isinstance(document_bytes, str):
+        p = Path(document_bytes)
+        try:
+            raw = p.read_bytes() if p.is_file() else document_bytes.encode("utf-8")
+        except OSError:
+            raw = document_bytes.encode("utf-8")
+    else:
+        raw = document_bytes
+    return hashlib.sha256(raw).hexdigest().lower()
 
 
 import threading
@@ -763,7 +773,7 @@ def _normalize_frontmatter_dates(val: Any) -> Any:
 
 def validate_record(
     path: Union[Path, str],
-    record_text: str,
+    record_text: Optional[Union[str, Path]] = None,
     type_name: Optional[str] = None,
     collection_dir: Optional[Union[Path, str]] = None
 ) -> ValidationResult:
@@ -774,6 +784,12 @@ def validate_record(
     Preserves Chrysalis Local Timezone format checks (rejecting UTC 'Z' strings).
     """
     path_obj = Path(path)
+    if record_text is None:
+        record_text = path_obj.read_text(encoding="utf-8")
+    elif isinstance(record_text, Path) or (isinstance(record_text, str) and not record_text.startswith("---") and Path(record_text).is_dir()):
+        if collection_dir is None:
+            collection_dir = Path(record_text)
+        record_text = path_obj.read_text(encoding="utf-8")
     diagnostics: List[Diagnostic] = []
 
     try:
@@ -794,6 +810,8 @@ def validate_record(
     resolved_type = type_name or fm.get("type")
     if resolved_type == "project_roadmap":
         resolved_type = "project"
+    elif resolved_type in {"strategic_roadmap", "system_health", "system_health_report", "system_specification"}:
+        resolved_type = "system_state"
 
     if not resolved_type:
         p_str = str(path_obj).replace("\\", "/")
@@ -805,8 +823,10 @@ def validate_record(
             resolved_type = "zettel"
         elif "Sources" in p_str:
             resolved_type = "source"
+        elif ("System/" in p_str or p_str.startswith("System/")) and "System/Workflows" not in p_str and "System/Environment" not in p_str:
+            resolved_type = "system_state"
 
-    valid_types = {"task", "project", "zettel", "source"}
+    valid_types = {"task", "project", "zettel", "source", "system_state"}
     if not resolved_type or resolved_type not in valid_types:
         diagnostics.append(Diagnostic(
             code="type_unknown",
@@ -874,3 +894,148 @@ def validate_record(
         frontmatter=fm,
         body=body
     )
+
+
+def _resolve_cli_vault(explicit_vault: Optional[str] = None, use_runtime: bool = False) -> Path:
+    import sys
+    repo_root = str(Path(__file__).resolve().parents[1])
+    if repo_root not in sys.path:
+        sys.path.insert(0, repo_root)
+    try:
+        from System.scripts.vault_paths import resolve_runtime_vault, resolve_vault_root
+        return resolve_runtime_vault(explicit_vault) if use_runtime else resolve_vault_root(explicit_vault)
+    except Exception:
+        if explicit_vault:
+            return Path(explicit_vault).expanduser().resolve()
+        env_v = os.environ.get("CHRYSALIS_VAULT_PATH") or os.environ.get("CHRYSALIS_VAULT_ROOT")
+        if env_v:
+            return Path(env_v).expanduser().resolve()
+        return Path.cwd().resolve()
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(
+        description="Chrysalis A2 Access Layer Helper CLI (schema validation, CAS revision, duplicate check, horizon query)"
+    )
+    parser.add_argument("--vault", default=None, help="Collection/vault root directory")
+    parser.add_argument("--runtime", action="store_true", help="Automatically resolve active personal runtime vault")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    subparsers.add_parser("resolve-vault", help="Print resolved vault root path")
+
+    p_list = subparsers.add_parser("list", help="List collection records in the vault")
+    p_list.add_argument("--type", dest="record_type", choices=["task", "project", "zettel", "source", "system_state"], default=None)
+
+    p_val = subparsers.add_parser("validate", help="Validate a record file against its JSON Schema 2020-12 type")
+    p_val.add_argument("path", help="Vault-relative or absolute path to record")
+    p_val.add_argument("--type", dest="record_type", default=None)
+
+    p_rev = subparsers.add_parser("revision", help="Compute exact ADR 0006 SHA-256 revision of a file")
+    p_rev.add_argument("path", help="Vault-relative or absolute path to file")
+
+    p_dup = subparsers.add_parser("check-duplicate", help="Check if a source file or payload already exists in Sources/")
+    p_dup.add_argument("source_file", help="Path to source file to hash and check")
+    p_dup.add_argument("--source-url", default=None, help="Optional source URL")
+
+    p_hor = subparsers.add_parser("horizon-tasks", help="Partition project roadmap deliverables across the 14-day planning horizon")
+    p_hor.add_argument("--horizon-days", type=int, default=14)
+    p_hor.add_argument("--reference-date", "--today", dest="reference_date", default=None, help="Reference date YYYY-MM-DD (defaults to today)")
+
+    args = parser.parse_args(argv)
+    vault_root = _resolve_cli_vault(args.vault, use_runtime=args.runtime or (args.command == "resolve-vault" and not args.vault))
+
+    if args.command == "resolve-vault":
+        print(vault_root)
+        return 0
+
+    if args.command == "list":
+        patterns = {
+            "task": "TaskNotes/Tasks/*.md",
+            "project": "Projects/*/Roadmap.md",
+            "zettel": "Slipbox/*.md",
+            "source": "Sources/*.md",
+            "system_state": "System/*.md",
+        }
+        selected_types = [args.record_type] if args.record_type else ["task", "project", "zettel", "source"]
+        records = []
+        for rtype in selected_types:
+            for p in sorted(vault_root.glob(patterns[rtype])):
+                if p.name == "README.md" or p.name.startswith("."):
+                    continue
+                try:
+                    fm, _ = parse_frontmatter(p.read_text(encoding="utf-8"))
+                except Exception:
+                    fm = {}
+                records.append({
+                    "type": rtype,
+                    "path": p.relative_to(vault_root).as_posix(),
+                    "title": fm.get("title") or fm.get("id") or p.stem,
+                    "status": fm.get("status") or fm.get("ingestion_status"),
+                    "due": str(fm.get("due")) if fm.get("due") is not None else None,
+                    "revision": compute_revision(p),
+                })
+        print(json.dumps({"vault": str(vault_root), "count": len(records), "records": records}, indent=2))
+        return 0
+
+    if args.command == "validate":
+        target = Path(args.path)
+        if not target.is_absolute():
+            target = vault_root / target
+        if not target.exists():
+            print(json.dumps({"valid": False, "error": f"File not found: {target}"}))
+            return 1
+        res = validate_record(target, target.read_text(encoding="utf-8"), type_name=args.record_type, collection_dir=vault_root)
+        print(json.dumps(res.to_dict(), indent=2, default=str))
+        return 0 if res.valid else 1
+
+    if args.command == "revision":
+        target = Path(args.path)
+        if not target.is_absolute():
+            target = vault_root / target
+        rev = compute_revision(target)
+        print(json.dumps({"path": str(target), "revision": rev}))
+        return 0 if rev else 1
+
+    if args.command == "check-duplicate":
+        src_path = Path(args.source_file)
+        if not src_path.is_absolute() and not src_path.exists():
+            src_path = vault_root / src_path
+        raw_bytes = src_path.read_bytes()
+        dup = check_semantic_duplicate(raw_bytes, vault_root, source_url=args.source_url)
+        print(json.dumps(dup, indent=2))
+        return 0
+
+    if args.command == "horizon-tasks":
+        ref_date = date.fromisoformat(args.reference_date) if args.reference_date else date.today()
+        summary = []
+        for rm in sorted(vault_root.glob("Projects/*/Roadmap.md")):
+            try:
+                fm, _ = parse_frontmatter(rm.read_text(encoding="utf-8"))
+                deliverables = fm.get("deliverables", [])
+                if isinstance(deliverables, list):
+                    active_items, inert_items = filter_horizon_deliverables(
+                        deliverables, reference_date=ref_date, horizon_days=args.horizon_days
+                    )
+                    imminent = [d for d in active_items if not d.get("date_uncertain") and d.get("due") is not None]
+                    uncertain = [d for d in active_items if d.get("date_uncertain") or d.get("due") is None]
+                    summary.append({
+                        "project_id": fm.get("project_id") or rm.parent.name,
+                        "roadmap": rm.relative_to(vault_root).as_posix(),
+                        "imminent": imminent,
+                        "uncertain": uncertain,
+                        "out_of_horizon_count": len(inert_items),
+                    })
+            except Exception as e:
+                summary.append({"roadmap": rm.relative_to(vault_root).as_posix(), "error": str(e)})
+        print(json.dumps({"vault": str(vault_root), "reference_date": ref_date.isoformat(), "projects": summary}, indent=2, default=str))
+        return 0
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

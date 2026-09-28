@@ -19,10 +19,14 @@ writes:
   - "TaskNotes/Tasks/*.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
+> Paths below are relative to the resolved personal runtime vault (`<vault>`). The default layout keeps `System/`, `Projects/`, `Slipbox/`, and `Sources/` at the root and operational task folders under `TaskNotes/`. See `ARCHITECTURE.md`.
 
 
 # /plan (Master Focus Scheduling & Bio-Cognitive Diurnal Engine)
+
+## A2 Access Layer & Runtime Vault Resolution (Platform-Agnostic)
+* **Resolve `<vault>`:** Run `python System/scripts/vault_paths.py --runtime --json` (or use `$CHRYSALIS_VAULT_PATH` / `$CHRYSALIS_VAULT_ROOT`). All reads and mutations must target `<vault>`, never the synthetic source checkout.
+* **Provider-Independent A2 Operations:** Across Google Antigravity, OpenAI Codex, Claude Code, and local CLI agents, execute all queries (`mdbase -C "<vault>" query`, `python helpers/mdbase_helper.py --vault "<vault>" list/horizon-tasks`), schema validations (`python helpers/mdbase_helper.py --vault "<vault>" validate`), and file mutations (`replace_file_content` / `write_to_file` / `apply_patch` / `apply_cas_mutation`) directly on `<vault>`.
 
 > **Stage 5 Lifecycle Alignment (`System/Workflows/05-plan.md`):** `/plan` executes immediately after `/ingest` (`System/Workflows/01-capture.md` through `04-organize.md`, aligned with `/project` and `/zettel`), taking newly materialized 14-day deliverable tasks (`TaskNotes/Tasks/YYYYMMDD-<slug>.md` with `project_ref` and `linked_zettels`) and stacking them into bio-cognitive ultradian focus sprints while keeping `date_uncertain: true, due: null` items unscheduled for deadline clarification.
 
@@ -128,16 +132,17 @@ Triggered during the morning workflow (`/morning`) to calibrate the pre-approved
    * **Energy 1–2 (Sleep Deprived / Low):** Complete lockout of Tier 3/4 tasks. Retain 1 low-friction kinetic/admin task in Slump window. Expand rest buffers by 50%.
    * **Energy 3–5 (Moderate to Optimal):** Execute full staged agenda.
 
-### Step 3: Mandatory Frontmatter Timeblocking Lock & Serialization (Tool Calls Required)
+### Step 3: Mandatory Frontmatter Timeblocking Lock & Serialization (A2 Local Writes Required)
 > [!IMPORTANT]
-> **Tool Execution Mandate:** You MUST actively execute file tool calls (`replace_file_content`) to serialize the scheduled state to disk. Never stop at printing text in chat.
+> **Physical Disk Mutation Mandate (`A2`):** You MUST actively execute local file mutations (`replace_file_content` / `write_to_file` in Antigravity, `apply_patch` / file writes in Codex/Claude, or `helpers.mdbase_helper.apply_cas_mutation()`) to serialize the scheduled state to `<vault>` on disk. Never stop at printing text in chat.
 
-1. **Mutate Task Frontmatter:** Call `replace_file_content` on each scheduled task file in `TaskNotes/Tasks/*.md` to write the resolved local ISO-8601 timestamp:
+1. **Mutate Task Frontmatter:** Update each scheduled task file in `<vault>/TaskNotes/Tasks/*.md` to write the resolved local ISO-8601 timestamp:
    ```yaml
    scheduled: "YYYY-MM-DDTHH:mm:ss-05:00"
    ```
-2. **Update Memory:** Call `replace_file_content` on `System/Memory.md` to update `morning_checkin.active_today`, `morning_checkin.learned_rhythms`, and `morning_checkin.checkin_history`.
-3. **Populate Daily Note:** Call `replace_file_content` (or create) `Daily/YYYY-MM-DD.md` (or `YYYY-MM-DD.md`) with the calibrated daily schedule table, biomarker telemetry, and task wikilinks.
+   Validate with `python helpers/mdbase_helper.py --vault "<vault>" validate <task_path>` or `mdbase -C "<vault>" validate`.
+2. **Update Memory:** Update `<vault>/System/Memory.md` to record `morning_checkin.active_today`, `morning_checkin.learned_rhythms`, and `morning_checkin.checkin_history`.
+3. **Populate Daily Note:** Update or create `<vault>/Daily/YYYY-MM-DD.md` with the calibrated daily schedule table, biomarker telemetry, and task wikilinks.
 4. **Calendar Export Status:** Native mobile calendar export is not implemented. Persist the approved schedule to task notes and daily memory; do not claim that Android, Google Calendar, or a watch was updated. Keep reference links in task frontmatter.
 
 ### Step 4: Deliver Final Locked Agenda

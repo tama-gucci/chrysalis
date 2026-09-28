@@ -9,8 +9,8 @@ writes:
   - "TaskNotes/Tasks/*.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
-
+> **A2 Access Layer & Runtime Vault Resolution:**
+> All paths below (`System/...`, `TaskNotes/...`, `Projects/...`, `Slipbox/...`) are relative to the resolved **personal runtime vault** (`<vault>`), resolved via `python System/scripts/vault_paths.py --runtime --json` (defaulting to `~/Documents/Chrysalis` when invoked from the source checkout). Write task files directly to `<vault>/TaskNotes/Tasks/` and validate with `python helpers/mdbase_helper.py --vault "<vault>" validate "<vault>/TaskNotes/Tasks/YYYYMMDD-slug.md"`.
 
 # /task (Shorthand Task Capture Engine)
 

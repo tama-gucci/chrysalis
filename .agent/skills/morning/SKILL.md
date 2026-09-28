@@ -13,10 +13,13 @@ writes:
   - "Daily/YYYY-MM-DD.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
+> Paths below are relative to the resolved personal runtime vault (`<vault>`). The default layout keeps `System/`, `Projects/`, `Slipbox/`, and `Sources/` at the root and operational task folders under `TaskNotes/`. See `ARCHITECTURE.md`.
 
 
 # /morning (Morning Operational Orchestrator)
+
+## A2 Access Layer & Runtime Vault Resolution (Platform-Agnostic)
+* **Resolve `<vault>`:** Run `python System/scripts/vault_paths.py --runtime --json` (or use `$CHRYSALIS_VAULT_PATH` / `$CHRYSALIS_VAULT_ROOT`). Target `<vault>` across Google Antigravity, OpenAI Codex, Claude Code, and local CLI agents using local file tools + `helpers/mdbase_helper.py` + `mdbase -C "<vault>" validate`.
 
 ## Execution Protocol
 

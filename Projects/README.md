@@ -10,7 +10,7 @@ Create actionable tasks under `TaskNotes/Tasks/` with a `project_ref` linking to
 
 ## Review, ingestion, and linking
 
-The `/audit` runbook automatically invokes `/ingest --drive` to direct Gemini Spark (`@Google Drive` + `@Mdbase`) to translate new source files from the dedicated Google Drive inbox via `System/Workflows/01-capture.md` through `04-organize.md` (aligning `/project` and `/zettel`), then reviews upcoming 14-day milestones before `/plan` (`05-plan.md`). `/ingest` is also invoked on direct file share in the Spark UI.
+The `/audit` runbook automatically invokes `/ingest --drive` so the active local coding agent (Google Antigravity, OpenAI Codex, or Claude Code) reads new source files from the dedicated Google Drive inbox (`Chrysalis-Media-Locker/01-Inbox` via a Google Drive MCP server or local Drive mount) and translates them into local vault Markdown records (`<vault>/Sources/`, `<vault>/Projects/`, `<vault>/Slipbox/`, `<vault>/TaskNotes/Tasks/`) via the A2 access layer (`helpers/mdbase_helper.py`) and `System/Workflows/01-capture.md` through `04-organize.md` (aligning `/project` and `/zettel`), then reviews upcoming 14-day milestones before `/plan` (`05-plan.md`). `/ingest` is also invoked on direct file share/attachment in the active agent session.
 
 `System/scripts/zettel_graph_linker.py --vault <runtime-vault>` matches tags and wikilinks. Review the resulting associations; the script does not infer meaning from arbitrary documents.
 

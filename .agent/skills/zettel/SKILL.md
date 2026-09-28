@@ -20,20 +20,24 @@ writes:
   - "TaskNotes/Tasks/*.md"
 ---
 
-> Paths below are relative to the explicitly selected vault. The default layout keeps System, Projects, and Slipbox at the root and operational task folders under TaskNotes/. See ARCHITECTURE.md.
+> Paths below are relative to the resolved personal runtime vault (`<vault>`). The default layout keeps `System/`, `Projects/`, `Slipbox/`, and `Sources/` at the root and operational task folders under `TaskNotes/`. See `ARCHITECTURE.md`.
 
 
 # /zettel (Atomic Knowledge & System Evolution Synthesis Engine)
 
+## A2 Access Layer & Runtime Vault Resolution (Platform-Agnostic)
+* **Resolve `<vault>`:** Run `python System/scripts/vault_paths.py --runtime --json` (or use `$CHRYSALIS_VAULT_PATH` / `$CHRYSALIS_VAULT_ROOT`). All runtime knowledge notes and hypergraph links must be written to `<vault>`, never the synthetic source checkout.
+* **Provider-Independent A2 Execution:** Create and link `<vault>/Slipbox/YYYYMMDDHHmmss-<slug>.md` using standard local file tools (`write_to_file` / `replace_file_content` / `apply_patch`), validate with `python helpers/mdbase_helper.py --vault "<vault>" validate <path>` / `mdbase -C "<vault>" validate`, and weave bidirectional wikilinks via `python System/scripts/zettel_graph_linker.py --vault "<vault>"`.
+
 ## Syntax & Triggers
 * `/zettel [title] [tags...]` — Synthesizes an atomic single-thesis knowledge note in `Slipbox/YYYYMMDDHHmmss-<slug>.md`.
 * `/zettel [title] #chrysalis [subtags...]` — Captures system feature ideas, habit trackers, and workflow concepts for `/evolve`.
-* **Automatic Invocation via `/ingest` (`Workflows 01–04`):** Invoked automatically during Google Drive batch ingestion (`/audit` $\to$ `/ingest --drive`) and interactive direct share (`/ingest`) to synthesize atomic notes from translated `Sources/{source_id}.md` records before `/plan` (`05-plan.md`).
+* **Automatic Invocation via `/ingest` (`Workflows 01–04`):** Invoked automatically during Google Drive batch ingestion (`/audit` $\to$ `/ingest --drive` via Google Drive MCP server or local Drive mount) and interactive direct share (`/ingest`) to synthesize atomic notes from translated `Sources/{source_id}.md` records before `/plan` (`05-plan.md`).
 
 ## Alignment with `System/Workflows/01-capture.md` – `04-organize.md` & `/ingest`
-1. **Zero Local Binary Storage (Google Drive Provenance):** Raw source files (lecture recordings, PDF papers, slide decks, whiteboard photos) remain in Google Drive (`Chrysalis-Media-Locker/`). `/ingest` first translates the source into `Sources/{source_id}.md` (`01-capture.md`).
+1. **Zero Local Binary Storage (Google Drive Provenance):** Raw source files (lecture recordings, PDF papers, slide decks, whiteboard photos) remain in Google Drive (`Chrysalis-Media-Locker/`, read via Google Drive MCP server or local Drive mount). `/ingest` first translates the source into `<vault>/Sources/{source_id}.md` (`01-capture.md`).
 2. **Cryptographic & Provenance Grounding (`02-extract.md` – `04-organize.md`):** Every Zettel extracted from an ingested source embeds `source_ref: "[[Sources/<source_id>]]"`, `source_checksum: "<64-char-sha256>"`, `source_url` (pointing to the original Google Drive file or external URL), and `project_ref: "[[Projects/<project_id>/Roadmap]]"`.
-3. **Pre-`/plan` Hypergraph Weaving (`04-organize.md` $\to$ `05-plan.md`):** Before `/plan` schedules active focus sprints, `/zettel` links each new `Slipbox/YYYYMMDDHHmmss-<slug>.md` note into `Projects/<project_id>/Roadmap.md` (`linked_zettels`) and active 14-day `TaskNotes/Tasks/YYYYMMDD-<slug>.md` frontmatter (`linked_zettels`) so the research notes surface inside scheduled focus blocks.
+3. **Pre-`/plan` Hypergraph Weaving (`04-organize.md` $\to$ `05-plan.md`):** Before `/plan` schedules active focus sprints, `/zettel` links each new `<vault>/Slipbox/YYYYMMDDHHmmss-<slug>.md` note into `<vault>/Projects/<project_id>/Roadmap.md` (`linked_zettels`) and active 14-day `<vault>/TaskNotes/Tasks/YYYYMMDD-<slug>.md` frontmatter (`linked_zettels`) so the research notes surface inside scheduled focus blocks.
 
 ## Processing Pipeline
 1. **Timestamp Identity Generation:** Create a 14-digit local timestamp identifier `YYYYMMDDHHmmss` with kebab-case slug (`YYYYMMDDHHmmss-slug`, matching `^[0-9]{14}(-[a-z0-9-]+)?$`).

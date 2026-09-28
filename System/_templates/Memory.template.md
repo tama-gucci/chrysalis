@@ -1,4 +1,5 @@
 ---
+type: system_state
 schema_version: "1.0.0"
 last_updated: "{{TIMESTAMP}}"
 updated_by: "agent-session-{{SESSION_ID}}"
