@@ -28,7 +28,7 @@ writes:
 ## Syntax & Triggers
 * `/zettel [title] [tags...]` — Synthesizes an atomic single-thesis knowledge note in `Slipbox/YYYYMMDDHHmmss-<slug>.md`.
 * `/zettel [title] #chrysalis [subtags...]` — Captures system feature ideas, habit trackers, and workflow concepts for `/evolve`.
-* **Automatic Invocation via `/ingest` (`Workflows 01–04`):** Invoked automatically during Google Drive batch ingestion (`/audit` $\to$ `/ingest --drive`) and Spark UI direct share (`/ingest`) to synthesize atomic notes from translated `Sources/{source_id}.md` records before `/plan` (`05-plan.md`).
+* **Automatic Invocation via `/ingest` (`Workflows 01–04`):** Invoked automatically during Google Drive batch ingestion (`/audit` $\to$ `/ingest --drive`) and interactive direct share (`/ingest`) to synthesize atomic notes from translated `Sources/{source_id}.md` records before `/plan` (`05-plan.md`).
 
 ## Alignment with `System/Workflows/01-capture.md` – `04-organize.md` & `/ingest`
 1. **Zero Local Binary Storage (Google Drive Provenance):** Raw source files (lecture recordings, PDF papers, slide decks, whiteboard photos) remain in Google Drive (`Chrysalis-Media-Locker/`). `/ingest` first translates the source into `Sources/{source_id}.md` (`01-capture.md`).

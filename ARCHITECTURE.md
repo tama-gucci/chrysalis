@@ -67,7 +67,7 @@ Chrysalis is an open, provider-independent AI agent framework operating on an **
                                  ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                    PLUGGABLE RUNTIME AGENTS                      │
-│  [Google Antigravity]  [Claude]  [OpenAI Codex]  [Gemini Spark]  │
+│   [Google Antigravity]   [Claude]   [OpenAI Codex]   [Local LLM] │
 │  - Governed by contracts/agent-runtime.contract.md               │
 │  - 8-Stage Lifecycle & Mandatory Human Approval Gate             │
 │  - Persistent Memory in System/Memory.md                         │
@@ -83,9 +83,9 @@ Chrysalis operates across three strictly segregated spheres:
 1. **Framework Boundary (Source Repository)**:
    - Owns collection manifests (`mdbase.yaml`), JSON Schema Draft 2020-12 type definitions (`_types/*.md`), runtime contracts (`contracts/`), templates (`_templates/`, `System/_templates/`), operational workflows (`System/Workflows/`), and deterministic Python helpers (`helpers/mdbase_helper.py`).
 2. **Runtime Agent Boundary (AI Reasoning Engine)**:
-   - An executing AI model (Google Antigravity, Claude, OpenAI Codex, Gemini Spark, local LLMs) supplying cognitive reasoning. The agent ingests context, formulates structured action proposals, waits for human approval, and invokes database operations strictly conforming to framework contracts.
+   - An executing AI model (Google Antigravity, Claude, OpenAI Codex, local LLMs) supplying cognitive reasoning. The agent ingests context, formulates structured action proposals, waits for human approval, and invokes database operations strictly conforming to framework contracts.
 3. **External Applications Boundary (UI & Transports)**:
-   - Optional interfaces (Obsidian desktop/mobile, TaskNotes community plugin, Google Calendar, cloud MCP gateways) providing visualization and calendar syncing. They are strictly decoupled from framework execution and do not govern data contracts.
+   - Optional interfaces (Obsidian desktop/mobile, TaskNotes community plugin, Google Calendar) providing visualization and calendar syncing. They are strictly decoupled from framework execution and do not govern data contracts.
 
 ### Strict Personal Domain Boundary
 Chrysalis is strictly scoped to personal knowledge, deliverable roadmaps, and cognitive execution. It prohibits:
@@ -144,13 +144,28 @@ Chrysalis separates validation concerns into three distinct layers:
 
 ## 5. Concurrency, Storage & CAS Architecture (ADR 0006)
 
-Chrysalis implements the exact-document storage authority established in ADR 0006 (`mdbase-connect` v0.1.0-beta.104):
+Chrysalis implements the exact-document storage authority established in ADR 0006 (`mdbase` v0.1.0-beta.108, engine `0.4.0-rc.4`):
 
 1. **Exact-Document Authority**: The UTF-8 document bytes on disk are the absolute source of truth. Document revision is strictly:
    $$\text{revision} = \text{sha256}(\text{document bytes}) \quad \text{(64 lowercase hex characters)}$$
 2. **Compare-And-Swap (CAS)**: All update and delete operations must provide `if_revision`. If `if_revision` does not match the current disk revision, the mutation fails closed with `concurrent_modification` and modifies zero bytes on disk.
-3. **Cross-Process Mutual Exclusion**: To eliminate Time-Of-Check to Time-Of-Use (TOCTOU) race conditions, `helpers/mdbase_helper.py` acquires an exclusive POSIX advisory lock (`fcntl.flock`) on a dedicated sibling lockfile (`<path>.lock`) before reading or writing. Lockfiles are never unlinked, preventing inode-reallocation races.
+3. **Cross-Process Mutual Exclusion**: To eliminate Time-Of-Check to Time-Of-Use (TOCTOU) race conditions, `helpers/mdbase_helper.py` acquires an exclusive advisory lock (`fcntl.flock` on POSIX; `msvcrt.locking` + per-path `threading.Lock` on Windows) on a dedicated sibling lockfile (`<path>.lock`) before reading or writing. Lockfiles are never unlinked, preventing inode-reallocation races.
 4. **Atomic Disk Replacement**: Files are written to temporary sibling files (`<path>.tmp.<uuid>`) and atomically replaced via `os.replace`, ensuring that crashes or power interruptions never corrupt existing files.
+
+### 5.1 Agent Access Layer Decision: Direct Local Access vs. `mdbase` MCP
+
+Evaluated against installed `mdbase` CLI (`0.1.0-beta.108`, engine `0.4.0-rc.4`, protocol `5`), `helpers/mdbase_helper.py`, and `tests/harness/validation_harness.py` (2026-09-27):
+
+| Dimension | A1. Raw File Editing (`view_file`, `replace_file_content`, `write_to_file`) | A2. Direct Local Access + Validation Tools (`helpers/mdbase_helper.py` + `mdbase -C <root>` CLI) | B. `mdbase` MCP (`mcp.mdbase.dev` Hosted Relay + `mdbase connect` Daemon) |
+| :--- | :--- | :--- | :--- |
+| **Read / Search / Query & Schema Enforcement** | Fast ripgrep/file reads (`<10ms`), but **zero automatic schema or non-`Z` offset enforcement** unless paired with a validator. | Full structured queries (`mdbase -C <root> query`) + strict Layer 1 (`Draft202012Validator` + explicit local offset), Layer 2 (`collection.links`), and Layer 3 (`validation_harness.py`, `doctor.py`). | Structured MCP queries and Layer 1/2 `_contracts/*.contract.md` checks, but **lacks Layer 3 rules** (`<untrusted_document_payload>`, syllabus diffing, `[0.20, 2.00]` multiplier bounds). |
+| **Preservation of Markdown, Frontmatter & Links** | Exact byte preservation of Markdown body, comments, and Obsidian/TaskNotes fields during surgical edits. | `apply_cas_mutation` and surgical edits preserve full Markdown bodies, `[[WikiLinks]]`, and TaskNotes fields (`googleCalendarEventId`, `tn_role`). | Field-level MCP updates (`mdbase update --fields`) re-serialize YAML frontmatter without preserving comments. |
+| **Atomic Writes, CAS & Concurrent Editors** | No built-in `if_revision` check against concurrent Obsidian edits unless `compute_revision` is checked first. | `apply_cas_mutation` and `mdbase -C <root> update --if-revision` enforce exact SHA-256 CAS, sibling lockfiles, and `os.replace`. | Enforces single-file `if_revision` CAS on the local connector, mediated over WebSocket relay. |
+| **Single-File vs. Multi-File Consistency** | Single-file atomic replacement only. | Single-file atomic replacement; multi-file workflows pre-validate all records before writing in referential order (`Sources` $\to$ `Slipbox` $\to$ `Projects` $\to$ `Tasks`). | Single-file atomic replacement (`mdbase batch` executes sequentially without cross-file ACID rollback on partial failure). |
+| **Offline Operation, Latency & Context Usage** | 100% offline; `<10ms` latency; minimal context overhead via targeted line/grep reads. | 100% offline; `15–45ms` local CLI/helper execution; zero MCP schema/envelope bloat. | **Requires internet + live relay + running local daemon** (`mdbase connect`); high tool-call round-trip latency (`300–1200ms+`). |
+| **Setup, Auth, Privacy & Background Daemons** | Zero daemon, zero auth, zero network exposure. | Zero daemon, zero auth, zero network exposure; vault bytes never leave local disk. | Requires persistent background daemon (`mdbase connect`), OAuth 2.1 grants, and plaintext termination in ephemeral RAM at `mcp.mdbase.dev`. |
+
+**Decision**: **Direct Local Vault Access paired with Local Validation & CAS Tooling (A2)** is the default architecture for capable local agents (Google Antigravity, OpenAI Codex, Claude Code). Agents read/edit the local vault directly, enforce CAS and Layer 1–3 contracts via `helpers/mdbase_helper.py`, `mdbase -C <vault> validate/query`, `tests/harness/validation_harness.py`, and `System/scripts/doctor.py`, and require zero background daemons or cloud relays. Headless `mdbase -C <vault>` CLI remains available as an optional zero-daemon local query/validation tool.
 
 ---
 
@@ -169,21 +184,22 @@ To protect autonomous AI agents from indirect prompt injection, ingested documen
 
 | Component | Status | Disposition Rationale |
 | :--- | :--- | :--- |
-| **Tripartite Hypergraph** (`Slipbox/`, `Projects/`, `TaskNotes/Tasks/`) | **Retained** | Core architectural foundation connecting knowledge to action. |
-| **Zero-Leak PII Law & Scanner** | **Retained** | Absolute privacy invariant protecting personal data from public Git tracking. |
+| **Tripartite Hypergraph** (`Sources/`, `Slipbox/`, `Projects/`, `TaskNotes/Tasks/`) | **Retained** | Core architectural foundation connecting provenance, knowledge, roadmaps, and tasks. |
+| **Zero-Leak PII Law & Scanner** (`candidate_audit.py`, `pii-scanner.sh`) | **Retained** | Absolute privacy invariant protecting personal data from public Git tracking. |
 | **Anti-Simulation Law** | **Retained** | Mandatory physical disk mutation; chat output alone never mutates state. |
-| **1:1 Public Template Matrix** | **Retained** | Sanitized public templates in `_templates/` and `System/_templates/`. |
-| **Collection Manifest** (`mdbase.yaml`) | **Redesigned** | Upgraded to mdbase v0.3 specification (`spec_version: "0.3.0"`). |
-| **Type Definitions** (`_types/*.md`) | **Redesigned** | Converted to JSON Schema Draft 2020-12 dialect with explicit offset validation. |
-| **Agent Runtime Contract** (`contracts/`) | **Redesigned** | Replaced bespoke daemon protocols with provider-independent 8-stage contract. |
-| **Persistent Agent Memory** (`System/Memory.md`) | **Redesigned** | Clean, deterministic session-grounded memory replacing continuous cron equations. |
-| **Validation Helpers** (`helpers/mdbase_helper.py`) | **Redesigned** | Python stdlib + PyYAML helper providing schema checks, CAS, and syllabus diffing. |
+| **1:1 Public Template Matrix** (`_templates/`, `System/_templates/`) | **Retained** | Sanitized public templates for all runtime records and state files. |
+| **Collection Manifest & Schemas** (`mdbase.yaml`, `_types/*.md`, `_contracts/*.contract.md`) | **Retained** | mdbase v0.3 specification (`spec_version: "0.3.0"`) and JSON Schema Draft 2020-12 types. |
+| **Agent Runtime & Collection Contracts** (`contracts/*.contract.md`) | **Retained** | Provider-independent 8-stage lifecycle and collection path invariants. |
+| **Runtime Skills & Portable Workflows** (`.agent/skills/`, `System/Workflows/01..08`) | **Simplified** | Removed Spark assumptions and `.agent/skills/chrysalis-router/`; retained 11 core runtime skills (`/audit`, `/calibrate`, `/doctor`, `/evening`, `/ingest`, `/morning`, `/onboard`, `/pause`, `/plan`, `/project`, `/task`, `/update`, `/zettel`). |
+| **Validation & CAS Helpers** (`helpers/mdbase_helper.py`, `tests/harness/`) | **Retained** | Deterministic schema checks, SHA-256 CAS locking, untrusted payload quarantine, and 3-layer validation harness. |
+| **Protected Updater & Bootstrap** (`update.py`, `bootstrap.py`, `export_starter.py`) | **Simplified** | Removed `Skills/` hardlink/bundle generation; added safe pruning of retired framework artifacts with backup/rollback support and non-destructive `.agent/skills.json` merging. |
+| **Bespoke Gemini Spark Integration** (`chrysalis-router`, `spark-agent-system-prompt.md`, `golem-deployment-and-spark-test-guide.md`, `SPARK-INTEGRATION-ASSESSMENT.md`, `Skills/bundle/`) | **Retired** | Removed bespoke Spark routing, prompts, hardlink bundles, and `mcp.mdbase.dev` cloud relay grants; replaced by direct local agent execution. |
+| **Golem Packaging Wrappers** (`package_golem_bundle.py`, `setup_golem.ps1`) | **Retired** | Redundant with cross-platform `update.py`, `bootstrap.py`, and `export_starter.py`. |
+| **`mdbase connect` Background Daemon & Cloud Relay** | **Retired** | Uninstalled background scheduled task and revoked `dev.mdbase.mcp` grants; headless `mdbase -C <vault>` CLI operates directly on local disk without a daemon. |
 | **FastAPI Server Daemon** (`apps/gateway/`) | **Retired** | Port 8765 daemon retired; core framework operates directly on local Markdown files. |
 | **Custom Mobile Client** (`apps/mobile/`) | **Retired** | Flutter app retired; mobile access provided by Obsidian Mobile / native recorders. |
 | **Vendored Obsidian Binary Bundle** | **Retired** | 5.8 MB bundle in `.obsidian/plugins/chrysalis-obsidian/` removed; users install community TaskNotes directly. |
 | **Autonomous 3 AM Background Cron** | **Retired** | Background night-time mutations retired; execution is interactive and human-gated. |
 | **Static Candidate Task Pools** | **Retired** | Static YAML lists retired in favor of dynamic mdbase queries. |
-| **Gemini Spark Cloud MCP Relay** | **Deferred** | Hosted MCP gateway (`mcp.mdbase.dev`) deferred to candidate integration phase. |
-| **TaskNotes Google Calendar Sync** | **Deferred** | Two-way OAuth 2.0 calendar sync deferred to community plugin runtime. |
-| **`mdbase connect` Daemon & Relay** | **Deferred** | Inbound relay listener (`crates/connect-cli`) deferred; local disk is authoritative. |
-| **Wear OS Smartwatch Client** | **Deferred** | Standalone wearable client deferred / parked in backlog. |
+| **TaskNotes Google Calendar Sync** | **Deferred** | Two-way OAuth 2.0 calendar sync handled by community TaskNotes plugin runtime. |
+| **Wear OS Smartwatch Client** | **Deferred** | Standalone wearable client parked in backlog. |

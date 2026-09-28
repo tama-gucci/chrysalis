@@ -93,7 +93,6 @@ helpers/**/*.pyc
 !/Development/BACKGROUND-DEVELOPMENT-REFERENCE.md
 !/Development/BACKLOG.md
 !/Development/FEEDBACK.md
-!/Development/SPARK-INTEGRATION-ASSESSMENT.md
 !/Development/_templates/
 !/Development/_templates/**
 !/Development/scripts/

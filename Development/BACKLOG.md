@@ -17,8 +17,8 @@ Objective: Maintain an authoritative engineering roadmap for the Chrysalis mdbas
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │ PHASE 2: CANDIDATE RUNTIME AGENT INTEGRATIONS                          │
-│  [R01] Gemini Spark Cloud MCP Adapter (mcp.mdbase.dev)   ──► [DEFERRED] │
-│  [R02] Claude / OpenAI Codex Desktop MCP Client Bridge   ──► [PROPOSED] │
+│  [R01] Gemini Spark Cloud MCP Adapter (mcp.mdbase.dev)   ──► [RETIRED]  │
+│  [R02] Claude / OpenAI Codex Local Direct Execution      ──► [ACTIVE]   │
 │  [R03] Local LLM / Ollama Local Agent Runner             ──► [PROPOSED] │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
@@ -26,7 +26,7 @@ Objective: Maintain an authoritative engineering roadmap for the Chrysalis mdbas
 ┌────────────────────────────────────────────────────────────────────────┐
 │ PHASE 3: APPLICATION & SYNCHRONIZATION BRIDGES                         │
 │  [A01] TaskNotes Google Calendar OAuth Sync Harmonization ─► [DEFERRED] │
-│  [A02] mdbase connect Daemon & Local Inbound Listener    ──► [DEFERRED] │
+│  [A02] mdbase connect Daemon & Local Inbound Listener    ──► [RETIRED]  │
 │  [A03] Obsidian Dataview & Kanban View Template Suite    ──► [PROPOSED] │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
@@ -52,22 +52,16 @@ Objective: Maintain an authoritative engineering roadmap for the Chrysalis mdbas
 
 ---
 
-## Phase 2: Candidate Runtime Agent Integrations (Deferred / Proposed)
+## Phase 2: Runtime Agent Integrations
 
 *Prerequisite: Milestone 3 complete and Gate 3 verified.*
 
 ### R01: Gemini Spark Cloud MCP Adapter (`mcp.mdbase.dev`)
-- **Status**: **DEFERRED** to candidate runtime integration phase.
-- **Scope**: Deploy a lightweight, secure streamable HTTP MCP server adapter interfacing Gemini Spark with local mdbase collections via `mcp.mdbase.dev`.
-- **Security & Privacy**: Enforce Grant Encryption Profile v1 (P-256 ECDH + AES-256-GCM); verify memory-only processing boundaries on the hosted gateway; guarantee zero server-side persistence of vault note bodies.
-- **Acceptance Criteria**:
-  - Spark can execute `create_record`, `query_records`, and `update_record` through MCP envelopes.
-  - CAS `if_revision` validation prevents concurrent overwrite conflicts.
-  - Human write confirmation is required for all state-mutating actions.
+- **Status**: **RETIRED** (2026-09-27). Bespoke Gemini Spark routing (`chrysalis-router`), `Skills/` hardlink bundles, Golem setup wrappers, and `mcp.mdbase.dev` cloud relay grants were retired in favor of direct local vault execution by capable agents (Antigravity, Codex).
 
-### R02: Claude / OpenAI Codex Desktop MCP Bridge
-- **Status**: **PROPOSED**
-- **Scope**: Standard stdio-based local MCP server configuration enabling Claude Desktop or OpenAI Codex to operate directly on the local mdbase collection without cloud relays.
+### R02: Direct Local Vault Execution (`helpers/mdbase_helper.py` + `mdbase -C <vault>`)
+- **Status**: **ACTIVE**
+- **Scope**: Capable local agents (Google Antigravity, OpenAI Codex, Claude Code) operate directly on the local Markdown collection paired with `helpers/mdbase_helper.py` (`validate_record`, `apply_cas_mutation`) and headless `mdbase -C <vault>` CLI without cloud relays or background daemons.
 - **Acceptance Criteria**:
   - Zero network transport; purely local stdio JSON-RPC.
   - Native invocation of `helpers/mdbase_helper.py` for schema and CAS verification.

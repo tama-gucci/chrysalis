@@ -1,15 +1,14 @@
 """Synthetic regressions for cleanup compatibility and data preservation."""
 import tempfile
 import unittest
-import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
 import update
+from Development.scripts.export_starter import export_starter
 from System.scripts.bootstrap import ensure_directories, seed_system_memory
 from System.scripts.doctor import ChrysalisDoctor
 from System.scripts.migrate_to_subfolder import create_directory_structure, migrate_substrates
-from System.scripts.package_golem_bundle import create_golem_bundle
 from System.scripts.vault_paths import memory_path, vault_path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -125,11 +124,27 @@ class CleanupRegressions(unittest.TestCase):
         self.assertFalse((self.root / 'Development/archive').exists())
 
     def test_bundle_uses_public_distribution_inventory(self):
-        archive = self.root / 'seed.zip'
-        create_golem_bundle(archive)
-        with zipfile.ZipFile(archive) as bundle:
-            names = set(bundle.namelist())
-        self.assertTrue(set(update.distribution_files(ROOT)).issubset(names))
-        self.assertNotIn('System/Life-Roadmap.md', names)
-        self.assertNotIn('System/Memory.md', names)
-        self.assertFalse(any(name.startswith('Development/archive/') for name in names))
+        starter = self.root / 'starter'
+        export_starter(str(starter))
+        exported = {p.relative_to(starter).as_posix() for p in starter.rglob('*') if p.is_file()}
+        dist = set(update.distribution_files(ROOT))
+        self.assertTrue(dist.issubset(exported))
+        self.assertNotIn('System/Life-Roadmap.md', dist)
+        self.assertNotIn('System/Memory.md', dist)
+        self.assertIn(
+            'active_pillar: "Pillar 1:',
+            (starter / 'System/Life-Roadmap.md').read_text(encoding='utf-8'),
+        )
+        for forbidden in (
+            '.agent/skills/chrysalis-router/SKILL.md',
+            'docs/spark-agent-system-prompt.md',
+            'docs/golem-deployment-and-spark-test-guide.md',
+            'Development/SPARK-INTEGRATION-ASSESSMENT.md',
+            'System/scripts/package_golem_bundle.py',
+            'System/scripts/setup_golem.ps1',
+            'Skills/bundle/SKILL.md',
+        ):
+            self.assertNotIn(forbidden, dist)
+            self.assertNotIn(forbidden, exported)
+        self.assertFalse(any(name.startswith('Development/archive/') for name in dist))
+        self.assertFalse(any(name.startswith('Skills/') for name in dist))

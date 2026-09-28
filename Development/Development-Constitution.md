@@ -75,7 +75,7 @@ All development-specific assets reside exclusively within `Development/` in the 
 
 ### Architectural Invariants in Development
 1. **Pure AI Agent Framework:** Chrysalis operates directly on an mdbase v0.3 Markdown database collection. All operations are mediated by formal runtime contracts.
-2. **Decoupled User Interfaces:** User interfaces (Obsidian with TaskNotes plugin, Google Calendar) and candidate AI integrations (Gemini Spark, Claude Desktop) are decoupled client applications, not internal framework daemons.
+2. **Decoupled User Interfaces:** User interfaces (Obsidian with TaskNotes plugin, Google Calendar) and AI coding/desktop clients (Google Antigravity, OpenAI Codex, Claude Desktop) are decoupled client applications, not internal framework daemons.
 3. **Hardware Portability & Local Authority:** The local Markdown files are the authoritative truth. Operations do not depend on cloud daemons or persistent background services.
 
 ---

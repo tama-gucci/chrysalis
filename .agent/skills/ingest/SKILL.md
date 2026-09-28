@@ -1,6 +1,6 @@
 ---
 name: ingest
-description: "Dedicated source translation and ingestion engine: translates external binary/source files from the dedicated Google Drive folder (automatically during nightly /audit) or direct share in the Spark UI into formatted Markdown records (Sources/, Projects/, Slipbox/, TaskNotes/Tasks/), executing Workflows 01–04 and aligning /project and /zettel before /plan."
+description: "Dedicated source translation and ingestion engine: translates external binary/source files from the dedicated Google Drive folder (automatically during nightly /audit) or direct share/attachment in the active agent session into formatted Markdown records (Sources/, Projects/, Slipbox/, TaskNotes/Tasks/), executing Workflows 01–04 and aligning /project and /zettel before /plan."
 trigger: "/ingest"
 domain: runtime
 reads:
@@ -33,15 +33,15 @@ writes:
 # /ingest (Chrysalis Source Translation & Hypergraph Ingestion Engine)
 
 ## Core Storage & Translation Invariant (Google Drive Media Locker)
-* **Zero Local Binary Storage on Golem:** All original binary and raw source files (PDF syllabi, textbooks, slide decks, audio recordings, lecture videos, images/whiteboard scans, datasets) live exclusively in **Google Drive** (default folder: `Chrysalis-Media-Locker/01-Inbox`) to minimize physical disk consumption on the Golem host.
+* **Zero Local Binary Storage in the Vault:** All original binary and raw source files (PDF syllabi, textbooks, slide decks, audio recordings, lecture videos, images/whiteboard scans, datasets) live exclusively in **Google Drive** (default folder: `Chrysalis-Media-Locker/01-Inbox`) to keep the Markdown vault lightweight and pure UTF-8 text.
 * **No Local `Resources/` Directory:** A local `Resources/` directory inside `Projects/<project_id>/` or the Chrysalis vault is unnecessary and prohibited. Never create or store raw binary files inside the vault.
-* **Mandatory Markdown Translation:** Whether reading from the dedicated Google Drive folder or receiving a direct file/content share in the Gemini Spark UI, the agent **always translates external sources into formatted, schema-validated UTF-8 Markdown records** across the four mdbase v0.3 collections (`Sources/`, `Projects/`, `Slipbox/`, `TaskNotes/Tasks/`), embedding the permanent Google Drive link in `source_url`.
+* **Mandatory Markdown Translation:** Whether reading from the dedicated Google Drive folder or receiving a direct file/content share in the active agent session, the agent **always translates external sources into formatted, schema-validated UTF-8 Markdown records** across the four mdbase v0.3 collections (`Sources/`, `Projects/`, `Slipbox/`, `TaskNotes/Tasks/`), embedding the permanent Google Drive link in `source_url`.
 
 ```mermaid
 flowchart TD
     subgraph Entry["1. Ingestion Entry Modes"]
         D["Protocol 1: Nightly Google Drive Batch\n(/audit -> /ingest --drive)\nScans Chrysalis-Media-Locker/01-Inbox"]
-        S["Protocol 2: Direct Share in Spark UI\n(/ingest or /ingest --share)\nUser attaches/pastes source in chat"]
+        S["Protocol 2: Interactive Direct Share\n(/ingest or /ingest --share)\nUser attaches/pastes source in agent session"]
     end
 
     subgraph Pipeline["2. Workflows 01–04 & Skill Alignment"]
@@ -63,8 +63,8 @@ flowchart TD
 ---
 
 ## Supported Commands & Triggers
-* `/ingest` (or `/ingest --share`) — **Protocol 2: Interactive Direct-Share UI Ingestion.** Triggered when the user uploads, attaches, or pastes a document, syllabus, image/whiteboard scan, voice memo, or URL directly in the Gemini Spark UI (or local agent session).
-* `/ingest --drive` (or `/ingest --batch`) — **Protocol 1: Automated Google Drive Folder Ingestion.** Automatically invoked during the scheduled nightly `/audit` (and `/evening` workflow) or on demand to direct Gemini Spark (`@Google Drive` + `@Mdbase`) to translate every unindexed file in `Chrysalis-Media-Locker/01-Inbox` (`ingestion_config.drive_inbox_folder` in `System/Memory.md`).
+* `/ingest` (or `/ingest --share`) — **Protocol 2: Interactive Direct-Share Ingestion.** Triggered when the user uploads, attaches, or pastes a document, syllabus, image/whiteboard scan, voice memo, or URL directly in the active agent session.
+* `/ingest --drive` (or `/ingest --batch`) — **Protocol 1: Automated Google Drive Folder Ingestion.** Automatically invoked during the nightly `/audit` (and `/evening` workflow) or on demand to translate every unindexed file in `Chrysalis-Media-Locker/01-Inbox` (`ingestion_config.drive_inbox_folder` in `System/Memory.md`).
 * `/ingest --reconcile [project-id]` — Reconciles a revised syllabus or specification against an existing `Projects/<project-id>/Roadmap.md` via `reconcile_syllabus()`.
 
 ---
@@ -75,9 +75,9 @@ Called automatically by `/audit` during the nightly operational workflow (`/even
 
 1. **Resolve Dedicated Google Drive Folder:**
    * Read `ingestion_config.drive_inbox_folder` from `System/Memory.md` (defaults to `"Chrysalis-Media-Locker/01-Inbox"`).
-   * In Gemini Spark, invoke `@Google Drive` to list all files currently in `Chrysalis-Media-Locker/01-Inbox`.
+   * Inspect all files currently in `Chrysalis-Media-Locker/01-Inbox` (via the configured local Google Drive mount or Drive connector).
 2. **Deduplication & Lineage Check (`01-capture.md`):**
-   * Query existing provenance records in `Sources/*.md` via `mdbase_query_records` (`collection: "sources"`) or `helpers.mdbase_helper.check_semantic_duplicate()`.
+   * Query existing provenance records in `Sources/*.md` via `helpers.mdbase_helper.check_semantic_duplicate()` or `mdbase -C <vault> query --types source`.
    * For each file in the Google Drive inbox:
      * Compute the 64-character lowercase hexadecimal `sha256` digest of its extracted UTF-8 content payload.
      * If a record in `Sources/*.md` already matches `sha256` (or `source_url` with unchanged content): emit `duplicate_source_detected` and skip redundant extraction (`is_duplicate: true`).
@@ -91,13 +91,13 @@ Called automatically by `/audit` during the nightly operational workflow (`/even
 
 ---
 
-## Protocol 2: User-Directed Direct Share in Spark UI (`/ingest` or `/ingest --share`)
+## Protocol 2: User-Directed Direct Share in Agent Session (`/ingest` or `/ingest --share`)
 
-Triggered whenever the user attaches a file (PDF syllabus, research paper, whiteboard photo, audio recording) or pastes raw unstructured content directly into the Gemini Spark UI:
+Triggered whenever the user attaches a file (PDF syllabus, research paper, whiteboard photo, audio recording) or pastes raw unstructured content directly into the active agent session:
 
 1. **Multimodal Translation & Google Drive Archival Link:**
-   * Perform native OCR, audio transcription, or table/text extraction on the shared attachment in-context without saving any raw binary file to the Golem vault filesystem.
-   * If the user shared a Google Drive link or saved the attachment to Google Drive (`Chrysalis-Media-Locker/02-Archived-Binaries/`), record that URL in `source_url`; otherwise set `source_url: null`.
+   * Perform native OCR, audio transcription, or table/text extraction on the shared attachment in-context without saving any raw binary file into the vault filesystem.
+   * If the user shared a Google Drive link or archived the attachment to Google Drive (`Chrysalis-Media-Locker/02-Archived-Binaries/`), record that URL in `source_url`; otherwise set `source_url: null`.
 2. **Execute the Unified 4-Stage Translation & Hypergraph Pipeline (`01-capture` $\to$ `04-organize`):**
    * Translate the shared source into `Sources/{source_id}.md`, align with `/project` (`Projects/{project_id}/Roadmap.md`) and `/zettel` (`Slipbox/{YYYYMMDDHHmmss}-{slug}.md`), and materialize 14-day/uncertain tasks in `TaskNotes/Tasks/YYYYMMDD-<slug>.md` after human approval.
 3. **Handoff to `/plan` (`05-plan.md`):**

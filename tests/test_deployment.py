@@ -175,21 +175,70 @@ class DeploymentTests(unittest.TestCase):
         self.assertTrue(mem_tmpl_fm.get('ingestion_config', {}).get('auto_ingest_on_nightly_audit'))
         self.assertFalse(mem_tmpl_fm.get('ingestion_config', {}).get('local_resources_folder_enabled'))
 
-    def test_sync_skill_hardlinks_bundles_ingest_and_protects_sources(self):
+    def test_sync_deploys_native_skills_protects_sources_and_prunes_spark_artifacts(self):
+        import json
+        import os
+
         self.assertTrue(update.is_protected_target('Sources/cs341-syllabus.md'))
         for name in ('ingest', 'zettel', 'audit', 'plan'):
             sdir = self.source / f'.agent/skills/{name}'
             sdir.mkdir(parents=True, exist_ok=True)
             (sdir / 'SKILL.md').write_text(f'---\nname: {name}\ndescription: {name} skill\n---\n# /{name}\nBody for {name}')
+        (self.source / '.agent/skills.json').write_text(
+            json.dumps({'version': 1, 'entries': [{'path': '.agent/skills'}, {'path': 'Development/skills'}]}) + '\n'
+        )
         (self.source / 'TaskNotes/Tasks').mkdir(parents=True, exist_ok=True)
         (self.source / 'TaskNotes/Tasks/example-task.md').write_text('example')
         (self.source / '_types').mkdir(parents=True, exist_ok=True)
         (self.source / '_types/task.md').write_text('---\nkind: mdbase.type\n---')
+
+        # Seed legacy Spark/Golem artifacts and hardlinked Skills/ mirror in target runtime
+        legacy_ingest = self.target / '.agent/skills/ingest/SKILL.md'
+        legacy_ingest.parent.mkdir(parents=True, exist_ok=True)
+        legacy_ingest.write_text('---\nname: ingest\n---\nold ingest body')
+        legacy_hardlink = self.target / 'Skills/ingest/SKILL.md'
+        legacy_hardlink.parent.mkdir(parents=True, exist_ok=True)
+        os.link(legacy_ingest, legacy_hardlink)
+
+        for rel in (
+            'Skills/bundle/SKILL.md',
+            '.agent/skills/chrysalis-router/SKILL.md',
+            'docs/spark-agent-system-prompt.md',
+            'docs/golem-deployment-and-spark-test-guide.md',
+            'Development/SPARK-INTEGRATION-ASSESSMENT.md',
+            'System/scripts/package_golem_bundle.py',
+            'System/scripts/setup_golem.ps1',
+        ):
+            p = self.target / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text('legacy spark artifact')
+
+        (self.target / '.agent/skills.json').write_text(
+            json.dumps({'version': 1, 'entries': [{'path': 'Development/skills'}, {'path': 'Custom/skills'}]}) + '\n'
+        )
+
         update.sync_engine(self.source, self.target)
-        self.assertTrue((self.target / 'Skills/ingest/SKILL.md').exists())
-        bundle_text = (self.target / 'Skills/bundle/SKILL.md').read_text(encoding='utf-8')
-        self.assertIn('Skill: `ingest`', bundle_text)
-        self.assertIn('Skill: `zettel`', bundle_text)
+
+        # Verify retired artifacts and Skills/ mirror are pruned without breaking .agent/skills/ingest/SKILL.md
+        self.assertFalse((self.target / 'Skills').exists())
+        self.assertFalse((self.target / '.agent/skills/chrysalis-router').exists())
+        self.assertFalse((self.target / 'docs/spark-agent-system-prompt.md').exists())
+        self.assertFalse((self.target / 'docs/golem-deployment-and-spark-test-guide.md').exists())
+        self.assertFalse((self.target / 'Development/SPARK-INTEGRATION-ASSESSMENT.md').exists())
+        self.assertFalse((self.target / 'System/scripts/package_golem_bundle.py').exists())
+        self.assertFalse((self.target / 'System/scripts/setup_golem.ps1').exists())
+        self.assertIn('Body for ingest', (self.target / '.agent/skills/ingest/SKILL.md').read_text(encoding='utf-8'))
+
+        # Verify .agent/skills.json merged non-destructively
+        merged_cfg = json.loads((self.target / '.agent/skills.json').read_text(encoding='utf-8'))
+        entry_paths = [e['path'] for e in merged_cfg['entries']]
+        self.assertIn('.agent/skills', entry_paths)
+        self.assertIn('Development/skills', entry_paths)
+        self.assertIn('Custom/skills', entry_paths)
+
+        # Repeated update is a clean no-op
+        self.assertEqual(update.sync_engine(self.source, self.target), (0, []))
+
         # Deleting example-task.md in runtime must not fail subsequent updates
         (self.target / 'TaskNotes/Tasks/example-task.md').unlink()
         (self.source / 'README.md').write_text('v2')

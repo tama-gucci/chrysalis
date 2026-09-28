@@ -1,6 +1,9 @@
 {
   "entries": [
     {
+      "path": ".agent/skills"
+    },
+    {
       "path": "Development/skills"
     }
   ]

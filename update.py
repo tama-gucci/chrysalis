@@ -176,6 +176,17 @@ def safe_path(root: Path, relative: str) -> Path:
     return path
 
 
+RETIRED_FRAMEWORK_ARTIFACTS = (
+    ".agent/skills/chrysalis-router/SKILL.md",
+    "docs/spark-agent-system-prompt.md",
+    "docs/golem-deployment-and-spark-test-guide.md",
+    "Development/SPARK-INTEGRATION-ASSESSMENT.md",
+    "System/scripts/package_golem_bundle.py",
+    "System/scripts/setup_golem.ps1",
+    "Skills/bundle/SKILL.md",
+)
+
+
 def fingerprint(path: Path):
     if not path.is_file():
         return None
@@ -192,10 +203,43 @@ def fingerprint(path: Path):
                 return hashlib.sha256(json.dumps(normalized, sort_keys=True).encode("utf-8")).hexdigest()
         except Exception:
             pass
+    if path.name == "skills.json":
+        try:
+            loaded = json.loads(raw.decode("utf-8"))
+            if isinstance(loaded, dict) and isinstance(loaded.get("entries"), list):
+                paths = [
+                    e.get("path") for e in loaded["entries"]
+                    if isinstance(e, dict) and e.get("path") in {".agent/skills", "Development/skills"}
+                ]
+                return hashlib.sha256(json.dumps(sorted(set(paths))).encode("utf-8")).hexdigest()
+        except Exception:
+            pass
     return hashlib.sha256(raw).hexdigest()
 
 
 def merge_mdbase_connect_metadata(src_bytes: bytes, dst_path: Path) -> bytes:
+    if dst_path.name == "skills.json":
+        try:
+            src_doc = json.loads(src_bytes.decode("utf-8"))
+            dst_doc = json.loads(dst_path.read_text(encoding="utf-8")) if dst_path.is_file() else {}
+            if isinstance(src_doc, dict) and isinstance(src_doc.get("entries"), list):
+                merged_entries = []
+                seen_paths = set()
+                for entry in src_doc["entries"] + (dst_doc.get("entries", []) if isinstance(dst_doc, dict) else []):
+                    if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
+                        continue
+                    p = entry["path"].strip()
+                    if p in {"Skills", "Skills/bundle", ".agent/skills/chrysalis-router"} or p in seen_paths:
+                        continue
+                    seen_paths.add(p)
+                    merged_entries.append(entry)
+                out_doc = dict(dst_doc) if isinstance(dst_doc, dict) else {}
+                out_doc.update(src_doc)
+                out_doc["entries"] = merged_entries
+                return (json.dumps(out_doc, indent=2) + "\n").encode("utf-8")
+        except Exception:
+            pass
+        return src_bytes
     if dst_path.name != "mdbase.yaml":
         return src_bytes
     try:
@@ -279,6 +323,53 @@ def destination_relative(target, relative):
     return relative
 
 
+def obsolete_framework_paths(target: Path, active_destinations: set[str], previous_files: dict) -> list[str]:
+    """Identify previously deployed or generated framework files that are now retired."""
+    candidates = set()
+    for dest in previous_files:
+        if dest not in active_destinations and dest != "TaskNotes/Tasks/example-task.md" and not is_protected_target(dest):
+            candidates.add(dest)
+    for rel in RETIRED_FRAMEWORK_ARTIFACTS:
+        try:
+            dest = destination_relative(target, rel)
+        except Exception:
+            dest = rel
+        if dest not in active_destinations and not is_protected_target(dest):
+            candidates.add(dest)
+        if rel not in active_destinations and not is_protected_target(rel):
+            candidates.add(rel)
+    skills_mirror = target / "Skills"
+    if skills_mirror.is_dir() and not skills_mirror.is_symlink():
+        for skill_md in skills_mirror.glob("*/SKILL.md"):
+            rel = skill_md.relative_to(target).as_posix()
+            if rel not in active_destinations and not is_protected_target(rel):
+                candidates.add(rel)
+    existing = []
+    for rel in sorted(candidates):
+        try:
+            dst = safe_path(target, rel)
+            if dst.is_file() and not dst.is_symlink():
+                existing.append(rel)
+        except Exception:
+            continue
+    return existing
+
+
+def prune_empty_framework_dirs(target: Path, removed_paths: list[str]) -> None:
+    """Remove empty directories left behind by pruned framework skills or mirrors."""
+    for rel in sorted(removed_paths, reverse=True):
+        try:
+            parent = safe_path(target, rel).parent
+            while parent != target.resolve() and parent.is_relative_to(target.resolve()):
+                if parent.exists() and parent.is_dir() and not any(parent.iterdir()):
+                    parent.rmdir()
+                    parent = parent.parent
+                else:
+                    break
+        except Exception:
+            pass
+
+
 def deployment_plan(source, target, *, plugins=False):
     if (source / "mdbase.yaml").is_file():
         if framework_root(target) != target.resolve() or vault_path(target, "Tasks") != target.resolve() / "TaskNotes/Tasks":
@@ -286,11 +377,13 @@ def deployment_plan(source, target, *, plugins=False):
     state_file = safe_path(target, STATE_DIRECTORY + "/deployment.json")
     previous = json.loads(state_file.read_text(encoding="utf-8")) if state_file.exists() else {"files": {}}
     changes = []
+    active_destinations = set()
     for relative in distribution_files(source, plugins=plugins):
         destination = destination_relative(target, relative)
+        active_destinations.add(destination)
         dst = safe_path(target, destination)
-        # Existing settings belong to this installation, even on first deploy.
-        if relative in {".gitignore", ".agent/skills.json"} and dst.exists():
+        # Existing .gitignore belongs to this installation, even on first deploy.
+        if relative == ".gitignore" and dst.exists():
             continue
         if relative == "TaskNotes/Tasks/example-task.md" and (dst.exists() or destination in previous.get("files", {})):
             continue
@@ -301,61 +394,21 @@ def deployment_plan(source, target, *, plugins=False):
         if destination in previous.get("files", {}) and before != previous["files"][destination]:
             raise ValueError(f"Runtime framework file changed locally: {destination}. Reconcile it in the source before deployment.")
         changes.append({"source": relative, "path": destination, "before": before, "after": after})
+
+    for obsolete in obsolete_framework_paths(target, active_destinations, previous.get("files", {})):
+        dst = safe_path(target, obsolete)
+        before = fingerprint(dst)
+        if obsolete in previous.get("files", {}) and not obsolete.startswith("Skills/") and before != previous["files"][obsolete]:
+            raise ValueError(f"Runtime framework file changed locally: {obsolete}. Reconcile it in the source before deployment.")
+        changes.append({"source": None, "path": obsolete, "before": before, "after": None})
     return changes, previous
 
 
-def sync_skill_hardlinks(target: Path) -> None:
-    """Expose .agent/skills/<name>/SKILL.md at Skills/<name>/SKILL.md via hardlink for mdbase MCP clients,
-    and generate a combined Skills/bundle/SKILL.md to minimize sequential MCP read tool calls."""
-    src_skills = target / ".agent" / "skills"
-    dst_skills = target / "Skills"
-    if not src_skills.is_dir():
-        return
-    dst_skills.mkdir(parents=True, exist_ok=True)
-    bundle_parts = [
-        "---",
-        "name: bundle",
-        'description: "Auto-generated unified Chrysalis runtime skill bundle (evening, morning, audit, calibrate, plan, task, project, pause, ingest, zettel) to minimize MCP read round-trips."',
-        'trigger: "/bundle"',
-        "domain: runtime",
-        "---",
-        "",
-        "# Chrysalis Unified Runtime Skill Bundle (Auto-Generated from .agent/skills/)",
-        "",
-        "## Universal Gemini Spark Execution Preamble (Authoritative Vault Rules)",
-        "1. **Single-Turn Parallel Read & Write Batching:** Do not fetch individual `Skills/<name>/SKILL.md` files after reading this bundle; all runtime skills (`audit`, `calibrate`, `evening`, `ingest`, `morning`, `pause`, `plan`, `project`, `task`, `zettel`) are included below. When persisting approved mutations, emit all `@Mdbase:create` and `@Mdbase:update` calls in one parallel tool turn.",
-        "2. **Explicit Local Timezone (`-05:00`):** Every ISO timestamp written to frontmatter MUST use the explicit local timezone offset from `System/Memory.md` (`-05:00`), never raw UTC `Z`.",
-        "3. **Google Drive Media Locker (`Chrysalis-Media-Locker/01-Inbox` -> `02-Archived-Binaries`) & Zero Local `Resources/`:** All raw/binary sources live in Google Drive (`ingestion_config.drive_inbox_folder` in `System/Memory.md`). Never create a local `Resources/` folder. During `/evening` or `/audit`, automatically execute `/ingest --drive` (Workflows 01–04 -> `/project` & `/zettel`) before `/plan`. When a user shares a file/snippet in the Spark UI, execute `/ingest` (`--share`) before `/plan`.",
-        "4. **Mandatory Human Approval Gate (`APPROVAL_GATE`):** Always present the proposed schedule or `PlanProposal` review table and wait for user confirmation before executing writes (do not assume a scheduled trigger waives confirmation).",
-    ]
-    for skill_dir in sorted(src_skills.iterdir(), key=lambda p: p.name):
-        if not skill_dir.is_dir() or skill_dir.name.startswith("."):
-            continue
-        src_md = skill_dir / "SKILL.md"
-        if not src_md.is_file():
-            continue
-        dst_dir = dst_skills / skill_dir.name
-        dst_dir.mkdir(parents=True, exist_ok=True)
-        dst_md = dst_dir / "SKILL.md"
-        dst_md.unlink(missing_ok=True)
-        try:
-            os.link(src_md, dst_md)
-        except OSError:
-            shutil.copy2(src_md, dst_md)
-        if skill_dir.name in {"evening", "morning", "audit", "calibrate", "plan", "task", "project", "pause", "ingest", "zettel"}:
-            raw = src_md.read_text(encoding="utf-8")
-            body = raw.split("---", 2)[2].strip() if raw.startswith("---") and raw.count("---") >= 2 else raw
-            bundle_parts.append(f"\n\n---\n## Skill: `{skill_dir.name}` (`.agent/skills/{skill_dir.name}/SKILL.md`)\n\n{body}")
-    bundle_dir = dst_skills / "bundle"
-    bundle_dir.mkdir(parents=True, exist_ok=True)
-    (bundle_dir / "SKILL.md").write_text("\n".join(bundle_parts) + "\n", encoding="utf-8")
-
-
 def sync_engine(src_dir: Path, target_dir: Path, dry_run: bool = False, *, plugins: bool = False) -> tuple[int, list[str]]:
-    """Deploy an allowlisted snapshot, backing up every replaced file first.
+    """Deploy an allowlisted snapshot and prune retired framework artifacts, backing up every replaced or removed file first.
 
     A failed copy is rolled back automatically. Subsequent deployments refuse
-    to overwrite local changes to managed files. Old files are never pruned.
+    to overwrite local changes to managed files.
     """
     source, target = Path(src_dir).resolve(), Path(target_dir).resolve()
     if source == target or source.is_relative_to(target) or target.is_relative_to(source):
@@ -375,31 +428,44 @@ def sync_engine(src_dir: Path, target_dir: Path, dry_run: bool = False, *, plugi
         # Stage source bytes and original files before touching the installation.
         for change in changes:
             rel = change["path"]
-            src = safe_path(source, change["source"])
             dst = safe_path(target, rel)
-            if fingerprint(src) != change["after"]:
-                raise ValueError(f"Source changed during deployment: {change['source']}")
-            data = merge_mdbase_connect_metadata(src.read_bytes(), dst)
-            atomic_write(safe_path(backup, "new/" + rel), data)
+            if change["after"] is not None:
+                src = safe_path(source, change["source"])
+                if fingerprint(src) != change["after"]:
+                    raise ValueError(f"Source changed during deployment: {change['source']}")
+                data = merge_mdbase_connect_metadata(src.read_bytes(), dst)
+                atomic_write(safe_path(backup, "new/" + rel), data)
             if change["before"] is not None:
                 if fingerprint(dst) != change["before"]:
                     raise ValueError(f"Target changed during deployment: {rel}")
                 atomic_write(safe_path(backup, "old/" + rel), dst.read_bytes())
         write_json(backup / "manifest.json", manifest)
         applied = []
+        removed_paths = []
         try:
-            for change in changes:
+            # Unlink pruned artifacts (such as hardlinked Skills/ mirrors) first so
+            # subsequent updates to .agent/skills/ never share an inode with a legacy link.
+            ordered_changes = [c for c in changes if c["after"] is None] + [c for c in changes if c["after"] is not None]
+            for change in ordered_changes:
                 dst = safe_path(target, change["path"])
                 if fingerprint(dst) != change["before"]:
                     raise ValueError(f"Target changed during deployment: {change['path']}")
-                atomic_write(dst, safe_path(backup, "new/" + change["path"]).read_bytes())
+                if change["after"] is None:
+                    dst.unlink(missing_ok=True)
+                    removed_paths.append(change["path"])
+                else:
+                    atomic_write(dst, safe_path(backup, "new/" + change["path"]).read_bytes())
                 applied.append(change)
+            prune_empty_framework_dirs(target, removed_paths)
             files = dict(previous.get("files", {}))
-            files.update({c["path"]: c["after"] for c in changes})
+            for c in changes:
+                if c["after"] is None:
+                    files.pop(c["path"], None)
+                else:
+                    files[c["path"]] = c["after"]
             manifest["status"] = "complete"
             write_json(backup / "manifest.json", manifest)
             write_json(safe_path(target, STATE_DIRECTORY + "/deployment.json"), {"id": release, "files": files})
-            sync_skill_hardlinks(target)
         except Exception:
             for change in reversed(applied):
                 dst = safe_path(target, change["path"])
@@ -431,18 +497,24 @@ def _rollback(target_dir: Path, *, dry_run=False):
             raise ValueError(f"Backup is missing or damaged: {change['path']}")
     if not dry_run:
         restored = []
+        removed_on_rollback = []
         try:
             for change in reversed(manifest["changes"]):
                 dst = safe_path(target, change["path"])
                 if change["before"] is None:
                     dst.unlink()
+                    removed_on_rollback.append(change["path"])
                 else:
                     atomic_write(dst, safe_path(backup, "old/" + change["path"]).read_bytes())
                 restored.append(change)
+            prune_empty_framework_dirs(target, removed_on_rollback)
             write_json(state_file, manifest["previous"])
         except Exception:
             for change in reversed(restored):
-                atomic_write(safe_path(target, change["path"]), safe_path(backup, "new/" + change["path"]).read_bytes())
+                if change["after"] is None:
+                    safe_path(target, change["path"]).unlink(missing_ok=True)
+                else:
+                    atomic_write(safe_path(target, change["path"]), safe_path(backup, "new/" + change["path"]).read_bytes())
             raise
         manifest["status"] = "rolled-back"
         write_json(backup / "manifest.json", manifest)

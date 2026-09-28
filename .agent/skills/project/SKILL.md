@@ -1,6 +1,6 @@
 ---
 name: project
-description: "Project staging and lifecycle integration engine: aligns with /ingest and Workflows 01–04 to synthesize or reconcile standardized project roadmaps in Projects/*/Roadmap.md from translated Google Drive/Spark sources or conversational intake, and orchestrates promotion into Life-Roadmap.md, System/Memory.md, and /plan."
+description: "Project staging and lifecycle integration engine: aligns with /ingest and Workflows 01–04 to synthesize or reconcile standardized project roadmaps in Projects/*/Roadmap.md from translated Google Drive/session sources or conversational intake, and orchestrates promotion into Life-Roadmap.md, System/Memory.md, and /plan."
 trigger: "/project"
 domain: runtime
 reads:
@@ -56,7 +56,7 @@ graph TD
 Execute project synthesis either when invoked directly by the user in chat or when called by [`/ingest`](../ingest/SKILL.md) during `System/Workflows/01-capture.md` through `04-organize.md`:
 
 ### Step 0: Alignment with `System/Workflows/01-capture.md` – `04-organize.md` & `/ingest`
-* **Zero Local Binary Storage (No `Resources/` Folder):** All original binary/source files live in Google Drive (`Chrysalis-Media-Locker/`) to conserve space on Golem. Never create a `Projects/<project_id>/Resources/` subfolder in the vault. External syllabi, specifications, and handouts are always translated into `Sources/{source_id}.md` via `/ingest` and linked into `Roadmap.md` via `source_ref` and `source_checksum`.
+* **Zero Local Binary Storage (No `Resources/` Folder):** All original binary/source files live in Google Drive (`Chrysalis-Media-Locker/`) to keep the vault pure Markdown. Never create a `Projects/<project_id>/Resources/` subfolder in the vault. External syllabi, specifications, and handouts are always translated into `Sources/{source_id}.md` via `/ingest` and linked into `Roadmap.md` via `source_ref` and `source_checksum`.
 * **Workflows `01`–`04` Execution:**
   1. **`01-capture`:** Source is quarantined in `Sources/{source_id}.md` with a 64-character hex `sha256`.
   2. **`02-extract`:** 100% of deliverables across the full timeline are extracted into the `deliverables` YAML array (with `due: null, date_uncertain: true` for any TBD or ambiguous dates).

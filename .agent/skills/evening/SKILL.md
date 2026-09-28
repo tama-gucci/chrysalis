@@ -29,7 +29,7 @@ writes:
 ### 1. Execute Unified Nightly Audit (Including Automated `/ingest --drive`)
 Read and execute `.agent/skills/audit/SKILL.md` under **Protocol 1: Unified Nightly Audit**:
 * Reconcile completed tasks & update bounded telemetry multipliers ($[0.20, 2.00]$).
-* **Automated Google Drive Batch Ingestion (`/ingest --drive`):** Direct Gemini Spark (`@Google Drive` + `@Mdbase`) to scan the dedicated Google Drive inbox (`Chrysalis-Media-Locker/01-Inbox`), translate all new or revised source files into formatted Markdown (`Sources/*.md`), and execute Workflows `01-capture` through `04-organize` (aligning `/project` and `/zettel`).
+* **Automated Google Drive Batch Ingestion (`/ingest --drive`):** Scan the dedicated Google Drive inbox (`Chrysalis-Media-Locker/01-Inbox`), translate all new or revised source files into formatted Markdown (`Sources/*.md`), and execute Workflows `01-capture` through `04-organize` (aligning `/project` and `/zettel`).
 * Ingest 14-day upcoming project & roadmap milestones (plus `date_uncertain: true` items).
 * Inject Starter Wedges into stalled tasks.
 * Maintain candidate task pools and execute auto-pause evaluation.

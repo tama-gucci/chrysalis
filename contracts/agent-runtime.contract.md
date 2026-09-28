@@ -12,7 +12,7 @@ description: "Authoritative contract governing agent lifecycle states, input/out
 
 ## 1. System Boundaries and Invariants
 
-This contract defines the provider-independent interface between any executing runtime agent (Google Antigravity, Claude, OpenAI Codex, Gemini Spark, or local LLMs) and the Chrysalis mdbase v0.3 Markdown database collection.
+This contract defines the provider-independent interface between any executing runtime agent (Google Antigravity, Claude, OpenAI Codex, or local LLMs) and the Chrysalis mdbase v0.3 Markdown database collection.
 
 ### 1.1 Separation of Spheres and System Boundaries
 - **Framework Boundary**: Owns collection manifests (`mdbase.yaml`), type definitions (`_types/*.md`), lifecycle rules, runtime contracts (`contracts/*.contract.md`), operational workflow runbooks (`System/Workflows/*.md`), public templates (`System/_templates/`), and deterministic validation helpers.
@@ -243,7 +243,7 @@ All runtime requests adhere strictly to the **JSON Schema Draft 2020-12** specif
         },
         "agent_id": {
           "type": "string",
-          "description": "Executing agent identity (e.g. antigravity, codex, spark)"
+          "description": "Executing agent identity (e.g. antigravity, codex, claude)"
         },
         "approval_token": {
           "type": "string",

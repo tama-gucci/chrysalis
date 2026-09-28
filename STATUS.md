@@ -1,6 +1,6 @@
 # Chrysalis Capability Status (mdbase v0.3 Agent Framework)
 
-Reviewed against source on 2026-09-23. This document is the authoritative ground-truth implementation reference for the Chrysalis mdbase v0.3 AI Agent Framework.
+Reviewed against source on 2026-09-27. This document is the authoritative ground-truth implementation reference for the Chrysalis mdbase v0.3 AI Agent Framework.
 
 ---
 
@@ -13,9 +13,10 @@ Reviewed against source on 2026-09-23. This document is the authoritative ground
 | **Agent Runtime Contract** | **Implemented** | `contracts/agent-runtime.contract.md` (8-stage lifecycle, 9 discrete actions, approval gate, 22 diagnostic codes). |
 | **Collection & Path Contract** | **Implemented** | `contracts/mdbase-collection.contract.md` (tripartite model, record identities, wikilinks matrix, 14-day horizon). |
 | **Persistent Agent Memory** | **Implemented** | `System/Memory.md` and public template `System/_templates/Memory.template.md` (deterministic preferences, modality baselines, bounded multiplier learning). |
-| **Validation & CAS Helpers** | **Implemented** | `helpers/mdbase_helper.py` (atomic CAS mutations via `fcntl.flock`, `compute_revision`, `validate_record`, `check_semantic_duplicate`, `reconcile_syllabus`). |
+| **Validation & CAS Helpers** | **Implemented** | `helpers/mdbase_helper.py` (atomic CAS mutations via `fcntl.flock` / `msvcrt.locking`, `compute_revision`, `validate_record`, `check_semantic_duplicate`, `reconcile_syllabus`). |
 | **Operational Workflow Runbooks** | **Implemented** | `System/Workflows/01-capture.md` through `08-continuation.md`. |
-| **Dedicated Source Ingestion (`/ingest`)** | **Implemented** | `.agent/skills/ingest/SKILL.md` (Google Drive Media Locker `Chrysalis-Media-Locker/` batch ingestion via `/ingest --drive` during nightly `/audit` and interactive Spark UI share via `/ingest --share`, zero local `Resources/` folder, Workflows 01–04 `/project` & `/zettel` alignment before `/plan`). |
+| **Dedicated Source Ingestion (`/ingest`)** | **Implemented** | `.agent/skills/ingest/SKILL.md` (Google Drive Media Locker `Chrysalis-Media-Locker/` batch ingestion via `/ingest --drive` during nightly `/audit` and interactive direct share via `/ingest --share`, zero local `Resources/` folder, Workflows 01–04 `/project` & `/zettel` alignment before `/plan`). |
+| **Protected Framework Updater (`update.py`)** | **Implemented** | `update.py` (deploys allowlisted framework files, prunes retired framework/Spark artifacts with pre-mutation backups and rollback support, merges `.agent/skills.json` and `mdbase.yaml` non-destructively, and protects all personal data). |
 | **Local Python Test Harness** | **Implemented** | Standalone validation harness in `tests/harness/validation_harness.py`, unit/integration tests in `tests/test_validation_harness.py`. |
 | **Synthetic Worked Scenario & Failure Suite** | **Implemented** | Synthetic syllabus v1, v2 revised, transcript, prompt injection (`fixtures/`), end-to-end runner in `tests/test_worked_scenario.py`, 6 negative tests in `tests/test_failure_modes.py`. |
 | **Staged Vault Migration Plan** | **Implemented** | Non-destructive migration plan in `docs/staged-migration-plan.md`. |
@@ -26,7 +27,8 @@ Reviewed against source on 2026-09-23. This document is the authoritative ground
 
 | Capability | State | Evidence / Implementation Reference |
 | :--- | :--- | :--- |
-| **Tripartite Hypergraph Model** | **Implemented** | Zettels $\leftrightarrow$ Roadmaps $\leftrightarrow$ Tasks linked via `[[WikiLinks]]`. |
+| **Tripartite Hypergraph Model** | **Implemented** | Sources $\leftrightarrow$ Zettels $\leftrightarrow$ Roadmaps $\leftrightarrow$ Tasks linked via `[[WikiLinks]]`. |
+| **Direct Local Agent Access (`A2`)** | **Implemented** | Capable local agents (Antigravity, Codex, Claude Code) operate directly on the local vault paired with `helpers/mdbase_helper.py` and headless `mdbase -C <vault>` CLI. |
 | **Zero-Leak PII Privacy Enforcement** | **Implemented** | Default-deny `.gitignore`, verified via `Development/scripts/candidate_audit.py` and `pii-scanner.sh`. |
 | **Anti-Simulation Law** | **Implemented** | Mandatory physical disk mutation; verified via automated test suites. |
 | **1:1 Public Template Matrix** | **Implemented** | Sanitized templates in `_templates/`, `System/_templates/`, `Projects/_templates/`, `Slipbox/_templates/`. |
@@ -41,8 +43,11 @@ Reviewed against source on 2026-09-23. This document is the authoritative ground
 
 | Subsystem | Previous Role | Retirement Rationale |
 | :--- | :--- | :--- |
+| **Bespoke Gemini Spark Integration** | `chrysalis-router`, `Skills/` hardlinks & `Skills/bundle/SKILL.md`, `spark-agent-system-prompt.md`, `golem-deployment-and-spark-test-guide.md`, `mcp.mdbase.dev` relay grants | Retired on 2026-09-27; capable local agents (Antigravity, Codex) read `.agent/skills/` and mutate the local vault directly without cloud MCP workarounds. |
+| **Golem Packaging Wrappers** | `System/scripts/package_golem_bundle.py` and `setup_golem.ps1` | Retired on 2026-09-27; redundant with cross-platform `update.py`, `bootstrap.py`, and `export_starter.py`. |
+| **`mdbase connect` Background Daemon** | Persistent background relay listener (`mdbase connect` scheduled task) | Retired on 2026-09-27; local filesystem and headless `mdbase -C <vault>` CLI require zero background daemons. |
 | **`apps/gateway/`** | FastAPI REST/WebSocket daemon on port 8765 | Archived on `archive/deprecated-apps`; core framework operates directly on local mdbase Markdown files. |
-| **`apps/mobile/`** | Custom Flutter cross-platform mobile client | Archived on `archive/deprecated-apps`; mobile access provided by Obsidian Mobile / candidate runtime agents. |
+| **`apps/mobile/`** | Custom Flutter cross-platform mobile client | Archived on `archive/deprecated-apps`; mobile access provided by Obsidian Mobile / native recorders. |
 | **Vendored Obsidian Plugin Bundle** | 5.8 MB bundle in `.obsidian/plugins/chrysalis-obsidian/` | Removed; community TaskNotes plugin installed directly by users. |
 | **Autonomous 3 AM Cron** | Background night-time task mutations | Retired; runtimes execute interactively with human approval. |
 | **Static Candidate Task Pools** | `quick_wins` and `deep_work` lists in YAML | Retired; replaced by dynamic mdbase queries. |
@@ -54,9 +59,7 @@ Reviewed against source on 2026-09-23. This document is the authoritative ground
 
 | Integration | Candidate Architecture | Current Disposition |
 | :--- | :--- | :--- |
-| **Gemini Spark Cloud MCP** | Hosted MCP adapter at `mcp.mdbase.dev` | **DEFERRED** to candidate runtime integration phase; local disk authority is primary. |
 | **TaskNotes Google Calendar Sync** | Two-way OAuth 2.0 calendar sync via TaskNotes | **DEFERRED** to community plugin runtime; Chrysalis initializes `googleCalendarEventId: null`. |
-| **`mdbase connect` Daemon & Relay** | Inbound request listener (`crates/connect-cli`) | **DEFERRED**; local filesystem is authoritative for framework execution. |
 | **Wear OS Smartwatch Client** | Standalone wearable client | **DEFERRED** / parked in backlog. |
 
 ---
