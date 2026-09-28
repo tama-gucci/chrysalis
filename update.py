@@ -388,10 +388,11 @@ def deployment_plan(source, target, *, plugins=False):
         if relative == "TaskNotes/Tasks/example-task.md" and (dst.exists() or destination in previous.get("files", {})):
             continue
         before = fingerprint(dst)
+        raw_before = hashlib.sha256(dst.read_bytes()).hexdigest() if dst.is_file() else None
         after = fingerprint(safe_path(source, relative))
         if before == after:
             continue
-        if destination in previous.get("files", {}) and before != previous["files"][destination]:
+        if destination in previous.get("files", {}) and previous["files"][destination] not in {before, raw_before} and destination != ".agent/skills.json":
             raise ValueError(f"Runtime framework file changed locally: {destination}. Reconcile it in the source before deployment.")
         changes.append({"source": relative, "path": destination, "before": before, "after": after})
 
