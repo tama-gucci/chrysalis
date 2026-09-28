@@ -70,7 +70,7 @@ This runs candidate privacy checks, pinned dependency checks, the framework suit
 
 The bespoke Flutter mobile application (`apps/mobile/`) and FastAPI daemon (`apps/gateway/`) have been **formally retired and archived** to the `archive/deprecated-apps` git branch. The `main` branch contains strictly what is required to run the redesigned mdbase v0.3 Chrysalis AI agent framework.
 
-The core framework operates directly on local Markdown files without daemon processes or custom mobile clients. Mobile and desktop interaction is provided natively by Obsidian with the community TaskNotes plugin, Google Calendar synchronization, and candidate AI runtime agents (Gemini Spark, Google Antigravity, local LLMs).
+The core framework operates directly on local Markdown files without daemon processes or custom mobile clients. Mobile and desktop interaction is provided natively by Obsidian with the community TaskNotes plugin, Google Calendar synchronization, and capable AI runtime agents (Google Antigravity, OpenAI Codex, Claude Code, local LLMs).
 
 If historical inspection of the retired Flutter or FastAPI prototypes is ever needed, check out the remote branch:
 ```bash

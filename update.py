@@ -178,6 +178,7 @@ def safe_path(root: Path, relative: str) -> Path:
 
 RETIRED_FRAMEWORK_ARTIFACTS = (
     ".agent/skills/chrysalis-router/SKILL.md",
+    "_types/skill.md",
     "docs/spark-agent-system-prompt.md",
     "docs/golem-deployment-and-spark-test-guide.md",
     "Development/SPARK-INTEGRATION-ASSESSMENT.md",
@@ -185,6 +186,12 @@ RETIRED_FRAMEWORK_ARTIFACTS = (
     "System/scripts/setup_golem.ps1",
     "Skills/bundle/SKILL.md",
 )
+
+RETIRED_SKILL_REGISTRY_PATHS = {
+    "Skills",
+    "Skills/bundle",
+    ".agent/skills/chrysalis-router",
+}
 
 
 def fingerprint(path: Path):
@@ -207,9 +214,10 @@ def fingerprint(path: Path):
         try:
             loaded = json.loads(raw.decode("utf-8"))
             if isinstance(loaded, dict) and isinstance(loaded.get("entries"), list):
+                tracked_paths = {".agent/skills", "Development/skills"} | RETIRED_SKILL_REGISTRY_PATHS
                 paths = [
-                    e.get("path") for e in loaded["entries"]
-                    if isinstance(e, dict) and e.get("path") in {".agent/skills", "Development/skills"}
+                    e.get("path").strip() for e in loaded["entries"]
+                    if isinstance(e, dict) and isinstance(e.get("path"), str) and e.get("path").strip() in tracked_paths
                 ]
                 return hashlib.sha256(json.dumps(sorted(set(paths))).encode("utf-8")).hexdigest()
         except Exception:
@@ -229,7 +237,7 @@ def merge_mdbase_connect_metadata(src_bytes: bytes, dst_path: Path) -> bytes:
                     if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
                         continue
                     p = entry["path"].strip()
-                    if p in {"Skills", "Skills/bundle", ".agent/skills/chrysalis-router"} or p in seen_paths:
+                    if p in RETIRED_SKILL_REGISTRY_PATHS or p in seen_paths:
                         continue
                     seen_paths.add(p)
                     merged_entries.append(entry)
@@ -340,7 +348,7 @@ def obsolete_framework_paths(target: Path, active_destinations: set[str], previo
             candidates.add(rel)
     skills_mirror = target / "Skills"
     if skills_mirror.is_dir() and not skills_mirror.is_symlink():
-        for skill_md in skills_mirror.glob("*/SKILL.md"):
+        for skill_md in skills_mirror.rglob("SKILL.md"):
             rel = skill_md.relative_to(target).as_posix()
             if rel not in active_destinations and not is_protected_target(rel):
                 candidates.add(rel)

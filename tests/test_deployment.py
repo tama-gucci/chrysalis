@@ -202,6 +202,7 @@ class DeploymentTests(unittest.TestCase):
 
         for rel in (
             'Skills/bundle/SKILL.md',
+            '_types/skill.md',
             '.agent/skills/chrysalis-router/SKILL.md',
             'docs/spark-agent-system-prompt.md',
             'docs/golem-deployment-and-spark-test-guide.md',
@@ -214,13 +215,23 @@ class DeploymentTests(unittest.TestCase):
             p.write_text('legacy spark artifact')
 
         (self.target / '.agent/skills.json').write_text(
-            json.dumps({'version': 1, 'entries': [{'path': 'Development/skills'}, {'path': 'Custom/skills'}]}) + '\n'
+            json.dumps({
+                'version': 1,
+                'entries': [
+                    {'path': '.agent/skills'},
+                    {'path': 'Development/skills'},
+                    {'path': 'Skills/bundle'},
+                    {'path': '.agent/skills/chrysalis-router'},
+                    {'path': 'Custom/skills'},
+                ],
+            }) + '\n'
         )
 
         update.sync_engine(self.source, self.target)
 
         # Verify retired artifacts and Skills/ mirror are pruned without breaking .agent/skills/ingest/SKILL.md
         self.assertFalse((self.target / 'Skills').exists())
+        self.assertFalse((self.target / '_types/skill.md').exists())
         self.assertFalse((self.target / '.agent/skills/chrysalis-router').exists())
         self.assertFalse((self.target / 'docs/spark-agent-system-prompt.md').exists())
         self.assertFalse((self.target / 'docs/golem-deployment-and-spark-test-guide.md').exists())
@@ -229,12 +240,23 @@ class DeploymentTests(unittest.TestCase):
         self.assertFalse((self.target / 'System/scripts/setup_golem.ps1').exists())
         self.assertIn('Body for ingest', (self.target / '.agent/skills/ingest/SKILL.md').read_text(encoding='utf-8'))
 
-        # Verify .agent/skills.json merged non-destructively
+        # Verify .agent/skills.json merged non-destructively AND stripped retired Spark paths even when .agent/skills & Development/skills were already present
         merged_cfg = json.loads((self.target / '.agent/skills.json').read_text(encoding='utf-8'))
         entry_paths = [e['path'] for e in merged_cfg['entries']]
         self.assertIn('.agent/skills', entry_paths)
         self.assertIn('Development/skills', entry_paths)
         self.assertIn('Custom/skills', entry_paths)
+        self.assertNotIn('Skills/bundle', entry_paths)
+        self.assertNotIn('.agent/skills/chrysalis-router', entry_paths)
+
+        # Verify rollback restores pruned Skills/ and retired artifacts cleanly, and re-sync re-prunes them
+        update._rollback(self.target)
+        self.assertTrue((self.target / 'Skills/ingest/SKILL.md').exists())
+        self.assertTrue((self.target / '_types/skill.md').exists())
+        self.assertTrue((self.target / '.agent/skills/chrysalis-router/SKILL.md').exists())
+        update.sync_engine(self.source, self.target)
+        self.assertFalse((self.target / 'Skills').exists())
+        self.assertFalse((self.target / '_types/skill.md').exists())
 
         # Repeated update is a clean no-op
         self.assertEqual(update.sync_engine(self.source, self.target), (0, []))

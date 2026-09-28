@@ -9,7 +9,7 @@ Reviewed against source on 2026-09-27. This document is the authoritative ground
 | Capability | State | Evidence / Implementation Reference |
 | :--- | :--- | :--- |
 | **Collection Manifest (`mdbase.yaml`)** | **Implemented** | `mdbase.yaml` specifies `spec_version: "0.3.0"`, Draft 2020-12, types and contracts folders. |
-| **Type Schemas (`_types/*.md`)** | **Implemented** | `_types/task.md`, `project.md`, `zettel.md`, `source.md` adhering strictly to JSON Schema Draft 2020-12 and `kind: mdbase.type`. |
+| **Type Schemas (`_types/*.md`)** | **Implemented** | `_types/task.md`, `project.md`, `zettel.md`, `source.md`, `system_state.md` adhering strictly to JSON Schema Draft 2020-12 and `kind: mdbase.type`. |
 | **Agent Runtime Contract** | **Implemented** | `contracts/agent-runtime.contract.md` (8-stage lifecycle, 9 discrete actions, approval gate, 22 diagnostic codes). |
 | **Collection & Path Contract** | **Implemented** | `contracts/mdbase-collection.contract.md` (tripartite model, record identities, wikilinks matrix, 14-day horizon). |
 | **Persistent Agent Memory** | **Implemented** | `System/Memory.md` and public template `System/_templates/Memory.template.md` (deterministic preferences, modality baselines, bounded multiplier learning). |
@@ -43,7 +43,7 @@ Reviewed against source on 2026-09-27. This document is the authoritative ground
 
 | Subsystem | Previous Role | Retirement Rationale |
 | :--- | :--- | :--- |
-| **Bespoke Gemini Spark Integration** | `chrysalis-router`, `Skills/` hardlinks & `Skills/bundle/SKILL.md`, `spark-agent-system-prompt.md`, `golem-deployment-and-spark-test-guide.md`, `mcp.mdbase.dev` relay grants | Retired on 2026-09-27; capable local agents (Antigravity, Codex) read `.agent/skills/` and mutate the local vault directly without cloud MCP workarounds. |
+| **Bespoke Gemini Spark Integration** | `chrysalis-router`, `_types/skill.md`, `Skills/` hardlinks & `Skills/bundle/SKILL.md`, `spark-agent-system-prompt.md`, `golem-deployment-and-spark-test-guide.md`, `mcp.mdbase.dev` relay grants | Retired on 2026-09-27; capable local agents (Antigravity, Codex) read `.agent/skills/` and mutate the local vault directly without cloud MCP workarounds. |
 | **Golem Packaging Wrappers** | `System/scripts/package_golem_bundle.py` and `setup_golem.ps1` | Retired on 2026-09-27; redundant with cross-platform `update.py`, `bootstrap.py`, and `export_starter.py`. |
 | **`mdbase connect` Background Daemon** | Persistent background relay listener (`mdbase connect` scheduled task) | Retired on 2026-09-27; local filesystem and headless `mdbase -C <vault>` CLI require zero background daemons. |
 | **`apps/gateway/`** | FastAPI REST/WebSocket daemon on port 8765 | Archived on `archive/deprecated-apps`; core framework operates directly on local mdbase Markdown files. |

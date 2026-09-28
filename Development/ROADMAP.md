@@ -13,7 +13,7 @@ Implementation status lives in [STATUS.md](../STATUS.md). The engineering backlo
 ## 2. Mid-term: Finish integrations
 
 - Harmonize TaskNotes community plugin as the designated sole writer for Google Calendar synchronization via `googleCalendarEventId`.
-- Evaluate candidate runtime agent bridges (Gemini Spark Streamable HTTP MCP adapter and Claude Desktop stdio bridge).
+- Maintain provider-independent local CLI and IDE agent execution (`A2`: `helpers/mdbase_helper.py` + headless `mdbase -C <vault>` CLI).
 - Reconcile cross-agent telemetry and chronotype calibration within deterministic session memory (`System/Memory.md`).
 - Multi-workstation synchronization over local network or encrypted relay listeners.
 - Strengthen runtime diagnostics (`/doctor`) and automated self-healing.

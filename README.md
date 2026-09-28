@@ -2,7 +2,7 @@
 
 Chrysalis is an open, provider-independent AI agent framework operating on an **mdbase v0.3** Markdown database collection. It defines the formal contracts, schemas, lifecycle rules, and deterministic helpers for how an autonomous AI agent ingests unstructured information, organizes knowledge, manages projects and deliverables, plans focused actions, maintains durable memory, and records verified outcomes in plain Markdown files.
 
-Markdown notes with YAML frontmatter are the authoritative database records. AI agents (Google Antigravity, Claude, OpenAI Codex, Gemini Spark, or local LLMs) supply reasoning and execute operations strictly through standardized runtime contracts. External tools (Obsidian, TaskNotes, Google Calendar) provide optional visualization and interface layers.
+Markdown notes with YAML frontmatter are the authoritative database records. AI agents (Google Antigravity, Claude, OpenAI Codex, or local LLMs) supply reasoning and execute operations strictly through standardized runtime contracts. External tools (Obsidian, TaskNotes, Google Calendar) provide optional visualization and interface layers.
 
 ---
 

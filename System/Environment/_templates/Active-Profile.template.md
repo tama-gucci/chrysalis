@@ -7,13 +7,13 @@ last_updated: "{{timestamp}}"
 production_runtime:
   role: "Chrysalis Continuous Execution (Home Server Node)"
   server_host:
-    name: "{{server_hostname}}" # e.g., golem
-    model: "{{server_model}}" # e.g., Microsoft Surface Pro X
+    name: "{{server_hostname}}" # e.g., server-node
+    model: "{{server_model}}" # e.g., Home Server / Mini PC
     role: "24/7 At-Home Server"
     os: "{{server_os}}" # e.g., Windows 11 on ARM (ARM64) or Linux
     chassis: "{{server_chassis}}" # e.g., tablet / convertible / server
     power_profile: "Plugged-in continuous execution node"
-    ram_total_gb: 16 # Golem hardware topology: 16GB total RAM
+    ram_total_gb: 16 # Synthetic server hardware topology: 16GB total RAM
     hyper_v_home_assistant_gb: 4 # 4GB dedicated to Home Assistant VM
     chrysalis_operational_memory_gb: 12 # 12GB operational memory for Chrysalis & agents
     manifest: "[[System/Environment/{{server_hostname}}|{{server_hostname}}.md]]"

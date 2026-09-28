@@ -29,4 +29,4 @@ schema:
 
 # System State & Strategic Roadmap Type Specification (`_types/system_state.md`)
 
-Enables MCP agents (`@Mdbase` in Gemini Spark) to read and update `System/Life-Roadmap.md`, `System/Memory.md`, and `System/System-Health.md` directly via canonical mdbase v0.3 operations.
+Validates Chrysalis runtime state records (`System/Life-Roadmap.md`, `System/Memory.md`, and `System/System-Health.md`) as canonical mdbase v0.3 records.

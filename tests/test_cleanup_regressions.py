@@ -137,6 +137,7 @@ class CleanupRegressions(unittest.TestCase):
         )
         for forbidden in (
             '.agent/skills/chrysalis-router/SKILL.md',
+            '_types/skill.md',
             'docs/spark-agent-system-prompt.md',
             'docs/golem-deployment-and-spark-test-guide.md',
             'Development/SPARK-INTEGRATION-ASSESSMENT.md',
