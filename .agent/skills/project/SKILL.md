@@ -60,7 +60,7 @@ graph TD
 Execute project synthesis either when invoked directly by the user in chat or when called by [`/ingest`](../ingest/SKILL.md) during `System/Workflows/01-capture.md` through `04-organize.md`:
 
 ### Step 0: Alignment with `System/Workflows/01-capture.md` – `04-organize.md` & `/ingest`
-* **Zero Local Binary Storage (No `Resources/` Folder):** All original binary/source files live outside the vault in the configured external media storage boundary (`preserve_originals_in_place: true`, configured under `ingestion.sources`, e.g., `media` via the optional `google-drive` integration skill or a local filesystem mount) to keep the vault pure Markdown. Never create a `Projects/<project_id>/Resources/` subfolder in the vault. External syllabi, specifications, and handouts are always translated into `<vault>/Sources/{source_id}.md` via `/ingest` and linked into `Roadmap.md` via `source_ref` and `source_checksum`.
+* **Zero Local Binary Storage (No `Resources/` Folder):** All original binary/source files live outside the vault in the configured external media storage boundary (`preserve_originals_in_place: true`, configured under `ingestion.sources`, e.g., `media` via an optional `ingestion.read` integration skill or a local filesystem mount) to keep the vault pure Markdown. Never create a `Projects/<project_id>/Resources/` subfolder in the vault. External syllabi, specifications, and handouts are always translated into `<vault>/Sources/{source_id}.md` via `/ingest` and linked into `Roadmap.md` via `source_ref` and `source_checksum`.
 
 * **Workflows `01`–`04` Execution:**
   1. **`01-capture`:** Source is quarantined in `<vault>/Sources/{source_id}.md` with a 64-character hex `sha256`.
@@ -124,7 +124,7 @@ deliverables:
 ---
 
 ## 3. Reference Files & Slipbox Grounding
-- Provenance Source: `[[Sources/{{source_id}}]]` (Original binary stored in Google Drive)
+- Provenance Source: `[[Sources/{{source_id}}]]` (Original binary stored in configured external media boundary)
 - Reference Research Zettels:
   - [[{{YYYYMMDDHHmmss}}-{{zettel_slug}}]]
 ```
@@ -169,7 +169,7 @@ Promote an incubating or staged project into active strategic execution:
      - `status: todo`, `scheduled: null`, explicit local timezone `"-05:00"`
      - `project_ref: "[[Projects/{{project_slug}}/Roadmap]]"`
      - `linked_zettels: ["[[related-zettel-id]]"]` (extracted from Section 3 of parent project roadmap)
-     - `googleCalendarEventId: null` (ready for TaskNotes Google Calendar sync)
+     - `googleCalendarEventId: null` (ready for TaskNotes calendar sync)
 
 ### Step 5: Verification & Ledger Reporting
 1. Execute `/doctor --integrity` to verify zero broken links, schema compliance, and tag registry alignment.

@@ -30,6 +30,7 @@ settings:
     - "System/System-Health.md"
     - "System/Changelog.md"
     - "System/Ingestion-Sources.md"
+    - "System/Integrations.md"
     - "TaskNotes/_templates"
     - "TaskNotes/Archive"
     - "TaskNotes/Daily"

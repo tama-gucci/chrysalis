@@ -185,6 +185,32 @@ def resolve_ingestion_config(vault_root: Union[Path, str]) -> Dict[str, Any]:
         except Exception:
             pass
 
+    has_modern_blocks = (
+        isinstance(fm.get("ingestion"), dict)
+        or isinstance(fm.get("integrations"), dict)
+        or (v_root / "System" / "Integrations.md").is_file()
+    )
+    if has_modern_blocks:
+        try:
+            from helpers.integration_registry import resolve_integration_config
+
+            int_cfg = resolve_integration_config(v_root)
+            bridged_sources = int_cfg.get("bridged_ingestion_sources")
+            if isinstance(bridged_sources, dict) and bridged_sources:
+                fm = dict(fm)
+                base_ing = dict(fm.get("ingestion")) if isinstance(fm.get("ingestion"), dict) else {}
+                base_sources = dict(base_ing.get("sources")) if isinstance(base_ing.get("sources"), dict) else {}
+                for alias_name, bridged_s in bridged_sources.items():
+                    if not isinstance(bridged_s, dict):
+                        continue
+                    existing_s = dict(base_sources.get(alias_name)) if isinstance(base_sources.get(alias_name), dict) else {}
+                    existing_s.update(bridged_s)
+                    base_sources[alias_name] = existing_s
+                base_ing["sources"] = base_sources
+                fm["ingestion"] = base_ing
+        except Exception:
+            pass
+
     raw_ingestion = fm.get("ingestion")
     legacy_cfg = fm.get("ingestion_config")
 
@@ -1157,6 +1183,10 @@ def evaluate_task_capture_identity(
                 or fm.get("googleCalendarEventId") is not None
                 or bool(fm.get("linked_zettels"))
                 or fm.get("project_ref") is not None
+                or fm.get("location") is not None
+                or fm.get("coordinates") is not None
+                or fm.get("route_estimate") is not None
+                or fm.get("travel_policy") is not None
                 or bool(fm.get("external_conflict_flag"))
                 or _has_local_body_or_frontmatter_edits(fm, body)
             )
@@ -1609,6 +1639,10 @@ def draft_structured_task_capture(
                 "googleCalendarEventId": existing_fm.get("googleCalendarEventId"),
                 "project_ref": existing_fm.get("project_ref"),
                 "linked_zettels": existing_fm.get("linked_zettels"),
+                "location": existing_fm.get("location"),
+                "coordinates": existing_fm.get("coordinates"),
+                "route_estimate": existing_fm.get("route_estimate"),
+                "travel_policy": existing_fm.get("travel_policy"),
             },
         }
         existing_fm["review_required"] = True

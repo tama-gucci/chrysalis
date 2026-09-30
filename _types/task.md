@@ -178,6 +178,210 @@ schema:
         type: [string, "null"]
         format: date-time
         description: "Timestamp when task was marked done"
+      coordinates:
+        type: [array, string, "null"]
+        description: "Optional canonical coordinate pair ([latitude, longitude] or 'lat, lng') for map view projection when map_display_permitted is true"
+      location:
+        type: [object, "null"]
+        additionalProperties: false
+        description: "Provider-neutral task location model separating user-supplied facts from provider-derived references"
+        properties:
+          label:
+            type: [string, "null"]
+          address:
+            type: [string, "null"]
+          is_virtual:
+            type: boolean
+            default: false
+          coordinates:
+            type: [object, "null"]
+            additionalProperties: false
+            required:
+              - latitude
+              - longitude
+            properties:
+              latitude:
+                type: number
+                minimum: -90
+                maximum: 90
+              longitude:
+                type: number
+                minimum: -180
+                maximum: 180
+          provider_ref:
+            type: [object, "null"]
+            additionalProperties: false
+            properties:
+              provider:
+                type: [string, "null"]
+              place_id:
+                type: [string, "null"]
+              location_id:
+                type: [string, "null"]
+          provenance:
+            type: string
+            enum: [user_supplied, manual_override, provider_derived, compatible_open_source, unresolved]
+          resolution_status:
+            type: string
+            enum: [resolved, ambiguous, unresolved, virtual, manual_override]
+          persistence_policy:
+            type: string
+            enum: [persistent_permitted, place_id_only, ephemeral_only]
+          map_display_permitted:
+            type: boolean
+          attribution:
+            type: [string, "null"]
+          candidates:
+            type: [array, "null"]
+            items:
+              type: object
+          user_modified:
+            type: boolean
+            default: false
+      route_estimate:
+        type: [object, "null"]
+        additionalProperties: false
+        description: "Contextual route estimate between explicit origin and destination (kept separate from task timeEstimate)"
+        properties:
+          origin:
+            type: [object, "null"]
+            additionalProperties: false
+            properties:
+              label:
+                type: [string, "null"]
+              address:
+                type: [string, "null"]
+              place_id:
+                type: [string, "null"]
+              source:
+                type: [string, "null"]
+                enum: [configured_origin, previous_task_location, explicit_input, null]
+              coordinates:
+                type: [object, "null"]
+                additionalProperties: false
+                properties:
+                  latitude:
+                    type: number
+                    minimum: -90
+                    maximum: 90
+                  longitude:
+                    type: number
+                    minimum: -180
+                    maximum: 180
+          destination:
+            type: [object, "null"]
+            additionalProperties: false
+            properties:
+              label:
+                type: [string, "null"]
+              address:
+                type: [string, "null"]
+              place_id:
+                type: [string, "null"]
+              coordinates:
+                type: [object, "null"]
+                additionalProperties: false
+                properties:
+                  latitude:
+                    type: number
+                    minimum: -90
+                    maximum: 90
+                  longitude:
+                    type: number
+                    minimum: -180
+                    maximum: 180
+          travel_mode:
+            type: [string, "null"]
+            enum: [driving, transit, walking, bicycling, null]
+          departure_at:
+            type: [string, "null"]
+            format: date-time
+          arrival_by:
+            type: [string, "null"]
+            format: date-time
+          duration_minutes:
+            type: [number, "null"]
+            exclusiveMinimum: 0
+          duration_seconds:
+            type: [integer, "null"]
+            minimum: 1
+          duration_unit:
+            type: [string, "null"]
+            enum: [minutes, null]
+          distance_meters:
+            type: [number, "null"]
+            minimum: 0
+          distance_unit:
+            type: [string, "null"]
+            enum: [meters, kilometers, miles, null]
+          observed_at:
+            type: [string, "null"]
+            format: date-time
+          provider:
+            type: [string, "null"]
+          provenance:
+            type: [string, "null"]
+            enum: [provider_derived, manual_override, unavailable, null]
+          freshness:
+            type: [string, "null"]
+            enum: [fresh, stale, manual, unavailable, null]
+          status:
+            type: string
+            enum: [ok, manual_override, stale, no_route, unsupported_mode, missing_origin, missing_destination, ambiguous_endpoint, timeout, quota_exceeded, auth_failure, offline, unavailable]
+          persistence_policy:
+            type: [string, "null"]
+            enum: [persistent_permitted, ephemeral_only, null]
+          map_display_permitted:
+            type: [boolean, "null"]
+          attribution:
+            type: [string, "null"]
+          context_fingerprint:
+            type: [string, "null"]
+          previous_task_id:
+            type: [string, "null"]
+      travel_policy:
+        type: [object, "null"]
+        additionalProperties: false
+        description: "Task-level planning policy governing travel buffer, arrival requirement, and schedule inclusion"
+        properties:
+          include_travel_in_schedule:
+            type: boolean
+            default: true
+          buffer_minutes:
+            type: integer
+            minimum: 0
+            default: 0
+          arrival_at:
+            type: [string, "null"]
+            format: date-time
+          preferred_mode:
+            type: [string, "null"]
+            enum: [driving, transit, walking, bicycling, null]
+          explicit_origin:
+            type: [object, "null"]
+            additionalProperties: false
+            properties:
+              label:
+                type: [string, "null"]
+              address:
+                type: [string, "null"]
+              place_id:
+                type: [string, "null"]
+              coordinates:
+                type: [object, "null"]
+                additionalProperties: false
+                properties:
+                  latitude:
+                    type: number
+                    minimum: -90
+                    maximum: 90
+                  longitude:
+                    type: number
+                    minimum: -180
+                    maximum: 180
+          manual_duration_minutes:
+            type: [number, "null"]
+            exclusiveMinimum: 0
 collection:
   display:
     name_field: title

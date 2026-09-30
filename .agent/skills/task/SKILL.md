@@ -34,7 +34,13 @@ writes:
 4. **Zettelkasten Hypergraph Association:**
    * If `project_ref` is present, read that project's `linked_zettels` array and Section 3 reference links to `Slipbox/`; do not depend on an exact heading label.
    * Inject matching Zettel references into `linked_zettels` frontmatter array.
-5. **File Generation:** Create a new file in `TaskNotes/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
+5. **Optional Location & Map Enrichment (`location.resolve` & `visualization.map_projection`):**
+   * If the task includes a physical venue, address, or coordinates:
+     * When a `location.resolve` capability provider is enabled in `System/Memory.md` or `System/Integrations.md`, resolve the location via `python helpers/mdbase_helper.py --vault "<vault>" location-resolve --query "<query>"`.
+     * If `location.resolve` returns `status: "ambiguous"`, present the returned `candidates` to the user rather than silently guessing.
+     * When no `location.resolve` provider is enabled (`fallback_mode: "manual_only"`), store user-entered `location` (`provenance: "user_supplied"`) and/or top-level `coordinates: "lat, lng"` directly.
+     * Respect provider storage and display policies (`contracts/integration-capabilities.contract.md`): when `persistence_policy: "place_id_only"`, persist `place_id` and label/address in `location`, omit provider-derived `lat`/`lng` from persistent Markdown (`coordinates: null`), and exclude the record from non-compatible map views (`map_display_permitted: false`).
+6. **File Generation:** Create a new file in `TaskNotes/Tasks/YYYYMMDD-slug.md` with complete YAML frontmatter:
 
 ```yaml
 ---
@@ -57,5 +63,9 @@ tags:
 linked_zettels: []
 project_ref: null
 googleCalendarEventId: null
+location: null
+coordinates: null
+route_estimate: null
+travel_policy: null
 ---
 ```

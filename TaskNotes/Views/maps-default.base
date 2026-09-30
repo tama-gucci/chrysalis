@@ -1,0 +1,28 @@
+filters:
+  and:
+    - file.hasTag("task")
+    - status != "archived"
+formulas:
+  mapCoordinates: if(location && location.map_display_permitted == false, null, if(coordinates, coordinates, if(location && location.coordinates, [location.coordinates.latitude, location.coordinates.longitude], null)))
+  hasPermittedMapPin: formula.mapCoordinates != null
+  locationLabel: if(location && location.label, location.label, file.name)
+  markerIcon: if(modality == "analytical", "cpu", if(modality == "kinetic", "wrench", if(modality == "synthesis", "book-open", "clipboard-list")))
+  markerColor: if(priority == "urgent", "var(--color-red)", if(priority == "high", "var(--color-orange)", if(priority == "normal", "var(--color-blue)", "var(--color-gray)")))
+views:
+  - type: map
+    name: Task Locations (Permitted Coordinates)
+    filters:
+      and:
+        - formula.hasPermittedMapPin == true
+    coordinates: formula.mapCoordinates
+    markerIcon: formula.markerIcon
+    markerColor: formula.markerColor
+    order:
+      - title
+      - status
+      - priority
+      - modality
+      - due
+      - scheduled
+      - formula.locationLabel
+      - coordinates

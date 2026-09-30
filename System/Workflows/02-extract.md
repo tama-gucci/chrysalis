@@ -34,7 +34,7 @@ Parse structured project roadmaps, master deliverables (for `/project`), atomic 
    - Record external identity fields (`external_source_alias`, `external_integration`, `external_account_scope`, `external_collection_id`, `external_item_id`, `external_payload_sha256`) in task frontmatter (`_types/task.md`) and explicit `### Source Evidence` vs. `### Framework Defaults` sections in the Markdown body.
 4. **Master Deliverable & Deadline Normalization (Aligned with `/project` & Structured Task Capture)**:
    - Extract 100% of course/project deliverables across the full timeline (`id` matching `^[a-z0-9-]+$`, `title`, `due`, `due_time`, `due_timezone`, `due_at`, `date_uncertain`, `status: todo`, `tier: 1..4`, `source_ref`).
-   - Normalize deadlines via `helpers.mdbase_helper.normalize_deadline_evidence()` and `helpers.providers.google_tasks.parse_google_task_due()`:
+   - Normalize deadlines via `helpers.mdbase_helper.normalize_deadline_evidence()` and provider-neutral `structured_task` normalization (`contracts/ingestion-input.contract.md`):
      - Date-only deadlines (e.g., `9/28/26` or `2026-09-28T00:00:00.000Z` from a date-only provider) set `due: "2026-09-28"`, `due_time: null`, `due_at: null` (never fabricate a timestamp).
      - Timed deadlines (e.g., `9/29/26, 11:59 PM (CDT)`) set `due: "2026-09-29"`, `due_time: "23:59:00"`, `due_timezone: "CDT"`, `due_at: "2026-09-29T23:59:00-05:00"`.
      - Ambiguous or unannounced dates (e.g., `"Final Exam: TBD"`) set `due: null`, `date_uncertain: true`.

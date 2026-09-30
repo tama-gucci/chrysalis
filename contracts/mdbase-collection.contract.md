@@ -202,6 +202,17 @@ schema:
       completedAt:
         type: [string, "null"]
         format: date-time
+      coordinates:
+        type: [array, string, "null"]
+      location:
+        type: [object, "null"]
+        additionalProperties: false
+      route_estimate:
+        type: [object, "null"]
+        additionalProperties: false
+      travel_policy:
+        type: [object, "null"]
+        additionalProperties: false
 collection:
   display:
     name_field: title

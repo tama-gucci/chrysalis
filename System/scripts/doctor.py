@@ -89,6 +89,13 @@ class ChrysalisDoctor:
         valid_count = 0
         task_dirs = self.get_tasks_dirs()
 
+        if str(self.repo_root) not in sys.path:
+            sys.path.insert(0, str(self.repo_root))
+        try:
+            from helpers.location_routing import validate_task_location_and_travel_fields
+        except Exception:
+            validate_task_location_and_travel_fields = None
+
         for tdir, role in task_dirs:
             for task_file in tdir.glob("*.md"):
                 if task_file.name.startswith("."):
@@ -109,11 +116,69 @@ class ChrysalisDoctor:
                     if fm.get("modality") not in allowed_modality:
                         self.errors.append(f"[Schema] {task_file.name} invalid modality '{fm.get('modality')}'")
                         continue
+                    if validate_task_location_and_travel_fields is not None:
+                        loc_val = validate_task_location_and_travel_fields(fm)
+                        loc_diags = loc_val if isinstance(loc_val, list) else loc_val.get("diagnostics", [])
+                        loc_errors = [
+                            d for d in loc_diags
+                            if d.get("severity", "error") == "error"
+                        ]
+                        loc_warns = [
+                            d for d in loc_diags
+                            if d.get("severity") == "warning"
+                        ]
+                        for w in loc_warns:
+                            self.warnings.append(f"[Location/Travel] {task_file.name}: {w.get('message')}")
+                        if loc_errors:
+                            for err in loc_errors:
+                                self.errors.append(f"[Location/Travel] {task_file.name}: {err.get('message')}")
+                            continue
                     valid_count += 1
                 except Exception as e:
                     self.errors.append(f"[Schema] {task_file.name} parse error: {e}")
 
-        status = "PASS" if valid_count == task_count and task_count > 0 else ("WARN" if task_count == 0 else "FAIL")
+        base_view_ok = True
+        try:
+            views_dir = vault_path(self.vault_root, "TaskNotes/Views")
+            base_files: List[Path] = []
+            if views_dir.is_dir():
+                for candidate_bf in sorted(views_dir.glob("*.base")):
+                    if "map" in candidate_bf.name.lower():
+                        base_files.append(candidate_bf)
+                    else:
+                        try:
+                            txt = candidate_bf.read_text(encoding="utf-8")
+                            if (
+                                "type: map" in txt
+                                or 'type: "map"' in txt
+                                or "plugin_id: maps" in txt
+                                or 'plugin_id: "maps"' in txt
+                            ):
+                                base_files.append(candidate_bf)
+                        except Exception:
+                            pass
+            default_base = vault_path(self.vault_root, "TaskNotes/Views/maps-default.base")
+            if default_base.is_file() and default_base not in base_files:
+                base_files.append(default_base)
+
+            for bf in base_files:
+                if str(self.repo_root) not in sys.path:
+                    sys.path.insert(0, str(self.repo_root))
+                from helpers.providers.obsidian_maps import validate_obsidian_maps_base_view
+                base_valid, base_diags = validate_obsidian_maps_base_view(bf)
+                if not base_valid:
+                    base_view_ok = False
+                    for bd in base_diags:
+                        self.errors.append(f"[Obsidian Maps Base View] {bf.name}: {bd.get('message')}")
+        except Exception as bv_exc:
+            base_view_ok = False
+            self.errors.append(f"[Obsidian Maps Base View] Base view validation error: {bv_exc}")
+
+        status = (
+            "PASS"
+            if (valid_count == task_count and task_count > 0 and base_view_ok)
+            else ("FAIL" if (not base_view_ok or valid_count != task_count) else "WARN")
+        )
         self.check_results["1_schema"] = {
             "name": "1. Schema & Frontmatter",
             "status": "🟢 PASS" if status == "PASS" else ("🟡 WARN" if status == "WARN" else "🔴 FAIL"),
@@ -344,6 +409,21 @@ class ChrysalisDoctor:
                         valid = False
                     if not valid:
                         self.errors.append(f"[Multiplier Invariant] {label}:{key}={value} is outside strict bounds [0.20, 2.00]")
+
+            if str(self.repo_root) not in sys.path:
+                sys.path.insert(0, str(self.repo_root))
+            try:
+                from helpers.integration_registry import evaluate_all_integrations
+                integ_eval = evaluate_all_integrations(self.vault_root)
+                for inst_id, inst_status in (integ_eval.get("instances") or {}).items():
+                    for diag in inst_status.get("diagnostics", []):
+                        code = str(diag.get("code") or "")
+                        if code in {"inline_secret_forbidden", "unknown_integration_adapter", "arbitrary_adapter_import_forbidden", "untrusted_integration_id"}:
+                            self.errors.append(f"[Integrations:{inst_id}] {diag.get('message')}")
+                        elif inst_status.get("enabled") and diag.get("severity") == "error":
+                            self.warnings.append(f"[Integrations:{inst_id}] {diag.get('message')}")
+            except Exception as integ_exc:
+                self.warnings.append(f"[Integrations] Could not evaluate integration status: {integ_exc}")
         except (ValueError, TypeError, AttributeError, OSError) as exc:
             self.errors.append(f"[Multiplier Sanity] Cannot validate runtime memory: {exc}")
         failed = len(self.errors) > errors_before
@@ -352,7 +432,7 @@ class ChrysalisDoctor:
         self.check_results["6_multipliers"] = {
             "name": "6. Dynamic State & Multipliers",
             "status": "🔴 FAIL" if failed else ("🟡 WARN" if missing else "🟢 PASS"),
-            "details": f"Checked {multiplier_count} multipliers against [0.20, 2.00]",
+            "details": f"Checked {multiplier_count} multipliers against [0.20, 2.00] and integration state",
         }
 
     def update_system_health_ledger(self):

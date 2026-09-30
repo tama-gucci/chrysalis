@@ -57,7 +57,8 @@ Upon receiving the user's natural language response:
 4. **Optional Read-Only Calendar Input (iCal Cache):**
    * Ingest external calendar commitments for tomorrow from the configured private iCal feed (`fetch_ical.py`) into `calendar_sync.cached_events` in `System/Memory.md`. Do not assume that the unfinished native mobile calendar bridge provides commitments.
    * Parse all external calendar commitments (e.g., team architecture syncs, lab sessions, recurring workshops).
-   * For events with physical locations (e.g., onsite facilities, research labs, client offices), allocate an automatic 30-minute transition/travel buffer before and after.
+   * For events or tasks with physical locations (`location` / `coordinates` and `travel_policy`), query the configured `routing.estimate` capability (`python helpers/mdbase_helper.py --vault "<vault>" route-estimate --origin "<origin>" --destination "<destination>" --mode "<mode>" --arrival-time "<arrival_at>" --buffer-minutes <buffer>`) when enabled, or apply a manual/default 30-minute transition buffer (`fallback_mode: "manual_only"`).
+   * Compute deterministic departure windows: `departure_at = arrival_at - duration_minutes - buffer_minutes` (e.g., `10:00` arrival with `25m` commute and `10m` buffer yields `09:25` departure, `09:25–09:50` travel window, and `09:50–10:00` pre-arrival buffer). Invalidate any cached `route_estimate` whose `context_fingerprint` (`origin | destination | mode | departure_bucket`) no longer matches, and never persist `ephemeral_only` provider route metrics or polylines into Markdown files.
    * Save parsed events to `calendar_sync.staged_events_tomorrow` in `System/Memory.md`.
 5. **Record Intent:** Save any user context or notes to `prototype_schedule.staged_user_intent` in `System/Memory.md`.
 
@@ -124,11 +125,11 @@ Triggered during the morning workflow (`/morning`) to calibrate the pre-approved
 1. Ingest actual $T_{\text{wake}}$ timestamp (e.g., `09:18:00-05:00`) and reported `energy_level` ($1–5$).
 2. Unpause system if paused (`system_state.pause_state.is_paused: false`).
 3. Update rolling baseline wake averages in `System/Memory.md`.
-4. **Dynamic Calendar Refresh:** Ingest today's latest Google Calendar events via Google Workspace tool integrations or read from `calendar_sync.cached_events` in `System/Memory.md`, updating `calendar_sync.active_events_today`.
+4. **Dynamic Calendar Refresh:** Ingest today's latest external calendar events from `calendar_sync.cached_events` in `System/Memory.md` (or configured read-only calendar feed), updating `calendar_sync.active_events_today`.
 
 ### Step 2: Diurnal Shift, Energy Gating & Calendar Collision Avoidance
 1. **Dynamic Shift:** Shift all sprint and defrost timeblocks relative to actual $T_{\text{wake}}$ using `diurnal_baselines.relative_offsets`.
-2. **Calendar Conflict Avoidance:** Adjust sprint boundaries so focus blocks do not overlap with scheduled calendar events. If an event has a physical location, ensure a 30-minute transition buffer before and after.
+2. **Calendar & Travel Conflict Avoidance:** Adjust sprint boundaries so focus blocks do not overlap with scheduled calendar events or commute windows (`routing.estimate` / `travel_policy`). If an event or task has a physical location, reserve the calculated `departure_at` to `arrival_at` travel + buffer window (or a 30-minute manual transition buffer when `routing.estimate` is unconfigured).
 3. **Energy Gating:**
    * **Energy 1–2 (Sleep Deprived / Low):** Complete lockout of Tier 3/4 tasks. Retain 1 low-friction kinetic/admin task in Slump window. Expand rest buffers by 50%.
    * **Energy 3–5 (Moderate to Optimal):** Execute full staged agenda.
@@ -144,7 +145,7 @@ Triggered during the morning workflow (`/morning`) to calibrate the pre-approved
    Validate with `python helpers/mdbase_helper.py --vault "<vault>" validate <task_path>` or `mdbase -C "<vault>" validate`.
 2. **Update Memory:** Update `<vault>/System/Memory.md` to record `morning_checkin.active_today`, `morning_checkin.learned_rhythms`, and `morning_checkin.checkin_history`.
 3. **Populate Daily Note:** Update or create `<vault>/Daily/YYYY-MM-DD.md` with the calibrated daily schedule table, biomarker telemetry, and task wikilinks.
-4. **Calendar Export Status:** Native mobile calendar export is not implemented. Persist the approved schedule to task notes and daily memory; do not claim that Android, Google Calendar, or a watch was updated. Keep reference links in task frontmatter.
+4. **Calendar Export Status:** Native mobile calendar export is not implemented. Persist the approved schedule to task notes and daily memory; do not claim that an external calendar service, mobile device, or watch was directly updated. Keep reference links in task frontmatter.
 
 ### Step 4: Deliver Final Locked Agenda
 Output the finalized daily schedule table in chat with exact sprint and defrost timeblocks and clickable markdown links to task notes.

@@ -28,7 +28,7 @@ The Chrysalis codebase is hosted on a public GitHub repository (`tama-gucci/chry
 ### 1. Quarantined Personal Substrates
 The following paths are designated as strictly private and MUST NEVER be tracked by git or pushed to GitHub:
 * **Personal Tasks, Archives & Obsidian Plugin Workflows:** `TaskNotes/Tasks/*.md` (except `example-task.md`), task archive (`TaskNotes/Archive/*.md`), and personal Obsidian TaskNotes Workflows plugin files (`TaskNotes/Workflows/*` except `README.md`).
-* **Live System Memory & Roadmaps:** `System/Life-Roadmap.md`, `System/Memory.md`, `System/Ingestion-Sources.md`, `System/System-Health.md`, `System/Changelog.md`.
+* **Live System Memory & Roadmaps:** `System/Life-Roadmap.md`, `System/Memory.md`, `System/Ingestion-Sources.md`, `System/Integrations.md`, `System/System-Health.md`, `System/Changelog.md`.
 * **Daily Focus & Journal Notes:** All daily notes matching `YYYY-MM-DD*.md` and `Daily/*.md` / `TaskNotes/Daily/*.md`.
 * **Personal Projects, Slipbox Thoughts & Translated Sources:** `Projects/*` (except `Projects/README.md` and `Projects/_templates/**`), `Slipbox/*` (except `Slipbox/README.md` and `Slipbox/_templates/**`), and `Sources/*` (except `Sources/README.md`).
 * **Personal Workstation Telemetry:** `System/Environment/*.md` manifests (e.g. `obelisk.md`, `surface-pro-x.md`, `Active-Profile.md`) and private workstation configurations.
@@ -39,6 +39,7 @@ Every file type that contains personal runtime information MUST provide an exact
 * `System/Life-Roadmap.md` $\to$ `System/_templates/Life-Roadmap.template.md`
 * `System/Memory.md` $\to$ `System/_templates/Memory.template.md`
 * `System/Ingestion-Sources.md` $\to$ `System/_templates/Ingestion-Sources.template.md`
+* `System/Integrations.md` $\to$ `System/_templates/Integrations.template.md`
 * `System/System-Health.md` $\to$ `System/_templates/System-Health.template.md`
 * `System/Changelog.md` $\to$ `System/_templates/Changelog.template.md`
 * `Daily Notes (YYYY-MM-DD.md)` $\to$ `System/_templates/Daily-Note.template.md`
@@ -69,13 +70,13 @@ All development-specific assets reside exclusively within `Development/` in the 
 * **`Development/README.md`:** Developer guide, architecture orientation, and git workflow.
 * **`Development/scripts/`:** Developer utility scripts, PII linters, git boundary verifiers, and setup helpers.
 * **`Development/skills/`:** Modular development-only agent skills (`audit-dev`, `evolve`), registered for Google Antigravity, OpenAI Codex, and local coding agents via `.agent/skills.json` and `AGENTS.md`.
-* **`contracts/`:** Formal runtime and collection contracts (`agent-runtime.contract.md`, `mdbase-collection.contract.md`, `ingestion-input.contract.md`).
+* **`contracts/`:** Formal runtime and collection contracts (`agent-runtime.contract.md`, `mdbase-collection.contract.md`, `ingestion-input.contract.md`, `integration-capabilities.contract.md`).
 * **`System/Workflows/`:** Portable 8-stage AI agent lifecycle workflow runbooks (`01-capture.md` through `08-continuation.md`).
 * **`_types/`:** Authoritative JSON Schema Draft 2020-12 data schemas (`task.md`, `project.md`, `source.md`, `zettel.md`, `system_state.md`).
-* **`helpers/`:** Deterministic A2 helper utilities (`mdbase_helper.py`, `ingestion_contract.py`, `helpers/providers/`) providing CAS concurrency, validation, duplicate detection, provider-neutral ingestion normalization, and provenance tracking.
+* **`helpers/`:** Deterministic A2 helper utilities (`mdbase_helper.py`, `ingestion_contract.py`, `integration_registry.py`, `location_routing.py`, `helpers/providers/`) providing CAS concurrency, validation, duplicate detection, provider-neutral capability resolution, and provenance tracking.
 
 ### Architectural Invariants in Development
-1. **Pure AI Agent Framework & A2 Access Layer:** Chrysalis operates directly on an mdbase v0.3 Markdown database collection via the A2 local access layer (`vault_paths.py --runtime`, `helpers/mdbase_helper.py`, `mdbase -C <vault>`, `doctor.py`, `tests/harness/validation_harness.py`). All operations are mediated by formal runtime contracts, and core `/ingest` (`discover → extract → draft → prevalidate → approve → apply → verify`) remains strictly decoupled from optional provider integration skills (`google-drive`, `google-tasks`).
+1. **Pure AI Agent Framework & A2 Access Layer:** Chrysalis operates directly on an mdbase v0.3 Markdown database collection via the A2 local access layer (`vault_paths.py --runtime`, `helpers/mdbase_helper.py`, `mdbase -C <vault>`, `doctor.py`, `tests/harness/validation_harness.py`). All operations are mediated by formal runtime contracts, and core workflows (`/ingest`, `/task`, `/plan`) remain strictly decoupled from optional provider integration skills (`google-drive`, `google-tasks`, `google-maps`, `obsidian-maps`).
 2. **Decoupled User Interfaces:** User interfaces (Obsidian with TaskNotes plugin, Google Calendar) and AI coding/desktop clients (Google Antigravity, OpenAI Codex, Claude Code/Desktop) are decoupled client applications, not internal framework daemons.
 3. **Hardware Portability & Local Authority:** The local Markdown files are the authoritative truth. Operations do not depend on cloud daemons or persistent background services.
 

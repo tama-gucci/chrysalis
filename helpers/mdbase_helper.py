@@ -2147,6 +2147,10 @@ class _FallbackValidator:
                         yield _MockValidationError("minimum", f"{v} is less than minimum {pdef['minimum']}", [k])
                     if "maximum" in pdef and v > pdef["maximum"]:
                         yield _MockValidationError("maximum", f"{v} is greater than maximum {pdef['maximum']}", [k])
+                if isinstance(v, dict) and "properties" in pdef:
+                    nested_validator = _FallbackValidator(pdef)
+                    for err in nested_validator.iter_errors(v):
+                        yield _MockValidationError(err.validator, err.message, [k] + err.path)
                 if isinstance(v, list) and "items" in pdef and isinstance(pdef["items"], dict):
                     item_validator = _FallbackValidator(pdef["items"])
                     for idx, item in enumerate(v):
@@ -2328,6 +2332,30 @@ def validate_record(
                 field=k,
                 path=str(path_obj),
                 recovery_action="FixRequest"
+            ))
+
+    # Semantic validation for task location, coordinates, route_estimate, and travel_policy
+    if resolved_type == "task":
+        try:
+            from helpers.location_routing import validate_task_location_and_travel_fields
+            loc_val = validate_task_location_and_travel_fields(fm)
+            loc_diags = loc_val if isinstance(loc_val, list) else loc_val.get("diagnostics", [])
+            for d_item in loc_diags:
+                diagnostics.append(Diagnostic(
+                    code=str(d_item.get("code") or "schema_semantic_violation"),
+                    severity=str(d_item.get("severity") or "error"),
+                    message=str(d_item.get("message") or "Invalid task location or travel field."),
+                    field=d_item.get("field"),
+                    path=str(path_obj),
+                    recovery_action="FixRequest",
+                ))
+        except Exception as e:
+            diagnostics.append(Diagnostic(
+                code="schema_semantic_violation",
+                severity="error",
+                message=f"Error validating task location/travel fields: {e}",
+                path=str(path_obj),
+                recovery_action="FixRequest",
             ))
 
     # Semantic validation for source records: forbid synthetic or empty-string sha256
@@ -3113,6 +3141,42 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p_icheck = subparsers.add_parser("ingest-check", help="Evaluate provider file or task capture identity against existing vault records")
     p_icheck.add_argument("item_json", help="Path to JSON file or inline JSON string of v1.0.0 IngestionItem")
 
+    subparsers.add_parser("integration-status", aliases=["integrations-status"], help="Evaluate configured integrations, readiness states, and capability bindings")
+
+    p_capres = subparsers.add_parser("capability-resolve", help="Resolve a named capability against configured integration bindings and readiness states")
+    p_capres.add_argument("capability", help="Capability identifier (e.g. location.resolve, routing.estimate, visualization.map_projection)")
+    p_capres.add_argument("--alias", default=None, help="Optional binding alias (e.g. media, quick-capture)")
+    p_capres.add_argument("--instance", default=None, help="Optional explicit integration instance ID")
+    p_capres.add_argument("--fallback", default="manual_only", help="Fallback mode (manual_only, skip_with_warning, require_user_input, fail)")
+
+    p_locres = subparsers.add_parser("location-resolve", help="Resolve a location query via the configured location.resolve capability provider")
+    p_locres.add_argument("--query", required=True, help="Location query string")
+    p_locres.add_argument("--region-code", default=None, help="Optional ISO region code (e.g. US)")
+    p_locres.add_argument("--language-code", default=None, help="Optional language code (defaults to instance config or en)")
+    p_locres.add_argument("--instance", default=None, help="Optional explicit integration instance ID")
+    p_locres.add_argument("--synthetic-response", default=None, help="Optional path to synthetic provider response JSON")
+
+    p_route = subparsers.add_parser("route-estimate", help="Estimate route duration and distance via the configured routing.estimate capability provider")
+    p_route.add_argument("--origin", required=True, help="Origin Place ID, coordinates, or address")
+    p_route.add_argument("--destination", default=None, help="Destination Place ID, coordinates, or address")
+    p_route.add_argument("--task", default=None, help="Optional vault-relative or absolute path to a task note")
+    p_route.add_argument("--scheduled", default=None, help="Optional scheduled ISO timestamp for the task")
+    p_route.add_argument(
+        "--mode",
+        default="driving",
+        choices=["driving", "transit", "walking", "bicycling", "drive", "walk", "bicycle", "bike"],
+        help="Travel mode",
+    )
+    p_route.add_argument("--departure-time", default=None, help="ISO 8601 departure timestamp with explicit local offset")
+    p_route.add_argument("--arrival-time", default=None, help="ISO 8601 arrival timestamp with explicit local offset")
+    p_route.add_argument("--buffer-minutes", type=int, default=None, help="Buffer minutes before arrival")
+    p_route.add_argument("--instance", default=None, help="Optional explicit integration instance ID")
+    p_route.add_argument("--synthetic-response", default=None, help="Optional path to synthetic provider response JSON")
+
+    p_mapproj = subparsers.add_parser("map-project", help="Project eligible task coordinates to the configured visualization.map_projection provider")
+    p_mapproj.add_argument("--view-path", default="TaskNotes/Views/maps-default.base", help="Vault-relative path to the Obsidian Bases map view")
+    p_mapproj.add_argument("--instance", default=None, help="Optional explicit integration instance ID")
+
     args = parser.parse_args(argv)
     vault_root = _resolve_cli_vault(args.vault, use_runtime=args.runtime or (args.command == "resolve-vault" and not args.vault))
 
@@ -3124,6 +3188,160 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         from helpers.ingestion_contract import resolve_ingestion_config
         print(json.dumps(resolve_ingestion_config(vault_root), indent=2, default=str))
         return 0
+
+    if args.command in {"integration-status", "integrations-status"}:
+        from helpers.integration_registry import evaluate_all_integrations
+        print(json.dumps(evaluate_all_integrations(vault_root), indent=2, default=str))
+        return 0
+
+    if args.command == "capability-resolve":
+        from helpers.integration_registry import resolve_capability_binding
+        res = resolve_capability_binding(
+            vault_root,
+            args.capability,
+            workflow_binding=args.alias,
+            instance_id=args.instance,
+        )
+        print(json.dumps(res, indent=2, default=str))
+        return 0 if res.get("status") == "ok" else 1
+
+    if args.command == "location-resolve":
+        from helpers.location_routing import enrich_task_location
+        syn_resp = None
+        if args.synthetic_response:
+            syn_resp = json.loads(Path(args.synthetic_response).read_text(encoding="utf-8"))
+        res = enrich_task_location(
+            vault_root,
+            {"title": args.query or "Location Lookup"},
+            query=args.query,
+            region_code=args.region_code,
+            language_code=args.language_code,
+            workflow_binding="task.location_lookup",
+            instance_id=args.instance,
+            transport=syn_resp,
+        )
+        print(json.dumps(res, indent=2, default=str))
+        return 0 if res.get("status") in {"resolved", "ambiguous", "resolved_user_supplied", "virtual"} else 1
+
+    if args.command == "route-estimate":
+        from helpers.location_routing import (
+            _parse_cli_endpoint,
+            estimate_task_commute,
+            normalize_travel_mode,
+            propose_travel_schedule_window,
+        )
+        syn_resp = None
+        if args.synthetic_response:
+            syn_resp = json.loads(Path(args.synthetic_response).read_text(encoding="utf-8"))
+
+        task_stub: Dict[str, Any] = {
+            "title": "Route Estimate Lookup",
+            "timeEstimate": 45,
+            "travel_policy": {},
+        }
+        if args.task:
+            task_path = (vault_root / args.task) if not Path(args.task).is_absolute() else Path(args.task)
+            if not task_path.is_file():
+                print(json.dumps({
+                    "valid": False,
+                    "error_code": "task_file_not_found",
+                    "message": f"Specified task file does not exist: {task_path}",
+                }, indent=2))
+                return 1
+            try:
+                task_fm, _ = parse_frontmatter(task_path.read_text(encoding="utf-8"))
+                if isinstance(task_fm, dict):
+                    task_stub.update(task_fm)
+            except Exception as e:
+                print(json.dumps({
+                    "valid": False,
+                    "error_code": "task_parse_error",
+                    "message": str(e),
+                }, indent=2))
+                return 1
+
+        if args.destination:
+            dest_stub = _parse_cli_endpoint(args.destination) or {
+                "label": args.destination,
+                "address": args.destination,
+                "resolution_status": "unresolved",
+            }
+            task_stub["location"] = dest_stub
+        elif not task_stub.get("location"):
+            print(json.dumps({
+                "valid": False,
+                "error_code": "missing_destination",
+                "message": "Destination is required (provide --destination or a --task note with resolved location).",
+            }, indent=2))
+            return 1
+
+        if args.scheduled:
+            task_stub["scheduled"] = args.scheduled
+
+        origin_stub = _parse_cli_endpoint(args.origin)
+
+        # Detect whether --mode was explicitly passed on the CLI vs defaulted
+        raw_cli_args = argv if argv is not None else sys.argv[1:]
+        explicit_mode_given = any(a == "--mode" or a.startswith("--mode=") for a in raw_cli_args)
+        if explicit_mode_given:
+            norm_mode = normalize_travel_mode(args.mode) or args.mode or "driving"
+        else:
+            norm_mode = None
+
+        t_policy = task_stub.setdefault("travel_policy", {})
+        if not isinstance(t_policy, dict):
+            t_policy = {}
+            task_stub["travel_policy"] = t_policy
+        if norm_mode:
+            t_policy["preferred_mode"] = norm_mode
+        if args.arrival_time:
+            t_policy["arrival_at"] = args.arrival_time
+        if args.buffer_minutes is not None:
+            t_policy["buffer_minutes"] = args.buffer_minutes
+
+        eff_buf = args.buffer_minutes if args.buffer_minutes is not None else int(t_policy.get("buffer_minutes", 0) or 0)
+
+        res = estimate_task_commute(
+            vault_root,
+            task_stub,
+            origin=origin_stub,
+            travel_mode=norm_mode,
+            departure_at=args.departure_time,
+            arrival_by=args.arrival_time or t_policy.get("arrival_at"),
+            workflow_binding="plan.route_estimate",
+            instance_id=args.instance,
+            transport=syn_resp,
+        )
+        effective_arrival = args.arrival_time or task_stub.get("scheduled") or t_policy.get("arrival_at")
+        if effective_arrival or args.departure_time:
+            res["schedule_window"] = propose_travel_schedule_window(
+                res.get("proposed_frontmatter") or task_stub,
+                route_estimate=res.get("ephemeral_route_estimate"),
+                arrival_at=effective_arrival,
+                departure_at=args.departure_time,
+                buffer_minutes=eff_buf,
+            )
+        print(json.dumps(res, indent=2, default=str))
+        return 0 if res.get("status") in {"ok", "manual_override"} else 1
+
+    if args.command == "map-project":
+        from helpers.integration_registry import invoke_capability
+        req_records = []
+        for tpath in sorted((vault_root / "TaskNotes" / "Tasks").glob("*.md")):
+            try:
+                tfm, _ = parse_frontmatter(tpath.read_text(encoding="utf-8"))
+                req_records.append({"path": tpath.relative_to(vault_root).as_posix(), "frontmatter": tfm})
+            except Exception:
+                pass
+        res = invoke_capability(
+            vault_root,
+            "visualization.map_projection",
+            {"records": req_records, "base_view_path": args.view_path},
+            workflow_binding="views.map_projection",
+            instance_id=args.instance,
+        )
+        print(json.dumps(res, indent=2, default=str))
+        return 0 if res.get("status") in {"ok", "empty", "policy_filtered"} else 1
 
     if args.command == "ingest-normalize-task":
         from helpers.providers.google_tasks import normalize_google_task_item

@@ -69,6 +69,50 @@ ingestion:
       collection: "<list-reference>"
       access: read-only
 
+integrations:
+  contract_version: "1.0.0"
+  instances:
+    media:
+      integration: google-drive
+      enabled: false
+      access: read-only
+      config:
+        collection: "<folder-reference>"
+    quick-capture:
+      integration: google-tasks
+      enabled: false
+      access: read-only
+      config:
+        collection: "<list-reference>"
+    maps:
+      integration: google-maps
+      enabled: false
+      access: read-only
+      auth_ref: "env:GOOGLE_MAPS_API_KEY"
+      config:
+        region_code: "US"
+        language_code: "en"
+        units: "metric"
+        default_travel_mode: "driving"
+    vault-maps:
+      integration: obsidian-maps
+      enabled: false
+      access: read-only
+      config:
+        base_view_path: "TaskNotes/Views/maps-default.base"
+        coordinate_property: "coordinates"
+        plugin_id: "maps"
+  bindings:
+    ingestion:
+      sources:
+        media: "media"
+        quick-capture: "quick-capture"
+    location:
+      resolve: "maps"
+    routing:
+      estimate: "maps"
+    visualization:
+      map_projection: "vault-maps"
 
 # Narrow legacy compatibility block preserved for older scripts and migration checks
 ingestion_config:

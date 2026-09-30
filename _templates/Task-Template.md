@@ -19,6 +19,10 @@ project_ref: null
 deliverable_id: null
 googleCalendarEventId: null
 date_uncertain: false
+location: null
+coordinates: null
+route_estimate: null
+travel_policy: null
 startedAt: null
 completedAt: null
 ---

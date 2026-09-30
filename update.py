@@ -78,6 +78,7 @@ PROTECTED_PATHS = [
     "System/Life-Roadmap.md",
     "System/Memory.md",
     "System/Ingestion-Sources.md",
+    "System/Integrations.md",
     "System/Scheduling-Memory.md",
     "System/System-Health.md",
     "System/Changelog.md",

@@ -29,9 +29,9 @@ PATTERNS = {
 EMAIL = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
 PRIVATE_PROBES = (
     'System/Life-Roadmap.md', 'System/Memory.md', 'System/Ingestion-Sources.md',
-    'System/Scheduling-Memory.md', 'System/System-Health.md',
+    'System/Integrations.md', 'System/Scheduling-Memory.md', 'System/System-Health.md',
     'System/Changelog.md', 'TaskNotes/System/Memory.md', 'TaskNotes/System/Ingestion-Sources.md',
-    'TaskNotes/System/Scheduling-Memory.md',
+    'TaskNotes/System/Integrations.md', 'TaskNotes/System/Scheduling-Memory.md',
     'TaskNotes/Tasks/private.md', 'chrysalis/Tasks/private.md',
     'chrysalis/Archive/private.md', 'chrysalis/Projects/private/Roadmap.md',
     'chrysalis/Slipbox/private.md', 'chrysalis/System/Memory.md',
@@ -68,7 +68,7 @@ def quarantined(path):
         return path != 'TaskNotes/Tasks/example-task.md'
     if re.search(r'(^|/)TaskNotes/Workflows/', path):
         return path != 'TaskNotes/Workflows/README.md'
-    if re.search(r'(^|/)System/(Life-Roadmap|Memory|Ingestion-Sources|Scheduling-Memory|System-Health|Changelog)\.md$', path):
+    if re.search(r'(^|/)System/(Life-Roadmap|Memory|Ingestion-Sources|Integrations|Scheduling-Memory|System-Health|Changelog)\.md$', path):
         return True
 
     if re.match(r'\d{4}-\d{2}-\d{2}.*\.md$', p.name):
