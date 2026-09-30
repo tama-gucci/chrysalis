@@ -1,5 +1,29 @@
 # Current engineering handoff
 
+## Quick-Capture Gap-Filler Prioritization & Inferred Candidate Engine (/plan) — 2026-09-30
+
+- **Agent Role**: Antigravity (Coding & Verification Worker)
+- **Branch & Base Commit**: `main` based on `34d5356` (working tree in the source repository; ready for verification, deployment to runtime vault, and sync).
+- **Goal**: Streamline task capture ingestion by prioritizing unscheduled quick-capture tasks as primary gap-filler candidates during `/plan`'s interactive feedback gate (Protocol 1: Staging Mode), falling back to inferred candidates from roadmap deliverable backlogs, active project deliverables, or routine low-energy administrative backlogs when quick-capture inventory is insufficient.
+
+### Candidate Modified & New Paths
+- **New Paths (1)**: `tests/test_gap_filler_candidates.py`.
+- **Modified Paths (5)**: `.agent/skills/audit/SKILL.md`, `.agent/skills/evening/SKILL.md`, `.agent/skills/plan/SKILL.md`, `System/Workflows/05-plan.md`, `helpers/mdbase_helper.py`.
+
+### Changes & Rationale
+- **Gap-Filler Selection Engine & CLI (`helpers/mdbase_helper.py`)**: Added `is_quick_capture_task()`, `select_gap_filler_candidates()`, and `format_gap_fillers_markdown()` to support provider-neutral gap-filler candidate selection. Unscheduled active tasks (`status: todo`, `scheduled: null`) with quick-capture signatures (`external_item_id`, `source_alias: quick-capture`, `external_integration: google-tasks`, `evidence_ref`, `source_ref`, or tags) are prioritized as primary candidates (`[qc-01]`, `[qc-02]`), sorted by deadline (overdue > imminent > undated > future), urgency tier, and priority. If fewer quick-capture tasks exist than the target count (default: 3), candidates are inferred (`[inf-01]`, `[inf-02]`) from active backlog tasks, 14-day roadmap deliverables (`Projects/*/Roadmap.md` via `classify_deliverable_horizons()`), or routine low-energy administrative maintenance templates. Added `gap-fillers` (alias `plan-candidates`) CLI subcommand and `--include-gap-fillers` flag on `horizon-tasks`.
+- **Skills & Workflows Alignment (`plan/SKILL.md`, `evening/SKILL.md`, `audit/SKILL.md`, `System/Workflows/05-plan.md`)**: Updated Protocol 1 Staging Mode in `/plan` and `/evening` to query gap-filler candidates, present the prototype schedule with primary quick-capture gap-fillers and inferred fallback options, and maintained strict provider neutrality across core skills and workflows (avoiding hardcoded provider tokens).
+- **Unit Test Coverage (`tests/test_gap_filler_candidates.py`)**: Implemented 8 synthetic unit tests verifying quick-capture signature detection, strict prioritization over project deliverables, inference fallback behavior when quick-capture inventory is partial or zero, deadline/urgency sorting, scheduled/done/archived/explicit exclusion filtering, Markdown rendering, and CLI subcommand dispatch.
+
+### Verification Record
+| Verification Dimension | Status | Evidence / Scope |
+| :--- | :--- | :--- |
+| **Source Implementation** | **Completed** | 6 candidate paths in source checkout (1 new test file, 5 modified tracked files). |
+| **Synthetic Verification** | **Completed (Passed)** | `unittest` (`test_gap_filler_candidates.py`: 8/8 passed; full test discovery: 334 tests passed, 1 skipped), `validation_harness.py -c .` (0 errors, 0 warnings), `doctor.py --vault .` (HEALTHY, 19/19 skills verified), `candidate_audit.py` (`passed: true`, 0 findings). |
+| **Personal Runtime Deployment** | **Ready for Deployment** | Ready to deploy via `python update.py --vault "~/Documents/Chrysalis"`. |
+
+---
+
 ## Shared integration capability registry, Google Maps & Obsidian Maps — 2026-09-30
 
 - **Agent Role**: Antigravity (Coding & Verification Worker)

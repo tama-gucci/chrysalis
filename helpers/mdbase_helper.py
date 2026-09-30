@@ -1793,6 +1793,385 @@ def filter_horizon_deliverables(
 
 
 # =========================================================================
+# 5.1 Gap-Filler Candidate Selection & Prioritization Engine (/plan)
+# =========================================================================
+
+def is_quick_capture_task(frontmatter: Dict[str, Any]) -> bool:
+    """
+    Determines whether a task note represents a quick-capture task (e.g. from Google Tasks,
+    inbox capture, or standalone external capture policy).
+    """
+    if not isinstance(frontmatter, dict):
+        return False
+    if frontmatter.get("external_item_id"):
+        return True
+    if str(frontmatter.get("external_source_alias") or "").strip().lower() == "quick-capture":
+        return True
+    if str(frontmatter.get("source_alias") or "").strip().lower() == "quick-capture":
+        return True
+    if str(frontmatter.get("external_integration") or "").strip().lower() == "google-tasks":
+        return True
+    evidence = str(frontmatter.get("evidence_ref") or "").strip().lower()
+    if evidence.startswith("google-tasks:") or "quick-capture" in evidence:
+        return True
+    src_ref = str(frontmatter.get("source_ref") or "").strip().lower()
+    if "capture-google-tasks" in src_ref or "capture-" in src_ref:
+        return True
+    tags = frontmatter.get("tags") or []
+    if isinstance(tags, list):
+        for t in tags:
+            t_str = str(t).strip().lower()
+            if t_str in {"quick-capture", "inbox-capture", "quick_capture"}:
+                return True
+    return False
+
+
+def select_gap_filler_candidates(
+    vault_root: Union[Path, str],
+    *,
+    target_count: int = 3,
+    reference_date: Optional[date] = None,
+    horizon_days: int = 14,
+    preferred_modalities: Optional[Sequence[str]] = None,
+    exclude_paths: Optional[Union[Set[str], Sequence[str]]] = None,
+) -> Dict[str, Any]:
+    """
+    Selects gap-filler candidates for the /plan interactive feedback gate.
+
+    Prioritization Rule:
+    1. Unscheduled quick capture tasks (tasks in TaskNotes/Tasks/ with external_item_id,
+       source_alias: quick-capture, or standalone capture with status: todo and scheduled: null)
+       serve as the PRIMARY gap-filler candidates.
+    2. If there are not enough preexisting quick capture tasks to fill available gaps or
+       reach target_count, gap-filler candidates are INFERRED from:
+       - Roadmap backlog deliverables / active project deliverable candidates (within the 14-day horizon),
+       - Routine low-energy administrative/kinetic/synthesis backlog tasks,
+       - Routine system maintenance templates.
+    """
+    v_path = Path(vault_root).resolve()
+    ref = reference_date or date.today()
+    target = max(1, target_count)
+
+    exclude_set: Set[str] = set()
+    if exclude_paths:
+        for ep in exclude_paths:
+            ep_str = str(ep).strip()
+            exclude_set.add(ep_str)
+            exclude_set.add(Path(ep_str).stem)
+            exclude_set.add(f"[[{Path(ep_str).as_posix().removesuffix('.md')}]]")
+            exclude_set.add(f"[[TaskNotes/Tasks/{Path(ep_str).stem}]]")
+
+    quick_capture_tasks: List[Dict[str, Any]] = []
+    backlog_tasks: List[Dict[str, Any]] = []
+
+    tasks_dir = v_path / "TaskNotes" / "Tasks"
+    if tasks_dir.is_dir():
+        for tf in sorted(tasks_dir.glob("*.md")):
+            if tf.name in {"README.md", "example-task.md"} or tf.name.startswith("."):
+                continue
+            rel_path = tf.relative_to(v_path).as_posix()
+            if (
+                rel_path in exclude_set
+                or tf.stem in exclude_set
+                or f"[[{rel_path[:-3]}]]" in exclude_set
+                or tf.name in exclude_set
+            ):
+                continue
+            try:
+                fm, _ = parse_frontmatter(tf.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            if not isinstance(fm, dict):
+                continue
+
+            status = str(fm.get("status") or "todo").strip().lower()
+            if status in {"done", "archived"}:
+                continue
+
+            sched = fm.get("scheduled")
+            if sched is not None and str(sched).strip() != "" and str(sched).strip().lower() != "null":
+                continue
+
+            due_val = fm.get("due")
+            due_str = str(due_val) if due_val is not None else None
+            due_bucket = 2
+            days_until = 9999
+            if due_str and DATE_ONLY_PATTERN.match(due_str[:10]):
+                try:
+                    d_obj = date.fromisoformat(due_str[:10])
+                    days_until = (d_obj - ref).days
+                    if days_until < 0:
+                        due_bucket = 0  # overdue
+                    elif days_until <= horizon_days:
+                        due_bucket = 1  # imminent
+                    else:
+                        due_bucket = 3  # future
+                except ValueError:
+                    due_bucket = 2
+            elif bool(fm.get("date_uncertain")):
+                due_bucket = 2
+
+            urgency = int(fm.get("urgency_tier") or 2)
+            prio_rank = {"urgent": 0, "high": 1, "normal": 2, "low": 3, "none": 4}.get(
+                str(fm.get("priority") or "normal").strip().lower(), 2
+            )
+            time_est = int(fm.get("timeEstimate") or 45)
+
+            task_entry = {
+                "title": str(fm.get("title") or tf.stem),
+                "path": rel_path,
+                "wikilink": f"[[{rel_path[:-3]}]]",
+                "tags": [str(t) for t in (fm.get("tags") or [])],
+                "modality": str(fm.get("modality") or "administrative"),
+                "timeEstimate": time_est,
+                "energy": str(fm.get("energy") or "medium"),
+                "friction": str(fm.get("friction") or "low"),
+                "priority": str(fm.get("priority") or "normal"),
+                "urgency_tier": urgency,
+                "due": due_str,
+                "external_item_id": fm.get("external_item_id"),
+                "external_source_alias": fm.get("external_source_alias") or fm.get("source_alias"),
+                "external_integration": fm.get("external_integration"),
+                "project_ref": fm.get("project_ref"),
+                "deliverable_id": fm.get("deliverable_id"),
+                "_due_bucket": due_bucket,
+                "_days_until": days_until,
+                "_urgency": urgency,
+                "_prio_rank": prio_rank,
+            }
+
+            if is_quick_capture_task(fm):
+                quick_capture_tasks.append(task_entry)
+            else:
+                backlog_tasks.append(task_entry)
+
+    # Sort quick_capture_tasks: overdue -> imminent -> undated -> future, then urgency desc, prio asc, days_until asc
+    quick_capture_tasks.sort(
+        key=lambda x: (x["_due_bucket"], -x["_urgency"], x["_prio_rank"], x["_days_until"], x["title"])
+    )
+
+    primary_candidates: List[Dict[str, Any]] = []
+    for idx, item in enumerate(quick_capture_tasks[:target], start=1):
+        clean_item = dict(item)
+        for k in ("_due_bucket", "_days_until", "_urgency", "_prio_rank"):
+            clean_item.pop(k, None)
+        clean_item["candidate_id"] = f"qc-{idx:02d}"
+        clean_item["candidate_type"] = "quick_capture"
+        clean_item["inference_source"] = None
+        primary_candidates.append(clean_item)
+
+    needed_inferred = target - len(primary_candidates)
+    inferred_candidates: List[Dict[str, Any]] = []
+    inference_triggered = needed_inferred > 0
+
+    if needed_inferred > 0:
+        # Preferred order for gap-filling: administrative & kinetic (ideal for slump/defrost), synthesis (recovery), analytical (deep)
+        modality_weights = {"administrative": 0, "kinetic": 1, "synthesis": 2, "analytical": 3}
+        if preferred_modalities:
+            pref_list = [str(m).strip().lower() for m in preferred_modalities]
+            modality_weights = {m: idx for idx, m in enumerate(pref_list)}
+            modality_weights.setdefault("administrative", 90)
+            modality_weights.setdefault("kinetic", 91)
+            modality_weights.setdefault("synthesis", 92)
+            modality_weights.setdefault("analytical", 93)
+
+        backlog_tasks.sort(
+            key=lambda x: (
+                modality_weights.get(x["modality"].lower(), 99),
+                x["_due_bucket"],
+                -x["_urgency"],
+                x["_prio_rank"],
+                x["_days_until"],
+            )
+        )
+
+        for item in backlog_tasks:
+            if len(inferred_candidates) >= needed_inferred:
+                break
+            clean_item = dict(item)
+            for k in ("_due_bucket", "_days_until", "_urgency", "_prio_rank"):
+                clean_item.pop(k, None)
+            idx = len(inferred_candidates) + 1
+            clean_item["candidate_id"] = f"inf-{idx:02d}"
+            clean_item["candidate_type"] = "inferred"
+            mod = clean_item.get("modality", "").lower()
+            if clean_item.get("project_ref"):
+                clean_item["inference_source"] = "project_deliverable" if clean_item.get("deliverable_id") else "roadmap_backlog"
+            elif mod in {"administrative", "kinetic"}:
+                clean_item["inference_source"] = "administrative_backlog"
+            elif mod == "synthesis":
+                clean_item["inference_source"] = "synthesis_backlog"
+            else:
+                clean_item["inference_source"] = "task_backlog"
+            inferred_candidates.append(clean_item)
+
+    # If still needed, infer from Projects/*/Roadmap.md deliverables
+    if len(inferred_candidates) < needed_inferred:
+        existing_deliv_ids = set()
+        for t in quick_capture_tasks + backlog_tasks:
+            if t.get("deliverable_id"):
+                existing_deliv_ids.add(str(t["deliverable_id"]))
+
+        for rm in sorted(v_path.glob("Projects/*/Roadmap.md")):
+            if len(inferred_candidates) >= needed_inferred:
+                break
+            try:
+                fm, _ = parse_frontmatter(rm.read_text(encoding="utf-8"))
+                delivs = fm.get("deliverables", [])
+                if not isinstance(delivs, list):
+                    continue
+                proj_id = fm.get("project_id") or rm.parent.name
+                classified = classify_deliverable_horizons(
+                    delivs,
+                    reference_date=ref,
+                    horizon_days=horizon_days,
+                    vault_root=v_path,
+                )
+                pool = classified["imminent"] + classified["overdue"] + classified["uncertain"]
+                for d in pool:
+                    if len(inferred_candidates) >= needed_inferred:
+                        break
+                    did = str(d.get("id") or "")
+                    if did in existing_deliv_ids or did in exclude_set:
+                        continue
+                    existing_deliv_ids.add(did)
+                    idx = len(inferred_candidates) + 1
+                    inferred_candidates.append({
+                        "candidate_id": f"inf-{idx:02d}",
+                        "candidate_type": "inferred",
+                        "inference_source": "project_deliverable",
+                        "title": str(d.get("title") or did),
+                        "path": None,
+                        "wikilink": None,
+                        "tags": ["task", f"project-{proj_id}"],
+                        "modality": str(d.get("modality") or "analytical"),
+                        "timeEstimate": int(d.get("timeEstimate") or 45),
+                        "energy": str(d.get("energy") or "medium"),
+                        "friction": str(d.get("friction") or "medium"),
+                        "priority": str(d.get("priority") or "normal"),
+                        "urgency_tier": int(d.get("urgency_tier") or 2),
+                        "due": str(d.get("due")) if d.get("due") is not None else None,
+                        "external_item_id": None,
+                        "external_source_alias": None,
+                        "external_integration": None,
+                        "project_ref": f"[[Projects/{proj_id}/Roadmap]]",
+                        "deliverable_id": did,
+                    })
+            except Exception:
+                continue
+
+    # If STILL needed (e.g. completely empty vault or everything scheduled), provide routine low-energy administrative backlog
+    if len(inferred_candidates) < needed_inferred:
+        standard_fallbacks = [
+            {
+                "title": "Slipbox hygiene & literature note review",
+                "tags": ["task", "chrysalis"],
+                "modality": "synthesis",
+                "timeEstimate": 45,
+                "energy": "medium",
+                "friction": "low",
+                "inference_source": "administrative_backlog",
+            },
+            {
+                "title": "Digital workspace & backlog triage",
+                "tags": ["task"],
+                "modality": "administrative",
+                "timeEstimate": 20,
+                "energy": "low",
+                "friction": "low",
+                "inference_source": "administrative_backlog",
+            },
+            {
+                "title": "Physical workspace & hardware maintenance",
+                "tags": ["task"],
+                "modality": "kinetic",
+                "timeEstimate": 30,
+                "energy": "low",
+                "friction": "low",
+                "inference_source": "administrative_backlog",
+            },
+        ]
+        for fb in standard_fallbacks:
+            if len(inferred_candidates) >= needed_inferred:
+                break
+            idx = len(inferred_candidates) + 1
+            inferred_candidates.append({
+                "candidate_id": f"inf-{idx:02d}",
+                "candidate_type": "inferred",
+                "inference_source": fb["inference_source"],
+                "title": fb["title"],
+                "path": None,
+                "wikilink": None,
+                "tags": fb["tags"],
+                "modality": fb["modality"],
+                "timeEstimate": fb["timeEstimate"],
+                "energy": fb["energy"],
+                "friction": fb["friction"],
+                "priority": "normal",
+                "urgency_tier": 2,
+                "due": None,
+                "external_item_id": None,
+                "external_source_alias": None,
+                "external_integration": None,
+                "project_ref": None,
+                "deliverable_id": None,
+            })
+
+    all_candidates = primary_candidates + inferred_candidates
+    return {
+        "reference_date": ref.isoformat(),
+        "target_count": target,
+        "quick_capture_count": len(quick_capture_tasks),
+        "inferred_count": len(inferred_candidates),
+        "inference_triggered": inference_triggered,
+        "primary_candidates": primary_candidates,
+        "inferred_candidates": inferred_candidates,
+        "candidates": all_candidates,
+    }
+
+
+def format_gap_fillers_markdown(gap_result: Dict[str, Any]) -> str:
+    """
+    Renders gap-filler candidates into standard Markdown matching the /plan presentation format.
+    """
+    primary = gap_result.get("primary_candidates") or []
+    inferred = gap_result.get("inferred_candidates") or []
+    all_cands = gap_result.get("candidates") or (primary + inferred)
+    if not all_cands:
+        return "#### 🧩 Gap-Filler Candidates:\n*(No eligible gap-filler candidates available)*"
+
+    if primary and not inferred:
+        header = "#### 🧩 Gap-Filler Candidates (Primary: Quick-Capture):"
+    elif inferred and not primary:
+        header = "#### 🧩 Inferred Gap-Filler Candidates:"
+    else:
+        header = "#### 🧩 Gap-Filler Candidates (Primary: Quick-Capture & Inferred Fallback):"
+
+    lines = [header]
+    for c in all_cands:
+        cid = c.get("candidate_id") or "cand"
+        title = c.get("title") or "Untitled Task"
+        tags = c.get("tags") or []
+        tag_str = " ".join(f"#{t}" for t in tags) if tags else "#task"
+        mod = c.get("modality") or "administrative"
+        est = f"{c.get('timeEstimate', 45)}m"
+        energy = str(c.get("energy") or "medium").capitalize()
+        ctype = c.get("candidate_type")
+        due = c.get("due")
+        due_suffix = f" • Due: {due}" if due else ""
+
+        if ctype == "quick_capture":
+            src_note = f"Quick-Capture{due_suffix}"
+        else:
+            inf_src = str(c.get("inference_source") or "backlog").replace("_", " ").title()
+            src_note = f"Inferred: {inf_src}{due_suffix}"
+
+        lines.append(f"- [ ] **[{cid}] {title}** (`{tag_str}` • `{mod}` • {est} • {energy}) *({src_note})*")
+
+    return "\n".join(lines)
+
+
+# =========================================================================
 # 6. Dynamic Cognitive Multiplier Learning
 # =========================================================================
 
@@ -3106,6 +3485,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p_hor = subparsers.add_parser("horizon-tasks", help="Partition project roadmap deliverables across the 14-day planning horizon")
     p_hor.add_argument("--horizon-days", type=int, default=14)
     p_hor.add_argument("--reference-date", "--today", dest="reference_date", default=None, help="Reference date YYYY-MM-DD (defaults to today)")
+    p_hor.add_argument("--include-gap-fillers", action="store_true", help="Include gap-filler candidate selection in horizon summary")
+
+    p_gap = subparsers.add_parser(
+        "gap-fillers",
+        aliases=["plan-candidates"],
+        help="Select primary quick-capture gap-fillers and inferred fallback candidates for /plan",
+    )
+    p_gap.add_argument("--target-count", type=int, default=3, help="Number of gap-filler candidates to select (default: 3)")
+    p_gap.add_argument("--reference-date", "--today", dest="reference_date", default=None, help="Reference date YYYY-MM-DD (defaults to today)")
+    p_gap.add_argument("--horizon-days", type=int, default=14, help="Horizon days (default: 14)")
+    p_gap.add_argument("--format", choices=["json", "markdown"], default="json", help="Output format (json or markdown)")
+    p_gap.add_argument("--exclude-task", action="append", default=None, help="Task path(s) to exclude from gap-filler selection")
+    p_gap.add_argument("--modality", action="append", default=None, help="Preferred cognitive modality filter")
 
     p_preval = subparsers.add_parser("prevalidate-proposal", help="Prevalidate an ingestion batch proposal JSON before human approval")
     p_preval.add_argument("proposal_file", help="Path to JSON file containing the ingestion proposal")
@@ -3729,7 +4121,31 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     })
             except Exception as e:
                 summary.append({"roadmap": rm.relative_to(vault_root).as_posix(), "error": str(e)})
-        print(json.dumps({"vault": str(vault_root), "reference_date": ref_date.isoformat(), "projects": summary}, indent=2, default=str))
+        payload: Dict[str, Any] = {"vault": str(vault_root), "reference_date": ref_date.isoformat(), "projects": summary}
+        if getattr(args, "include_gap_fillers", False):
+            payload["gap_fillers"] = select_gap_filler_candidates(
+                vault_root,
+                target_count=3,
+                reference_date=ref_date,
+                horizon_days=args.horizon_days,
+            )
+        print(json.dumps(payload, indent=2, default=str))
+        return 0
+
+    if args.command in {"gap-fillers", "plan-candidates"}:
+        ref_date = date.fromisoformat(args.reference_date) if args.reference_date else date.today()
+        result = select_gap_filler_candidates(
+            vault_root,
+            target_count=args.target_count,
+            reference_date=ref_date,
+            horizon_days=args.horizon_days,
+            preferred_modalities=args.modality,
+            exclude_paths=set(args.exclude_task) if args.exclude_task else None,
+        )
+        if args.format == "markdown":
+            print(format_gap_fillers_markdown(result))
+        else:
+            print(json.dumps(result, indent=2, default=str))
         return 0
 
     if args.command == "prevalidate-proposal":

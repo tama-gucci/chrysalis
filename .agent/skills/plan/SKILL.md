@@ -82,6 +82,15 @@ Upon receiving the user's natural language response:
    * **Weekday (Mon–Fri):** 1 Anchor Task (Tier 3/4) + up to 2 Support Tasks (Max 3 total, $< 4\text{h}$ deep work + external calendar commitments).
    * **Weekend (Sat–Sun):** Max 1 Primary Anchor Task ($< 2.5\text{h}$, fabrication/creative/technical). Enforce strict `#pillar-1/admin` institutional lockout.
 
+4. **Candidate Gap-Filler Selection (Quick-Capture Prioritization & Inference Rule):**
+   * Query eligible unscheduled tasks via `python helpers/mdbase_helper.py --vault "<vault>" gap-fillers --target-count 3` (or direct A2 query).
+   * **Primary Prioritization Rule:** Unscheduled quick capture tasks (tasks in `TaskNotes/Tasks/` captured with `external_item_id`, `source_alias: quick-capture`, external task capture adapters, or standalone capture policy with `status: todo` and `scheduled: null`) serve as the **primary gap-filler candidates** (`[qc-01]`, `[qc-02]`, etc.) presented to the user during the interactive feedback gate.
+   * **Inference Fallback Rule:** If there are not enough preexisting quick-capture tasks to fill available downtime/recovery/slump gaps or present sufficient options (e.g. `< 3` candidates), gap-filler candidates are **inferred** (`[inf-01]`, `[inf-02]`, etc.) from:
+     1. Roadmap backlog deliverables / active project deliverable candidates (`Projects/*/Roadmap.md` deliverables within the 14-day planning horizon),
+     2. Routine low-energy administrative or kinetic task backlog in `TaskNotes/Tasks/`,
+     3. Routine low-energy maintenance backlog fallbacks (slipbox hygiene, digital workspace triage, physical maintenance).
+   * Candidates are labeled with their origin (`Quick-Capture • Due: YYYY-MM-DD` vs. `Inferred: Project Deliverable`, `Inferred: Administrative Backlog`) to provide immediate context during feedback evaluation.
+
 ### Step 4: Presentation & Interactive Feedback Gate
 1. Render the prototype focus table followed by candidate gap-fillers:
 
@@ -98,8 +107,10 @@ Upon receiving the user's natural language response:
 | **Recovery Focus** | `17:30 – 18:30` | Synthesis | **Support 2** | `[[zettel-slipbox]]` | 45m | Med |
 
 ---
-#### 🧩 Inferred Gap-Filler Candidates:
-- [ ] **[inf-01] Task Title** (`#tag` • `modality` • Est • Energy)
+#### 🧩 Gap-Filler Candidates:
+- [ ] **[qc-01] Send invoice for consultation** (`#task` • `administrative` • 15m • Low) *(Quick-Capture • Due: 2026-10-02)*
+- [ ] **[qc-02] Pick up lab supplies** (`#task` • `kinetic` • 30m • Low) *(Quick-Capture)*
+- [ ] **[inf-01] Slipbox hygiene & literature review** (`#task #chrysalis` • `synthesis` • 45m • Medium) *(Inferred: Administrative Backlog)*
 ```
 
 2. Set `prototype_schedule.feedback_status: "pending"` in `System/Memory.md`.
