@@ -63,6 +63,15 @@ class TestGapFillerCandidates(unittest.TestCase):
         self.assertTrue(is_quick_capture_task({"evidence_ref": "google-tasks:inbox:item-9"}))
         self.assertTrue(is_quick_capture_task({"source_ref": "[[Sources/capture-google-tasks-test]]"}))
         self.assertTrue(is_quick_capture_task({"tags": ["task", "quick-capture"]}))
+        self.assertTrue(is_quick_capture_task({"capture_policy": "standalone"}))
+        self.assertTrue(is_quick_capture_task({"capture_policy": "quick-capture"}))
+        self.assertTrue(is_quick_capture_task({"external_source": "quick-capture"}))
+        self.assertTrue(is_quick_capture_task({"external_id": "gt-12345"}))
+        self.assertTrue(is_quick_capture_task({"source_ref": "[[Sources/capture_media_inbox]]"}))
+        self.assertTrue(is_quick_capture_task({"source_alias": "quick_capture"}))
+        self.assertTrue(is_quick_capture_task({"tags": ["task", "capture"]}))
+        self.assertTrue(is_quick_capture_task({"evidence_ref": "quick_capture:note-1"}))
+        self.assertTrue(is_quick_capture_task({"capture_source": "quick-capture"}))
 
         # Non-quick-capture tasks
         self.assertFalse(is_quick_capture_task({}))
@@ -441,6 +450,155 @@ class TestGapFillerCandidates(unittest.TestCase):
         data_hor = json.loads(buf_hor.getvalue())
         self.assertIn("gap_fillers", data_hor)
         self.assertEqual(data_hor["gap_fillers"]["quick_capture_count"], 1)
+
+    def test_09_wikilink_and_comma_separated_exclusions(self):
+        """Validates that exclusion paths specified as short wikilinks, full wikilinks, or comma-separated strings work."""
+        self._write_task("syn-task-exclude-me.md", {
+            "title": "Exclude Me Task",
+            "status": "todo",
+            "scheduled": None,
+            "external_item_id": "ext-ex-1",
+        })
+        self._write_task("syn-task-keep-me.md", {
+            "title": "Keep Me Task",
+            "status": "todo",
+            "scheduled": None,
+            "external_item_id": "ext-keep-1",
+        })
+
+        # Exclude via short wikilink [[syn-task-exclude-me]]
+        res = select_gap_filler_candidates(
+            self.vault,
+            target_count=2,
+            reference_date=date(2026, 10, 1),
+            exclude_paths={"[[syn-task-exclude-me]]"},
+        )
+        titles = [c["title"] for c in res["candidates"]]
+        self.assertNotIn("Exclude Me Task", titles)
+        self.assertIn("Keep Me Task", titles)
+
+        # Exclude via comma-separated string
+        res2 = select_gap_filler_candidates(
+            self.vault,
+            target_count=2,
+            reference_date=date(2026, 10, 1),
+            exclude_paths="[[syn-task-exclude-me]],TaskNotes/Tasks/syn-task-keep-me.md",
+        )
+        titles2 = [c["title"] for c in res2["candidates"]]
+        self.assertNotIn("Exclude Me Task", titles2)
+        self.assertNotIn("Keep Me Task", titles2)
+
+    def test_10_prevents_scheduled_deliverable_leakage_from_roadmap(self):
+        """Deliverables already materialized and scheduled on the calendar must NOT leak as inferred gap-fillers."""
+        self._write_roadmap("compiler-pipeline", {
+            "project_id": "compiler-pipeline",
+            "deliverables": [
+                {
+                    "id": "deliv-already-scheduled",
+                    "title": "Already Scheduled AST Walker",
+                    "due": "2026-10-02",
+                    "status": "todo",
+                }
+            ],
+        })
+        self._write_task("syn-task-scheduled.md", {
+            "title": "Already Scheduled AST Walker",
+            "status": "todo",
+            "scheduled": "2026-10-02T10:00:00-05:00",
+            "deliverable_id": "deliv-already-scheduled",
+            "project_ref": "[[Projects/compiler-pipeline/Roadmap]]",
+        })
+
+        res = select_gap_filler_candidates(
+            self.vault,
+            target_count=1,
+            reference_date=date(2026, 10, 1),
+        )
+        self.assertEqual(len(res["candidates"]), 1)
+        # Should fallback to standard administrative backlog instead of the scheduled deliverable
+        self.assertNotEqual(res["candidates"][0].get("deliverable_id"), "deliv-already-scheduled")
+        self.assertEqual(res["candidates"][0]["candidate_type"], "inferred")
+        self.assertEqual(res["candidates"][0]["inference_source"], "administrative_backlog")
+
+    def test_11_prevents_excluded_anchor_deliverable_leakage_from_roadmap(self):
+        """When an anchor task is excluded, its roadmap deliverable must NOT leak as an inferred gap-filler."""
+        self._write_roadmap("compiler-pipeline", {
+            "project_id": "compiler-pipeline",
+            "deliverables": [
+                {
+                    "id": "deliv-anchor",
+                    "title": "Staged Anchor Deliverable",
+                    "due": "2026-10-02",
+                    "status": "todo",
+                }
+            ],
+        })
+        self._write_task("syn-anchor.md", {
+            "title": "Staged Anchor Deliverable",
+            "status": "todo",
+            "scheduled": None,
+            "deliverable_id": "deliv-anchor",
+            "project_ref": "[[Projects/compiler-pipeline/Roadmap]]",
+        })
+
+        res = select_gap_filler_candidates(
+            self.vault,
+            target_count=1,
+            reference_date=date(2026, 10, 1),
+            exclude_paths={"TaskNotes/Tasks/syn-anchor.md"},
+        )
+        self.assertNotEqual(res["candidates"][0].get("deliverable_id"), "deliv-anchor")
+        self.assertEqual(res["candidates"][0]["inference_source"], "administrative_backlog")
+
+    def test_12_resilience_to_string_and_malformed_metadata(self):
+        """Validates that string urgency tiers or time estimates do not crash candidate selection."""
+        self._write_task("syn-task-string-fields.md", {
+            "title": "Task with String Metadata",
+            "status": "todo",
+            "scheduled": None,
+            "external_item_id": "ext-str-1",
+            "urgency_tier": "high",
+            "timeEstimate": "45m",
+            "modality": "kinetic",
+        })
+        res = select_gap_filler_candidates(
+            self.vault,
+            target_count=1,
+            reference_date=date(2026, 10, 1),
+        )
+        self.assertEqual(res["quick_capture_count"], 1)
+        c0 = res["candidates"][0]
+        self.assertEqual(c0["urgency_tier"], 3)
+        self.assertEqual(c0["timeEstimate"], 45)
+
+    def test_13_preferred_modality_sorting_and_comma_separated_modalities(self):
+        """Validates that preferred modalities prioritize matching tasks and accept comma-separated strings."""
+        self._write_task("syn-task-admin.md", {
+            "title": "Admin Capture",
+            "status": "todo",
+            "scheduled": None,
+            "external_item_id": "ext-admin",
+            "modality": "administrative",
+            "urgency_tier": 2,
+        })
+        self._write_task("syn-task-kinetic.md", {
+            "title": "Kinetic Capture",
+            "status": "todo",
+            "scheduled": None,
+            "external_item_id": "ext-kinetic",
+            "modality": "kinetic",
+            "urgency_tier": 2,
+        })
+
+        # When kinetic is preferred via string with comma
+        res = select_gap_filler_candidates(
+            self.vault,
+            target_count=2,
+            reference_date=date(2026, 10, 1),
+            preferred_modalities="kinetic,administrative",
+        )
+        self.assertEqual(res["candidates"][0]["title"], "Kinetic Capture")
+        self.assertEqual(res["candidates"][1]["title"], "Admin Capture")
 
 
 if __name__ == "__main__":

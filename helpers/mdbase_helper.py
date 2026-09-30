@@ -1803,26 +1803,46 @@ def is_quick_capture_task(frontmatter: Dict[str, Any]) -> bool:
     """
     if not isinstance(frontmatter, dict):
         return False
-    if frontmatter.get("external_item_id"):
+    # Direct external IDs
+    if frontmatter.get("external_item_id") or frontmatter.get("external_id"):
         return True
-    if str(frontmatter.get("external_source_alias") or "").strip().lower() == "quick-capture":
+
+    # Source aliases (normalize hyphens / underscores)
+    for alias_key in ("external_source_alias", "source_alias", "source", "capture_source"):
+        val = str(frontmatter.get(alias_key) or "").strip().lower().replace("_", "-")
+        if val in {"quick-capture", "inbox", "capture", "google-tasks"}:
+            return True
+
+    # Integrations
+    for integ_key in ("external_integration", "integration", "external_source"):
+        val = str(frontmatter.get(integ_key) or "").strip().lower().replace("_", "-")
+        if val in {"google-tasks", "quick-capture", "inbox"}:
+            return True
+
+    # Standalone capture policy
+    for pol_key in ("capture_policy", "standalone_future_task_policy", "capture_type", "source_type"):
+        val = str(frontmatter.get(pol_key) or "").strip().lower().replace("_", "-")
+        if val in {"standalone", "quick-capture", "inbox", "create-inert-task"}:
+            return True
+
+    # Evidence reference (e.g. google-tasks:..., quick-capture:..., capture:...)
+    evidence = str(frontmatter.get("evidence_ref") or "").strip().lower().replace("_", "-")
+    if evidence.startswith("google-tasks:") or "quick-capture" in evidence or evidence.startswith("capture:"):
         return True
-    if str(frontmatter.get("source_alias") or "").strip().lower() == "quick-capture":
+
+    # Source reference (e.g. [[Sources/capture-google-tasks...]], [[Sources/capture_...]], [[Sources/quick-capture...]])
+    src_ref = str(frontmatter.get("source_ref") or "").strip().lower().replace("_", "-")
+    if "capture-google-tasks" in src_ref or "capture-" in src_ref or "quick-capture" in src_ref:
         return True
-    if str(frontmatter.get("external_integration") or "").strip().lower() == "google-tasks":
-        return True
-    evidence = str(frontmatter.get("evidence_ref") or "").strip().lower()
-    if evidence.startswith("google-tasks:") or "quick-capture" in evidence:
-        return True
-    src_ref = str(frontmatter.get("source_ref") or "").strip().lower()
-    if "capture-google-tasks" in src_ref or "capture-" in src_ref:
-        return True
+
+    # Tags
     tags = frontmatter.get("tags") or []
     if isinstance(tags, list):
         for t in tags:
-            t_str = str(t).strip().lower()
-            if t_str in {"quick-capture", "inbox-capture", "quick_capture"}:
+            t_str = str(t).strip().lower().replace("_", "-")
+            if t_str in {"quick-capture", "inbox-capture", "quick_capture", "capture"}:
                 return True
+
     return False
 
 
@@ -1852,17 +1872,66 @@ def select_gap_filler_candidates(
     ref = reference_date or date.today()
     target = max(1, target_count)
 
+    def _parse_urgency(val: Any) -> int:
+        try:
+            if val is not None:
+                return int(val)
+        except (ValueError, TypeError):
+            m = {"urgent": 4, "high": 3, "medium": 2, "normal": 2, "low": 1}
+            return m.get(str(val).strip().lower(), 2)
+        return 2
+
+    def _parse_time_estimate(val: Any, default: int = 45) -> int:
+        try:
+            if isinstance(val, str) and val.endswith("m"):
+                return int(val[:-1])
+            if val is not None:
+                return int(val)
+        except (ValueError, TypeError):
+            return default
+        return default
+
     exclude_set: Set[str] = set()
     if exclude_paths:
-        for ep in exclude_paths:
-            ep_str = str(ep).strip()
-            exclude_set.add(ep_str)
-            exclude_set.add(Path(ep_str).stem)
-            exclude_set.add(f"[[{Path(ep_str).as_posix().removesuffix('.md')}]]")
-            exclude_set.add(f"[[TaskNotes/Tasks/{Path(ep_str).stem}]]")
+        raw_list: List[str] = []
+        if isinstance(exclude_paths, str):
+            raw_list = [exclude_paths]
+        else:
+            raw_list = list(exclude_paths)
+        for ep in raw_list:
+            for sub in str(ep).split(","):
+                sub_clean = sub.strip()
+                if not sub_clean:
+                    continue
+                exclude_set.add(sub_clean)
+                unbracketed = sub_clean.strip("[]").strip()
+                exclude_set.add(unbracketed)
+                stem = Path(unbracketed).stem
+                name = Path(unbracketed).name
+                exclude_set.add(stem)
+                exclude_set.add(name)
+                exclude_set.add(f"[[{stem}]]")
+                exclude_set.add(f"[[TaskNotes/Tasks/{stem}]]")
+                exclude_set.add(f"TaskNotes/Tasks/{name}")
+                exclude_set.add(f"TaskNotes/Tasks/{stem}.md")
+
+    pref_modalities_list: List[str] = []
+    if preferred_modalities:
+        raw_mods: List[str] = []
+        if isinstance(preferred_modalities, str):
+            raw_mods = [preferred_modalities]
+        else:
+            raw_mods = list(preferred_modalities)
+        for m in raw_mods:
+            for sub in str(m).split(","):
+                sub_clean = sub.strip().lower()
+                if sub_clean and sub_clean not in pref_modalities_list:
+                    pref_modalities_list.append(sub_clean)
 
     quick_capture_tasks: List[Dict[str, Any]] = []
     backlog_tasks: List[Dict[str, Any]] = []
+    ineligible_deliv_ids: Set[str] = set()
+    ineligible_task_refs: Set[str] = set()
 
     tasks_dir = v_path / "TaskNotes" / "Tasks"
     if tasks_dir.is_dir():
@@ -1870,13 +1939,6 @@ def select_gap_filler_candidates(
             if tf.name in {"README.md", "example-task.md"} or tf.name.startswith("."):
                 continue
             rel_path = tf.relative_to(v_path).as_posix()
-            if (
-                rel_path in exclude_set
-                or tf.stem in exclude_set
-                or f"[[{rel_path[:-3]}]]" in exclude_set
-                or tf.name in exclude_set
-            ):
-                continue
             try:
                 fm, _ = parse_frontmatter(tf.read_text(encoding="utf-8"))
             except Exception:
@@ -1884,12 +1946,38 @@ def select_gap_filler_candidates(
             if not isinstance(fm, dict):
                 continue
 
-            status = str(fm.get("status") or "todo").strip().lower()
-            if status in {"done", "archived"}:
+            did = str(fm.get("deliverable_id") or "").strip()
+            task_ref_forms = {
+                rel_path,
+                tf.name,
+                tf.stem,
+                f"[[{tf.stem}]]",
+                f"[[{rel_path[:-3]}]]",
+                f"[[TaskNotes/Tasks/{tf.stem}]]",
+            }
+
+            # Check if explicitly excluded
+            if any(ref_form in exclude_set for ref_form in task_ref_forms):
+                if did:
+                    exclude_set.add(did)
+                    ineligible_deliv_ids.add(did)
+                ineligible_task_refs.update(task_ref_forms)
                 continue
 
+            # Check status: done/archived/completed/cancelled tasks are ineligible
+            status = str(fm.get("status") or "todo").strip().lower()
+            if status in {"done", "archived", "completed", "cancelled"}:
+                if did:
+                    ineligible_deliv_ids.add(did)
+                ineligible_task_refs.update(task_ref_forms)
+                continue
+
+            # Check scheduled: tasks already scheduled on calendar are ineligible
             sched = fm.get("scheduled")
             if sched is not None and str(sched).strip() != "" and str(sched).strip().lower() != "null":
+                if did:
+                    ineligible_deliv_ids.add(did)
+                ineligible_task_refs.update(task_ref_forms)
                 continue
 
             due_val = fm.get("due")
@@ -1910,12 +1998,22 @@ def select_gap_filler_candidates(
                     due_bucket = 2
             elif bool(fm.get("date_uncertain")):
                 due_bucket = 2
+            else:
+                hb = str(fm.get("horizon_bucket") or "").strip().lower()
+                if hb == "overdue":
+                    due_bucket = 0
+                elif hb == "imminent":
+                    due_bucket = 1
+                elif hb == "future":
+                    due_bucket = 3
+                elif hb == "uncertain":
+                    due_bucket = 2
 
-            urgency = int(fm.get("urgency_tier") or 2)
+            urgency = _parse_urgency(fm.get("urgency_tier"))
             prio_rank = {"urgent": 0, "high": 1, "normal": 2, "low": 3, "none": 4}.get(
                 str(fm.get("priority") or "normal").strip().lower(), 2
             )
-            time_est = int(fm.get("timeEstimate") or 45)
+            time_est = _parse_time_estimate(fm.get("timeEstimate"), 45)
 
             task_entry = {
                 "title": str(fm.get("title") or tf.stem),
@@ -1929,11 +2027,11 @@ def select_gap_filler_candidates(
                 "priority": str(fm.get("priority") or "normal"),
                 "urgency_tier": urgency,
                 "due": due_str,
-                "external_item_id": fm.get("external_item_id"),
-                "external_source_alias": fm.get("external_source_alias") or fm.get("source_alias"),
-                "external_integration": fm.get("external_integration"),
+                "external_item_id": fm.get("external_item_id") or fm.get("external_id"),
+                "external_source_alias": fm.get("external_source_alias") or fm.get("source_alias") or fm.get("external_source"),
+                "external_integration": fm.get("external_integration") or fm.get("integration"),
                 "project_ref": fm.get("project_ref"),
-                "deliverable_id": fm.get("deliverable_id"),
+                "deliverable_id": did or None,
                 "_due_bucket": due_bucket,
                 "_days_until": days_until,
                 "_urgency": urgency,
@@ -1945,9 +2043,21 @@ def select_gap_filler_candidates(
             else:
                 backlog_tasks.append(task_entry)
 
-    # Sort quick_capture_tasks: overdue -> imminent -> undated -> future, then urgency desc, prio asc, days_until asc
+    # Sort quick_capture_tasks: overdue -> imminent -> undated -> future
+    # When preferred modalities specified, rank matching modalities first within each due bucket
+    qc_mod_weights: Dict[str, int] = {}
+    if pref_modalities_list:
+        qc_mod_weights = {m: idx for idx, m in enumerate(pref_modalities_list)}
+
     quick_capture_tasks.sort(
-        key=lambda x: (x["_due_bucket"], -x["_urgency"], x["_prio_rank"], x["_days_until"], x["title"])
+        key=lambda x: (
+            x["_due_bucket"],
+            qc_mod_weights.get(x["modality"].lower(), 99),
+            -x["_urgency"],
+            x["_prio_rank"],
+            x["_days_until"],
+            x["title"],
+        )
     )
 
     primary_candidates: List[Dict[str, Any]] = []
@@ -1967,9 +2077,8 @@ def select_gap_filler_candidates(
     if needed_inferred > 0:
         # Preferred order for gap-filling: administrative & kinetic (ideal for slump/defrost), synthesis (recovery), analytical (deep)
         modality_weights = {"administrative": 0, "kinetic": 1, "synthesis": 2, "analytical": 3}
-        if preferred_modalities:
-            pref_list = [str(m).strip().lower() for m in preferred_modalities]
-            modality_weights = {m: idx for idx, m in enumerate(pref_list)}
+        if pref_modalities_list:
+            modality_weights = {m: idx for idx, m in enumerate(pref_modalities_list)}
             modality_weights.setdefault("administrative", 90)
             modality_weights.setdefault("kinetic", 91)
             modality_weights.setdefault("synthesis", 92)
@@ -2031,9 +2140,23 @@ def select_gap_filler_candidates(
                 for d in pool:
                     if len(inferred_candidates) >= needed_inferred:
                         break
-                    did = str(d.get("id") or "")
-                    if did in existing_deliv_ids or did in exclude_set:
+                    did = str(d.get("id") or "").strip()
+                    t_ref = str(d.get("task_ref") or "").strip()
+                    if not did and not t_ref:
                         continue
+                    if did in existing_deliv_ids or did in ineligible_deliv_ids or did in exclude_set:
+                        continue
+                    if t_ref:
+                        t_clean = t_ref.strip("[]").strip()
+                        if (
+                            t_ref in exclude_set
+                            or t_clean in exclude_set
+                            or Path(t_clean).stem in exclude_set
+                            or t_ref in ineligible_task_refs
+                            or f"[[{t_clean}]]" in ineligible_task_refs
+                            or f"[[TaskNotes/Tasks/{Path(t_clean).stem}]]" in ineligible_task_refs
+                        ):
+                            continue
                     existing_deliv_ids.add(did)
                     idx = len(inferred_candidates) + 1
                     inferred_candidates.append({
@@ -2045,17 +2168,17 @@ def select_gap_filler_candidates(
                         "wikilink": None,
                         "tags": ["task", f"project-{proj_id}"],
                         "modality": str(d.get("modality") or "analytical"),
-                        "timeEstimate": int(d.get("timeEstimate") or 45),
+                        "timeEstimate": _parse_time_estimate(d.get("timeEstimate"), 45),
                         "energy": str(d.get("energy") or "medium"),
                         "friction": str(d.get("friction") or "medium"),
                         "priority": str(d.get("priority") or "normal"),
-                        "urgency_tier": int(d.get("urgency_tier") or 2),
+                        "urgency_tier": _parse_urgency(d.get("urgency_tier")),
                         "due": str(d.get("due")) if d.get("due") is not None else None,
                         "external_item_id": None,
                         "external_source_alias": None,
                         "external_integration": None,
                         "project_ref": f"[[Projects/{proj_id}/Roadmap]]",
-                        "deliverable_id": did,
+                        "deliverable_id": did or None,
                     })
             except Exception:
                 continue
