@@ -459,11 +459,12 @@ class DeploymentTests(unittest.TestCase):
         with mock.patch("sys.argv", ["zettel_graph_linker.py", "--vault", str(self.target), "--dry-run"]):
             self.assertEqual(zettel_graph_linker.main(), 0)
 
-        # 4. Verify all 15 runtime and development skills and workflows have A2 Access Layer and zero Antigravity-only tool lock-in
+        # 4. Verify all 17 runtime, integration, and development skills and workflows have A2 Access Layer and zero Antigravity-only tool lock-in
         all_skills = list(sorted((repo_root / ".agent/skills").glob("*/SKILL.md"))) + list(
             sorted((repo_root / "Development/skills").glob("*/SKILL.md"))
         )
-        self.assertEqual(len(all_skills), 15)
+        self.assertEqual(len(all_skills), 17)
+        self.assertTrue(update.is_protected_target("System/Ingestion-Sources.md"))
         for skill_md in all_skills:
             text = skill_md.read_text(encoding="utf-8")
             self.assertNotIn("Gemini Spark", text, str(skill_md))

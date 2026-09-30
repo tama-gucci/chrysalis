@@ -126,8 +126,28 @@ class TestTypeDefinitionsV03(unittest.TestCase):
         props = val["properties"]
         self.assertEqual(val["required"], ["id", "title", "sha256", "captured_date", "source_type", "ingestion_status"])
         self.assertEqual(props["sha256"]["pattern"], "^[a-f0-9]{64}$")
-        self.assertEqual(props["source_type"]["enum"], ["syllabus", "transcript", "pdf", "web_page", "audio", "lecture_recording"])
-        self.assertEqual(props["ingestion_status"]["enum"], ["raw", "extracted", "reconciled", "archived"])
+        self.assertEqual(
+            props["source_type"]["enum"],
+            [
+                "syllabus",
+                "transcript",
+                "pdf",
+                "web_page",
+                "audio",
+                "lecture_recording",
+                "image",
+                "screenshot",
+                "specification",
+                "reference",
+                "pdf_textbook",
+                "supporting_asset",
+                "other",
+            ],
+        )
+        self.assertEqual(
+            props["ingestion_status"]["enum"],
+            ["raw", "extracted", "processed", "reconciled", "incomplete", "archived"],
+        )
 
 
 class TestContractsAndTemplates(unittest.TestCase):

@@ -35,6 +35,10 @@ schema:
         type: string
         format: date-time
         description: "Creation timestamp with explicit local offset"
+      created:
+        type: string
+        format: date-time
+        description: "Backward-compatible creation timestamp alias"
       tags:
         type: array
         minItems: 1
@@ -60,6 +64,12 @@ schema:
           type: string
         default: []
         description: "Bidirectional wikilinks to related atomic Zettels"
+      related_zettels:
+        type: array
+        items:
+          type: string
+        default: []
+        description: "Backward-compatible alias for linked_zettels"
       integration_status:
         type: string
         enum: [unintegrated, staged, integrated]

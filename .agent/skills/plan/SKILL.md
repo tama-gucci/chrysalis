@@ -31,7 +31,8 @@ writes:
 > **Stage 5 Lifecycle Alignment (`System/Workflows/05-plan.md`):** `/plan` executes immediately after `/ingest` (`System/Workflows/01-capture.md` through `04-organize.md`, aligned with `/project` and `/zettel`), taking newly materialized 14-day deliverable tasks (`TaskNotes/Tasks/YYYYMMDD-<slug>.md` with `project_ref` and `linked_zettels`) and stacking them into bio-cognitive ultradian focus sprints while keeping `date_uncertain: true, due: null` items unscheduled for deadline clarification.
 
 ## Protocol 1: Staging Mode (`/plan --stage` or `/stage`)
-Triggered during the evening workflow (`/evening` after `/audit` and `/ingest --drive`) or after interactive `/ingest` to construct tomorrow's prototype schedule.
+Triggered during the evening workflow (`/evening` after `/audit` and `/ingest --all`) or after interactive `/ingest` to construct tomorrow's prototype schedule.
+
 
 ### Step 1: Schedule Addition & Context Query
 Initiate the conversation by prompting the user:

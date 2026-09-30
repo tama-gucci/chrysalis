@@ -1,6 +1,6 @@
 ---
 name: project
-description: "Project staging and lifecycle integration engine: aligns with /ingest and Workflows 01–04 to synthesize or reconcile standardized project roadmaps in Projects/*/Roadmap.md from translated Google Drive/session sources or conversational intake, and orchestrates promotion into Life-Roadmap.md, System/Memory.md, and /plan."
+description: "Project staging and lifecycle integration engine: aligns with /ingest and Workflows 01–04 to synthesize or reconcile standardized project roadmaps in Projects/*/Roadmap.md from translated external/session sources or conversational intake, and orchestrates promotion into Life-Roadmap.md, System/Memory.md, and /plan."
 trigger: "/project"
 domain: runtime
 reads:
@@ -32,7 +32,7 @@ writes:
 * **Provider-Independent A2 Execution:** Operate directly on `<vault>` across Google Antigravity, OpenAI Codex, Claude Code, and local CLI agents using local file tools (`write_to_file` / `replace_file_content` / `apply_patch`), `helpers/mdbase_helper.py` (`reconcile_syllabus`, `filter_horizon_deliverables`, `validate_record`, `apply_cas_mutation`), and `mdbase -C "<vault>" query/validate`.
 
 ## Supported Commands & Triggers
-* `/project` (or `/project --stage` / `/stage --project`) — Initiates conversational or source-driven (`/ingest`) intake and synthesizes/reconciles a project roadmap in `Projects/<project_id>/Roadmap.md` aligned with `System/Workflows/01-capture.md` through `04-organize.md`.
+* `/project` (or `/project --stage` / `/stage --project`) — Initiates conversational or source-driven (`/ingest --all` / `/ingest --source <alias>`) intake and synthesizes/reconciles a project roadmap in `Projects/<project_id>/Roadmap.md` aligned with `System/Workflows/01-capture.md` through `04-organize.md`.
 * `/project --integrate [project-id]` (or `/integrate --project [project-id]`) — Promotes an incubated/staged project roadmap into `System/Life-Roadmap.md` and dynamic memory, and hands off 14-day tasks to `/plan`.
 * `/project --status` (or `/project --list`) — Scans all project dossiers in `Projects/` and displays active, staged, paused, and archived projects.
 
@@ -60,7 +60,8 @@ graph TD
 Execute project synthesis either when invoked directly by the user in chat or when called by [`/ingest`](../ingest/SKILL.md) during `System/Workflows/01-capture.md` through `04-organize.md`:
 
 ### Step 0: Alignment with `System/Workflows/01-capture.md` – `04-organize.md` & `/ingest`
-* **Zero Local Binary Storage (No `Resources/` Folder):** All original binary/source files live in Google Drive (`Chrysalis-Media-Locker/`, read via Google Drive MCP server or local Drive mount) to keep the vault pure Markdown. Never create a `Projects/<project_id>/Resources/` subfolder in the vault. External syllabi, specifications, and handouts are always translated into `<vault>/Sources/{source_id}.md` via `/ingest` and linked into `Roadmap.md` via `source_ref` and `source_checksum`.
+* **Zero Local Binary Storage (No `Resources/` Folder):** All original binary/source files live outside the vault in the configured external media storage boundary (`preserve_originals_in_place: true`, configured under `ingestion.sources`, e.g., `media` via the optional `google-drive` integration skill or a local filesystem mount) to keep the vault pure Markdown. Never create a `Projects/<project_id>/Resources/` subfolder in the vault. External syllabi, specifications, and handouts are always translated into `<vault>/Sources/{source_id}.md` via `/ingest` and linked into `Roadmap.md` via `source_ref` and `source_checksum`.
+
 * **Workflows `01`–`04` Execution:**
   1. **`01-capture`:** Source is quarantined in `<vault>/Sources/{source_id}.md` with a 64-character hex `sha256`.
   2. **`02-extract`:** 100% of deliverables across the full timeline are extracted into the `deliverables` YAML array (with `due: null, date_uncertain: true` for any TBD or ambiguous dates).

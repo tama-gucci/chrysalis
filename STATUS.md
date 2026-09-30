@@ -11,14 +11,15 @@ Reviewed against source on 2026-09-27. This document is the authoritative ground
 | **Collection Manifest (`mdbase.yaml`)** | **Implemented** | `mdbase.yaml` specifies `spec_version: "0.3.0"`, Draft 2020-12, types and contracts folders. |
 | **Type Schemas (`_types/*.md`)** | **Implemented** | `_types/task.md`, `project.md`, `zettel.md`, `source.md`, `system_state.md` adhering strictly to JSON Schema Draft 2020-12 and `kind: mdbase.type`. |
 | **Agent Runtime Contract** | **Implemented** | `contracts/agent-runtime.contract.md` (8-stage lifecycle, 9 discrete actions, approval gate, 22 diagnostic codes). |
+| **Ingestion Input Contract (`v1.0.0`)** | **Implemented** | `contracts/ingestion-input.contract.md` & `helpers/ingestion_contract.py` (provider-neutral `file`, `text`, and `structured_task` normalization, separated `sha256` / `normalized_text_sha256` / `structured_payload_sha256` fingerprints, composite external identity, and anti-injection sanitization). |
 | **Collection & Path Contract** | **Implemented** | `contracts/mdbase-collection.contract.md` (tripartite model, record identities, wikilinks matrix, 14-day horizon). |
-| **Persistent Agent Memory** | **Implemented** | `System/Memory.md` and public template `System/_templates/Memory.template.md` (deterministic preferences, modality baselines, bounded multiplier learning). |
-| **Validation & CAS Helpers** | **Implemented** | `helpers/mdbase_helper.py` (atomic CAS mutations via `fcntl.flock` / `msvcrt.locking`, `compute_revision`, `validate_record`, `check_semantic_duplicate`, `reconcile_syllabus`). |
+| **Persistent Agent Memory** | **Implemented** | `System/Memory.md` and public templates `System/_templates/Memory.template.md` & `System/_templates/Ingestion-Sources.template.md` (deterministic preferences, modality baselines, bounded multiplier learning, private `ingestion.sources` bindings). |
+| **Validation & CAS Helpers** | **Implemented** | `helpers/mdbase_helper.py`, `helpers/ingestion_contract.py`, `helpers/providers/google_drive.py`, `helpers/providers/google_tasks.py` (atomic CAS mutations, `validate_record`, `discover_configured_source`, `evaluate_provider_file_identity`, `evaluate_task_capture_identity`, `draft_structured_task_capture`, `reconcile_syllabus`, `classify_deliverable_horizons`, `prevalidate_ingestion_proposal`, `apply_ingestion_proposal`, `verify_ingestion_batch`). |
 | **Operational Workflow Runbooks** | **Implemented** | `System/Workflows/01-capture.md` through `08-continuation.md`. |
-| **Dedicated Source Ingestion (`/ingest`)** | **Implemented** | `.agent/skills/ingest/SKILL.md` (Google Drive Media Locker `Chrysalis-Media-Locker/` batch ingestion via `/ingest --drive` during nightly `/audit` and interactive direct share via `/ingest --share`, zero local `Resources/` folder, Workflows 01–04 `/project` & `/zettel` alignment before `/plan`). |
-| **Protected Framework Updater (`update.py`)** | **Implemented** | `update.py` (deploys allowlisted framework files, prunes retired framework/Spark artifacts with pre-mutation backups and rollback support, merges `.agent/skills.json` and `mdbase.yaml` non-destructively, and protects all personal data). |
+| **Provider-Independent Core Ingestion (`/ingest`) & Optional Provider Adapters** | **Implemented** | `.agent/skills/ingest/SKILL.md` (100% provider-neutral 7-stage lifecycle `discover → extract → draft → prevalidate → approve → apply → verify` via `/ingest --source <alias>` and `/ingest --all`), paired with optional read-only integration skills `.agent/skills/google-drive/SKILL.md` (`media`) and `.agent/skills/google-tasks/SKILL.md` (`quick-capture`). |
+| **Protected Framework Updater (`update.py`)** | **Implemented** | `update.py` (deploys allowlisted framework files, preserves custom skills, `System/Memory.md`, `System/Ingestion-Sources.md`, and previously deployed `.obsidian/plugins/**`, prunes retired Spark/mirror artifacts with pre-mutation backups, enforces exact-content SHA-256 verification on `_rollback()`, and protects all personal data). |
 | **Local Python Test Harness** | **Implemented** | Standalone validation harness in `tests/harness/validation_harness.py`, unit/integration tests in `tests/test_validation_harness.py`. |
-| **Synthetic Worked Scenario & Failure Suite** | **Implemented** | Synthetic syllabus v1, v2 revised, transcript, prompt injection (`fixtures/`), end-to-end runner in `tests/test_worked_scenario.py`, 6 negative tests in `tests/test_failure_modes.py`. |
+| **Synthetic Worked Scenario & Failure Suite** | **Implemented** | Synthetic syllabus v1, v2 revised, transcript, prompt injection (`fixtures/`), end-to-end runner in `tests/test_worked_scenario.py`, 6 negative tests in `tests/test_failure_modes.py`, and provider-neutral ingestion suite in `tests/test_provider_neutral_ingestion.py`. |
 | **Staged Vault Migration Plan** | **Implemented** | Non-destructive migration plan in `docs/staged-migration-plan.md`. |
 
 ---
@@ -65,6 +66,13 @@ Reviewed against source on 2026-09-27. This document is the authoritative ground
 ---
 
 ## 5. Verification Records
+
+### Provider-Independent Ingestion & One-Way Task Capture Verification (2026-09-29)
+- **Provider-Neutral Ingestion Suite**: `python -m unittest tests.test_provider_neutral_ingestion -v` $\to$ **10/10 passed** (core `/ingest` provider neutrality, contract `1.0.0` fingerprint separation, provider relocation guard & `previous_sources`/`previous_paths` preservation, Google Tasks composite identity & date-only preservation, conflict proposal prevalidation/application with local `scheduled`/`project_ref` & repeat-import conflict deduplication, bounded pagination & read-only enforcement, resumable batch ledger, untrusted payload quarantine, legacy migration, and multi-list collision/subtask reconciliation).
+- **Core Unittest Suite**: `python -m unittest discover -t . -s tests` $\to$ **301 tests passed, 1 skipped cleanly** (0 failures, 0 errors).
+- **Local Validation Harness**: `python tests/harness/validation_harness.py -c .` $\to$ **Exit code 0** (0 errors, 0 warnings).
+- **System Integrity Diagnostic (`/doctor`)**: `python System/scripts/doctor.py --vault .` $\to$ **HEALTHY** (0 errors, 17/17 skills strictly verified).
+- **Candidate Privacy Audit**: `python Development/scripts/candidate_audit.py` $\to$ **passed: true, 0 findings**.
 
 ### Milestone 3 Verification (2026-09-23)
 - **Pytest Full Suite**: `.venv/bin/pytest tests/` $\to$ **259 passed, 1 skipped cleanly** (0 failures, 0 errors).

@@ -46,6 +46,16 @@ schema:
         type: [string, "null"]
         format: date
         description: "Target completion date in YYYY-MM-DD format, or null if uncertain"
+      due_time:
+        type: [string, "null"]
+        description: "Observed deadline time from source (e.g. '23:59:00'), or null for date-only deadlines"
+      due_timezone:
+        type: [string, "null"]
+        description: "Observed timezone label/offset from source (e.g. 'CDT', '-05:00')"
+      due_at:
+        type: [string, "null"]
+        format: date-time
+        description: "Full RFC 3339 deadline timestamp with explicit local offset when time is observed; null for date-only deadlines"
       scheduled:
         type: [string, "null"]
         format: date-time
@@ -103,6 +113,23 @@ schema:
       deliverable_id:
         type: [string, "null"]
         description: "Identifier linking task to deliverable entry in parent roadmap"
+      source_ref:
+        type: [string, "null"]
+        description: "Wikilink to originating source record, e.g. [[Sources/<id>]]"
+      evidence_ref:
+        type: [string, "null"]
+        description: "Page, section, or visual evidence citation supporting this task"
+      horizon_bucket:
+        type: [string, "null"]
+        enum: [overdue, imminent, uncertain, future, null]
+        description: "Horizon bucket classification (overdue, imminent, uncertain, future)"
+      review_required:
+        type: boolean
+        default: false
+        description: "True if contradictory, stale, or uncertain deadline/association evidence requires user review"
+      review_notes:
+        type: [string, "null"]
+        description: "Explanation of contradictory, stale, or uncertain evidence"
       googleCalendarEventId:
         type: [string, "null"]
         description: "TaskNotes Google Calendar event ID for external calendar sync"
@@ -110,6 +137,39 @@ schema:
         type: boolean
         default: false
         description: "True if deliverable has an ambiguous deadline or is TBD"
+      external_source_alias:
+        type: [string, "null"]
+        description: "Configured ingestion source alias that captured this task (e.g. 'quick-capture')"
+      external_integration:
+        type: [string, "null"]
+        description: "Integration adapter that captured this task (e.g. 'google-tasks')"
+      external_account_scope:
+        type: [string, "null"]
+        description: "Account scope identifier for external task deduplication"
+      external_collection_id:
+        type: [string, "null"]
+        description: "External task list or collection identifier"
+      external_item_id:
+        type: [string, "null"]
+        description: "Stable external item ID within the provider task list"
+      external_revision:
+        type: [string, "null"]
+        description: "Observed external revision token, etag, or update timestamp"
+      external_payload_sha256:
+        type: [string, "null"]
+        pattern: "^[a-f0-9]{64}$"
+        description: "Separate SHA-256 fingerprint of normalized structured task payload"
+      external_conflict_flag:
+        type: boolean
+        default: false
+        description: "True when an external task update conflicts with local edits"
+      external_conflict_proposal:
+        type: [object, "null"]
+        description: "Proposed external changes awaiting human review when local edits are preserved"
+      user_modified:
+        type: boolean
+        default: false
+        description: "True if task fields or body were manually modified locally"
       startedAt:
         type: [string, "null"]
         format: date-time

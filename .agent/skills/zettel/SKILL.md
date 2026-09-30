@@ -1,6 +1,6 @@
 ---
 name: zettel
-description: "Captures atomic literature, technical insights, or Chrysalis system evolution ideas (#chrysalis), aligns with /ingest and Workflows 01–04 to ground notes in Sources/{source_id}.md and Google Drive URLs, generates 14-digit timestamp IDs, and weaves bidirectional wikilinks into Projects/*/Roadmap.md and TaskNotes/Tasks/*.md before /plan."
+description: "Captures atomic literature, technical insights, or Chrysalis system evolution ideas (#chrysalis), aligns with /ingest and Workflows 01–04 to ground notes in Sources/{source_id}.md and external source URLs, generates 14-digit timestamp IDs, and weaves bidirectional wikilinks into Projects/*/Roadmap.md and TaskNotes/Tasks/*.md before /plan."
 trigger: "/zettel"
 domain: runtime
 reads:
@@ -32,11 +32,11 @@ writes:
 ## Syntax & Triggers
 * `/zettel [title] [tags...]` — Synthesizes an atomic single-thesis knowledge note in `Slipbox/YYYYMMDDHHmmss-<slug>.md`.
 * `/zettel [title] #chrysalis [subtags...]` — Captures system feature ideas, habit trackers, and workflow concepts for `/evolve`.
-* **Automatic Invocation via `/ingest` (`Workflows 01–04`):** Invoked automatically during Google Drive batch ingestion (`/audit` $\to$ `/ingest --drive` via Google Drive MCP server or local Drive mount) and interactive direct share (`/ingest`) to synthesize atomic notes from translated `Sources/{source_id}.md` records before `/plan` (`05-plan.md`).
+* **Automatic Invocation via `/ingest` (`Workflows 01–04`):** Invoked automatically during configured source batch ingestion (`/audit` $\to$ `/ingest --all` or `/ingest --source <alias>` via optional integration skills such as `google-drive` or local filesystem mounts) and interactive direct share (`/ingest`) to synthesize atomic notes from translated `Sources/{source_id}.md` records before `/plan` (`05-plan.md`).
 
 ## Alignment with `System/Workflows/01-capture.md` – `04-organize.md` & `/ingest`
-1. **Zero Local Binary Storage (Google Drive Provenance):** Raw source files (lecture recordings, PDF papers, slide decks, whiteboard photos) remain in Google Drive (`Chrysalis-Media-Locker/`, read via Google Drive MCP server or local Drive mount). `/ingest` first translates the source into `<vault>/Sources/{source_id}.md` (`01-capture.md`).
-2. **Cryptographic & Provenance Grounding (`02-extract.md` – `04-organize.md`):** Every Zettel extracted from an ingested source embeds `source_ref: "[[Sources/<source_id>]]"`, `source_checksum: "<64-char-sha256>"`, `source_url` (pointing to the original Google Drive file or external URL), and `project_ref: "[[Projects/<project_id>/Roadmap]]"`.
+1. **Zero Local Binary Storage (Configured External Media Provenance):** Raw source files (lecture recordings, PDF papers, slide decks, whiteboard photos) remain outside the vault in the configured external media storage boundary (`preserve_originals_in_place: true`, configured under `ingestion.sources`, e.g., `media` via the optional `google-drive` integration skill or a local filesystem mount). `/ingest` first translates the source into `<vault>/Sources/{source_id}.md` (`01-capture.md`).
+2. **Cryptographic & Provenance Grounding (`02-extract.md` – `04-organize.md`):** Every Zettel extracted from an ingested source embeds `source_ref: "[[Sources/<source_id>]]"`, `source_checksum: "<64-char-sha256>"`, `source_url` (pointing to the original external file or web URL when known), and `project_ref: "[[Projects/<project_id>/Roadmap]]"`.
 3. **Pre-`/plan` Hypergraph Weaving (`04-organize.md` $\to$ `05-plan.md`):** Before `/plan` schedules active focus sprints, `/zettel` links each new `<vault>/Slipbox/YYYYMMDDHHmmss-<slug>.md` note into `<vault>/Projects/<project_id>/Roadmap.md` (`linked_zettels`) and active 14-day `<vault>/TaskNotes/Tasks/YYYYMMDD-<slug>.md` frontmatter (`linked_zettels`) so the research notes surface inside scheduled focus blocks.
 
 ## Processing Pipeline
@@ -55,7 +55,7 @@ writes:
        - chrysalis/feature # or habit, workflow, ui
      source_ref: "[[Sources/source-id]]" # or null if conversational
      source_checksum: null # 64-char lowercase hex sha256 if extracted from source
-     source_url: null # Google Drive or web URL if applicable
+     source_url: null # External media or web URL if applicable
      project_ref: null
      linked_zettels: []
      integration_status: unintegrated # unintegrated, staged, integrated
@@ -85,7 +85,7 @@ writes:
        - principle/domain
      source_ref: "[[Sources/source-id]]" # or null if conversational
      source_checksum: "{{64_char_sha256_or_null}}"
-     source_url: "{{google_drive_or_web_url_or_null}}"
+     source_url: "{{external_source_or_web_url_or_null}}"
      project_ref: "[[Projects/project-slug/Roadmap]]" # or null
      linked_zettels: []
      integration_status: integrated # integrated when linked into Roadmap & Tasks during Stage 4
@@ -114,4 +114,4 @@ writes:
         linked_zettels:
           - "[[YYYYMMDDHHmmss-slug]]"
         ```
-     3. **Task & Knowledge Interoperability:** During active focus sprints planned by `/plan`, Obsidian (with TaskNotes) and AI runtime agents read `linked_zettels` to surface the underlying knowledge note and its Google Drive `source_url` directly within task execution context.
+     3. **Task & Knowledge Interoperability:** During active focus sprints planned by `/plan`, Obsidian (with TaskNotes) and AI runtime agents read `linked_zettels` to surface the underlying knowledge note and its external `source_url` directly within task execution context.

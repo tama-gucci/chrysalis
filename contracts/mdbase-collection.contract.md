@@ -102,12 +102,22 @@ schema:
       dateCreated:
         type: string
         format: date-time
+      created:
+        type: string
+        format: date-time
       dateModified:
         type: string
         format: date-time
       due:
         type: [string, "null"]
         format: date
+      due_time:
+        type: [string, "null"]
+      due_timezone:
+        type: [string, "null"]
+      due_at:
+        type: [string, "null"]
+        format: date-time
       scheduled:
         type: [string, "null"]
         format: date-time
@@ -146,9 +156,44 @@ schema:
         type: [string, "null"]
       deliverable_id:
         type: [string, "null"]
+      source_ref:
+        type: [string, "null"]
+      evidence_ref:
+        type: [string, "null"]
+      horizon_bucket:
+        type: [string, "null"]
+        enum: [overdue, imminent, uncertain, future, null]
+      review_required:
+        type: boolean
+        default: false
+      review_notes:
+        type: [string, "null"]
       googleCalendarEventId:
         type: [string, "null"]
       date_uncertain:
+        type: boolean
+        default: false
+      external_source_alias:
+        type: [string, "null"]
+      external_integration:
+        type: [string, "null"]
+      external_account_scope:
+        type: [string, "null"]
+      external_collection_id:
+        type: [string, "null"]
+      external_item_id:
+        type: [string, "null"]
+      external_revision:
+        type: [string, "null"]
+      external_payload_sha256:
+        type: [string, "null"]
+        pattern: "^[a-f0-9]{64}$"
+      external_conflict_flag:
+        type: boolean
+        default: false
+      external_conflict_proposal:
+        type: [object, "null"]
+      user_modified:
         type: boolean
         default: false
       startedAt:
@@ -236,6 +281,18 @@ schema:
       source_checksum:
         type: [string, "null"]
         pattern: "^[a-f0-9]{64}$"
+      contributing_sources:
+        type: array
+        items:
+          type: [string, object]
+      reference_sources:
+        type: array
+        items:
+          type: string
+      supporting_assets:
+        type: array
+        items:
+          type: object
       tags:
         type: array
         items:
@@ -252,17 +309,29 @@ schema:
             - id
             - title
             - status
+          additionalProperties: false
           properties:
             id:
               type: string
+              pattern: "^[a-z0-9-]+$"
             title:
               type: string
             due:
               type: [string, "null"]
               format: date
+            due_time:
+              type: [string, "null"]
+            due_timezone:
+              type: [string, "null"]
+            due_at:
+              type: [string, "null"]
+              format: date-time
             date_uncertain:
               type: boolean
               default: false
+            horizon_bucket:
+              type: [string, "null"]
+              enum: [overdue, imminent, uncertain, future, completed, archived, null]
             status:
               type: string
               enum: [todo, in-progress, done, archived]
@@ -272,6 +341,22 @@ schema:
               type: integer
               minimum: 1
               maximum: 4
+            source_ref:
+              type: [string, "null"]
+            source_scope:
+              type: [string, "null"]
+            evidence:
+              type: [string, "null"]
+            conflict_flag:
+              type: boolean
+              default: false
+            conflict_notes:
+              type: [string, "null"]
+            user_modified:
+              type: boolean
+              default: false
+            googleCalendarEventId:
+              type: [string, "null"]
 collection:
   display:
     name_field: title
@@ -332,6 +417,9 @@ schema:
       dateCreated:
         type: string
         format: date-time
+      created:
+        type: string
+        format: date-time
       tags:
         type: array
         minItems: 1
@@ -347,6 +435,10 @@ schema:
       project_ref:
         type: [string, "null"]
       linked_zettels:
+        type: array
+        items:
+          type: string
+      related_zettels:
         type: array
         items:
           type: string
@@ -414,12 +506,54 @@ schema:
         minLength: 1
       source_type:
         type: string
-        enum: [syllabus, transcript, pdf, web_page, audio, lecture_recording]
+        enum: [syllabus, transcript, pdf, web_page, audio, lecture_recording, image, screenshot, specification, reference, pdf_textbook, supporting_asset, structured_task, task_capture, other]
       sha256:
-        type: string
+        type: [string, "null"]
         pattern: "^[a-f0-9]{64}$"
+      bytes_available:
+        type: boolean
+        default: true
+      normalized_text_sha256:
+        type: [string, "null"]
+        pattern: "^[a-f0-9]{64}$"
+      structured_payload_sha256:
+        type: [string, "null"]
+        pattern: "^[a-f0-9]{64}$"
+      source_alias:
+        type: [string, "null"]
+      integration:
+        type: [string, "null"]
+      collection_id:
+        type: [string, "null"]
+      external_item_id:
+        type: [string, "null"]
+      external_revision:
+        type: [string, "null"]
+      previous_sources:
+        type: array
+        items:
+          type: object
+        default: []
       original_filename:
         type: string
+      relative_path:
+        type: [string, "null"]
+      previous_paths:
+        type: array
+        items:
+          type: string
+      location_category:
+        type: [string, "null"]
+      material_role:
+        type: [string, "null"]
+      ingestion_outcome:
+        type: [string, "null"]
+      extraction_coverage:
+        type: [object, "null"]
+      evidence_anchors:
+        type: array
+        items:
+          type: object
       file_size_bytes:
         type: integer
         minimum: 0
@@ -432,7 +566,7 @@ schema:
         format: date-time
       ingestion_status:
         type: string
-        enum: [raw, extracted, reconciled, archived]
+        enum: [raw, extracted, processed, reconciled, incomplete, archived]
         default: raw
       supersedes:
         type: [string, "null"]

@@ -16,7 +16,7 @@ schema:
     properties:
       type:
         type: string
-        enum: [system_state, strategic_roadmap, system_health, system_health_report, system_specification]
+        enum: [system_state, strategic_roadmap, system_health, system_health_report, system_specification, system_memory_extension]
       id:
         type: string
       version:

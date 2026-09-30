@@ -48,9 +48,38 @@ session_metrics:
   total_focus_hours: 0.0
   consecutive_planned_days: 1
 
+ingestion:
+  contract_version: "1.0.0"
+  auto_ingest_on_nightly_audit: true
+  local_resources_folder_enabled: false
+  preserve_originals_in_place: true
+  standalone_future_task_policy: "create_inert_task"
+  default_sources:
+    - "media"
+    - "quick-capture"
+  sources:
+    media:
+      integration: google-drive
+      enabled: false
+      collection: "<folder-reference>"
+      access: read-only
+    quick-capture:
+      integration: google-tasks
+      enabled: false
+      collection: "<list-reference>"
+      access: read-only
+
+
+# Narrow legacy compatibility block preserved for older scripts and migration checks
 ingestion_config:
+  locker_root: "Chrysalis-Media-Locker"
   drive_inbox_folder: "Chrysalis-Media-Locker/01-Inbox"
-  drive_archive_folder: "Chrysalis-Media-Locker/02-Archived-Binaries"
+  drive_projects_folder: "Chrysalis-Media-Locker/02-Projects"
+  discovery_roots:
+    - "01-Inbox"
+    - "02-Projects"
+  preserve_originals_in_place: true
+  max_discovery_depth: 6
   auto_ingest_on_nightly_audit: true
   local_resources_folder_enabled: false
 ---

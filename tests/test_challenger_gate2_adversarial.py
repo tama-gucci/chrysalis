@@ -241,16 +241,16 @@ deliverables:
         self.assertEqual(len(diff_ghost.added), 1)
         self.assertEqual(len(diff_ghost.dropped), 0)
 
-        # Empty deliverables: all existing items become dropped
+        # Empty deliverables: empty extraction must never imply deletion
         diff_empty = reconcile_syllabus(self.roadmap_file, [])
-        self.assertEqual(len(diff_empty.dropped), len(self.initial_roadmap["deliverables"]))
-        for dropped in diff_empty.dropped:
-            self.assertEqual(dropped["status"], "archived")
+        self.assertEqual(len(diff_empty.dropped), 0)
+        self.assertEqual(len(diff_empty.unchanged), len(self.initial_roadmap["deliverables"]))
 
-        # Malformed YAML string does not throw unhandled exception
+        # Malformed YAML string does not throw unhandled exception and never implies deletion
         diff_bad_yaml = reconcile_syllabus(self.roadmap_file, ":::invalid yaml * % --")
         self.assertIsInstance(diff_bad_yaml, SyllabusDiff)
-        self.assertEqual(len(diff_bad_yaml.dropped), len(self.initial_roadmap["deliverables"]))
+        self.assertEqual(len(diff_bad_yaml.dropped), 0)
+        self.assertEqual(len(diff_bad_yaml.unchanged), len(self.initial_roadmap["deliverables"]))
 
     def test_reconciliation_omitted_due_key_behavior(self):
         """

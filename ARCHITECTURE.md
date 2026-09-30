@@ -81,17 +81,17 @@ Chrysalis is an open, provider-independent AI agent framework operating on an **
 Chrysalis operates across three strictly segregated spheres:
 
 1. **Framework Boundary (Source Repository)**:
-   - Owns collection manifests (`mdbase.yaml`), JSON Schema Draft 2020-12 type definitions (`_types/*.md`), runtime contracts (`contracts/`), templates (`_templates/`, `System/_templates/`), operational workflows (`System/Workflows/`), and deterministic Python helpers (`helpers/mdbase_helper.py`).
+   - Owns collection manifests (`mdbase.yaml`), JSON Schema Draft 2020-12 type definitions (`_types/*.md`), runtime contracts (`contracts/` including `contracts/ingestion-input.contract.md`), templates (`_templates/`, `System/_templates/`), operational workflows (`System/Workflows/`), provider-neutral ingestion skills (`.agent/skills/ingest/SKILL.md`), optional provider integration skills (`.agent/skills/google-drive/SKILL.md`, `.agent/skills/google-tasks/SKILL.md`), and deterministic Python helpers (`helpers/mdbase_helper.py`, `helpers/ingestion_contract.py`, `helpers/providers/`).
 2. **Runtime Agent Boundary (AI Reasoning Engine)**:
-   - An executing AI model (Google Antigravity, Claude, OpenAI Codex, local LLMs) supplying cognitive reasoning. The agent ingests context, formulates structured action proposals, waits for human approval, and invokes database operations strictly conforming to framework contracts.
-3. **External Applications Boundary (UI & Transports)**:
-   - Optional interfaces (Obsidian desktop/mobile, TaskNotes community plugin, Google Calendar) providing visualization and calendar syncing. They are strictly decoupled from framework execution and do not govern data contracts.
+   - An executing AI model (Google Antigravity, Claude, OpenAI Codex, local LLMs) supplying cognitive reasoning. The agent ingests context via the versioned (`1.0.0`) Ingestion Input Contract, formulates structured action proposals, waits for human approval, and invokes database operations strictly conforming to framework contracts.
+3. **External Applications & Storage Boundary (UI, Media Storage & One-Way Capture Transports)**:
+   - Optional interfaces (Obsidian desktop/mobile, TaskNotes community plugin, Google Calendar) providing visualization and calendar syncing, plus optional external media storage (`google-drive` or local filesystem mounts) and one-way quick-capture adapters (`google-tasks`). They are strictly decoupled from core framework execution and do not govern data contracts.
 
 ### Strict Personal Domain Boundary
 Chrysalis is strictly scoped to personal knowledge, deliverable roadmaps, and cognitive execution. It prohibits:
 - Building general-purpose multi-agent daemons or background supervisor processes.
 - Building custom replacement database engines (it operates natively on plain Markdown files).
-- Utilizing proprietary cloud task managers or external closed databases.
+- Utilizing proprietary cloud task managers as an active task store, write-back target, or bidirectional sync engine (external task tools may serve strictly as one-way, read-only capture inputs into `/ingest`; `<vault>/TaskNotes/Tasks/*.md` remains the sole authoritative task store).
 
 #### Separation of Source Repository and Personal Runtime Vault
 Use Chrysalis in the personal runtime vault; edit the reusable framework in the source repository outside cloud synchronization. Tests use temporary synthetic sandboxes. Personal tasks, settings, and private notes stay in the runtime vault.
@@ -193,7 +193,8 @@ To protect autonomous AI agents from indirect prompt injection, ingested documen
 | **1:1 Public Template Matrix** (`_templates/`, `System/_templates/`) | **Retained** | Sanitized public templates for all runtime records and state files. |
 | **Collection Manifest & Schemas** (`mdbase.yaml`, `_types/*.md`, `_contracts/*.contract.md`) | **Simplified** | Retained mdbase v0.3 specification (`spec_version: "0.3.0"`) and Draft 2020-12 types (`task`, `project`, `zettel`, `source`, `system_state`); retired Spark-only `_types/skill.md`. |
 | **Agent Runtime & Collection Contracts** (`contracts/*.contract.md`) | **Retained** | Provider-independent 8-stage lifecycle and collection path invariants. |
-| **Runtime & Development Skills** (`.agent/skills/`, `Development/skills/`, `System/Workflows/01..08`) | **Simplified** | Removed Spark assumptions and `.agent/skills/chrysalis-router/`; retained 13 core runtime skills (`/audit`, `/calibrate`, `/doctor`, `/evening`, `/ingest`, `/morning`, `/onboard`, `/pause`, `/plan`, `/project`, `/task`, `/update`, `/zettel`) plus 2 development skills (`/audit-dev`, `/evolve`). |
+| **Runtime & Development Skills** (`.agent/skills/`, `Development/skills/`, `System/Workflows/01..08`) | **Simplified** | Removed Spark assumptions and `.agent/skills/chrysalis-router/`; retained 13 core runtime skills (`/audit`, `/calibrate`, `/doctor`, `/evening`, `/ingest`, `/morning`, `/onboard`, `/pause`, `/plan`, `/project`, `/task`, `/update`, `/zettel`), 2 optional integration skills (`google-drive`, `google-tasks`), and 2 development skills (`/audit-dev`, `/evolve`) (17 total). |
+
 | **Validation & CAS Helpers** (`helpers/mdbase_helper.py`, `tests/harness/`) | **Retained** | Deterministic schema checks, SHA-256 CAS locking, untrusted payload quarantine, and 3-layer validation harness. |
 | **Protected Updater & Bootstrap** (`update.py`, `bootstrap.py`, `export_starter.py`) | **Simplified** | Removed `Skills/` hardlink/bundle generation; added safe pruning of retired framework artifacts (`RETIRED_FRAMEWORK_ARTIFACTS` and `RETIRED_SKILL_REGISTRY_PATHS`) with backup/rollback support and non-destructive `.agent/skills.json` merging. |
 | **Bespoke Gemini Spark Integration** (`chrysalis-router`, `_types/skill.md`, `spark-agent-system-prompt.md`, `golem-deployment-and-spark-test-guide.md`, `SPARK-INTEGRATION-ASSESSMENT.md`, `Skills/bundle/`) | **Retired** | Removed bespoke Spark routing, remote skill schema, prompts, hardlink bundles, and `mcp.mdbase.dev` cloud relay grants; replaced by direct local agent execution. |

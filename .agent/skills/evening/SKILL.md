@@ -1,6 +1,6 @@
 ---
 name: evening
-description: "Orchestrates the nightly workflow: executes the unified nightly /audit (task reconciliation, automated Google Drive folder ingestion via /ingest --drive, roadmap sync, starter wedges, candidate pool), then hands off to /plan in Staging Mode to query for schedule additions, arbitrate priority with Life-Roadmap.md, and assemble tomorrow's prototype schedule."
+description: "Orchestrates the nightly workflow: executes the unified nightly /audit (task reconciliation, automated source ingestion across configured source aliases via /ingest --all, roadmap sync, starter wedges, candidate pool), then hands off to /plan in Staging Mode to query for schedule additions, arbitrate priority with Life-Roadmap.md, and assemble tomorrow's prototype schedule."
 trigger: "/evening"
 domain: runtime
 reads:
@@ -38,14 +38,14 @@ This skill is strictly provider- and IDE-agnostic across capable local agents (*
 
 ## Execution Protocol
 
-### 1. Execute Unified Nightly Audit (Including Automated `/ingest --drive`)
+### 1. Execute Unified Nightly Audit (Including Automated `/ingest --all`)
 Read and execute `.agent/skills/audit/SKILL.md` under **Protocol 1: Unified Nightly Audit** against `<vault>`:
 * **Pre-Flight Integrity Pass (`/doctor`):** Run `python System/scripts/doctor.py --vault "<vault>"` (or `python System/scripts/doctor.py --runtime`) to verify task schemas, explicit local timezones, tag registries, graph wikilinks, and multiplier bounds.
 * **Task Reconciliation & Multiplier Learning:** Reconcile completed tasks in `<vault>/TaskNotes/Tasks/*.md` and update bounded telemetry multipliers ($[0.20, 2.00]$) in `<vault>/System/Memory.md`.
-* **Automated Google Drive Batch Ingestion (`/ingest --drive`):**
-  * Run `python helpers/mdbase_helper.py --runtime drive-inbox` and scan `Chrysalis-Media-Locker/01-Inbox` (`ingestion_config.drive_inbox_folder` in `<vault>/System/Memory.md`) via the **connected Google Drive MCP server** (in Antigravity, OpenAI Codex, or Claude Code) or **local Google Drive mount**.
-  * Translate any new or revised source files into formatted Markdown (`<vault>/Sources/*.md`) and execute Workflows `01-capture` through `04-organize` (aligning `/project` and `/zettel`) locally on `<vault>` via the A2 access layer.
-  * *Graceful Continuation:* If `Chrysalis-Media-Locker/01-Inbox` has 0 unindexed files or if the Google Drive MCP server / local Drive mount is not currently connected, log an informational notice and proceed directly to 14-day horizon ingestion without halting `/evening`.
+* **Automated Configured Source Ingestion (`/ingest --all` / `/ingest --source <alias>`):**
+   * Run `python helpers/mdbase_helper.py --runtime ingest-discover --all` across enabled sources configured in `<vault>/System/Memory.md` (`ingestion.sources`, such as `media` and `quick-capture`; legacy `/ingest --drive` maps to `--source media`).
+   * Translate new or revised `file`, `text`, and `structured_task` inputs into formatted Markdown records (`<vault>/Sources/*.md`, `<vault>/TaskNotes/Tasks/*.md`) and execute Workflows `01-capture` through `04-organize` (aligning `/project` and `/zettel`) locally on `<vault>` via the A2 access layer.
+   * *Graceful Continuation:* If a configured source has 0 unindexed items (`ok_empty` / `ok_fully_indexed`) or its external connector/mount is not currently connected (`operation_unavailable` / `mount_unavailable`), record the explicit status notice and proceed directly to 14-day horizon ingestion without halting `/evening`.
 * **14-Day Horizon Ingestion:** Run `python helpers/mdbase_helper.py --vault "<vault>" horizon-tasks` (or `python helpers/mdbase_helper.py --runtime horizon-tasks`) to inspect upcoming 14-day project & roadmap milestones (plus `date_uncertain: true` items) and materialize any missing task notes in `<vault>/TaskNotes/Tasks/`.
 * **Starter Wedges & Auto-Pause Check:** Inject Starter Wedges into stalled tasks and evaluate auto-pause status.
 

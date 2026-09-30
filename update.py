@@ -77,6 +77,7 @@ ENGINE_DIRS = [
 PROTECTED_PATHS = [
     "System/Life-Roadmap.md",
     "System/Memory.md",
+    "System/Ingestion-Sources.md",
     "System/Scheduling-Memory.md",
     "System/System-Health.md",
     "System/Changelog.md",
@@ -331,10 +332,19 @@ def destination_relative(target, relative):
     return relative
 
 
-def obsolete_framework_paths(target: Path, active_destinations: set[str], previous_files: dict) -> list[str]:
+def obsolete_framework_paths(
+    target: Path,
+    active_destinations: set[str],
+    previous_files: dict,
+    *,
+    plugins: bool = False,
+    source: Path | None = None,
+) -> list[str]:
     """Identify previously deployed or generated framework files that are now retired."""
     candidates = set()
     for dest in previous_files:
+        if not plugins and dest.replace("\\", "/").startswith(".obsidian/plugins/"):
+            continue
         if dest not in active_destinations and dest != "TaskNotes/Tasks/example-task.md" and not is_protected_target(dest):
             candidates.add(dest)
     for rel in RETIRED_FRAMEWORK_ARTIFACTS:
@@ -348,10 +358,39 @@ def obsolete_framework_paths(target: Path, active_destinations: set[str], previo
             candidates.add(rel)
     skills_mirror = target / "Skills"
     if skills_mirror.is_dir() and not skills_mirror.is_symlink():
+        known_framework_skills = {"bundle", "chrysalis-router"}
+        if source is not None:
+            for sdir in (source / ".agent" / "skills", source / "Development" / "skills"):
+                if sdir.is_dir():
+                    for child in sdir.iterdir():
+                        if child.is_dir():
+                            known_framework_skills.add(child.name)
         for skill_md in skills_mirror.rglob("SKILL.md"):
             rel = skill_md.relative_to(target).as_posix()
-            if rel not in active_destinations and not is_protected_target(rel):
+            if rel in active_destinations or is_protected_target(rel):
+                continue
+            rel_parts = Path(rel).parts
+            # Only prune Skills/<name>/SKILL.md if it was previously tracked by deployment.json
+            # or is an unmodified mirror of a known framework skill. Never delete unknown/custom skills.
+            if rel in previous_files:
                 candidates.add(rel)
+            elif len(rel_parts) == 3 and rel_parts[0] == "Skills" and rel_parts[2] == "SKILL.md":
+                skill_name = rel_parts[1]
+                if skill_name in {"bundle", "chrysalis-router"}:
+                    candidates.add(rel)
+                elif skill_name in known_framework_skills:
+                    src_skill = (source / ".agent" / "skills" / skill_name / "SKILL.md") if source else None
+                    if src_skill and not src_skill.is_file():
+                        src_skill = source / "Development" / "skills" / skill_name / "SKILL.md"
+                    dst_skill = target / ".agent" / "skills" / skill_name / "SKILL.md"
+                    if not dst_skill.is_file():
+                        dst_skill = target / "Development" / "skills" / skill_name / "SKILL.md"
+                    matches_src = bool(src_skill and src_skill.is_file() and fingerprint(skill_md) == fingerprint(src_skill))
+                    matches_dst = bool(dst_skill.is_file() and (
+                        os.path.samefile(skill_md, dst_skill) or fingerprint(skill_md) == fingerprint(dst_skill)
+                    ))
+                    if matches_src or matches_dst:
+                        candidates.add(rel)
     existing = []
     for rel in sorted(candidates):
         try:
@@ -404,10 +443,10 @@ def deployment_plan(source, target, *, plugins=False):
             raise ValueError(f"Runtime framework file changed locally: {destination}. Reconcile it in the source before deployment.")
         changes.append({"source": relative, "path": destination, "before": before, "after": after})
 
-    for obsolete in obsolete_framework_paths(target, active_destinations, previous.get("files", {})):
+    for obsolete in obsolete_framework_paths(target, active_destinations, previous.get("files", {}), plugins=plugins, source=source):
         dst = safe_path(target, obsolete)
         before = fingerprint(dst)
-        if obsolete in previous.get("files", {}) and not obsolete.startswith("Skills/") and before != previous["files"][obsolete]:
+        if obsolete in previous.get("files", {}) and before != previous["files"][obsolete]:
             raise ValueError(f"Runtime framework file changed locally: {obsolete}. Reconcile it in the source before deployment.")
         changes.append({"source": None, "path": obsolete, "before": before, "after": None})
     return changes, previous
@@ -443,10 +482,14 @@ def sync_engine(src_dir: Path, target_dir: Path, dry_run: bool = False, *, plugi
                 if fingerprint(src) != change["after"]:
                     raise ValueError(f"Source changed during deployment: {change['source']}")
                 data = merge_mdbase_connect_metadata(src.read_bytes(), dst)
+                change["deployed_sha256"] = hashlib.sha256(data).hexdigest()
                 atomic_write(safe_path(backup, "new/" + rel), data)
+            else:
+                change["deployed_sha256"] = None
             if change["before"] is not None:
                 if fingerprint(dst) != change["before"]:
                     raise ValueError(f"Target changed during deployment: {rel}")
+                change["before_raw_sha256"] = hashlib.sha256(dst.read_bytes()).hexdigest()
                 atomic_write(safe_path(backup, "old/" + rel), dst.read_bytes())
         write_json(backup / "manifest.json", manifest)
         applied = []
@@ -467,14 +510,22 @@ def sync_engine(src_dir: Path, target_dir: Path, dry_run: bool = False, *, plugi
                 applied.append(change)
             prune_empty_framework_dirs(target, removed_paths)
             files = dict(previous.get("files", {}))
+            raw_files = dict(previous.get("raw_files", {}))
             for c in changes:
                 if c["after"] is None:
                     files.pop(c["path"], None)
+                    raw_files.pop(c["path"], None)
                 else:
                     files[c["path"]] = c["after"]
+                    if c.get("deployed_sha256"):
+                        raw_files[c["path"]] = c["deployed_sha256"]
+            for merged_rel in (".agent/skills.json", "mdbase.yaml"):
+                dst_m = safe_path(target, merged_rel)
+                if dst_m.is_file():
+                    raw_files[merged_rel] = hashlib.sha256(dst_m.read_bytes()).hexdigest()
             manifest["status"] = "complete"
             write_json(backup / "manifest.json", manifest)
-            write_json(safe_path(target, STATE_DIRECTORY + "/deployment.json"), {"id": release, "files": files})
+            write_json(safe_path(target, STATE_DIRECTORY + "/deployment.json"), {"id": release, "files": files, "raw_files": raw_files})
         except Exception:
             for change in reversed(applied):
                 dst = safe_path(target, change["path"])
@@ -490,7 +541,7 @@ def sync_engine(src_dir: Path, target_dir: Path, dry_run: bool = False, *, plugi
 
 
 def _rollback(target_dir: Path, *, dry_run=False):
-    """Restore the latest deployment only if its files are still unchanged."""
+    """Restore the latest deployment only if its files are still unchanged (using exact-content checks)."""
     target = Path(target_dir).resolve()
     state_file = safe_path(target, STATE_DIRECTORY + "/deployment.json")
     state = json.loads(state_file.read_text(encoding="utf-8"))
@@ -498,12 +549,35 @@ def _rollback(target_dir: Path, *, dry_run=False):
         raise ValueError("No deployment to roll back")
     backup = safe_path(target, f"{STATE_DIRECTORY}/deployments/{state['id']}")
     manifest = json.loads((backup / "manifest.json").read_text(encoding="utf-8"))
-    # Validate every file and backup before restoring anything.
+    # Validate every file and backup before restoring anything using exact-content SHA-256 checks
+    # so post-deployment personal edits to .agent/skills.json or mdbase.yaml are never overwritten.
+    for merged_rel, expected_raw_sha in (state.get("raw_files") or {}).items():
+        if merged_rel in {".agent/skills.json", "mdbase.yaml"}:
+            dst_m = safe_path(target, merged_rel)
+            if dst_m.is_file() and hashlib.sha256(dst_m.read_bytes()).hexdigest() != expected_raw_sha:
+                raise ValueError(f"File changed since deployment: {merged_rel}; rollback stopped")
     for change in manifest["changes"]:
-        if fingerprint(safe_path(target, change["path"])) != change["after"]:
-            raise ValueError(f"File changed since deployment: {change['path']}; rollback stopped")
-        if change["before"] is not None and fingerprint(safe_path(backup, "old/" + change["path"])) != change["before"]:
-            raise ValueError(f"Backup is missing or damaged: {change['path']}")
+        dst = safe_path(target, change["path"])
+        if change["after"] is None:
+            if dst.exists():
+                raise ValueError(f"File changed since deployment: {change['path']}; rollback stopped")
+        else:
+            if not dst.is_file():
+                raise ValueError(f"File changed since deployment: {change['path']}; rollback stopped")
+            current_raw_sha = hashlib.sha256(dst.read_bytes()).hexdigest()
+            new_backup_file = safe_path(backup, "new/" + change["path"])
+            expected_raw_sha = change.get("deployed_sha256")
+            if expected_raw_sha is None and new_backup_file.is_file():
+                expected_raw_sha = hashlib.sha256(new_backup_file.read_bytes()).hexdigest()
+            if expected_raw_sha is not None:
+                if current_raw_sha != expected_raw_sha:
+                    raise ValueError(f"File changed since deployment: {change['path']}; rollback stopped")
+            elif fingerprint(dst) != change["after"]:
+                raise ValueError(f"File changed since deployment: {change['path']}; rollback stopped")
+        if change["before"] is not None:
+            old_backup_file = safe_path(backup, "old/" + change["path"])
+            if not old_backup_file.is_file() or fingerprint(old_backup_file) != change["before"]:
+                raise ValueError(f"Backup is missing or damaged: {change['path']}")
     if not dry_run:
         restored = []
         removed_on_rollback = []
@@ -540,7 +614,7 @@ def rollback(target_dir: Path, *, dry_run=False):
 
 def main():
     parser = argparse.ArgumentParser(description="Chrysalis Framework Upstream Updater")
-    parser.add_argument("--target", default=".", help="Target vault path (default: current directory)")
+    parser.add_argument("--target", "--vault", dest="target", default=".", help="Target vault path (default: current directory)")
     parser.add_argument("--repo", default=None, help="Custom git repository URL")
     parser.add_argument("--source", default=None, help="Local repository path to sync from instead of git clone")
     parser.add_argument("--dry-run", action="store_true", help="Inspect updates without writing to disk")
@@ -549,6 +623,15 @@ def main():
     args = parser.parse_args()
 
     target_path = Path(args.target).resolve()
+    local_repo = Path(__file__).resolve().parent
+    if (
+        args.source is None
+        and args.repo is None
+        and local_repo != target_path
+        and (local_repo / ".git").exists()
+        and (local_repo / "AGENTS.md").exists()
+    ):
+        args.source = str(local_repo)
 
     if args.rollback:
         changed = rollback(target_path, dry_run=args.dry_run)

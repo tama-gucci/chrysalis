@@ -24,8 +24,8 @@ This contract governs all atomic research notes located in `Slipbox/**/*.md`.
 - **Bidirectional Hypergraph Grounding**:
   - `project_ref`: Wikilink to parent project roadmap (e.g. `[[Projects/cs410/Roadmap]]`).
   - `source_ref`: Wikilink to originating ingestion source in `Sources/` (e.g. `[[Sources/lecture-01-recording]]`).
-  - `source_checksum`: 64-character lowercase hexadecimal SHA-256 digest of original material.
-  - `linked_zettels`: Array of wikilinks connecting related concepts.
+  - `source_checksum`: 64-character lowercase hexadecimal SHA-256 digest of original binary material, or `null` when original binary bytes were unavailable.
+  - `linked_zettels` (and backward-compatible alias `related_zettels`): Array of wikilinks connecting related concepts.
 
 ## 3. Integration Lifecycle
 Zettel integration follows a three-stage lifecycle:
@@ -34,4 +34,4 @@ Zettel integration follows a three-stage lifecycle:
 - `integrated`: Fully woven into the Chrysalis Hypergraph with cross-links and empirical operational applications.
 
 ## 4. Format Invariant
-All timestamps must serialize with explicit local timezone offsets (e.g. `-05:00`). Raw UTC `"Z"` strings violate this contract.
+All timestamps (`dateCreated` and backward-compatible alias `created`) must serialize with explicit local timezone offsets (e.g. `-05:00`). Raw UTC `"Z"` strings violate this contract.
