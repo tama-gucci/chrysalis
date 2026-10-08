@@ -42,6 +42,8 @@ from helpers.providers.obsidian_maps import (
 
 ALLOWED_TRAVEL_MODES = {"driving", "transit", "walking", "bicycling"}
 
+DEFAULT_TRAFFIC_FRESHNESS_TTL_SECONDS: int = 900
+
 EXPLICIT_OFFSET_ISO_RE = re.compile(
     r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?([+\-][0-9]{2}:[0-9]{2})$"
 )
@@ -163,10 +165,13 @@ def evaluate_route_freshness(
     departure_at: Optional[str] = None,
     arrival_by: Optional[str] = None,
     previous_task_id: Optional[str] = None,
+    freshness_ttl_seconds: Optional[int] = None,
+    reference_time: Optional[Union[datetime, str]] = None,
 ) -> Dict[str, Any]:
     """
     Evaluates whether a task's route_estimate is fresh or stale given the current schedule context.
-    Invalidates the estimate if endpoints, departure/arrival time, mode, or schedule predecessor changed.
+    Invalidates the estimate if endpoints, departure/arrival time, mode, schedule predecessor,
+    or traffic freshness TTL (default 900s / 15m) changed/expired.
     """
     est = task_fm.get("route_estimate")
     if not isinstance(est, dict):
@@ -197,6 +202,40 @@ def evaluate_route_freshness(
         previous_task_id=eff_prev_task_id,
     )
     stored_fp = est.get("context_fingerprint")
+
+    # Check traffic freshness TTL against observed_at
+    if (freshness_ttl_seconds is not None or reference_time is not None) and est.get("observed_at"):
+        try:
+            obs_raw = str(est["observed_at"]).strip()
+            obs_dt = datetime.fromisoformat(obs_raw)
+            if reference_time is not None:
+                ref_dt = datetime.fromisoformat(reference_time) if isinstance(reference_time, str) else reference_time
+            else:
+                ref_dt = datetime.now(timezone.utc)
+
+            if obs_dt.tzinfo is not None and ref_dt.tzinfo is None:
+                ref_dt = ref_dt.replace(tzinfo=obs_dt.tzinfo)
+            elif obs_dt.tzinfo is None and ref_dt.tzinfo is not None:
+                obs_dt = obs_dt.replace(tzinfo=ref_dt.tzinfo)
+
+            ttl = freshness_ttl_seconds if freshness_ttl_seconds is not None else DEFAULT_TRAFFIC_FRESHNESS_TTL_SECONDS
+            elapsed = (ref_dt - obs_dt).total_seconds()
+            if elapsed > ttl:
+                stale_est = dict(est)
+                stale_est["freshness"] = "stale"
+                stale_est["status"] = "stale"
+                return {
+                    "freshness": "stale",
+                    "is_stale": True,
+                    "reason": "traffic_freshness_expired",
+                    "expected_fingerprint": expected_fp,
+                    "stored_fingerprint": stored_fp,
+                    "updated_route_estimate": stale_est,
+                    "elapsed_seconds": elapsed,
+                    "freshness_ttl_seconds": ttl,
+                }
+        except (ValueError, TypeError):
+            pass
 
     if stored_fp and stored_fp != expected_fp:
         stale_est = dict(est)
@@ -1030,6 +1069,8 @@ def propose_travel_schedule_window(
     buffer_minutes: Optional[int] = None,
     existing_blocks: Optional[Sequence[Dict[str, Any]]] = None,
     tz_name: Optional[str] = None,
+    freshness_ttl_seconds: Optional[int] = None,
+    reference_time: Optional[Union[datetime, str]] = None,
 ) -> Dict[str, Any]:
     """
     Computes a proposed travel + buffer + task execution schedule window:
@@ -1056,13 +1097,15 @@ def propose_travel_schedule_window(
     if include_travel and eff_est and not has_manual_policy_dur:
         is_explicitly_stale = eff_est.get("freshness") == "stale" or eff_est.get("status") == "stale"
         is_context_stale = False
-        if not is_explicitly_stale and (eff_est.get("origin") or eff_est.get("destination") or eff_est.get("context_fingerprint")):
+        if not is_explicitly_stale and (eff_est.get("origin") or eff_est.get("destination") or eff_est.get("context_fingerprint") or eff_est.get("observed_at")):
             fresh_check = evaluate_route_freshness(
                 {
                     "location": task_fm.get("location"),
                     "travel_policy": t_policy,
                     "route_estimate": eff_est,
-                }
+                },
+                freshness_ttl_seconds=freshness_ttl_seconds,
+                reference_time=reference_time,
             )
             is_context_stale = bool(fresh_check.get("is_stale"))
         if is_explicitly_stale or is_context_stale:

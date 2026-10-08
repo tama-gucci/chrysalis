@@ -1,0 +1,52 @@
+{
+  "name": "chrysalis",
+  "version": "1.0.0",
+  "description": "Pi skills and tools for a portable Markdown knowledge and daily-work vault",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "obsidian",
+    "tasknotes"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ],
+    "extensions": [
+      "./hosts/pi/extension.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "files": [
+    "chrysalis",
+    "helpers",
+    "System/scripts",
+    "System/_templates",
+    "System/Runtime-Constitution.md",
+    "skills",
+    "hosts/pi",
+    "_types",
+    "_templates",
+    "TaskNotes/Views",
+    "Projects/_templates",
+    "Slipbox/_templates",
+    "Environments/_templates",
+    "contracts",
+    "docs",
+    "tests/specs",
+    "run.py",
+    "requirements.txt",
+    "README.md",
+    "ARCHITECTURE.md",
+    "STATUS.md",
+    "Dashboard.md",
+    "TaskNotes/Workflows/README.md",
+    "Projects/README.md",
+    "Slipbox/README.md",
+    "Environments/README.md",
+    "LICENSE"
+  ]
+}

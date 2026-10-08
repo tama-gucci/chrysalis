@@ -35,49 +35,6 @@ def is_google_drive_folder_url(url: Optional[str]) -> bool:
     return "/drive/folders/" in str(url).strip()
 
 
-def resolve_google_drive_host_mount(
-    collection_name: str = "Chrysalis-Media-Locker",
-    *,
-    allow_host_fallback: bool = False,
-) -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
-    """
-    Resolves a host-mounted Google Drive collection folder when permitted.
-    Strictly disabled under pytest or when CHRYSALIS_DISABLE_HOST_FALLBACK=1.
-    """
-    host_fallback_allowed = (
-        allow_host_fallback
-        and os.environ.get("CHRYSALIS_DISABLE_HOST_FALLBACK") != "1"
-        and "PYTEST_CURRENT_TEST" not in os.environ
-    )
-    if not host_fallback_allowed:
-        return None, None
-
-    env_locker = os.environ.get("CHRYSALIS_MEDIA_LOCKER_PATH")
-    if env_locker:
-        env_cand = Path(env_locker).expanduser()
-        if not env_cand.is_dir():
-            return None, {
-                "code": "locker_unavailable",
-                "severity": "error",
-                "message": f"CHRYSALIS_MEDIA_LOCKER_PATH does not exist: {env_cand}",
-                "path": str(env_cand),
-            }
-        return env_cand.resolve(), None
-
-    home = Path.home()
-    locker_candidates = [
-        Path("G:/My Drive") / collection_name,
-        home / "Google Drive" / "My Drive" / collection_name,
-        home / "My Drive" / collection_name,
-        home / collection_name,
-    ]
-    for lc in locker_candidates:
-        try:
-            if lc.is_dir():
-                return lc.resolve(), None
-        except Exception:
-            continue
-    return None, None
 
 
 def map_google_drive_item_to_contract(
@@ -110,16 +67,15 @@ def discover_google_drive_source(
     source_config: Dict[str, Any],
     *,
     source_alias: str = "media",
-    page_size: Optional[int] = None,
+    page_size: Optional[int] = 50,
     page_token: Optional[str] = None,
     synthetic_response: Optional[Dict[str, Any]] = None,
-    allow_host_fallback: bool = False,
 ) -> Dict[str, Any]:
     """
     Executes bounded read-only discovery for a configured Google Drive source alias
     and returns a canonical v1.0.0 IngestionDiscoveryEnvelope.
     """
-    from helpers.mdbase_helper import discover_media_locker
+    from helpers.discovery import discover_originals
 
     collection_id = str(source_config.get("collection") or source_config.get("locker_root") or "<folder-reference>")
     account_scope = source_config.get("account_scope")
@@ -239,12 +195,11 @@ def discover_google_drive_source(
     discovery_roots = source_config.get("discovery_roots")
     max_depth = int(source_config.get("max_discovery_depth", 6))
 
-    locker_res = discover_media_locker(
+    locker_res = discover_originals(
         vault_root,
         locker_root=mount_path,
         discovery_roots=discovery_roots,
         max_depth=max_depth,
-        allow_host_fallback=allow_host_fallback,
     )
 
     col_status = locker_res.get("collection_status")
@@ -293,7 +248,7 @@ def discover_google_drive_source(
         page_files = raw_files[start_idx:]
         next_token = None
 
-    truncated = next_token is not None
+    truncated = next_token is not None or bool(locker_res.get("listing_truncated"))
     if truncated and discovery_status in {"ok_items_available", "ok_fully_indexed"}:
         discovery_status = "partial_listing"
 

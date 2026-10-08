@@ -1,5 +1,5 @@
 ---
-kind: mdbase.type
+kind: chrysalis.type
 name: zettel
 version: 1
 description: "Authoritative Chrysalis atomic research note and Slipbox knowledge model"
@@ -38,7 +38,7 @@ schema:
       created:
         type: string
         format: date-time
-        description: "Backward-compatible creation timestamp alias"
+        description: "Optional creation timestamp"
       tags:
         type: array
         minItems: 1
@@ -69,7 +69,7 @@ schema:
         items:
           type: string
         default: []
-        description: "Backward-compatible alias for linked_zettels"
+        description: "Optional related knowledge links"
       integration_status:
         type: string
         enum: [unintegrated, staged, integrated]
@@ -104,5 +104,5 @@ This type defines atomic Zettelkasten knowledge notes in `Slipbox/**/*.md`.
 
 ## Core Invariants:
 1. **Atomic Thesis**: Each note encapsulates exactly one mental model, theoretical concept, or system evolution idea (`#chrysalis`).
-2. **Timestamp Identity**: IDs are prefixed with a 14-digit local timestamp `YYYYMMDDHHmmss` guaranteeing chronological uniqueness.
+2. **Timestamp Identity**: IDs use a 14-digit local timestamp `YYYYMMDDHHmmss` plus a distinct slug; a timestamp alone is not unique.
 3. **Cryptographic Grounding**: When extracted from a lecture transcript or paper, notes link back to `source_ref` and embed `source_checksum`.

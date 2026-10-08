@@ -207,10 +207,8 @@ def _inspect_outbound_string_for_privacy(val: Any, field_name: str) -> Optional[
                     break
             if reason is not None:
                 break
-            for host_token in ("c:/users/", "/home/", "/users/"):
-                if host_token in norm_c:
-                    reason = f"local_machine_path_leak ({host_token})"
-                    break
+            if re.search(r"[a-z]:/users/|/home/|/users/", norm_c):
+                reason = "local_machine_path_leak"
             if reason is not None:
                 break
 

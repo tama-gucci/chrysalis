@@ -1,173 +1,97 @@
-"""Resolve resources inside an explicitly selected vault.
-
-New vaults use System/ and TaskNotes/. Existing encapsulated TaskNotes/ or
-legacy chrysalis/ layouts remain readable; duplicate resources fail closed.
-"""
-
+"""Explicit vault selection and confined paths for the supported layout."""
+import json
 import os
 from pathlib import Path
 
-TASK_DIRECTORIES = {"Tasks", "Archive", "Daily", "Inbox", "Views", "Workflows"}
-LAYOUT_PREFIXES = ("TaskNotes", "chrysalis")
+
+def native_path(path):
+    """Preserve logical identities while using extended Windows paths for disk I/O."""
+    path = Path(path).absolute()
+    value = str(path)
+    if os.name == "nt" and not value.startswith("\\\\?\\"):
+        return Path("\\\\?\\UNC\\" + value[2:] if value.startswith("\\\\") else "\\\\?\\" + value)
+    return path
 
 
 def resolve_vault_root(explicit_path=None, *, script_path=__file__):
     selected = explicit_path or os.environ.get("CHRYSALIS_VAULT_PATH")
-    if selected:
-        root = Path(selected).expanduser().resolve()
-        if not root.is_dir():
-            raise ValueError(f"Vault directory does not exist: {root}")
-        return root
-    root = Path(script_path).resolve().parent.parent.parent
-    if root.name in LAYOUT_PREFIXES and (root.parent / "AGENTS.md").exists():
-        return root.parent
+    if not selected:
+        raise ValueError("Select an explicit vault; there is no automatic runtime fallback")
+    path = Path(selected).expanduser()
+    if not path.is_absolute() or not path.is_dir():
+        raise ValueError("Vault must be an existing absolute directory")
+    reject_redirects(path)
+    return path.resolve()
+
+
+def reject_redirects(path):
+    for item in (Path(path), *Path(path).parents):
+        if item.is_symlink() or (hasattr(item, "is_junction") and item.is_junction()):
+            raise ValueError("Authoritative paths cannot traverse links or junctions")
+
+
+def is_source_repository_checkout(root):
+    root = Path(root).resolve()
+    return (root / ".git").exists() or (root / "package.json").is_file()
+
+
+def resolve_runtime_vault(explicit_path=None, *, script_path=__file__):
+    root = resolve_vault_root(explicit_path)
+    actual = next((p.name for p in root.parent.iterdir() if p.resolve() == root), None)
+    if actual != "chrysalis":
+        raise ValueError("The actual vault directory entry must be named chrysalis")
+    if any(is_source_repository_checkout(p) or p.name in {".git", ".agents", "node_modules"} for p in (root, *root.parents)):
+        raise ValueError("Source and package directories are not personal runtimes")
+    marker = root / ".chrysalis-vault.json"
+    if marker.is_symlink() or not marker.is_file():
+        raise ValueError("Vault has not been initialized through reviewed setup")
+    info = json.loads(marker.read_text(encoding="utf-8"))
+    if info.get("schema_version") != "1" or not info.get("vault_id"):
+        raise ValueError("Unsupported vault schema or missing identity")
     return root
 
 
-def _existing_resource(candidates, relative):
-    present = [path for path in candidates if path.exists()]
-    if len({path.resolve() for path in present}) > 1:
-        raise ValueError(f"Ambiguous vault resource: {relative}; reconcile the copies first")
-    return present[0] if present else None
+def vault_path(root, relative):
+    root = Path(root).resolve()
+    rel = Path(relative)
+    if rel.is_absolute() or not rel.parts or ".." in rel.parts or ":" in str(relative):
+        raise ValueError("Expected a confined vault-relative path")
+    target = root / rel
+    for item in (target, *target.parents):
+        if item == root:
+            break
+        if item.is_symlink() or (hasattr(item, "is_junction") and item.is_junction()):
+            raise ValueError("Links and junctions are not supported inside authoritative paths")
+    target.resolve().relative_to(root)
+    return target
 
 
 def framework_root(root):
-    """Locate the framework without mistaking a task-only folder for a vault."""
-    root = Path(root).resolve()
-    system = _existing_resource(
-        [root / "System", *(root / prefix / "System" for prefix in LAYOUT_PREFIXES)],
-        "System",
-    )
-    return system.parent if system else root
-
-
-def vault_path(root, relative):
-    """Resolve a resource, preserving its existing layout and rejecting duplicates."""
-    root = Path(root).resolve()
-    rel = Path(relative)
-    if rel.is_absolute() or ".." in rel.parts:
-        raise ValueError("Expected a vault-relative path")
-    if not rel.parts or str(rel) in LAYOUT_PREFIXES:
-        return root / rel
-    # Collection templates and TaskNotes templates are distinct resources.
-    if rel.parts[:2] == ("TaskNotes", "_templates"):
-        return root / rel
-    if rel.parts[0] == "_templates" and (root / rel).exists():
-        return root / rel
-    if rel.parts[0] in LAYOUT_PREFIXES:
-        rel = Path(*rel.parts[1:])
-    candidates = [root / rel, *(root / prefix / rel for prefix in LAYOUT_PREFIXES)]
-    present = _existing_resource(candidates, relative)
-    if present:
-        return present
-    # Choose a missing file's location from its existing top-level directory.
-    parents = [root / rel.parts[0], *(root / prefix / rel.parts[0] for prefix in LAYOUT_PREFIXES)]
-    parent = _existing_resource(parents, rel.parts[0])
-    if parent:
-        return parent.joinpath(*rel.parts[1:])
-    if rel.parts[0] in TASK_DIRECTORIES:
-        task_base = _existing_resource(
-            [root / "Tasks", *(root / prefix / "Tasks" for prefix in LAYOUT_PREFIXES)],
-            "Tasks",
-        )
-        return (task_base.parent if task_base else root / "TaskNotes") / rel
-    return framework_root(root) / rel
+    return Path(root).resolve()
 
 
 def runtime_memory_path(root):
-    """Prefer current memory, falling back to existing legacy state, never a template."""
-    current = vault_path(root, "System/Memory.md")
-    if current.exists():
-        return current
-    legacy = vault_path(root, "System/Scheduling-Memory.md")
-    return legacy if legacy.exists() else current
+    return vault_path(root, "System/Memory.md")
 
 
-def is_source_repository_checkout(root: Path) -> bool:
-    """Return True if root is the framework git source checkout without personal runtime state."""
-    root = Path(root).resolve()
-    has_git = (root / ".git").exists()
-    has_personal_roadmap = (root / "System" / "Life-Roadmap.md").exists()
-    return has_git and not has_personal_roadmap
-
-
-def resolve_runtime_vault(explicit_path=None, *, script_path=__file__) -> Path:
-    """Resolve the active personal runtime vault across Antigravity, Codex, and CLI sessions.
-
-    Priority order:
-    1. Explicit path argument or CHRYSALIS_VAULT_PATH / CHRYSALIS_VAULT_ROOT env var.
-    2. Current workspace/script root if it contains personal runtime state (System/Life-Roadmap.md).
-    3. Standard personal runtime vault (~/Documents/Chrysalis) when invoked from the source repo checkout.
-    4. Fallback to resolve_vault_root().
-    """
-    selected = (
-        explicit_path
-        or os.environ.get("CHRYSALIS_VAULT_PATH")
-        or os.environ.get("CHRYSALIS_VAULT_ROOT")
-    )
-    if selected:
-        root = Path(selected).expanduser().resolve()
-        if not root.is_dir():
-            raise ValueError(f"Vault directory does not exist: {root}")
-        return root
-
-    candidate = resolve_vault_root(None, script_path=script_path)
-    if not is_source_repository_checkout(candidate):
-        return candidate
-
-    default_personal_vault = Path.home() / "Documents" / "Chrysalis"
-    if default_personal_vault.is_dir() and (
-        (default_personal_vault / "mdbase.yaml").exists()
-        or (default_personal_vault / "System" / "Memory.md").exists()
-        or (default_personal_vault / "System" / "Life-Roadmap.md").exists()
-    ):
-        return default_personal_vault.resolve()
-
-    return candidate
-
-
-def memory_path(explicit_path=None, *, vault=None, runtime: bool = False):
-    selected = explicit_path or os.environ.get("CHRYSALIS_MEMORY_PATH")
-    if selected:
-        return Path(selected).expanduser().resolve()
+def memory_path(explicit_path=None, *, vault=None, runtime=False):
     root = resolve_runtime_vault(vault) if runtime else resolve_vault_root(vault)
+    if explicit_path:
+        return vault_path(root, Path(explicit_path).relative_to(root))
     return runtime_memory_path(root)
 
 
-def main(argv=None) -> int:
+def main(argv=None):
     import argparse
-    import json
-
-    parser = argparse.ArgumentParser(
-        description="Resolve Chrysalis vault paths for A2 local agent execution."
-    )
-    parser.add_argument("--vault", default=None, help="Explicit vault root path")
-    parser.add_argument(
-        "--runtime",
-        action="store_true",
-        help="Resolve the active personal runtime vault (e.g. ~/Documents/Chrysalis when run from source)",
-    )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output resolved paths as JSON",
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--vault", required=True)
+    parser.add_argument("--runtime", action="store_true")
+    parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     root = resolve_runtime_vault(args.vault) if args.runtime else resolve_vault_root(args.vault)
-    if args.json:
-        payload = {
-            "vault_root": str(root),
-            "memory_path": str(runtime_memory_path(root)),
-            "life_roadmap_path": str(vault_path(root, "System/Life-Roadmap.md")),
-            "tasks_dir": str(vault_path(root, "TaskNotes/Tasks")),
-            "is_source_checkout": is_source_repository_checkout(root),
-        }
-        print(json.dumps(payload, indent=2))
-    else:
-        print(root)
+    print(json.dumps({"vault_root": str(root), "memory_path": str(runtime_memory_path(root))}) if args.json else root)
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

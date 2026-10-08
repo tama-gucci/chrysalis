@@ -164,7 +164,7 @@ def parse_google_tasks_due(
     Google Tasks API stores date-only values as 'YYYY-MM-DDT00:00:00.000Z'.
     Unless an explicit clock time is supplied, due_time and due_at remain None.
     """
-    from helpers.mdbase_helper import normalize_deadline_evidence
+    from helpers.records import normalize_deadline_evidence
 
     if raw_due is None or not str(raw_due).strip():
         return {

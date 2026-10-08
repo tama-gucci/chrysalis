@@ -1,34 +1,22 @@
 ---
-type: project_roadmap
-project_id: "{{PROJECT_SLUG}}"
-title: "{{PROJECT_TITLE}}"
-status: active
-pillar: "{{PILLAR_TAG}}"
-horizon_window: "YYYY-MM-DD → YYYY-MM-DD"
-last_updated: "{{TIMESTAMP}}"
+type: project
+project_id: "{{PROJECT_ID}}"
+title: "{{TITLE}}"
+status: staged
+pillar: "{{CHOSEN_PILLAR}}"
+last_updated: "{{LOCAL_TIMESTAMP}}"
+tags: []
 source_ref: null
-source_checksum: null
-tags:
-  - "{{PILLAR_TAG}}"
 linked_zettels: []
-deliverables:
-  - id: "deliverable-1"
-    title: "Initial Milestone Deliverable"
-    due: "YYYY-MM-DD"
-    date_uncertain: false
-    status: todo
-    task_ref: null
-    tier: 2
+deliverables: []
 ---
 
-# 🚀 {{PROJECT_TITLE}}
+# {{TITLE}}
 
-## 1. Project Objective & Scope
-Overview of objectives, milestone boundaries, and exit criteria.
+## Purpose and exit criteria
 
-## 2. Master Deliverable Ledger
-- [ ] **deliverable-1**: Initial Milestone Deliverable (Due: YYYY-MM-DD)
+## Evidence and knowledge
 
-## 3. Reference Files & Slipbox Grounding
-- Provenance Source: [[Sources/{{SOURCE_ID}}]] (Original binary stored in Google Drive)
-- [[Slipbox-Research-Note]]
+## Complete deliverable ledger
+
+Keep future work here; near-term tasks are materialized only after review.

@@ -1,5 +1,5 @@
 ---
-kind: mdbase.type
+kind: chrysalis.type
 name: system_state
 version: 1
 description: "Authoritative Chrysalis runtime state and strategic roadmap records in System/"
@@ -27,6 +27,6 @@ schema:
         type: string
 ---
 
-# System State & Strategic Roadmap Type Specification (`_types/system_state.md`)
+# System state
 
-Validates Chrysalis runtime state records (`System/Life-Roadmap.md`, `System/Memory.md`, and `System/System-Health.md`) as canonical mdbase v0.3 records.
+Operational records retain extensible private preferences; domain operations additionally validate critical timezone and multiplier fields.

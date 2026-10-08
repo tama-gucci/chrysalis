@@ -1,146 +1,117 @@
-#!/usr/bin/env python3
-"""Run every required local check; optionally control a separate candidate checkout."""
+"""Whole working-tree checks. Detailed reports belong outside source."""
 import argparse
-from datetime import datetime
+import ast
 import json
-import os
-from pathlib import Path
-import platform
 import re
-import signal
-import subprocess
 import sys
-import tempfile
-import time
-
-from candidate_audit import audit, candidates, identities, repository
-
-ENVIRONMENT_CHECK = """import importlib.metadata as metadata
 from pathlib import Path
-import sys
 
-if sys.version_info[:2] != (3, 14):
-    raise SystemExit("Python 3.14 required")
-pins = [line.split("==") for line in Path(sys.argv[1]).read_text().splitlines()
-        if line and not line.startswith("#")]
-bad = [name for name, version in pins if metadata.version(name) != version]
-if bad:
-    raise SystemExit("Pinned dependencies differ: " + str(bad))
-print("Python and dependency pins match")
-"""
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+import yaml
 
-TRUSTED_ROOT = Path(__file__).resolve().parents[2]
-POLICY_FILES = (
-    'Development/scripts/check.py', 'Development/scripts/candidate_audit.py',
-    'Development/scripts/pii-scanner.sh', 'Development/scripts/setup-dev.sh',
-    'Development/requirements.lock', 'Development/skills/audit-dev/SKILL.md',
-)
+PRIVATE_PREFIXES = (".agent", ".agents", ".obsidian", ".venv", "node_modules", "Nexus", ".conversations", ".workspaces", ".trash")
+PRIVATE_SYSTEM = {"Memory.md", "Life-Roadmap.md", "Integrations.md", "Ingestion-Sources.md", "System-Health.md", "Onboarding.md", "Changelog.md"}
 
 
-def policy_issues(root):
-    issues = []
-    if root != TRUSTED_ROOT:
-        for name in POLICY_FILES:
-            path = root / name
-            if path.is_symlink() or not path.is_file() or path.read_bytes() != (TRUSTED_ROOT / name).read_bytes():
-                issues.append(f'Protected check policy differs: {name}; review and update the trusted controller separately.')
-        for pattern in ('tests/**/test_*.py',):
-            for source in TRUSTED_ROOT.glob(pattern):
-                relative = source.relative_to(TRUSTED_ROOT)
-                if not (root / relative).is_file():
-                    issues.append(f'Required baseline test file removed: {relative}')
-    return issues
-
-
-def run_check(name, command, cwd, directory, timeout, env):
-    log = directory / (name + '.log')
-    start = time.monotonic()
-    print(f'RUN  {name}', flush=True)
-    code = 1
-    try:
-        with log.open('w') as output:
-            process = subprocess.Popen(command, cwd=cwd, env=env, stdout=output,
-                                       stderr=subprocess.STDOUT, start_new_session=True)
+def check(root=ROOT):
+    root = Path(root).resolve()
+    findings, files = [], []
+    def issue(code, relative):
+        findings.append({"code": code, "path": relative})
+    def walk(directory):
+        for path in sorted(directory.iterdir()):
+            if path == root / ".git":
+                continue
+            relative = path.relative_to(root).as_posix()
+            if path.is_symlink() or (hasattr(path, "is_junction") and path.is_junction()):
+                issue("redirected_source", relative)
+                continue
+            if path.is_dir():
+                if path.name in PRIVATE_PREFIXES or path.name in {"__pycache__", ".pytest_cache", "backups", "archive"}:
+                    issue("private_or_generated_directory", relative)
+                walk(path)
+            elif path.is_file():
+                files.append(path)
+    walk(root)
+    brands = re.compile(r"antigravity|codex|claude\s+code", re.I)
+    machine = re.compile(r"[a-z]:[\\/]+users[\\/]|/home/[a-z0-9_-]+/", re.I)
+    secrets = re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{25,}|AIza[A-Za-z0-9_-]{30,}|sk-(?:proj-)?[A-Za-z0-9_-]{30,}")
+    for path in files:
+        relative = path.relative_to(root).as_posix()
+        parts = path.relative_to(root).parts
+        if parts[0] in {"Daily", "Attachments", "Sources"}:
+            issue("personal_collection_in_source", relative)
+        if parts[:1] == ("System",) and len(parts) == 2 and path.name in PRIVATE_SYSTEM:
+            issue("private_state_in_source", relative)
+        if parts[:2] == ("TaskNotes", "Tasks") and path.name != "example-task.md":
+            issue("private_task_in_source", relative)
+        if parts[:1] == ("Projects",) and len(parts) > 1 and parts[1] not in {"README.md", "_templates"}:
+            issue("private_project_in_source", relative)
+        if parts[:1] == ("Slipbox",) and len(parts) > 1 and parts[1] not in {"README.md", "_templates"}:
+            issue("private_knowledge_in_source", relative)
+        if parts[:1] == ("Environments",) and len(parts) > 1 and parts[1] not in {"README.md", "_templates"}:
+            issue("private_environment_in_source", relative)
+        if path.suffix in {".pyc", ".sqlite", ".db", ".zip", ".lock", ".env", ".log"} and relative != "Development/requirements.lock":
+            issue("private_or_generated_file", relative)
+        if path.suffix not in {".py", ".md", ".json", ".yaml", ".yml", ".base", ".ts", ".mjs", ".txt", ".lock"}:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeError:
+            issue("non_utf8_source", relative)
+            continue
+        if machine.search(text):
+            issue("machine_bound_user_path", relative)
+        if secrets.search(text):
+            issue("credential_pattern", relative)
+        if path.suffix == ".md" and brands.search(text):
+            issue("retired_harness_documentation", relative)
+        if path.suffix == ".py":
             try:
-                code = process.wait(timeout=timeout)
-            except (subprocess.TimeoutExpired, KeyboardInterrupt):
-                if hasattr(os, 'killpg'):
-                    os.killpg(process.pid, signal.SIGKILL)
-                else:
-                    process.kill()
-                process.wait()
-                output.write('\nCheck interrupted or exceeded its time limit.\n')
-                code = 124
-    except OSError as error:
-        log.write_text(str(error) + '\n')
-    if name == 'framework' and code == 0:
-        if not re.search(r'Ran [1-9][0-9]* tests? in ', log.read_text()):
-            with log.open('a') as output:
-                output.write('\nNo executed framework tests were reported.\n')
-            code = 1
-    passed = code == 0
-    print(f'{"PASS" if passed else "FAIL"} {name} (exit {code}) — {log}', flush=True)
-    return {'name': name, 'passed': passed, 'exit_code': code,
-            'seconds': round(time.monotonic() - start, 2), 'log': str(log)}
+                ast.parse(text)
+            except SyntaxError:
+                issue("python_syntax", relative)
+        if path.suffix == ".json":
+            try:
+                json.loads(text)
+            except ValueError:
+                issue("json_syntax", relative)
+        if path.suffix in {".yaml", ".yml", ".base"} or (path.suffix == ".md" and text.startswith("---\n")):
+            try:
+                yaml.safe_load(text.split("---", 2)[1] if path.suffix == ".md" else text)
+            except yaml.YAMLError:
+                issue("yaml_syntax", relative)
+        if path.suffix == ".md":
+            for target in re.findall(r"(?<!!)\[[^\]\n]+\]\(([^)\n]+)\)", text):
+                target = target.strip("<>").split("#", 1)[0]
+                if not target or "://" in target or target.startswith(("mailto:", "#")):
+                    continue
+                if not (path.parent / target).exists():
+                    issue("broken_document_link", relative)
+    for skill in (root / "skills").glob("*/SKILL.md"):
+        for relative in re.findall(r"references/[a-z0-9-]+\.md", skill.read_text()):
+            if not (skill.parent / relative).is_file():
+                issue("missing_skill_reference", skill.relative_to(root).as_posix())
+    manifest = json.loads((root / "package.json").read_text())
+    for relative in manifest["files"]:
+        if not (root / relative).exists():
+            issue("missing_package_resource", relative)
+    if not (root / ".gitignore").read_text().splitlines()[1:]:
+        issue("missing_privacy_policy", ".gitignore")
+    if "/*" not in (root / ".gitignore").read_text().splitlines():
+        issue("missing_default_deny", ".gitignore")
+    return {"status": "passed" if not findings else "failed", "files_checked": len(files), "findings": findings,
+            "scope": "entire non-Git working tree; prose review and Git history are separate"}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--candidate', type=Path, default=TRUSTED_ROOT,
-                        help='Source checkout to test using this controller’s required checks.')
-    args = parser.parse_args()
-    directory = Path(tempfile.mkdtemp(prefix='chrysalis-check-'))
-    results = []
-    report = {'started': datetime.now().astimezone().isoformat(), 'checks': results,
-              'mode': 'local development check', 'passed': False}
-    try:
-        root = repository(args.candidate)
-        if platform.system() != 'Linux':
-            raise ValueError('The verified local runner supports Linux; use the documented toolchain.')
-        if any(os.environ.get(k) for k in ('CHRYSALIS_VAULT_PATH', 'CHRYSALIS_MEMORY_PATH')):
-            raise ValueError('Unset personal runtime overrides before development checks.')
-        problems = policy_issues(root)
-        if problems:
-            raise ValueError('\n'.join(problems))
-        report['mode'] = 'external trusted controller' if root != TRUSTED_ROOT else 'local development check'
-        initial = audit(root)
-        report['candidate'] = initial['fingerprints']
-        report['head'] = subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip()
-        (directory / 'privacy.log').write_text(json.dumps(initial, indent=2) + '\n')
-        results.append({'name': 'candidate-privacy', 'passed': initial['passed'], 'log': str(directory / 'privacy.log')})
-        print(f'{"PASS" if initial["passed"] else "FAIL"} candidate-privacy — {directory / "privacy.log"}', flush=True)
-        if not initial['passed']:
-            raise ValueError('Candidate privacy failed; inspect the report before executing candidate tests.')
-        python = root / '.venv/bin/python'
-        if (root / '.venv').is_symlink() or not python.is_file():
-            raise ValueError('Run bash Development/scripts/setup-dev.sh in this checkout first.')
-        env = os.environ.copy()
-        env['PYTHONNOUSERSITE'] = '1'
-        for key in ('PYTHONPATH', 'PYTHONHOME', 'PYTHONOPTIMIZE', 'PYTEST_ADDOPTS', 'PYTEST_PLUGINS'):
-            env.pop(key, None)
-        checks = [
-            ('dependencies', [str(python), '-c', ENVIRONMENT_CHECK, str(TRUSTED_ROOT / 'Development/requirements.lock')], root, 60),
-            ('pip-consistency', [str(python), '-m', 'pip', 'check'], root, 60),
-            ('framework', [str(python), '-m', 'unittest', 'discover', '-t', '.', '-s', 'tests'], root, 300),
-            ('validation-harness', [str(python), 'tests/harness/validation_harness.py', '-c', '.'], root, 60),
-        ]
-        for name, command, cwd, timeout in checks:
-            result = run_check(name, command, cwd, directory, timeout, env)
-            results.append(result)
-        final = identities(root, candidates(root))
-        unchanged = final == initial['fingerprints']
-        results.append({'name': 'candidate-unchanged', 'passed': unchanged})
-        print(f'{"PASS" if unchanged else "FAIL"} candidate-unchanged', flush=True)
-        report['passed'] = all(result['passed'] for result in results)
-    except (ValueError, OSError, subprocess.SubprocessError) as error:
-        report['error'] = str(error)
-        print(f'FAIL preflight: {error}', flush=True)
-    finally:
-        report['finished'] = datetime.now().astimezone().isoformat()
-        (directory / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
-        print(f'\nOverall: {"PASS" if report["passed"] else "FAIL"}. Report: {directory / "report.json"}', flush=True)
-    return 0 if report['passed'] else 1
+    parser.parse_args()
+    result = check()
+    print(json.dumps(result, indent=2))
+    return 0 if result["status"] == "passed" else 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

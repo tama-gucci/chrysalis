@@ -1,81 +1,19 @@
 ---
-title: Chrysalis Command Center
+title: chrysalis
 type: dashboard
 ---
 
-# 🛸 Chrysalis Command Center
+# chrysalis
 
-Requires the Dataview plugin enabled in this vault. Task lists remain available as ordinary notes when it is disabled.
+TaskNotes supplies the task, calendar and session UI. Open a supplied view in `TaskNotes/Views`.
+The following optional Dataview projection uses the same task notes.
 
-> [!abstract] System State & Energy Profile
-> **Phase:** Pillar 1 (Core Foundation & Systems Setup)  
-> **Diurnal Rhythm:** Diurnally calibrated focus blocks relative to $T_{\text{wake}}$ (Peak Sprints • Slump/Defrost • Recovery)
-
----
-
-## ⚡ 1. Daily Action Queue (`status: todo`)
 ```dataview
-TABLE 
-    urgency_tier as "Tier",
-    priority as "Priority",
-    timeEstimate + "m" as "Duration",
-    energy as "Energy",
-    due as "Due Date",
-    file.folder as "Folder"
+TABLE priority, due, scheduled, timeEstimate, modality
 FROM "TaskNotes/Tasks"
-WHERE status = "todo" AND file.name != "example-task"
-SORT urgency_tier DESC, priority DESC, due ASC
+WHERE status != "done" AND status != "archived" AND file.name != "example-task"
+SORT scheduled ASC, due ASC
 ```
 
----
-
-## 🎯 2. Today's Scheduled Focus
-```dataview
-TABLE
-    timeEstimate + "m" as "Duration",
-    scheduled as "Scheduled Block",
-    priority as "Priority",
-    energy as "Energy"
-FROM "TaskNotes/Tasks"
-WHERE scheduled != null AND date(scheduled).day = date(today).day AND date(scheduled).month = date(today).month AND date(scheduled).year = date(today).year AND status != "done" AND status != "archived"
-SORT scheduled ASC
-```
-
----
-
-## 🏛️ 3. Active Pillar 1 Projects & Deliverables
-```dataview
-TABLE
-    pillar as "Pillar",
-    status as "Status",
-    horizon_window as "Horizon Window"
-FROM "Projects"
-WHERE type = "project_roadmap"
-SORT pillar ASC
-```
-
----
-
-## 📚 4. Recent Slipbox Additions (Zettelkasten)
-```dataview
-TABLE
-    dateCreated as "Created",
-    tags as "Domain Tags",
-    aliases as "Aliases"
-FROM "Slipbox"
-WHERE type = "permanent-note" OR contains(tags, "zettel")
-SORT dateCreated DESC
-LIMIT 10
-```
-
----
-
-## 📦 5. Completed & Archived Tasks
-```dataview
-TABLE
-    title as "Completed Task",
-    file.mtime as "Archived Date"
-FROM "TaskNotes/Archive"
-SORT file.mtime DESC
-LIMIT 10
-```
+Daily focus is in `Daily`; project ledgers are in `Projects`. Notes and original documents
+remain readable when optional projections are unavailable.

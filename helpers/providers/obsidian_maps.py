@@ -24,7 +24,8 @@ Key Architectural Invariants:
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Optional, Tuple, Union
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 
 OBSIDIAN_MAPS_INTEGRATION_ID = "obsidian-maps"
@@ -222,6 +223,8 @@ def synchronize_task_map_coordinates(task_fm: Dict[str, Any]) -> Dict[str, Any]:
                 "user_modified": True,
             }
     return updated
+
+
 
 
 def project_tasks_to_obsidian_maps(

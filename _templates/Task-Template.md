@@ -1,8 +1,9 @@
 ---
-title: "Imperative Task Title"
+type: task
+title: "{{TITLE}}"
 status: todo
-dateCreated: "{{TIMESTAMP}}"
-due: "{{DUE_DATE}}"
+dateCreated: "{{LOCAL_TIMESTAMP}}"
+due: null
 scheduled: null
 priority: normal
 urgency_tier: 2
@@ -11,28 +12,12 @@ timeEstimate: 45
 energy: medium
 friction: medium
 micro_chunked: false
-tags:
-  - task
-  - "{{PILLAR_TAG}}/subtag"
+tags: [task]
 linked_zettels: []
 project_ref: null
-deliverable_id: null
 googleCalendarEventId: null
-date_uncertain: false
-location: null
-coordinates: null
-route_estimate: null
-travel_policy: null
-startedAt: null
-completedAt: null
 ---
 
-# Imperative Task Title
+# {{TITLE}}
 
-## Context & Objective
-Brief 1-2 sentence description of the deliverable and success criteria.
-
-## Execution Checklist
-- [ ] Step 1: Open project workspace and verify dependencies
-- [ ] Step 2: Execute primary analytical or synthesis work
-- [ ] Step 3: Verify and record deliverable output
+Describe the next action and evidence of completion. Fill placeholders before validation.

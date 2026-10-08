@@ -9,7 +9,7 @@ Implements:
 2. Separation of private integration instances (`integrations.instances`) from workflow capability
    bindings (`integrations.bindings`) across `System/Memory.md`, optional `System/Integrations.md`,
    and optional `System/Ingestion-Sources.md`.
-3. Non-destructive compatibility bridging with `ingestion.sources` and legacy `ingestion_config`.
+3. Private capture source bindings through `ingestion.sources`.
 4. Five-state readiness evaluation (`installed`, `configured`, `authenticated`, `available`, `verified`).
 5. Deterministic failure codes (`binding_missing`, `binding_ambiguous`, `instance_disabled`,
    `capability_not_supported`, `effect_not_authorized`, `inline_secret_forbidden`,
@@ -18,12 +18,13 @@ Implements:
 
 from __future__ import annotations
 
+import inspect
 import os
 from pathlib import Path
 import re
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
-from helpers.mdbase_helper import parse_frontmatter
+from helpers.records import parse_frontmatter
 from helpers.providers.google_drive import (
     GOOGLE_DRIVE_CAPABILITIES,
     GOOGLE_DRIVE_INTEGRATION_ID,
@@ -49,17 +50,29 @@ from helpers.providers.obsidian_maps import (
 
 INTEGRATION_CAPABILITY_CONTRACT_VERSION = "1.0.0"
 
+TASKNOTES_CALENDAR_INTEGRATION_ID = "tasknotes-calendar"
+
+TASKNOTES_CALENDAR_CAPABILITIES: Dict[str, Any] = {
+    "integration_id": TASKNOTES_CALENDAR_INTEGRATION_ID,
+    "contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION,
+    "description": "TaskNotes Google Calendar observation bridge (read-only commitments).",
+    "two_way_calendar_sync_owner": "TaskNotes Obsidian Community Plugin",
+    "agent_calendar_write_permitted": False,
+    "write_back_supported": False,
+    "capabilities": ["calendar.commitments_read"],
+    "supports_write": False,
+}
+
 CAPABILITY_FAMILIES: Set[str] = {
     "ingestion.discover",
     "ingestion.read",
     "location.resolve",
     "routing.estimate",
     "visualization.map_projection",
+    "calendar.commitments_read",
 }
 
 FUTURE_CAPABILITY_FAMILIES: Set[str] = {
-    "calendar.commitments_read",
-    "calendar.events_write",
     "notification.dispatch",
 }
 
@@ -83,11 +96,45 @@ INLINE_SECRET_PATTERN = re.compile(
 )
 
 
+def read_tasknotes_calendar_commitments(request_payload=None, *, instance_config=None, vault_root=None):
+    """Normalize observed commitments; absent observation never means a free calendar."""
+    from datetime import datetime, timezone
+    req = dict(request_payload or {})
+    cfg = dict((instance_config or {}).get("config") or {})
+    observation = req if "events" in req else cfg
+    if "events" not in observation and vault_root:
+        memory = Path(vault_root) / "System/Memory.md"
+        if memory.is_file():
+            fm, _ = parse_frontmatter(memory.read_text(encoding="utf-8"))
+            cache = fm.get("calendar_sync", {})
+            observation = {"events": cache.get("cached_events"), "observed_at": cache.get("observed_at")}
+    events = observation.get("events")
+    observed = observation.get("observed_at")
+    status, freshness = "unavailable", "never_observed"
+    if isinstance(events, list) and isinstance(observed, str):
+        try:
+            stamp = datetime.fromisoformat(observed.replace("Z", "+00:00"))
+            current = datetime.now(timezone.utc)
+            age = (current - stamp).total_seconds()
+            if stamp.tzinfo is None or age < -60:
+                raise ValueError("Invalid observation")
+            freshness = "fresh" if age <= min(86400, max(60, int(observation.get("max_age_seconds", 3600)))) else "stale"
+            status = ("ok" if events else "empty") if freshness == "fresh" else "stale"
+        except (ValueError, TypeError):
+            freshness = "invalid_observation"
+    return {"contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION,
+            "capability": "calendar.commitments_read", "integration": TASKNOTES_CALENDAR_INTEGRATION_ID,
+            "effect": "external_query", "status": status, "freshness": freshness,
+            "observed_at": observed, "events": events if isinstance(events, list) else [],
+            "commitments_count": len(events) if isinstance(events, list) else 0,
+            "two_way_calendar_sync_owner": "TaskNotes", "agent_calendar_write_permitted": False,
+            "supports_write": False, "diagnostics": []}
+
+
 TRUSTED_INTEGRATION_ADAPTERS: Dict[str, Dict[str, Any]] = {
     GOOGLE_DRIVE_INTEGRATION_ID: {
         "integration_id": GOOGLE_DRIVE_INTEGRATION_ID,
         "contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION,
-        "skill_path": ".agent/skills/google-drive/SKILL.md",
         "capabilities": ["ingestion.discover", "ingestion.read"],
         "effects": {
             "ingestion.discover": "external_query",
@@ -105,7 +152,6 @@ TRUSTED_INTEGRATION_ADAPTERS: Dict[str, Dict[str, Any]] = {
     GOOGLE_TASKS_INTEGRATION_ID: {
         "integration_id": GOOGLE_TASKS_INTEGRATION_ID,
         "contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION,
-        "skill_path": ".agent/skills/google-tasks/SKILL.md",
         "capabilities": ["ingestion.discover", "ingestion.read"],
         "effects": {
             "ingestion.discover": "external_query",
@@ -123,7 +169,6 @@ TRUSTED_INTEGRATION_ADAPTERS: Dict[str, Dict[str, Any]] = {
     GOOGLE_MAPS_INTEGRATION_ID: {
         "integration_id": GOOGLE_MAPS_INTEGRATION_ID,
         "contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION,
-        "skill_path": ".agent/skills/google-maps/SKILL.md",
         "capabilities": ["location.resolve", "routing.estimate"],
         "effects": {
             "location.resolve": "external_query",
@@ -141,7 +186,6 @@ TRUSTED_INTEGRATION_ADAPTERS: Dict[str, Dict[str, Any]] = {
     OBSIDIAN_MAPS_INTEGRATION_ID: {
         "integration_id": OBSIDIAN_MAPS_INTEGRATION_ID,
         "contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION,
-        "skill_path": ".agent/skills/obsidian-maps/SKILL.md",
         "capabilities": ["visualization.map_projection"],
         "effects": {
             "visualization.map_projection": "local_projection",
@@ -154,10 +198,25 @@ TRUSTED_INTEGRATION_ADAPTERS: Dict[str, Dict[str, Any]] = {
             "visualization.map_projection": project_tasks_to_obsidian_maps,
         },
     },
+    TASKNOTES_CALENDAR_INTEGRATION_ID: {
+        "integration_id": TASKNOTES_CALENDAR_INTEGRATION_ID,
+        "contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION,
+        "capabilities": ["calendar.commitments_read"],
+        "effects": {
+            "calendar.commitments_read": "external_query",
+        },
+        "requires_secret": False,
+        "external_mutation_supported": False,
+        "external_mutation_authorized": False,
+        "supports_write": False,
+        "metadata": TASKNOTES_CALENDAR_CAPABILITIES,
+        "handlers": {
+            "calendar.commitments_read": read_tasknotes_calendar_commitments,
+        },
+    },
     "filesystem": {
         "integration_id": "filesystem",
         "contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION,
-        "skill_path": ".agent/skills/ingest/SKILL.md",
         "capabilities": ["ingestion.discover", "ingestion.read"],
         "effects": {
             "ingestion.discover": "external_query",
@@ -193,6 +252,9 @@ def get_registered_adapter(
             "code": "arbitrary_adapter_import_forbidden",
             "message": f"Dynamic or path-based adapter loading is prohibited: {iid!r}",
         }
+
+    if iid in {"tasknotes", "tasknotes-calendar"}:
+        iid = TASKNOTES_CALENDAR_INTEGRATION_ID
 
     registry = dict(TRUSTED_INTEGRATION_ADAPTERS)
     if isinstance(custom_registry, dict):
@@ -247,8 +309,18 @@ def resolve_secret_reference(
         if not rel_or_abs:
             return None, {"code": "invalid_secret_ref", "message": "Empty file path in secret_ref."}
         cand = Path(rel_or_abs)
-        if not cand.is_absolute() and vault_root is not None:
-            cand = (Path(vault_root).resolve() / cand).resolve()
+        if not cand.is_absolute():
+            return None, {"code": "invalid_secret_ref", "message": "Secret files require an absolute external private path."}
+        from System.scripts.vault_paths import reject_redirects
+        try:
+            reject_redirects(cand)
+            resolved = cand.resolve()
+            package = Path(__file__).resolve().parents[1]
+            for forbidden in (package, Path(vault_root).resolve() if vault_root else package):
+                if resolved == forbidden or forbidden in resolved.parents:
+                    return None, {"code": "invalid_secret_ref", "message": "Credentials must remain outside package and vault."}
+        except ValueError:
+            return None, {"code": "invalid_secret_ref", "message": "Secret references cannot traverse redirects."}
         if not cand.is_file():
             return None, {
                 "code": "secret_unresolved",
@@ -270,7 +342,8 @@ def _scan_config_for_inline_secrets(cfg_dict: Dict[str, Any], prefix: str = "") 
         return issues
     for k, v in cfg_dict.items():
         field_name = f"{prefix}.{k}" if prefix else str(k)
-        if isinstance(v, str) and INLINE_SECRET_PATTERN.search(v):
+        credential_field = str(k).lower() in {"api_key", "apikey", "client_secret", "access_token", "refresh_token", "token", "password", "credentials"}
+        if (credential_field and not _is_placeholder_value(v)) or (isinstance(v, str) and INLINE_SECRET_PATTERN.search(v)):
             issues.append(
                 {
                     "code": "inline_secret_forbidden",
@@ -439,7 +512,7 @@ def resolve_integration_config(vault_root: Union[Path, str]) -> Dict[str, Any]:
     3. Optional `<vault>/System/Integrations.md` (`integrations`)
 
     Separates `instances` (`integrations.instances.<id>`) from `bindings` (`integrations.bindings.<slot>`),
-    and non-destructively bridges `ingestion.sources` (and legacy `ingestion_config`) into instances and bindings.
+    and resolves `ingestion.sources` into private instances and bindings.
     """
     v_root = Path(vault_root).resolve()
     repo_root = Path(__file__).resolve().parent.parent
@@ -468,11 +541,8 @@ def resolve_integration_config(vault_root: Union[Path, str]) -> Dict[str, Any]:
     instances: Dict[str, Dict[str, Any]] = {}
     bindings: Dict[str, Dict[str, Any]] = {}
     ingestion_sources: Dict[str, Dict[str, Any]] = {}
-    legacy_cfg: Dict[str, Any] = {}
 
     for layer_idx, (layer_label, layer) in enumerate(fm_layers):
-        if isinstance(layer.get("ingestion_config"), dict):
-            legacy_cfg.update(layer["ingestion_config"])
 
         int_block = layer.get("integrations")
         layer_instances_updated: Set[str] = set()
@@ -548,18 +618,6 @@ def resolve_integration_config(vault_root: Union[Path, str]) -> Dict[str, Any]:
                         merged_s["enabled"] = True
                         instances[bound_id]["enabled"] = True
                 ingestion_sources[s_alias] = merged_s
-
-    # Non-destructive compatibility bridge for legacy_cfg when ingestion.sources is absent
-    if not ingestion_sources and legacy_cfg:
-        locker_root = str(legacy_cfg.get("locker_root") or "Chrysalis-Media-Locker")
-        ingestion_sources["media"] = {
-            "integration": GOOGLE_DRIVE_INTEGRATION_ID,
-            "enabled": True,
-            "collection": locker_root,
-            "local_mount_path": legacy_cfg.get("local_locker_path"),
-            "discovery_roots": list(legacy_cfg.get("discovery_roots") or ["01-Inbox", "02-Projects"]),
-            "access": "read-only",
-        }
 
     # Synchronize ingestion_sources <-> instances & bindings
     for alias, scfg in ingestion_sources.items():
@@ -683,9 +741,7 @@ def evaluate_instance_readiness(
     integration_id = str(instance_cfg.get("integration") or "").strip()
 
     adapter, adapter_err = get_registered_adapter(integration_id, custom_registry=custom_registry)
-    skill_rel = adapter.get("skill_path") if adapter else f".agent/skills/{integration_id}/SKILL.md"
-    skill_exists = (v_root / skill_rel).is_file() or (repo_root / skill_rel).is_file()
-    installed = adapter is not None and skill_exists
+    installed = adapter is not None
 
     enabled = bool(instance_cfg.get("enabled") is True)
     cap_ok = True
@@ -704,45 +760,41 @@ def evaluate_instance_readiness(
     resolved_secret, secret_err = resolve_secret_reference(secret_ref, vault_root=v_root, env=env)
 
     requires_secret = bool(adapter.get("requires_secret")) if adapter else False
-    has_mock_or_fixture = bool(
-        instance_cfg.get("fixture_path")
-        or cfg_block.get("fixture_path")
-        or instance_cfg.get("route_fixture_path")
-        or cfg_block.get("route_fixture_path")
-        or instance_cfg.get("mock_transport")
-        or cfg_block.get("mock_transport")
-    )
-
-    if inline_secret_issues:
-        authenticated = False
-    elif requires_secret:
-        authenticated = bool(resolved_secret) or has_mock_or_fixture
-    else:
-        authenticated = secret_err is None
-
-    if not configured or not authenticated:
+    fixture_available = False
+    for key in ("fixture_path", "route_fixture_path"):
+        selected = instance_cfg.get(key) or cfg_block.get(key)
+        if selected:
+            candidate = Path(str(selected)).expanduser()
+            fixture_available = fixture_available or (candidate.is_absolute() and candidate.is_file())
+    mock = instance_cfg.get("mock_transport") or cfg_block.get("mock_transport")
+    fixture_available = fixture_available or callable(mock) or isinstance(mock, dict)
+    synthetic = instance_cfg.get("synthetic_response") or cfg_block.get("synthetic_response")
+    fixture_available = fixture_available or isinstance(synthetic, dict)
+    credentials_present = bool(resolved_secret) and not inline_secret_issues
+    # Presence is not an authenticated account check. No authenticated result exists yet.
+    authenticated = False if inline_secret_issues or (requires_secret and not credentials_present) else None
+    if not configured or inline_secret_issues:
         available = False
     elif integration_id == OBSIDIAN_MAPS_INTEGRATION_ID:
         base_rel = str(instance_cfg.get("base_view_path") or cfg_block.get("base_view_path") or "TaskNotes/Views/maps-default.base")
         available = (v_root / base_rel).is_file() or (repo_root / base_rel).is_file()
     elif integration_id == GOOGLE_MAPS_INTEGRATION_ID:
-        live_http = bool(instance_cfg.get("live_http_enabled") is True or cfg_block.get("live_http_enabled") is True)
-        available = has_mock_or_fixture or (live_http and bool(resolved_secret))
+        live_http = instance_cfg.get("live_http_enabled") is True or cfg_block.get("live_http_enabled") is True
+        available = fixture_available or (live_http and credentials_present)
     elif integration_id == GOOGLE_DRIVE_INTEGRATION_ID:
         mount_p = instance_cfg.get("local_mount_path") or cfg_block.get("local_mount_path")
-        available = bool(mount_p and Path(str(mount_p)).is_dir()) or has_mock_or_fixture
+        available = bool(mount_p and Path(str(mount_p)).is_absolute() and Path(str(mount_p)).is_dir()) or isinstance(synthetic, dict)
     elif integration_id == GOOGLE_TASKS_INTEGRATION_ID:
-        snap_p = (
-            instance_cfg.get("mcp_snapshot_path")
-            or cfg_block.get("mcp_snapshot_path")
-            or instance_cfg.get("export_path")
-            or cfg_block.get("export_path")
-        )
-        available = bool(snap_p and (Path(str(snap_p)).is_file() or (v_root / str(snap_p)).is_file())) or has_mock_or_fixture
+        snap_p = instance_cfg.get("mcp_snapshot_path") or cfg_block.get("mcp_snapshot_path") or instance_cfg.get("export_path") or cfg_block.get("export_path") or instance_cfg.get("fixture_path") or cfg_block.get("fixture_path")
+        available = bool(snap_p and Path(str(snap_p)).is_absolute() and Path(str(snap_p)).is_file()) or isinstance(synthetic, dict)
+    elif integration_id in {TASKNOTES_CALENDAR_INTEGRATION_ID, "tasknotes"}:
+        memory = v_root / "System/Memory.md"
+        observed = parse_frontmatter(memory.read_text(encoding="utf-8"))[0].get("calendar_sync", {}) if memory.is_file() else {}
+        available = isinstance(cfg_block.get("events"), list) and bool(cfg_block.get("observed_at")) or isinstance(observed.get("cached_events"), list) and bool(observed.get("observed_at"))
     else:
-        available = True
+        available = False
 
-    verified = bool(available and verified_override)
+    verified = False  # Configuration assertions are not end-to-end verification receipts.
 
     return {
         "installed": installed,
@@ -750,6 +802,8 @@ def evaluate_instance_readiness(
         "authenticated": authenticated,
         "available": available,
         "verified": verified,
+        "credentials_present": credentials_present,
+        "fixture_available": fixture_available,
         "resolved_secret": resolved_secret,
         "secret_error": secret_err,
         "inline_secret_issues": inline_secret_issues,
@@ -772,6 +826,25 @@ def resolve_capability_binding(
     Fails deterministically on missing, disabled, ambiguous, unsupported, or unauthorized bindings.
     """
     cap = str(capability or "").strip()
+    if cap in {
+        "calendar.events_write",
+        "calendar.write",
+        "calendar.events_create",
+        "calendar.events_update",
+        "calendar.events_delete",
+    }:
+        return {
+            "ok": False,
+            "status": "effect_not_authorized",
+            "capability": cap,
+            "diagnostics": [
+                {
+                    "code": "calendar_write_forbidden",
+                    "message": "Agents cannot write to Google Calendar. TaskNotes owns calendar sync.",
+                }
+            ],
+        }
+
     if cap not in CAPABILITY_FAMILIES:
         if cap in FUTURE_CAPABILITY_FAMILIES:
             return {
@@ -1066,6 +1139,8 @@ def resolve_capability_binding(
         "instance_config": instance_cfg,
         "adapter": adapter,
         "readiness": {k: readiness[k] for k in READINESS_STATES},
+        "credentials_present": readiness["credentials_present"],
+        "fixture_available": readiness["fixture_available"],
         "resolved_secret": readiness["resolved_secret"],
         "diagnostics": [],
     }
@@ -1183,6 +1258,31 @@ def validate_capability_result(
                 }
             )
 
+    elif expected_capability == "calendar.commitments_read":
+        if not isinstance(result.get("events"), list):
+            issues.append(
+                {
+                    "code": "malformed_calendar_events",
+                    "message": "Calendar commitments result must contain an 'events' list.",
+                }
+            )
+        if result.get("agent_calendar_write_permitted") is True:
+            issues.append(
+                {
+                    "code": "calendar_write_forbidden",
+                    "message": "agent_calendar_write_permitted must not be True.",
+                }
+            )
+
+    elif expected_capability in {"ingestion.discover", "ingestion.read"}:
+        if not isinstance(result.get("items"), list):
+            issues.append(
+                {
+                    "code": "malformed_ingestion_items",
+                    "message": "Ingestion discovery result must contain an 'items' list.",
+                }
+            )
+
     return len(issues) == 0, issues
 
 
@@ -1202,6 +1302,27 @@ def invoke_capability(
     Resolves a capability binding and invokes the bound integration adapter, validating
     the returned capability envelope before returning it to the caller.
     """
+    if capability in {
+        "calendar.events_write",
+        "calendar.write",
+        "calendar.events_create",
+        "calendar.events_update",
+        "calendar.events_delete",
+    } or (capability.startswith("calendar.") and requested_effect == "external_mutation"):
+        return {
+            "contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION,
+            "capability": capability,
+            "status": "effect_not_authorized",
+            "effect": "external_mutation",
+            "readiness": None,
+            "diagnostics": [
+                {
+                    "code": "calendar_write_forbidden",
+                    "message": "Agents cannot write to Google Calendar. TaskNotes owns calendar sync.",
+                }
+            ],
+        }
+
     resolution = resolve_capability_binding(
         vault_root,
         capability,
@@ -1240,6 +1361,11 @@ def invoke_capability(
     instance_cfg = resolution["instance_config"]
     resolved_secret = resolution.get("resolved_secret")
 
+    if adapter.get("requires_secret") and not resolved_secret and transport is None and not resolution.get("fixture_available"):
+        return {"contract_version": INTEGRATION_CAPABILITY_CONTRACT_VERSION, "capability": capability,
+                "status": "auth_required", "effect": resolution["effect"], "readiness": resolution["readiness"],
+                "diagnostics": [{"code": "credentials_missing", "message": "No credential or available synthetic transport"}]}
+
     if capability in {"location.resolve", "routing.estimate"}:
         raw_result = handler(
             request_payload,
@@ -1252,8 +1378,53 @@ def invoke_capability(
             request_payload,
             instance_config=instance_cfg,
         )
+    elif capability == "calendar.commitments_read":
+        raw_result = handler(
+            request_payload,
+            instance_config=instance_cfg,
+            vault_root=vault_root,
+        )
+    elif capability in {"ingestion.discover", "ingestion.read"}:
+        eff_cfg = dict(instance_cfg)
+        if not isinstance(request_payload, dict) or set(request_payload) - {"source_alias", "page_size", "page_token"}:
+            raise ValueError("Ingestion requests cannot override trusted configuration or provider evidence")
+        page_size = request_payload.get("page_size", 50)
+        page_token = request_payload.get("page_token")
+        if not isinstance(page_size, int) or isinstance(page_size, bool) or not 1 <= page_size <= 100:
+            raise ValueError("Discovery page size must be 1–100")
+        if page_token is not None and not re.fullmatch(r"[0-9]{1,6}", str(page_token)):
+            raise ValueError("Invalid discovery page token")
+
+        sig = inspect.signature(handler)
+        params = list(sig.parameters.keys())
+        if params and params[0] == "vault_root":
+            kw = {}
+            for k in ["source_alias", "page_size", "page_token", "synthetic_response"]:
+                if isinstance(request_payload, dict) and k in request_payload:
+                    kw[k] = request_payload[k]
+                elif k in eff_cfg:
+                    kw[k] = eff_cfg[k]
+            raw_result = handler(vault_root, eff_cfg, **kw)
+        else:
+            kw = {}
+            for k in ["source_alias", "page_size", "page_token", "synthetic_response"]:
+                if isinstance(request_payload, dict) and k in request_payload:
+                    kw[k] = request_payload[k]
+                elif k in eff_cfg:
+                    kw[k] = eff_cfg[k]
+            if "vault_root" in params:
+                kw["vault_root"] = vault_root
+            raw_result = handler(eff_cfg, **kw)
+
+        if isinstance(raw_result, dict):
+            raw_result.setdefault("capability", capability)
+            raw_result.setdefault("effect", resolution["effect"])
     else:
-        raw_result = handler(instance_cfg)
+        sig = inspect.signature(handler)
+        if "vault_root" in sig.parameters:
+            raw_result = handler(instance_cfg, vault_root=vault_root)
+        else:
+            raw_result = handler(instance_cfg)
 
     valid, validation_issues = validate_capability_result(raw_result, expected_capability=capability)
     if not valid:
@@ -1271,9 +1442,12 @@ def invoke_capability(
     raw_result["instance_id"] = resolution["instance_id"]
     raw_result["workflow_binding"] = workflow_binding
     readiness = dict(resolution["readiness"])
-    if raw_result.get("status") in {"resolved", "ambiguous", "ok", "empty", "policy_filtered"}:
+    if (
+        raw_result.get("status") in {"resolved", "ambiguous", "ok", "empty", "policy_filtered"}
+        or raw_result.get("discovery_status") in {"ok", "empty", "ok_items_available", "ok_empty"}
+    ):
         readiness["available"] = True
-        readiness["verified"] = True
+        readiness["verified"] = False
     raw_result["readiness"] = readiness
     return raw_result
 

@@ -1,5 +1,5 @@
 ---
-kind: mdbase.type
+kind: chrysalis.type
 name: project
 version: 1
 description: "Authoritative Chrysalis project roadmap and master deliverable ledger model"
@@ -42,7 +42,7 @@ schema:
         description: "Strategic pillar category, e.g. pillar-academics, pillar-career"
       horizon_window:
         type: string
-        description: "Project active date range, e.g. '2026-09-01 → 2026-12-15'"
+        description: "Project active date range, e.g. '2026-09-01 -> 2026-12-15'"
       last_updated:
         type: string
         format: date-time
@@ -184,12 +184,6 @@ collection:
 lifecycle: {}
 ---
 
-# Project Roadmap Model
+# Project ledgers
 
-This type defines project roadmaps and master deliverable ledgers.
-Each project lives in `Projects/{project_id}/Roadmap.md`.
-
-## Master Ledger Architecture:
-1. **Single Source of Truth**: The `deliverables` list retains 100% of semester or project deliverables across the complete timeline.
-2. **Horizon Materialization**: Only deliverables within the active 14-day planning horizon materialize as individual execution tasks in `TaskNotes/Tasks/`. Deliverables outside 14 days remain recorded in the roadmap's `deliverables` ledger.
-3. **Reconciliation**: When an updated syllabus is ingested, the diffing algorithm modifies existing deliverables in-place and archives removed deliverables (`status: archived`).
+Retain all deliverables. Reconciliation is additive; only an explicitly reviewed complete same-scope replacement can archive omissions.

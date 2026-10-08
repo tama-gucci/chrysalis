@@ -5,7 +5,7 @@ Implements:
 1. Versioned Ingestion Input Contract (v1.0.0) with shared envelope and explicit variants
    (`file`, `text`, `structured_task`).
 2. Private runtime source configuration resolution (`ingestion.sources`) with a narrow,
-   non-destructive compatibility layer for legacy `ingestion_config` and `--drive`.
+   explicit private source configuration.
 3. Untrusted payload quarantine, delimiter neutralization, and anti-control validation.
 4. Provider-aware file identity (preserving originals in place and preventing silent
    cross-provider provenance migration assumptions).
@@ -23,7 +23,7 @@ from pathlib import Path
 import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
-from helpers.mdbase_helper import (
+from helpers.records import (
     EMPTY_BYTES_SHA256,
     SHA256_HEX_PATTERN,
     UNTRUSTED_CLOSING_TAG_PATTERN,
@@ -98,56 +98,11 @@ FORBIDDEN_PAYLOAD_CONTROL_KEYS: Set[str] = {
 # 1. Private Source Configuration & Compatibility Layer
 # =========================================================================
 
-def translate_legacy_ingestion_config(legacy_cfg: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Narrow, non-destructive compatibility translator mapping legacy `ingestion_config`
-    fields into the provider-neutral `ingestion` configuration structure.
-    Preserves all existing runtime values without mutating or deleting user config.
-    """
-    if not isinstance(legacy_cfg, dict) or not legacy_cfg:
-        return {}
-
-    locker_root = str(legacy_cfg.get("locker_root") or "Chrysalis-Media-Locker")
-    local_mount = legacy_cfg.get("local_locker_path")
-    discovery_roots = list(legacy_cfg.get("discovery_roots") or ["01-Inbox", "02-Projects"])
-    preserve_in_place = bool(legacy_cfg.get("preserve_originals_in_place", True))
-    max_depth = int(legacy_cfg.get("max_discovery_depth", 6))
-    auto_ingest = bool(legacy_cfg.get("auto_ingest_on_nightly_audit", True))
-    local_res = bool(legacy_cfg.get("local_resources_folder_enabled", False))
-
-    return {
-        "contract_version": INGESTION_CONTRACT_VERSION,
-        "auto_ingest_on_nightly_audit": auto_ingest,
-        "local_resources_folder_enabled": local_res,
-        "preserve_originals_in_place": preserve_in_place,
-        "standalone_future_task_policy": "create_inert_task",
-        "default_sources": ["media"],
-        "legacy_compatibility_applied": True,
-        "sources": {
-            "media": {
-                "alias": "media",
-                "integration": GOOGLE_DRIVE_INTEGRATION_ID,
-                "enabled": True,
-                "collection": locker_root,
-                "local_mount_path": local_mount,
-                "drive_inbox_folder": legacy_cfg.get("drive_inbox_folder", f"{locker_root}/01-Inbox"),
-                "drive_projects_folder": legacy_cfg.get("drive_projects_folder", f"{locker_root}/02-Projects"),
-                "discovery_roots": discovery_roots,
-                "access": "read-only",
-                "preserve_originals_in_place": preserve_in_place,
-                "max_discovery_depth": max_depth,
-            }
-        },
-    }
-
-
 def resolve_ingestion_config(vault_root: Union[Path, str]) -> Dict[str, Any]:
     """
     Resolves the private runtime ingestion configuration from `<vault>/System/Memory.md`
     (or optional `<vault>/System/Ingestion-Sources.md`).
     - Prefers `ingestion.sources`.
-    - Falls back cleanly to `translate_legacy_ingestion_config(ingestion_config)` when only
-      legacy configuration is present.
     - Never auto-activates installed integration skills that are not explicitly enabled
       in the user's configuration.
     """
@@ -212,7 +167,6 @@ def resolve_ingestion_config(vault_root: Union[Path, str]) -> Dict[str, Any]:
             pass
 
     raw_ingestion = fm.get("ingestion")
-    legacy_cfg = fm.get("ingestion_config")
 
     if isinstance(raw_ingestion, dict) and isinstance(raw_ingestion.get("sources"), dict):
         sources_out: Dict[str, Dict[str, Any]] = {}
@@ -233,16 +187,6 @@ def resolve_ingestion_config(vault_root: Union[Path, str]) -> Dict[str, Any]:
             norm_s["enabled"] = bool(scfg.get("enabled") is True)
             sources_out[str(alias)] = norm_s
 
-        # Preserve optional legacy path hints onto 'media' without overwriting collection or auto-enabling
-        if isinstance(legacy_cfg, dict) and "media" in sources_out:
-            m_src = sources_out["media"]
-            if not m_src.get("collection") and legacy_cfg.get("locker_root"):
-                m_src["collection"] = str(legacy_cfg["locker_root"])
-            if m_src.get("local_mount_path") is None and legacy_cfg.get("local_locker_path"):
-                m_src["local_mount_path"] = legacy_cfg.get("local_locker_path")
-            if "discovery_roots" not in m_src and legacy_cfg.get("discovery_roots"):
-                m_src["discovery_roots"] = list(legacy_cfg["discovery_roots"])
-
         default_sources = list(
             raw_ingestion.get("default_sources")
             or [alias for alias, s in sources_out.items() if s.get("enabled")]
@@ -253,64 +197,38 @@ def resolve_ingestion_config(vault_root: Union[Path, str]) -> Dict[str, Any]:
             "auto_ingest_on_nightly_audit": bool(
                 raw_ingestion.get(
                     "auto_ingest_on_nightly_audit",
-                    legacy_cfg.get("auto_ingest_on_nightly_audit", True) if isinstance(legacy_cfg, dict) else True,
+                    True,
                 )
             ),
             "local_resources_folder_enabled": bool(
                 raw_ingestion.get(
                     "local_resources_folder_enabled",
-                    legacy_cfg.get("local_resources_folder_enabled", False) if isinstance(legacy_cfg, dict) else False,
+                    True,
                 )
             ),
             "preserve_originals_in_place": bool(
                 raw_ingestion.get(
                     "preserve_originals_in_place",
-                    legacy_cfg.get("preserve_originals_in_place", True) if isinstance(legacy_cfg, dict) else True,
+                    True,
                 )
             ),
             "standalone_future_task_policy": str(
                 raw_ingestion.get("standalone_future_task_policy") or "create_inert_task"
             ),
             "default_sources": default_sources,
-            "legacy_compatibility_applied": False,
             "sources": sources_out,
         }
-
-    if isinstance(legacy_cfg, dict) and legacy_cfg:
-        return translate_legacy_ingestion_config(legacy_cfg)
 
     return {
         "contract_version": INGESTION_CONTRACT_VERSION,
         "auto_ingest_on_nightly_audit": True,
-        "local_resources_folder_enabled": False,
+        "local_resources_folder_enabled": True,
         "preserve_originals_in_place": True,
         "standalone_future_task_policy": "create_inert_task",
         "default_sources": [],
-        "legacy_compatibility_applied": False,
         "sources": {},
     }
 
-
-def resolve_legacy_command_alias(
-    source_alias: Optional[str] = None,
-    *,
-    legacy_drive_flag: bool = False,
-) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
-    """
-    Maps deprecated `--drive` flag to `--source media` outside the core `/ingest` runbook.
-    """
-    if legacy_drive_flag and not source_alias:
-        return "media", {
-            "code": "legacy_command_alias_used",
-            "severity": "info",
-            "message": "Compatibility layer mapped legacy '--drive' command to '--source media'.",
-        }
-    return source_alias, None
-
-
-# =========================================================================
-# 2. Versioned Contract Validation & Untrusted Payload Security
-# =========================================================================
 
 def sanitize_ingestion_item(item: Dict[str, Any]) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     """
@@ -426,6 +344,10 @@ def validate_ingestion_item(item: Dict[str, Any]) -> Dict[str, Any]:
     norm_text_sha = fps.get("normalized_text_sha256")
     struct_sha = fps.get("structured_payload_sha256")
     payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
+    mime_type = payload.get("mime_type")
+    if mime_type is not None and (not isinstance(mime_type, str) or not re.fullmatch(r"[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+", mime_type)):
+        diagnostics.append({"code": "invalid_mime_type", "severity": "error", "field": "payload.mime_type",
+                            "message": "MIME metadata must be a type/subtype token without markup."})
 
     # Enforce the binary hashing law: sha256 means ONLY exact original binary file bytes!
     if sha256_val is not None:
@@ -637,7 +559,7 @@ def map_filesystem_item_to_contract(
         elif not raw_item.get("supported", True):
             cov_status = "unsupported"
         else:
-            cov_status = "complete"
+            cov_status = "complete" if extracted_text else "partial"
         ext_cov = {
             "status": cov_status,
             "pages_processed": raw_item.get("estimated_pages"),
@@ -692,7 +614,7 @@ def map_filesystem_item_to_contract(
             "format_kind": raw_item.get("format_kind", "file"),
             "location_category": raw_item.get("location_category", "unclassified_inbox"),
             "material_role": raw_item.get("material_role", "deliverable_instruction"),
-            "ingestion_outcome": raw_item.get("ingestion_outcome", "extracted"),
+            "ingestion_outcome": raw_item.get("ingestion_outcome") or ("extracted" if extracted_text else "unsupported_deferred" if not raw_item.get("supported", True) else "metadata_only"),
             "extracted_text": extracted_text,
             "auto_create_project": raw_item.get("auto_create_project", True),
             "auto_materialize_tasks": raw_item.get("auto_materialize_tasks", True),
@@ -709,7 +631,7 @@ def discover_mounted_filesystem_source(
     *,
     source_alias: str,
     integration: str = "local-filesystem",
-    page_size: Optional[int] = None,
+    page_size: Optional[int] = 50,
     page_token: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -717,7 +639,7 @@ def discover_mounted_filesystem_source(
     folders from any provider (Nextcloud, Syncthing, SMB, local folders, etc.)
     without Google Drive assumptions.
     """
-    from helpers.mdbase_helper import discover_media_locker
+    from helpers.discovery import discover_originals
 
     collection_id = str(source_config.get("collection") or source_config.get("local_mount_path") or "")
     access_mode = str(source_config.get("access") or "read-only")
@@ -760,12 +682,11 @@ def discover_mounted_filesystem_source(
         if (not raw_mount or (str(raw_mount).startswith("<") and str(raw_mount).endswith(">")))
         else raw_mount
     )
-    locker_res = discover_media_locker(
+    locker_res = discover_originals(
         vault_root,
         locker_root=mount_path,
         discovery_roots=source_config.get("discovery_roots"),
         max_depth=int(source_config.get("max_discovery_depth", 6)),
-        allow_host_fallback=False,
         integration=integration,
     )
     status_map = {
@@ -809,7 +730,7 @@ def discover_mounted_filesystem_source(
     else:
         page_files = raw_files[start_idx:]
         next_token = None
-    truncated = next_token is not None
+    truncated = next_token is not None or bool(locker_res.get("listing_truncated"))
     if truncated and d_status in {"ok_items_available", "ok_fully_indexed"}:
         d_status = "partial_listing"
 
@@ -858,10 +779,9 @@ def discover_configured_source(
     vault_root: Union[Path, str],
     source_alias: str,
     *,
-    page_size: Optional[int] = None,
+    page_size: Optional[int] = 50,
     page_token: Optional[str] = None,
     synthetic_responses: Optional[Dict[str, Dict[str, Any]]] = None,
-    allow_host_fallback: bool = False,
 ) -> Dict[str, Any]:
     """
     Resolves `<source_alias>` in `<vault>/System/Memory.md` and dispatches to the
@@ -943,8 +863,7 @@ def discover_configured_source(
             page_size=page_size,
             page_token=page_token,
             synthetic_response=syn_resp,
-            allow_host_fallback=allow_host_fallback,
-        )
+            )
 
     if integration == GOOGLE_TASKS_INTEGRATION_ID:
         return discover_google_tasks_source(
@@ -1005,9 +924,8 @@ def discover_configured_source(
 def discover_all_configured_sources(
     vault_root: Union[Path, str],
     *,
-    page_size: Optional[int] = None,
+    page_size: Optional[int] = 50,
     synthetic_responses: Optional[Dict[str, Dict[str, Any]]] = None,
-    allow_host_fallback: bool = False,
 ) -> Dict[str, Any]:
     """
     Executes discovery across all enabled sources in `ingestion.sources` in deterministic order.
@@ -1025,8 +943,7 @@ def discover_all_configured_sources(
             alias,
             page_size=page_size,
             synthetic_responses=synthetic_responses,
-            allow_host_fallback=allow_host_fallback,
-        )
+            )
 
     return {
         "contract_version": INGESTION_CONTRACT_VERSION,
@@ -1833,7 +1750,7 @@ def build_ingestion_proposal_from_envelope(
     """
     Converts a provider's v1.0.0 IngestionDiscoveryEnvelope (containing `file`, `text`,
     and/or `structured_task` items) into a unified Chrysalis ingestion proposal ready
-    for `prevalidate_ingestion_proposal` -> human approval -> `apply_ingestion_proposal`.
+    for prevalidation, exact operator approval and the shared runtime apply operation.
     """
     v_root = Path(vault_root).resolve()
     ref_date = reference_date or date.today()
@@ -1937,20 +1854,24 @@ def build_ingestion_proposal_from_envelope(
                     ident["supersedes"] = f"[[Sources/{existing_id_cand}]]"
 
             source_rel_path = f"Sources/{source_slug}.md"
+            suffix = 2
+            while source_rel_path in shared_allocated_paths:
+                source_rel_path = f"Sources/{source_slug}-{suffix}.md"
+                suffix += 1
+            source_slug = Path(source_rel_path).stem
             shared_allocated_paths.add(source_rel_path)
             source_abs_path = v_root / source_rel_path
-            source_if_rev = compute_revision(source_abs_path) if source_abs_path.is_file() else None
+            source_bytes = source_abs_path.read_bytes() if source_abs_path.is_file() else None
+            source_if_rev = compute_revision(source_bytes) if source_bytes is not None else None
             existing_src_fm: Dict[str, Any] = {}
-            if source_abs_path.is_file():
-                try:
-                    existing_src_fm, _ = parse_frontmatter(source_abs_path.read_text(encoding="utf-8"))
-                except Exception:
-                    existing_src_fm = {}
+            existing_src_body = ""
+            if source_bytes is not None:
+                existing_src_fm, existing_src_body = parse_frontmatter(source_bytes.decode("utf-8"))
 
             is_update_existing = bool(m_status == "renamed_or_moved" or ident.get("provider_scope_changed"))
             outcome_val = str(
                 payload.get("ingestion_outcome")
-                or ("updated_existing" if is_update_existing else "extracted")
+                or ("updated_existing" if is_update_existing else "extracted" if extracted_text else "metadata_only")
             )
             if is_update_existing and outcome_val == "extracted":
                 outcome_val = "updated_existing"
@@ -1965,7 +1886,7 @@ def build_ingestion_proposal_from_envelope(
             old_rel_p = existing_src_fm.get("relative_path")
             if old_rel_p and old_rel_p != rel_p and old_rel_p not in prev_paths:
                 prev_paths.append(str(old_rel_p))
-            source_fm = {
+            source_fm = {**existing_src_fm,
                 "type": "source",
                 "id": source_slug,
                 "title": str(payload.get("title") or existing_src_fm.get("title") or Path(fname).stem),
@@ -1990,8 +1911,8 @@ def build_ingestion_proposal_from_envelope(
                 "file_size_bytes": int(payload.get("file_size_bytes") or existing_src_fm.get("file_size_bytes") or 0),
                 "mime_type": str(payload.get("mime_type") or existing_src_fm.get("mime_type") or "text/markdown"),
                 "source_url": ident.get("source_url"),
-                "captured_date": now_iso,
-                "ingestion_status": "processed" if outcome_val == "extracted" else "extracted",
+                "captured_date": existing_src_fm.get("captured_date") or now_iso,
+                "ingestion_status": "processed" if outcome_val == "extracted" else "raw" if outcome_val in {"metadata_only", "unsupported_deferred", "supporting_asset_deferred"} else "extracted",
                 "supersedes": ident.get("supersedes") or existing_src_fm.get("supersedes"),
                 "linked_projects": list(existing_src_fm.get("linked_projects") or []),
                 "extracted_projects": list(existing_src_fm.get("extracted_projects") or []),
@@ -1999,6 +1920,21 @@ def build_ingestion_proposal_from_envelope(
                 "extracted_zettels": list(existing_src_fm.get("extracted_zettels") or []),
                 "extracted_tasks": list(existing_src_fm.get("extracted_tasks") or []),
             }
+            # File transport paths are observations. Persist a relative locator only
+            # when its actual original bytes are already inside this selected vault.
+            absolute = loc.get("local_path") or loc.get("absolute_path") or loc.get("path")
+            if absolute and Path(absolute).is_absolute():
+                try:
+                    relative_original = Path(absolute).resolve().relative_to(v_root).as_posix()
+                    if relative_original.startswith("Attachments/Originals/"):
+                        source_fm["original_locator"] = {"kind": "vault_relative", "path": relative_original}
+                except ValueError:
+                    pass
+            if rel_p and str(rel_p).startswith("Attachments/Originals/"):
+                source_fm["original_locator"] = {"kind": "vault_relative", "path": rel_p}
+            original_link = ""
+            if source_fm.get("original_locator", {}).get("kind") == "vault_relative":
+                original_link = "\nOriginal: [[" + source_fm["original_locator"]["path"] + "]]\n"
             if ident.get("provider_scope_changed"):
                 prior_list = list(existing_src_fm.get("previous_sources") or [])
                 prior_entry = {
@@ -2015,7 +1951,7 @@ def build_ingestion_proposal_from_envelope(
                 "type": "source",
                 "if_revision": source_if_rev,
                 "frontmatter": source_fm,
-                "body": f"# {source_fm['title']}\n\n{quarantined_body}\n",
+                "body": (existing_src_body + "\n\n## Observed provenance\n" if existing_src_body else f"# {source_fm['title']}\n\n") + original_link + quarantined_body + "\n",
             })
             outcomes.append({
                 "input_path": rel_p or fname,
@@ -2045,4 +1981,3 @@ def compute_file_sha256(data_or_path: Union[bytes, str, Path]) -> str:
 
 
 validate_ingestion_batch = validate_discovery_envelope
-resolve_ingestion_sources = resolve_ingestion_config

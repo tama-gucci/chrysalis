@@ -1,18 +1,7 @@
 # Projects
 
-Projects connect strategic priorities to tasks and reference notes. Create personal project folders in the runtime vault; only this guide and the templates belong in Git.
-
-## Create a project
-
-Use the `/project` or `/ingest` runbook or copy [Project-Template.md](_templates/Project-Template.md) to `Projects/<project-slug>/Roadmap.md`. Record outcomes, milestones, due dates, and reference notes. All original binary and source files live outside the vault in the configured external media storage boundary (`preserve_originals_in_place: true`, e.g., `media` configured under `ingestion.sources`); a local `Resources/` folder inside the vault is unnecessary as the agent translates external sources into formatted Markdown (`Sources/{source_id}.md`, `Projects/<project-slug>/Roadmap.md`, `Slipbox/*.md`, `TaskNotes/Tasks/*.md`).
-
-Create actionable tasks under `TaskNotes/Tasks/` with a `project_ref` linking to the roadmap. Put reusable concepts in `Slipbox/` and reference them from the roadmap and task `linked_zettels` fields.
-
-## Review, ingestion, and linking
-
-The `/audit` runbook automatically invokes `/ingest --all` (or `/ingest --source <alias>`) so the active local coding agent (Google Antigravity, OpenAI Codex, or Claude Code) discovers new inputs from configured read-only sources (`ingestion.sources` in `System/Memory.md` / `System/Ingestion-Sources.md`, such as `media` via `google-drive` or local filesystem mounts and `quick-capture` via `google-tasks`) and translates them into local vault Markdown records (`<vault>/Sources/`, `<vault>/Projects/`, `<vault>/Slipbox/`, `<vault>/TaskNotes/Tasks/`) via the A2 access layer (`helpers/mdbase_helper.py`) and `System/Workflows/01-capture.md` through `04-organize.md` (aligning `/project` and `/zettel`), then reviews upcoming 14-day milestones before `/plan` (`05-plan.md`). `/ingest` is also invoked on direct file share/attachment in the active agent session.
-
-
-`System/scripts/zettel_graph_linker.py --vault <runtime-vault>` matches tags and wikilinks. Review the resulting associations; the script does not infer meaning from arbitrary documents.
-
-Document and audio ingestion are processed through `Sources/{source_id}.md` and governed by agent runtime contracts. Ingestion does not materialize tasks without human review and approval. See [capability status](../STATUS.md).
+Private project roadmaps live at `Projects/<id>/Roadmap.md`. Use the
+[project template](_templates/Project-Template.md) and the knowledge skill. Keep the full
+deliverable ledger and evidence links; materialize only reviewed near-term/uncertain work.
+Staged exploration is distinct from integration into chosen pillars and active horizons.
+Originals share `Attachments/Originals`; source contains only sanitized templates.
