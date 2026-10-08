@@ -1,44 +1,39 @@
 # Implementation status
 
-The Pi package candidate implements one portable Python domain core, seven canonical skill families,
-strict Markdown schemas and a thin Pi adapter. Pi is the sole maintained harness target.
-It has not been adopted as a personal
-runtime. The [behavior matrix](tests/specs/behaviors.md) identifies each procedure, deterministic
-test and remaining conversation/provider/UI boundary.
+Version 2.0.0 contains one TypeScript/Node core, seven canonical skill families, a shared operation
+API and a native Pi extension. Onboarding prepares an Obsidian folder with TaskNotes 4.13.8,
+Dataview 0.5.68, nonsecret settings and detected named timezone. The user chooses the vault name.
+Obsidian installation, account configuration and storage transport remain user responsibilities.
 
-Verified on Windows in external isolated fixtures:
+Verified in isolated Windows ARM64 fixtures with Pi SDK 1.0.4:
 
-- The complete retained suite passed 78 tests with ordinary deep Windows scratch paths,
-  including independent-review regressions for
-  read/revision races, provider configuration, quarantine, apply-time dependencies, package
-  ancestry, native TaskNotes fields, planning limits, original extraction, Daily receipts,
-  long-path I/O and lock isolation under conflicting explicit/environment state bindings.
-- A separate read-only review accepted the implementation after all 13 findings were repaired.
-  The final working-tree identity and detailed receipts are held outside source. The whole-source
-  privacy/resource check passed 117 files; the exported npm package contains 98 verified files.
-- Core validation, raw revisions, exact approval, resumable CAS writes, plugin preservation,
-  daily planning/staging/learning, pauses, checkpoints, horizons, reciprocal links and ingestion.
-- Metadata-only discovery, selected synthetic PDF parsing, image/opaque deferral, and vault
-  relocation retaining original bytes, relative links and record identities.
-- Owned package install/update/remove/rollback, collisions and injected-failure recovery.
-- Real Pi package loading, seven skills, extension registration, nested tool
-  pipeline and denied bypasses. Pi exercised 12 synthetic workflow/tool calls, including
-  task, ingestion, links, planning, audit and approved application. These used synthetic assistant
-  calls; no model conversation was asserted.
-- Python x64 interpreter launch from Node ARM64 on the Windows host. Tested Pi 1.0.4 with Node
-  24.20.0.
-- Optional pi-hermes-memory 0.9.10 native SQLite on Node ARM64, durable-content JSON export/import
-  across 40 synthetic rows (29,830 characters), and combined extension loading without loader
-  errors. This does not verify model learning or permission coexistence; capped Markdown exports
-  are not complete migration backups.
+- All 37 maintained Node tests pass on minimum Node 22.18.0. Production TypeScript checks and the
+  whole-source privacy/resource check pass. Node 24.20.0 has also exercised the implementation.
+- Core cases cover approval/CAS conflicts and recovery, dependency validation, protected TaskNotes
+  fields/history, timezone changes/DST, original hashes/PDF parsing and compressed-stream budgets,
+  discovery/quarantine/provider identity, projects/knowledge, planning/staging/learning/pauses and receipts.
+- The pinned TaskNotes model 0.3.0-rc.9 roundtrips supported native task fields/date forms against
+  the generated schema. Native timeblock collision/midnight cases, moved originals, structured
+  completion/updates/local conflicts and corrected setup have dedicated regression coverage.
+- Native command tests cover declined/edited review, unapproved restart, explicit zone correction,
+  Unicode names, approved-scope recovery and conversational handoff. Actual SDK loading discovers
+  seven skills, calls the tool and denies arbitrary reads/executors.
+- Pinned plugin bytes match locked hashes. Clean production-only npm archive and Pi-managed pinned
+  Git installations load the package, generate a vault with networking forbidden during onboarding,
+  and pass doctor. Installed-package onboarding also passes on minimum Node 22.18.0.
+- Package removal in a disposable Pi profile preserves the generated vault and external chrysalis state.
+- Three architecture flowcharts render without parser warnings. Maintained documentation links,
+  frontmatter and shipped resource syntax pass the source checker.
 
-External acceptance remains required for real model conversations, onboarding research, semantic
-judgment, OCR/vision, authenticated providers, TaskNotes/Maps UI and Calendar sync, live host launch,
-job scheduling, streaming/offline conflicts and backups, and mobile. No credentials or real data
-were used, no live profile/job was configured, and no storage was moved. Health-data integration
-is deferred until its exact app/API, authorization and data scope are selected.
+The [behavior matrix](tests/specs/behaviors.md) separates deterministic, transport, conversation,
+account and UI acceptance. Tests/dialogs/assistant calls use synthetic data. Detailed receipts,
+frozen hash identities and independent read-only review evidence remain outside source.
 
-Installation/configuration/authentication/availability/verification are distinct capability states.
-Normalized fixtures and unavailable-state tests do not prove authenticated operation. Local CAS
-locks are cooperating-writer protection; distributed concurrent editing needs separate acceptance.
-See [setup](docs/setup.md), [storage](docs/storage.md) and [test coverage](tests/specs/behaviors.md).
+Physical Obsidian rendering, community-plugin activation and task/timer interaction have not been
+verified in this implementation run. Model conversation quality, research, authenticated integrations,
+other operating systems/devices and OCR/vision require separate acceptance. The supported Pi range
+is not a claim that every host version was tested. Health-data integration remains deferred.
+
+Source publication and npm registry publication are distinct. No npm release or personal-vault
+adoption is established by these checks. Local CAS coordinates cooperating writers; it cannot
+provide a distributed transaction or prevent every noncooperating editor race.

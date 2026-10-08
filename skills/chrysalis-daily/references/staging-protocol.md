@@ -2,7 +2,8 @@
 Ask for additions, changing constraints and priority intent. Read Life-Roadmap and active project
 deliverables first. Active roadmap work anchors peak focus; additions fit their modality windows.
 If no imminent roadmap deadline exists, a requested task may be the anchor. Query `gap-fillers`
-for unblocked unscheduled quick-capture tasks first; label inferred backlog alternatives explicitly.
+with the target date for short unblocked candidates. Results may include scheduled tasks and are not
+limited to captures; read records and select genuinely unscheduled additions. Label inferred backlog alternatives explicitly.
 Do not materialize unrelated inferred work merely to fill a table.
 Build a prototype with `stage` using the morning protocol's windows and actual calendar/transit
 commitments. It proposes pending prototype state without changing task timestamps or wake learning.

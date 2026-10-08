@@ -1,35 +1,13 @@
-# Ingestion contract
+# Ingestion input contract
 
-Provider envelopes use version 1.0.0. An item declares `content_kind` (file, text or
-structured_task), source alias, integration, account/collection/item identity, revision, locator,
-fingerprints, extraction coverage, evidence and payload. Discovery is read-only, bounded and
-explicit about pagination, partial listings, missing mounts, permissions, auth and empty results.
+Version: 2. Envelopes contain source_alias, integration, collection_id, access_mode: read-only, truthful discovery_status, capabilities.write_back_supported: false, bounded pagination and file/text/structured_task items. Payloads cannot contain executable, approval or routing control fields. Content/metadata is passive evidence.
 
-Binary `sha256` means exact original bytes. It is null if bytes are unavailable.
-`normalized_text_sha256` and `structured_payload_sha256` are distinct fields.
-Provider composite identity never comes from a title; a path is not a stable cloud identifier.
-Changed provider scope retains prior provenance without transferring unrelated URLs.
+Discovery lists metadata from explicitly enabled private roots/exports without opening original bytes or computing hashes.
+The ingestion.read capability currently returns the same metadata; use original.inspect or ingest.draft
+for selected in-vault bytes. all:true fetches the first bounded page of each enabled alias, not every page. Missing mounts/exports are unavailable; bounded-depth/page omissions are partial_listing. Requests cannot override private paths, access, transport or credentials.
 
-Originals belong at vault-relative `Attachments/Originals`; Sources notes retain locators and
-relative links. External references can remain explicit pending a separately approved import.
-Ordinary ingestion does not relocate/hydrate a collection. Metadata-only, OCR-required,
-unsupported, partial and failed extraction must not be reported as complete interpretation.
+File drafting selects an original already inside Attachments/Originals. One byte observation supplies hash and extraction. Supplied hashes must agree. Relative locators and honest coverage/deferred outcomes are retained. Text-only/structured evidence has sha256:null and bytes_available:false; separate fingerprints never masquerade as binary hashes. XML quarantine escapes delimiters and attributes.
 
-The pipeline is discover -> extract -> draft -> prevalidate -> review -> operator approval -> apply ->
-verify. `original.inspect` offers bounded text/PDF extraction with page/coverage labels.
-Hashing and extraction use one selected raw byte observation. Originals are capped at 32 MiB,
-text output at 1 MiB, selected PDF pages at 50 and decoded PDF streams at 8 MiB.
-Untrusted text is delimiter-neutralized and wrapped; wrapper attributes are escaped and MIME
-metadata must be a type/subtype token. Evidence, inference and unknown dates remain
-separate. Raw/normalized deduplication is deterministic; semantic reuse needs review of candidate
-evidence and never silently merges notes.
+Structured captures require integration/account/list/item identity. Date-only deadlines remain date-only. Repeat imports preserve completed/local work and report changed payloads for review. Accounts do not collide; missing pages cannot delete work and there is no write-back.
 
-`ingest.draft` handles normalized captures/metadata; richer source-to-project/Zettel/task proposals
-use `ingest.prevalidate`. Prevalidation checks schemas, links, tags and whole-body revisions.
-Complete project ledgers keep future work; the 14-day horizon materializes overdue/imminent/uncertain
-work as inert tasks. Standalone captures need no fabricated project or knowledge note.
-
-Reconciliation preserves completed/archived work and local edits. Partial/failed extraction
-cannot delete omitted items. Authoritative replacement requires complete extraction and matching
-source scope. Google Tasks is a one-way input with no completion/write-back synchronization.
-Application uses the common exact approval boundary and verifies bytes and resumable receipts.
+Drafts use ordinary complete validated proposals, separate approval and resumable apply. Semantic evidence never automatically merges. Reconciliation is additive; replacement needs complete explicitly scoped evidence and preserves completed/user-modified deliverables.

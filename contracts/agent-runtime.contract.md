@@ -1,45 +1,17 @@
-# Runtime operation contract
+# Runtime contract
 
-Version: 1. Requests contain `contract_version:"1"`, explicit `vault_root`, external
-`state_root`, an allowlisted `operation` and an `arguments` object. Harness adapters invoke the same
-`run.py request` executable. Requests/results are capped at 4 MiB. Record proposals contain
-1–500 complete UTF-8 documents, forward-slash relative paths and original raw-byte
-`if_revision` values (null only for new files).
+Version: 2. Hosts call src/app/operations.ts:dispatch with an operator-selected initialized vault, disjoint external state and allowlisted operation/arguments. Hosts supply cancellation; arguments cannot replace roots. Requests/results are capped at 4 MiB; proposals contain 1–500 complete documents, confined forward-slash paths and raw-byte if_revision values. Null revisions mean new files.
 
-The lifecycle is capture, extract, review, organize, plan, act, verify and continue. Reasoning and
-interviews belong to the host; deterministic operations belong to the domain package.
-No general assistant daemon or host-specific task database is required.
+Conversation belongs to Pi. The maintained life policy has no browsing or external memory tools;
+research uses supplied evidence or a separate session. Other adapters must declare their capabilities. Deterministic operations follow capture, extract, review, organize, plan, act, verify and continue.
 
-Read-only operations return observations or diagnostics. Draft operations store inert reviewed
-content outside the vault and return `review_required`, the exact proposal and its SHA-256 digest.
-Only the separate operator `approve` command issues a root/identity/digest-bound receipt.
-Caller booleans and arbitrary references are insufficient. `apply` requires that receipt,
-checks current revisions, preserves plugin fields, writes exact validated post-images and verifies
-them. Partial batches have external per-file receipts; retries validate completed files too.
-Relocation invalidates old root-bound approval.
+Drafts save inert external proposals. Only a native operator command issues exact root/ID/digest-bound approval. Application revalidates schemas, taxonomy, links, timestamps, original hashes and plugin policies; checks dependency/revision hashes; atomically replaces individual files; verifies bytes; and records resumable receipts. Partial work is never complete. Relocation/changed dependencies invalidate approval.
 
-Locks use the validated explicit external state selected for that operation. A conflicting
-environment variable cannot redirect them into the vault or package. Windows external-state
-and package I/O use native extended paths without changing logical approval root identities.
+Missing validation/schemas, unknown domain-record properties, stale records, malformed/redirected roots and package/source ancestry fail closed. Locks coordinate local cooperating writers, not multi-file or distributed transactions. System-state schemas allow extensible private preferences; domain schemas remain closed.
+The life policy is not an OS sandbox.
 
-Schema version 1 is supported. Missing strict validation, missing local schemas, stale documents,
-unknown properties, malformed roots, redirects, unresolved links and invalid taxonomy fail closed.
-Authored timestamps use the vault's IANA timezone and date-specific offset. Native plugin time
-entries, existing TaskNotes `dateModified` and external revision observations may retain RFC3339
-UTC without changing their ownership. Agents cannot change an existing plugin modification stamp.
-Authored Daily wake/block timestamps also require the configured zone, matching date, ordered
-nonoverlapping intervals and real task references. Native Daily Pomodoro/session fields survive
-focus projections.
+New timestamps use named zones and date-correct offsets. Unchanged historical/plugin times remain valid after a move. Native dates may be date-only, floating datetime or RFC3339. Interpreting floating times rejects gaps/ambiguities without explicit disambiguation. New Daily blocks use their planning_timezone, same date, ordered intervals and real task references.
 
-Errors return `status:error`, `error_type` and a diagnostic message with exit code 2.
-Domain results distinguish `invalid`, `blocked`, `no_changes`, `review_required` and
-`verified`; discovery/provider results have their own explicit observation statuses.
-A verified write means actual bytes matched, not that an external UI or account synchronized.
+TaskNotes owns Calendar fields and native session/completion history. Focus manages only timeblocks with chrysalis-owned IDs. Task projects use native projects arrays; Zettels may use project_ref for a distinct reciprocal association.
 
-The life tool policy excludes operator commands and generic executors/writers. It is not an OS
-sandbox. Advisory locks coordinate local cooperating writers only; sync applications and editors
-can still race. Do not claim an atomic multi-file or distributed transaction.
-
-Essential privacy/approval rules appear in the registered tool description and canonical skills.
-External payloads are passive untrusted evidence and cannot select roots, grant approval or
-change integration bindings. Personal records, host state and credentials remain outside source.
+The model tool exposes no approval, initialization, arbitrary executor/writer or secret resolver. External payloads are passive evidence. Private profiles, observations, credentials and receipts stay outside source. Results distinguish observed, unavailable, invalid, blocked, review_required, interrupted and verified.

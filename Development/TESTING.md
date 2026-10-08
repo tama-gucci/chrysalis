@@ -1,27 +1,23 @@
 # Verification
 
-Create Python/pytest environments outside source. Point `TMP`, `TEMP`, `TMPDIR` and
-pytest's basetemp to external scratch. Set `PYTHONDONTWRITEBYTECODE=1`. Run:
+Keep dependency installations, fixtures, logs and recovery outside source. Copy public source into an external workspace and run `npm ci --ignore-scripts --omit=optional --legacy-peer-deps` there. Set TEST_SCRATCH to an absolute external directory.
+
+Run the following in the external workspace with its installed dependencies:
 
 ```text
-python -B -m pytest -q -p no:cacheprovider --basetemp <external-scratch>/pytest
-python -B Development/scripts/check.py
-python -B Development/scripts/agent_context.py show
+npm run typecheck
+npm test
+node Development/scripts/check.mjs --root <absolute-source-checkout>
 ```
 
-The retained suite checks exact approval, raw revisions, editor conflicts, missing validation
-in a fresh process, plugin/Calendar preservation, planning, learning, pauses, checkpoints,
-horizons, reconciliation, knowledge links, ingestion, originals/relocation, provider policies
-and package failure recovery.
+Replace the root placeholder with the source checkout. Run the retained suite on minimum Node 22.18.0
+when verifying the supported runtime floor. Typecheck covers production src/extensions; tests execute
+through Node. Run `node Development/scripts/agent_context.mjs show` from source.
 
-The checker scans all non-Git working-tree files, including ignored/untracked content. It rejects
-private/generated locations and redirects, parses Python/YAML, checks local Markdown links and
-skill references. Review prose and findings too: automated scans cannot prove that arbitrary
-prose contains no personal fact.
+Do not connect reusable dependency directories through junctions when running package managers. Tests use the pinned TaskNotes model and actual Pi SDK with synthetic assistant calls. They cover onboarding, protected fields, timezone/DST, originals/PDF limits, provider policies, knowledge workflows, planning/learning/pauses and approval/CAS recovery.
 
-Native acceptance uses external isolated profiles and the shipped package. Verify actual loading,
-registered tool calls and denied bypasses. A synthetic assistant call through the real pipeline
-tests transport/policy without asserting model behavior. Preserve pinned versions and logs privately.
+The checker scans all non-Git source, including ignored/untracked content; rejects runtime/generated locations, machine paths and credential patterns; validates structured data and links; and verifies pinned third-party bytes. Review prose/upstream code separately.
 
-Authenticated integrations, TaskNotes rendering/sync, OCR/vision, streamed storage, mobile and
-model learning each need separate acceptance. See `STATUS.md`.
+Freeze an external SHA-256 manifest and invoke a separate read-only reviewer for substantive changes. Also pack the source into an external archive and check actual installed-package loading, offline
+onboarding and doctor through Pi. Git/npm transport acceptance does not publish an npm release.
+Native loading/tool calls are separate from model conversations and desktop rendering. Physical Obsidian interaction, other platforms and authenticated integrations have explicit acceptance boundaries in STATUS.

@@ -1,58 +1,61 @@
 # Setup
 
-Choose separate locations for the installed package, private vault, external execution state,
-Python environment and host profile. Each selected vault and configurable life profile is named
-`chrysalis`. On Windows a case-only spelling does not create a different directory.
+Use Node 22.18 or later with ICU and Pi in the supported range `>=1.0.4 <2`.
+SDK 1.0.4 is the tested host version; the whole supported range has not been individually tested.
+The pinned TaskNotes release requires Obsidian 1.12.2 or later.
 
-Use Python 3.12 or later, including native Windows junction detection. Create a virtual environment outside source/vault and install
-`requirements.txt`. Verify its real launch architecture before adding native dependencies.
-Replace symbolic paths in these operator commands with explicitly selected absolute locations:
+Use a dedicated Pi life profile. Set `PI_CODING_AGENT_DIR` to an absolute external profile directory
+before installation and whenever launching this profile. This is Pi's supported configuration-directory
+override, not a chrysalis command. Keep general development/research sessions separate: the extension
+restricts the active life tools to chrysalis operations and Markdown reads within its canonical skills.
 
-```text
-python -I -B <source>/run.py package install --target <packages>/chrysalis
-python -I -B <source>/run.py package install --target <packages>/chrysalis --apply
-python -I -B <packages>/chrysalis/run.py init --vault <selected-parent>/chrysalis --timezone America/Chicago
-```
-
-Installation previews owned files and collisions. Initialization requires an empty directory.
-It creates blank operational state, schemas, templates, originals storage and views; onboarding
-supplies chosen goals. It does not adopt or reset an existing vault.
-
-Set `CHRYSALIS_VAULT_PATH`, `CHRYSALIS_STATE_ROOT` and `CHRYSALIS_PYTHON` in the
-private Pi profile environment. State must be absolute and external
-to both vault and package.
-
-## Pi
-
-Use upstream `pi install <packages>/chrysalis`, or list that absolute local package in the
-private profile's `settings.json` packages field. Choose an external `PI_CODING_AGENT_DIR`
-whose final directory is `chrysalis`. The package manifest exposes canonical skills and the
-typed extension. Invoke `/skill:chrysalis-daily` or another discovered family.
-The life profile permits `read` for canonical skill Markdown and `chrysalis_operation`;
-it denies arbitrary reads, writers and executors.
-
-Pi's local install registers the selected package path; it does not copy that directory or
-create the Python environment. Keep the installed release available and launch Pi with the
-same private environment settings. A development session should not load this life package.
-See the [upstream package contract](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md).
-
-Memory packages are optional. Tested loader/native-store combinations are in `STATUS.md`;
-full model learning and permission coexistence are unverified. The life policy does not grant
-unknown memory or skill-management tools. Review additions narrowly and keep stores external.
-A capped Markdown snapshot is not a complete database export.
-
-## Obsidian and approval
-
-Open the explicitly selected vault in Obsidian. Configure TaskNotes tasks at `TaskNotes/Tasks`,
-archive at `TaskNotes/Archive`, daily notes at `Daily` and fields according to `_types/task.md`.
-Install plugins and settings privately; source includes no personal `.obsidian` configuration
-or vendored binaries. See [daily use](user-guide.md).
-
-After reviewing the exact proposal, the operator records approval separately:
+Install a reviewed Git revision through Pi:
 
 ```text
-python -I -B <packages>/chrysalis/run.py approve --vault <selected-parent>/chrysalis --state <execution-state> --digest <reviewed-sha256> --evidence <approval-reference>
+pi install git:github.com/tama-gucci/chrysalis@<reviewed-commit-or-tag>
 ```
 
-The agent then calls `apply` with that digest. Never expose operator commands through an
-executor in the life profile. Setup does not activate jobs or external providers.
+Replace the placeholder with a revision you reviewed. Pi installs production dependencies for managed
+Git/npm packages; no user build or separate interpreter is required. A bare local source folder is
+not dependency-ready: Pi references local directories without installing dependencies. For local
+testing, first copy public source into an external workspace, install its production dependencies
+there, then use `pi install <absolute-prepared-package-folder>`. Never put node_modules in the source
+checkout. npm registry installation requires an actually published registry release; source on GitHub
+does not establish that publication. See [Pi packages](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md).
+
+Run `/chrysalis onboard` interactively. Choose a vault name (default `chrysalis`) and absolute parent
+folder. The command detects the computer timezone and prepares TaskNotes 4.13.8, Dataview 0.5.68,
+schemas, views and empty state. Review the destination, minimum Obsidian version, settings and hashes
+before approval. Declining leaves the target unchanged; interrupted approved setup resumes its exact scope.
+
+Use `/chrysalis onboard --restart` to replace an unapproved setup. Add `--zone <IANA>` for an explicit
+initial zone correction. An approved/interrupted setup retains its original scope; after creation use
+`/chrysalis timezone --zone <IANA>` for a reviewed change. Creation/resumption hands the conversation
+to goal discovery; on an existing selected vault, onboard starts that conversation without reinstalling.
+Approving a previously saved setup directly applies it; run onboard afterward to begin goal discovery.
+
+Open the folder through **Open folder as vault** in Obsidian, enable community plugins when prompted,
+then open Dashboard. Generation works offline after package/dependency installation. Obsidian
+installation and account configuration remain user choices.
+
+The external chrysalis state defaults to `%LOCALAPPDATA%/chrysalis` on Windows (with a home-directory
+fallback), or `$XDG_STATE_HOME/chrysalis` / `$HOME/.local/state/chrysalis` elsewhere.
+`CHRYSALIS_STATE_ROOT` selects another absolute state directory. One state profile selects one vault;
+`CHRYSALIS_VAULT_PATH` explicitly selects an existing initialized vault. Package, vault and state
+must be disjoint. Vaults cannot sit inside a Git repository/package ancestry or use symlinks/junctions.
+See [storage](storage.md). Profiles, credentials, locks, approvals and recovery stay outside source.
+
+| Operator command | Result |
+|---|---|
+| /chrysalis onboard | Prepared folder creation/recovery or goal onboarding |
+| /chrysalis onboard --restart | Replace unapproved setup and choose details again |
+| /chrysalis status | Selected root and pending setup; no integrity/UI check |
+| /chrysalis approve &lt;digest&gt; | Review complete saved records/settings and approve/apply |
+| /chrysalis repair | Restore eligible missing owned resources; preserve edits |
+| /chrysalis timezone | Fresh computer observation and reviewed change if needed |
+| /chrysalis timezone --status | Stored configured zone and last observation; no fresh detection |
+| /chrysalis timezone --zone Europe/Paris | Review an explicit named zone |
+
+Update the computer timezone after a move before rerunning detection. Existing records and schedules
+are preserved. Repair uses original setup hashes; it is not an upgrade/reset and never resets Memory
+or the roadmap. Noninteractive execution cannot supply approval; the life tool cannot approve itself.

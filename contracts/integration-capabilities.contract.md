@@ -1,6 +1,6 @@
 # Integration capabilities
 
-Version: 1.0.0. Core workflows request named capabilities rather than provider imports:
+Version: 2. Core workflows request named capabilities rather than provider imports:
 `ingestion.discover`, `ingestion.read`, `location.resolve`, `routing.estimate`,
 `visualization.map_projection` and `calendar.commitments_read`.
 Static registry entries bind trusted functions; arbitrary module/path imports are rejected.
@@ -25,7 +25,7 @@ Secret references use explicit environment variables or absolute external privat
 Inline credentials and secret files inside the package/vault are rejected. Provider auth is
 separate from model auth. Results omit resolved credential values.
 
-Drive transport can read an explicit mount, synthetic export or configured read-only client.
+Drive discovery reads an explicit bounded mount or normalized export. Selected file drafting requires originals inside the vault.
 Google Tasks imports structured captures without write-back. Calendar observations include
 `observed_at` and events: fresh empty differs from stale, unavailable and never-observed.
 TaskNotes is the only Calendar synchronization writer; agents preserve every Calendar identifier.

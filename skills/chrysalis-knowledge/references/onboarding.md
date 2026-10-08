@@ -1,12 +1,13 @@
 # Conversational life onboarding
 
 Use this procedure for first setup, a fresh roadmap, or a deliberate reconsideration of direction.
-It is part of `chrysalis-knowledge`, using native host conversation, clarification, web research,
-session continuation and existing domain writes. Do not build another agent or interview engine.
+It is part of `chrysalis-knowledge`, using Pi conversation, clarification,
+session continuation and reviewed domain writes. Research guidance below requires supplied evidence
+or a separate research session; the life profile has no web or external memory tool. Do not build another agent or interview engine.
 
 ## 1. Establish context and assess the environment first
 
-Resolve the explicit initialized vault, external state, package and interpreter; do not fall back to the development checkout. Read an
+Run native /chrysalis onboard for a new vault. It detects timezone, stages the prepared folder, obtains operator approval and verifies files before this conversation. Resolve the explicitly selected vault, external state and package; do not fall back to the development checkout. Read an
 existing `System/Onboarding.md` checkpoint when resuming and only the current records needed to
 understand its status. Fresh-start onboarding never mines archived personal priorities by default.
 
@@ -27,15 +28,16 @@ conversation is sufficient. Batch only independent questions. Accept “not sure
 
 Clarify meanings, motivations, starting position, practical constraints and success criteria. Reuse
 answers already given; do not force archetypes, a fixed number of pillars, or a complete biography.
-Ask for decisions and personal context; research discoverable external facts yourself. Hardware
+Ask for decisions and personal context; identify external facts that require verification. Hardware
 limitations inform near-term execution, not the range of aspirations the user is allowed to explore.
 
 ## 3. Research routes, then compare them
 
 For an uncertain aspiration, develop two or three credible alternatives when available, including a
-bounded exploration route if the user is not ready to commit. Reuse the native `grounded-citations`
-skill when available; keep evidence in this onboarding session/checkpoint rather than overwriting
-another research ledger. Its absence does not block ordinary cited research.
+bounded exploration route if the user is not ready to commit. Keep supplied evidence in this
+onboarding session/checkpoint. Browser tools and other packages' research skills are unavailable
+in this life profile. Offer a separate research session and bring its cited findings back for review;
+do not bypass the tool policy or imply that unchecked facts were researched.
 
 Use current primary sources for requirements, eligibility, admissions, costs, timelines or software
 compatibility. Establish the relevant jurisdiction before researching regulated qualifications.
@@ -82,13 +84,14 @@ to which the ingestion horizon rule automatically applies. Do not manufacture a 
 
 Present the concrete roadmap and exact list of records to create/update: relevant projects, source
 records, useful Zettels, initial unscheduled tasks, and minimal operational state. Show unresolved
-assumptions and what remains inactive. Reuse approval that covers the exact proposal; choosing a
+assumptions and what remains inactive. Reuse only a saved native approval for the same digest; choosing a
 route alone does not authorize an unspecified backlog, appointments, purchases or external messages.
 
-After approval, validate proposals and apply through reviewed proposal operations and domain procedures.
-Capture existing revisions before drafting. Save roadmap/tag registry before dependent tasks.
+Validate and save the proposal first, then obtain `/chrysalis approve <digest>` review/application.
+Capture existing revisions before drafting. Put roadmap/tag registry before dependent tasks in
+`records`; application follows caller order and does not automatically sort dependencies.
 Use `chrysalis-task` for task records and the knowledge pipeline for researched source/project/Zettel
-records where appropriate. Do not pass System records to an ingestion API that does not support them.
+records where appropriate. Use ordinary `propose` for the complete system-state change set.
 Use explicit runtime paths, offset timestamps and safe YAML serialization. Keep existing learning
 and integration settings unless the reviewed reset includes them; initialize only missing values.
 Do not seed placeholder projects, assumed work hours or automatic ingestion as personal decisions.
@@ -96,20 +99,22 @@ Do not seed placeholder projects, assumed work hours or automatic ingestion as p
 The cross-file change set is not an all-or-nothing transaction. Record each successful path/revision;
 if a later write fails, stop, report the partial state, reread it and resume remaining approved work.
 Do not claim completion or blindly repeat earlier creates. Verify schema, links and saved content;
-use read-only diagnostics, interpreting an empty vault's expected warnings separately from corruption.
+use read-only diagnostics. A freshly prepared empty vault must pass doctor; do not dismiss failures
+as expected emptiness.
 TaskNotes alone owns Calendar synchronization. New tasks remain `scheduled: null` with no event ID.
 
 ## 7. Hand off to the daily skill
 
 After the approved onboarding records pass readback, **invoke `chrysalis-daily` in this conversation**.
-Read its `references/daily-entry.md` and call `daily.begin` with mode `check-in` and the configured timezone.
+Read its `references/daily-entry.md` and call `daily.begin` with mode `check-in`, the configured
+timezone and `invocation_id` set to the handoff UUID described below.
 Do not merely suggest a daily prompt or claim that reading the skill ran it. This is the normal final
 onboarding stage; the user can still pause or decline it. Do not run it after a proposal-only interview
 or while the approved roadmap apply remains incomplete.
 
-Use a fresh UUID for this onboarding handoff. If checkpoint updates were approved, save it as
+Use a fresh UUID for this onboarding handoff. Propose and obtain exact approval to save it as
 `daily_handoff_id` before entry, set stage `daily_handoff`, and maintain `daily_handoff_status`:
-`pending`, `started`, `paused`, or `complete`. Otherwise retain it in the host session. Reuse the
+`pending`, `started`, `paused`, or `complete`. Without a saved checkpoint, retain it in the Pi session. Reuse the
 same ID when recovering after interruption; the receipt helper distinguishes existing entry from a
 new invocation. Read prior progress and resume unfinished actions rather than repeating a check-in
 or already applied changes. If the ID/progress cannot be recovered, clarify status before restarting.
@@ -120,7 +125,7 @@ action, while evening can review today and propose tomorrow. Do not fabricate co
 or force a full-day schedule late at night. The daily procedure retains its task/schedule approval
 gates. Once it reaches a useful stopping point, report completed and pending work accurately.
 
-The handoff alone does not suppress evening cron. If the daily conversation actually produces an
+The handoff alone does not suppress a separately implemented evening fallback. If the daily conversation actually produces an
 audit result or concrete staging proposal, retain the actual hashed result receipt produced by `audit` or `stage`; only that completed
 stage suppresses the matching local date's evening fallback. Use `stage` for qualifying planning;
 morning calibration through `plan` alone does not count.
@@ -131,8 +136,9 @@ reinvoked when an already finished onboarding checkpoint is reopened.
 
 Offer a concise progress recap at natural pauses. With approval to save progress, maintain
 `System/Onboarding.md` from the sanitized checkpoint template using the same system-state CAS path.
-That approval can cover checkpoint updates during this interview without repeated prompts for each
-answer. Without it, keep discussion in the host session and do not claim a vault checkpoint exists.
+Batch checkpoint updates at natural pauses. Every changed post-image requires a new exact proposal
+digest and native approval; blanket permission to save progress is insufficient. Without approval,
+keep discussion in the Pi session and do not claim a vault checkpoint exists.
 
 Checkpoint stages are `environment`, `exploration`, `research`, `decision`, `roadmap_proposal`,
 `applying`, `daily_handoff`, `complete`, or `paused`; these labels are procedural guidance, not a new state engine.
@@ -155,5 +161,6 @@ approval; explicitly list that pending work. If the user pauses/declines daily, 
 with its saved roadmap intact and explain what remains. Partial record application stays `applying`
 or `paused`, with successful receipts and remaining work listed.
 
-Only stable confirmed preferences belong in host durable memory. Candidate routes and changing goals
-stay in the checkpoint and, once adopted, the vault roadmap. Leave SOUL personality intact.
+Stable confirmed preferences belong in reviewed System/Memory.md. Candidate routes and changing
+goals stay in the checkpoint and, once adopted, the vault roadmap. The package provides no separate
+host-memory integration.

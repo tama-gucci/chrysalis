@@ -1,21 +1,22 @@
-# Storage
+# Vault storage
 
-Originals live inside the private vault at `Attachments/Originals`. Sources notes describe
-evidence and use relative links such as `[[Attachments/Originals/specification.pdf]]`.
-Supported embeds use `![[...]]`; opaque formats need an external application. Raw SHA-256,
-normalized extraction fingerprints and provider identities remain separate.
+Originals belong inside the private vault at `Attachments/Originals`. Source records use relative
+links such as `[[Attachments/Originals/specification.pdf]]`; supported formats can also use embeds.
+Opaque formats need an appropriate application. Raw-byte SHA-256, normalized extracted-text
+fingerprints and provider identities remain separate.
 
-To relocate: close writers, make an independent backup, copy and verify bytes, and change the
-explicit profile vault binding. Relative links and identities remain intact. Re-review pending
-proposals because approval binds the original absolute root. Host profiles, Python, credentials,
-caches, locks and receipts remain external.
+Package, vault and external state are absolute disjoint directories. An initialized vault has a
+`.chrysalis-vault.json` identity marker. Roots inside Git/package ancestry, node_modules, .agents
+or .git are rejected. Symlinks/junctions are rejected rather than followed. Collection queries read
+direct children and one-level project roadmaps; deeply nested records are not automatically indexed.
 
-Cloud capacity does not add SSD space. A streamed Drive vault can retain selected originals
-offline, while Markdown, indexes and selected content still need local capacity. Before production
-use, test offline startup/read/edit, placeholder behavior, conflicts, reconnection, backup/restore
-and credential separation. Verify the actual mount and lowercase entry. Avoid overlapping sync
-engines over authoritative notes.
+To relocate a vault, stop writers, make a verified independent backup, copy and verify all bytes,
+including hidden configuration and the identity marker, then set `CHRYSALIS_VAULT_PATH` to the new
+absolute root before launching Pi. The new location must satisfy the same root rules. Keep relative
+paths and the vault ID. There is no automatic relocation/profile-rebinding command. Old root-bound
+proposals require fresh review. Keep the package/state separate and do not duplicate active writers.
 
-Desktop operation is the current target. Mobile plugin, storage and sync behavior require
-separate device acceptance. Explicit root configuration supports a later move; it does not
-certify streamed storage or resolve distributed conflicts.
+Storage transport and replication are outside package responsibilities. Large originals still need
+to be locally accessible when selected for hashing/extraction; a remote placeholder is not readable
+original evidence. Another filesystem/device needs its own offline, byte-integrity and concurrency
+checks. Desktop is the current acceptance target.

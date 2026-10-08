@@ -1,11 +1,5 @@
 # Environment assessment
-Ask only for missing node alias, intended use and IANA timezone. Use a neutral alias such as
-station-node, never a hostname. Call `environment` with node, timezone, scope and optional storage_root.
-The bounded collector observes OS, visible CPU/memory, selected hardware, interpreter pointer size,
-PATH presence and storage capacity. It installs nothing and does not prove physical host identity,
-emulation compatibility, GPU performance, model subscriptions or provider authentication. Report
-unknown when running inside an uncertain shell/container. Do not dump config/env or token-bearing
-plugin data. Inspect only plugin manifests and non-secret settings needed for the chosen workflow.
-Save approved observations as a system_state environment_manifest under Environments/<node>.md
-through propose/approval/apply. Preserve user annotations. Another device gets its own confirmed alias
-and explicit roots; no synced active-device pointer. Reassess only relevant capability requirements.
+
+Call environment with include_hardware:true only when visible CPU/memory observations are wanted. The collector reports platform, architecture, Node version and process timezone. Automatic computer timezone setup uses the separate native timezone command, which ignores process TZ.
+
+Choose a neutral device alias such as station-node before proposing Environments/<alias>.md. Never use a hostname or dump configuration/environment values. Observations install nothing and do not prove physical identity, compatibility, GPU capability or account authentication. Preserve annotations and persist only reviewed system-state proposals. Each device uses explicit roots and a confirmed alias.

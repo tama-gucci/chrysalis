@@ -1,33 +1,36 @@
 # Optional named capabilities
-Inspect integrations.status and the trusted registry. Installation, private configuration,
-credentials, transport availability and end-to-end verification are different states. Only enabled
-bindings run. Model auth is separate. Keep credential references in private config and actual secrets
-outside vault/package; never include resolved secrets in tool results or diagnostics.
 
-Drive supplies ingestion.discover/read through a bounded configured local mount or supplied read-only
-connector responses. Use explicit collection roots, depth/page limits and raw-byte SHA-256 only when
-actual bytes are available. Text-only exports have sha256:null. Folder URLs are not file URLs.
-Unavailable/auth/permission/partial states remain visible. Never upload, move, rename, delete or hydrate
-cloud originals automatically. Configure vault Attachments/Originals as the ordinary local source.
+Inspect `integrations.status`. Installed, configured, credentials-present, transport-available,
+authenticated and verified are separate states. Authentication may be unknown; fixtures never
+authenticate an account. Only enabled private bindings run. Keep secret references in private
+configuration and actual secrets outside vault/package; resolved secrets never belong in results.
 
-Google Tasks consumes a user-configured read-only connector snapshot/export/API response. It has no
-bundled OAuth daemon. Map id/title/notes/date-only due/update/etag/parent/links and pagination into
-structured_task envelopes. Distinct IDs with equal titles remain distinct; missing pages never delete
-local tasks. Local completed work, schedules, links and edits remain authoritative. Zero write-back.
+Drive discovery uses bounded explicit local roots or supplied normalized exports. The current
+`ingestion.read` capability also returns metadata. Selected in-vault bytes use `original.inspect`
+or `ingest.draft`; only actual byte observations supply raw SHA-256. Text exports have `sha256:null`.
+No cloud upload, rename, deletion, hydration or OAuth service is bundled. Configure the vault's
+`Attachments/Originals` as the ordinary local original collection.
 
-Google Maps supplies separate location.resolve and routing.estimate bindings. Query only minimal
-location endpoints, never transmit task bodies, tags or unrelated context. Ask on ambiguous results.
-Manual coordinates work without providers. Respect current provider storage/display/attribution terms:
-place IDs may persist; restricted coordinates/route metrics stay ephemeral and cannot appear in a
-non-compatible map projection. Route context invalidation uses origin/destination/mode/time fingerprint;
-travel durations/buffers never overwrite timeEstimate. Unknown travel uses a declared manual buffer.
+Google Tasks reads a configured snapshot/export. Supported fields are id, title, notes, date-only
+due, status and updated. Configured account/list scope supplies identity. Other provider fields
+such as parent relationships and links are not mapped automatically. Missing pages never delete
+local work; completion, schedules and local edits survive reconciliation. There is no write-back.
 
-Obsidian Maps (official maps Bases plugin) supplies visualization.map_projection only. location owns
-coordinates; the top-level coordinates property is a synchronized permitted projection. Virtual,
-cleared or disallowed locations clear stale pins. Google-derived/disallowed data is excluded from
-non-Google tiles. Map pins do not compute commutes. Disabling Maps never breaks tasks or planning.
+Google Maps exposes `location.resolve` and `routing.estimate`. Live reads require explicit private
+activation and external credentials; fixtures are separate evidence. Queries exclude task bodies,
+tags and unrelated context. Ask on ambiguous results. Manual coordinates need no provider.
+Route context/freshness remain separate from `timeEstimate`; planning uses explicitly supplied
+Calendar travel buffers, without automatically calling a routing provider. Restricted provider
+coordinates/route metrics cannot persist in records. Current terms/account behavior need separate
+verification before deployment; the package's provenance rules are not a legal terms audit.
 
-Calendar commitments are read-only observations with observed_at, freshness and actual events. A fresh
-empty list differs from stale, absent and unavailable. TaskNotes alone writes Calendar. Authenticated
-provider operation and real UI rendering require separate acceptance; fixture normalization is scoped
-evidence. Fitbit/Google Health is deferred pending eligible access and defined metrics.
+`visualization.map_projection` returns permitted projection data; it installs or opens no Maps UI.
+An optional compatible Obsidian Maps plugin is not bundled. Location owns coordinates; any proposed
+top-level coordinates must agree with it and obey provenance rules. Propose both fields together,
+including clearing a stale projection: the core does not automatically update or remove pins.
+
+Calendar commitments are read-only normalized observations with `observed_at` and actual events.
+Fresh empty differs from stale, absent and unavailable. The package connects no Calendar account.
+TaskNotes alone owns Calendar writes if the user independently enables its synchronization.
+Authenticated integrations and physical UI rendering require separate acceptance. Health-data
+integration remains deferred.

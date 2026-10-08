@@ -1,6 +1,0 @@
-# Direct validation dependencies tested on Windows; install outside source.
-PyYAML==6.0.3
-jsonschema==4.26.0
-tzdata==2026.5
-pypdf==6.19.0
-pytest==9.1.1

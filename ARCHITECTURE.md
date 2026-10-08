@@ -1,51 +1,84 @@
 # Architecture
 
-One Pi package contains a host-independent domain core. `skills/` holds canonical procedures; `chrysalis/`
-dispatches operations; `helpers/` implements validation, ingestion and provider policy.
-`hosts/pi/` registers the tool and launches isolated Python. The core imports no Pi API.
-The operation allowlist is `contracts/operations.json`.
-`run.py request` consumes one bounded versioned JSON request from stdin.
+The installed package, user vault and external local profile are separate directories. The user chooses the vault folder name. The package identity is always chrysalis. No runtime is inferred from the current directory.
 
-| Vault collection | Purpose |
+## Package layers
+
+extensions/chrysalis.ts registers Pi tools and operator commands. src/app coordinates onboarding, timezone setup and 30 allowlisted operations. src/core owns deterministic workflows; src/storage owns Markdown/schema access, selected roots and receipts. src/platforms owns filesystem, environment observations and bounded processes. The core imports no Pi SDK. The field registry supplies task schema, native mapping and custom defaults.
+Schemas use schema.value for validation; collection paths are fixed and shallow, without a recursive
+query/default-filling engine. See the [operation API](docs/operations.md).
+
+```mermaid
+flowchart TD
+    Pi[Pi conversation and operator commands] --> Adapter[extensions/chrysalis.ts]
+    Skills[Seven canonical skill families] --> Adapter
+    Adapter --> App[src/app orchestration]
+    App --> Core[src/core workflows]
+    App --> Preset[src/obsidian preset]
+    Core --> Storage[src/storage records and receipts]
+    Preset --> Resources[Pinned plugins and public templates]
+    Storage --> Platform[src/platforms filesystem and parsers]
+    Storage --> Vault[User-selected Markdown vault]
+    Storage --> Local[External profile and approvals]
+    Core --> Time[src/time named-zone rules]
+```
+
+## Prepared vault
+
+Onboarding builds external staging with complete resource hashes and settings for review. Approval binds that digest, destination and stable vault ID. Application refuses collisions, verifies all files and writes the ready marker last. Interrupted setup resumes only its reviewed scope. Repair restores eligible missing resources only when current bytes match the original setup receipt.
+It preserves edits and cannot reset Memory or the roadmap; it is not a vault resource upgrade.
+
+```mermaid
+flowchart TD
+    Onboard[Native onboard command] --> Input[Choose name and parent folder]
+    Input --> Detect[Fresh computer timezone observation]
+    Detect --> Stage[Stage pinned assets and validated empty state]
+    Stage --> Review[Review settings and resource hashes]
+    Review --> Approval{Approve exact digest?}
+    Approval -->|No| Pending[Leave target unchanged]
+    Approval -->|Yes| Write[Create files with collision checks]
+    Write --> Verify[Verify bytes and write ready marker last]
+    Verify --> Open[User opens folder in Obsidian and enables plugins]
+    Verify --> Goals[Pi continues goal discovery and reviewed roadmap work]
+```
+
+| Collection | Authority |
 |---|---|
-| `System/Memory.md` | Preferences, IANA timezone, learning and private bindings |
-| `System/Life-Roadmap.md` | Chosen goals, milestones and registered pillar tags |
-| `Projects/<id>/Roadmap.md` | Complete deliverable ledger, including future work |
-| `TaskNotes/Tasks`, `TaskNotes/Archive` | Authoritative tasks |
-| `Slipbox`, `Sources` | Atomic knowledge and evidence/provenance notes |
-| `Daily` | Approved focus projections and user notes |
-| `Attachments/Originals` | Original bytes with relative links |
-| `Environments` | Reviewed observations for explicit device aliases |
-| `_types`, `_templates`, `TaskNotes/Views` | Schemas, templates and UI projections |
+| System/Memory.md | Preferences, timezone, learning and private bindings |
+| System/Life-Roadmap.md | Chosen goals, milestones and pillar taxonomy |
+| Projects/&lt;id&gt;/Roadmap.md | Complete deliverable ledger |
+| TaskNotes/Tasks and TaskNotes/Archive | Tasks with native projects relationships |
+| Slipbox and Sources | Atomic knowledge and evidence provenance |
+| Daily | Focus blocks, native calendar timeblocks, notes and sessions |
+| Attachments/Originals | Original bytes and relative links |
+| Environments | Reviewed observations with neutral aliases |
+| _types, _templates and TaskNotes/Views | Generated schemas, templates and projections |
 
-There is no inferred runtime. Setup selects an empty absolute directory whose actual entry is
-lowercase `chrysalis`. Its marker binds identity and schema version. Source/package roots and
-redirects are rejected. Profiles, Python, authentication, receipts, locks, host databases and
-learned procedures stay outside synced vault content.
+## Mutation boundary
 
-Writes carry a complete UTF-8 post-image and the SHA-256 of the bytes originally read. Strict
-JSON Schema, timestamp, taxonomy, link and plugin policies run before proposal storage. Operator
-approval is outside the life tool policy and binds the exact digest/root/identity/revisions.
-Application validates remaining records, uses per-file atomic replacement, verifies actual bytes
-and records external resumable receipts. A batch can partially apply. Local locks and final
-rereads are cooperating-writer protection, not a distributed filesystem transaction.
+Version 2 proposals contain complete post-images, raw revisions, root/ID bindings and schema/Memory/roadmap dependency hashes. Approval is absent from model operations. Application revalidates policies, atomically replaces individual files, verifies post-images and records resumable receipts externally. Local locks coordinate cooperating writers; a batch is not a distributed transaction and another editor can still race a final check.
 
-The Pi life profile denies generic executors and arbitrary writers. Its read tool opens only
-canonical Markdown skill resources. The operating-system
-owner, another application and malicious extensions are outside this policy. Use a separate
-development profile for general tools.
+The life policy permits canonical skill reads and chrysalis operations. General executors, web research, external memory tools and arbitrary reads/writers require a separate session.
+The shared operation API lives inside the readable skill root. This policy is not an OS sandbox.
 
-A future harness adapter needs only tool registration, bounded JSON transport, canonical skill
-discovery and an equivalent life-profile tool policy. It must use the existing operation allowlist,
-external state and operator approval boundary. Host auth, jobs and optional memory stay in the
-adapter/profile; they do not become core dependencies. Pi is the only maintained adapter today.
+## Time context
 
-Private capability bindings select statically registered providers. Installation, configuration,
-credentials, observation and end-to-end verification are distinct. Host memory contains lessons
-and references, never another backlog or schedule. Package defaults are owned and hashed;
-external learned overrides remain separate. Collisions stop updates. A recovery journal and
-rollback image protect interrupted package replacement.
+```mermaid
+flowchart TD
+    Command[Onboarding or timezone command] --> Observation[Same Node executable with TZ omitted]
+    Observation --> Validate[Validate named IANA zone]
+    Validate --> Compare{Zone changed?}
+    Compare -->|No| Status[Report without vault rewrite]
+    Compare -->|Yes| Proposal[Propose Memory change and flag prototype for recalibration]
+    Proposal --> Approval[Exact approval and CAS]
+    Approval --> Future[Future timestamps use date-correct offsets]
+    Approval --> Preserve[Keep schedules and historical records]
+```
 
-Local `_types/*.md` documents contain JSON Schema definitions; no database daemon or collection
-CLI is required. Normative boundaries: [runtime](contracts/agent-runtime.contract.md),
-[ingestion](contracts/ingestion-input.contract.md), [integrations](contracts/integration-capabilities.contract.md).
+Detection reads the computer setting. It does not infer geographical location or change OS settings. New timestamps use explicit offsets; UTC serializes as +00:00. Daily records retain their planning zone. Native floating dates/times keep their date/wall-time meaning and are never rewritten simply because the zone changes.
+
+## Portability
+
+Future adapters call the operation module with explicit roots, cancellation, canonical skills and an equivalent operator boundary. No daemon or parallel task database is required. Static capability bindings keep ingestion, location, routing, map projection and observed commitments separate. TaskNotes owns Calendar identifiers and history.
+
+See [runtime](contracts/agent-runtime.contract.md), [ingestion](contracts/ingestion-input.contract.md) and [capabilities](contracts/integration-capabilities.contract.md).

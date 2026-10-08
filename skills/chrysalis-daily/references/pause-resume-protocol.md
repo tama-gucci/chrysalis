@@ -1,10 +1,13 @@
 # Pause and resume
-Resolve maintenance, rest, flow or vacation; ask when unclear. Call `pause` with mode, local now,
-timezone and vacation until date. Maintenance clears the prototype and re-enters evening; rest
-preserves wake rhythms, records a rest day and re-enters morning; flow clears rigid blocks and uses
-an unscripted log; vacation suspends prompts until its date. Clear today's scheduled blocks and
-annotate the existing Daily note. Keep statuses, outcomes and learned multipliers intact.
-Review/apply the exact proposal. Resume through `resume`, which proposes active state and returns
-contextual morning, afternoon flex, or evening re-entry. Maintenance resumption runs doctor first.
-Missing feedback is an automatic pause proposal, never permission to schedule. Host scheduling must
-respect semantic pause targets; a cron configuration alone is not a verified active schedule.
+
+Resolve maintenance, rest, flow or vacation; ask when unclear. Call `pause` with `mode`, local `now`
+and optional matching `timezone`. Vacation also requires `until` on or after today's local date.
+Maintenance clears the pending prototype; rest records a rest day; flow flags an unscripted pause;
+vacation stores its date. The operation clears today's chrysalis schedules and owned Daily blocks,
+while preserving statuses, outcomes, plugin sessions, user timeblocks/prose and learned multipliers.
+
+Review/apply the exact proposal. No prompt scheduler, automatic log or automatic resumption is
+included. The conversation checks pause intent before further planning. `resume` with local `now`
+proposes active state and returns morning, afternoon flex or evening re-entry guidance. It does not
+run doctor automatically; the maintenance procedure calls doctor before resuming work.
+Missing feedback produces a pause proposal during audit, never permission to schedule.

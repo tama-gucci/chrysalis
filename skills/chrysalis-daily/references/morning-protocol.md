@@ -9,7 +9,8 @@ Call `plan` with wake, energy, configured timezone, calendar and optional select
 Review every proposed task timestamp, Memory change and Daily record before the operator approves.
 The helper uses a .15 rolling wake baseline adjustment, 75-minute focus sprints, 15-minute breaks
 (22.5 minutes at low energy), analytical peak +90m, administrative slump +390m, kinetic defrost
-+465m and synthesis recovery +510m. It reserves observed commitments and physical transit windows,
++465m and synthesis recovery +510m. It reserves observed commitments with supplied travel_minutes (a located event defaults to a
+30-minute travel buffer) and a 15-minute post-event buffer,
 shifts collisions forward within the local day, and does not invent routed durations.
 Energy 1–2 excludes tiers 3/4 and analytical/synthesis tasks and retains one low-load support task.
 That support must have explicitly low friction and must not require high energy; it receives at

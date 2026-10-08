@@ -1,6 +1,6 @@
 {
   "name": "chrysalis",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Pi skills and tools for a portable Markdown knowledge and daily-work vault",
   "license": "MIT",
   "keywords": [
@@ -13,40 +13,53 @@
       "./skills"
     ],
     "extensions": [
-      "./hosts/pi/extension.ts"
+      "./extensions/chrysalis.ts"
     ]
   },
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "*",
-    "typebox": "*"
+    "@earendil-works/pi-coding-agent": ">=1.0.4 <2",
+    "typebox": ">=1.3.27 <2"
   },
   "files": [
-    "chrysalis",
-    "helpers",
-    "System/scripts",
-    "System/_templates",
-    "System/Runtime-Constitution.md",
+    "src",
+    "extensions",
+    "resources",
     "skills",
-    "hosts/pi",
-    "_types",
-    "_templates",
-    "TaskNotes/Views",
-    "Projects/_templates",
-    "Slipbox/_templates",
-    "Environments/_templates",
     "contracts",
     "docs",
-    "tests/specs",
-    "run.py",
-    "requirements.txt",
     "README.md",
     "ARCHITECTURE.md",
     "STATUS.md",
-    "Dashboard.md",
-    "TaskNotes/Workflows/README.md",
-    "Projects/README.md",
-    "Slipbox/README.md",
-    "Environments/README.md",
-    "LICENSE"
-  ]
+    "CHANGELOG.md",
+    "LICENSE",
+    "Development",
+    "tests",
+    "tsconfig.json",
+    "AGENTS.md"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "dependencies": {
+    "yaml": "2.9.1",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "@js-temporal/polyfill": "0.5.1",
+    "pdfjs-dist": "6.4.299",
+    "@thednp/dommatrix": "3.1.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "26.6.4",
+    "@tasknotes/model": "0.3.0-rc.9",
+    "prettier": "3.6.2",
+    "@earendil-works/pi-coding-agent": "1.0.4",
+    "typebox": "1.3.27"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "node Development/scripts/check.mjs"
+  }
 }

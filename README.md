@@ -1,30 +1,11 @@
 # chrysalis
 
-chrysalis connects knowledge, projects and daily work in an Obsidian vault. Markdown notes are
-authoritative. TaskNotes supplies task lists, calendars and timers; Pi reads the packaged
-procedures and invokes one small Python domain core.
+A self-contained Pi package for goals, projects, knowledge and daily work in a private Markdown vault. TaskNotes supplies the Obsidian task interface; Dataview supplies declarative dashboards.
 
-The Pi package exposes seven skill families and one `chrysalis_operation` tool. The tool reads,
-drafts and applies separately approved proposals. Keep the private vault, installed package,
-host profiles and execution state in separate explicitly selected locations.
+Follow [setup](docs/setup.md) to install a reviewed Git revision through Pi, then run `/chrysalis onboard`. Choose a vault name and parent folder, review the detected timezone and prepared settings, and approve creation. Open the completed folder as a vault in Obsidian and enable community plugins when prompted. No separate language runtime or user build is required.
 
-Pi is the supported harness. The core, schemas and procedures remain independent of it;
-future adapters can use the same versioned JSON operation contract.
+The empty roadmap awaits a conversation about real goals. Original documents belong inside `Attachments/Originals`, where they can be opened and linked. Task and schedule changes require complete proposals and native operator approval through `/chrysalis approve <digest>`.
 
-- [Setup](docs/setup.md)
-- [Daily use](docs/user-guide.md)
-- [Architecture](ARCHITECTURE.md)
-- [Verified capabilities and limits](STATUS.md)
-- [Storage](docs/storage.md)
+After changing the computer's timezone, run `/chrysalis timezone`. Use `--status` to inspect or `--zone Europe/Paris` to choose a named zone. Historical records and existing schedules are preserved.
 
-Capture, ingestion, project horizons, knowledge links, morning calibration, evening review,
-four pause modes, diagnostics and onboarding use the same core. Providers are optional and
-disabled until configured. Google Tasks is a read-only capture input; TaskNotes owns Calendar sync.
-
-Originals live at `Attachments/Originals`, separate from evidence notes in `Sources`. Relative
-links survive relocation. Bounded text/PDF extraction is available; image OCR and physical preview
-require a suitable external reader.
-
-Source contains synthetic examples and sanitized templates only. Keep private records,
-credentials, caches, environments, learned skills and recovery assets outside it. Git exclusion
-alone does not remove a file from disk.
+Read [setup](docs/setup.md), [daily use](docs/user-guide.md), [operation API](docs/operations.md), [architecture](ARCHITECTURE.md), [verification status](STATUS.md) and [development checks](Development/TESTING.md). Pi is the maintained host; the domain core uses no Pi API.
