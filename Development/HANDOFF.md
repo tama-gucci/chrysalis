@@ -1,8 +1,9 @@
 # Current engineering handoff
 
-Date: 2026-10-08. Role: implementation. Branch: main. Base HEAD:
-187b1ff84cdfbe95f5380ffe176c7f2740a10df8. The working tree is the candidate; HEAD alone does not
-identify it. An external frozen-file hash manifest records the final review identity.
+Date: 2026-10-08. Role: publication handoff. Branch: main. Implementation baseline:
+375888e012d934ca6a031c402eed6a5880476498. Source is committed and synchronized to the remote.
+Run the context script for current HEAD and working state. External frozen-file hash manifests
+and verification receipts record the review and publication identities.
 
 The portable core, canonical skill families, Pi bridge, schemas, package lifecycle,
 synthetic tests and current documentation are maintained source. Recovery copies and detailed
@@ -17,5 +18,8 @@ frozen candidate. Its manifest SHA-256 is
 Finalization clears the Changelog template and updates verification metadata/checks; an external
 final hash manifest records those exact files. Whole-source checks and the 98-file npm/Pi package
 export/install acceptance passed. Concrete scope and remaining external acceptance
-are recorded in STATUS.md and tests/specs/behaviors.md. No deployment, publication or personal
-runtime adoption is included. Run the context script and inspect current files before continuing.
+are recorded in STATUS.md and tests/specs/behaviors.md. Publication passed a fresh 78-test suite,
+117-file source check and staged-content verification. A subsequent native Pi smoke passed seven
+skills and three tool calls using the preserved release and external Python environment.
+No personal runtime deployment or adoption is included. Run the context script and inspect
+current files before continuing.
