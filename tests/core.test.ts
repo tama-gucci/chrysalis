@@ -847,8 +847,8 @@ test("operator repair preserves edited assets and never infers ownership", async
   assert.deepEqual(raw(file), original);
   assert.equal(raw(dashboard).toString(), "User edited dashboard\n");
 });
-test("all 30 operations are explicit; approval and arbitrary executors are absent", async () => {
-  assert.equal(OPERATIONS.length, 30);
+test("all 36 operations are explicit; approval and arbitrary executors are absent", async () => {
+  assert.equal(OPERATIONS.length, 36);
   assert(!OPERATIONS.includes("approve"));
   for (const name of ["approve", "exec", "write", "initialize"])
     await assert.rejects(

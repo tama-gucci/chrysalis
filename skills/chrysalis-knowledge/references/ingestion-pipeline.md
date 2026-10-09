@@ -11,6 +11,11 @@ for bounded text/PDF extraction; scanned PDFs/images report OCR-required and opa
 deferred. The life profile has no general extraction executor or browser. Preserve original bytes
 and vault-relative links; never relocate or hydrate real media implicitly.
 
+For optional life-document onboarding, the [document procedure](life-documents.md) provides native
+folder selection and a separately reviewed selected-copy manifest. Its verified result supplies
+an in-vault ingestion envelope. Copying originals is separate from creating Sources or synthesized
+roadmap/project/atomic-note records; each resulting batch retains its own review boundary.
+
 Call `ingest.draft` with `envelope`, local `date: "YYYY-MM-DD"` and optional local `now`.
 The envelope has `contract_version: "2"`, read-only access and no write-back. Quarantine payloads.
 Keep raw-byte SHA-256, normalized text and structured-payload fingerprints separate. Repeated raw
@@ -29,6 +34,13 @@ richer project/Zettel/task changes call `ingest.prevalidate` with complete `reco
 additive; failed/partial extraction cannot remove work. Only a reviewed complete same-scope
 authoritative replacement may archive omissions. `horizon` drafts missing active-project overdue,
 14-day and uncertain tasks; uncertain tasks remain excluded from scheduling until clarified.
+
+For atomic knowledge read [zettelkasten-guide.md](zettelkasten-guide.md). Triage each claim as
+new/update/disputed/no_material; do not turn every capture into a note. Use knowledge.search for
+existing claims and inspect complete evidence before writing figures, dates or quotations. Prefer
+knowledge.prepare for a combined source/note/link proposal with its reviewed index/log. Every new
+atomic note is individually vetted and confirmed through Pi before the final batch approval.
+Source capture does not imply approval to write synthesized notes. No candidates enter the vault.
 
 Present the complete proposal and digest for native approval. Put foundational records before
 dependants: application follows caller order and is not a multi-file transaction. Verify actual

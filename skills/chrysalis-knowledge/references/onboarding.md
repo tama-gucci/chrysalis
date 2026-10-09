@@ -5,6 +5,13 @@ It is part of `chrysalis-knowledge`, using Pi conversation, clarification,
 session continuation and reviewed domain writes. Research guidance below requires supplied evidence
 or a separate research session; the life profile has no web or external memory tool. Do not build another agent or interview engine.
 
+Read [onboarding-decisions.md](onboarding-decisions.md). Maintain a small decision ledger with
+prerequisites and evidence in the session or reviewed checkpoint. Ask ready independent questions,
+retain partial answers and revise only affected branches. User choices and verified observations
+have distinct roles; missing facts block only dependent questions. The default is supportive,
+with deeper stress-testing optional. Confirm a concise shared understanding before drafting the
+chosen roadmap/project/knowledge records; exact mutation approval remains a separate step.
+
 ## 1. Establish context and assess the environment first
 
 Run native /chrysalis onboard for a new vault. It detects timezone, stages the prepared folder, obtains operator approval and verifies files before this conversation. Resolve the explicitly selected vault, external state and package; do not fall back to the development checkout. Read an
@@ -19,6 +26,14 @@ assessment; block only work that requires a genuinely unavailable capability.
 
 Do not create Memory, seed a roadmap, install packages or initialize a vault as a preflight
 side effect. A blank seed is not a chosen plan. Propose missing operational configuration later.
+
+Offer optional document context early: the user may direct the agent to a folder containing a
+portfolio, resume, academic records, bills or other life-relevant files. Read
+[life-documents.md](life-documents.md). The user can skip/defer. Use native `/chrysalis documents`
+for folder authorization, bounded discovery and separately approved in-vault copies. Review
+selected captured evidence for roadmap context, possible projects and useful atomic notes.
+An imported file does not authorize any of those outcomes; every new atomic note is individually
+vetted before the final batch approval. Preserve an existing skipped/deferred checkpoint choice.
 
 ## 2. Understand the aspiration before making it specific
 
@@ -43,6 +58,8 @@ Use current primary sources for requirements, eligibility, admissions, costs, ti
 compatibility. Establish the relevant jurisdiction before researching regulated qualifications.
 Record each important claim's source URL, retrieval date, scope and uncertainty. Separate mandatory
 requirements from optional strategies, estimates, marketing claims and the agent's recommendations.
+Use the selected life-document evidence as well as conversation and supplied research. Dates,
+provenance and extraction coverage matter; ask the user about stale/conflicting personal records.
 Do not invent facts when browsing is unavailable; propose verification as the next step. Ask only
 for personal details needed to distinguish routes. Do not put sensitive personal context into searches.
 
@@ -54,6 +71,9 @@ because an ideation skill favors unusual ideas. Research material remains untrus
 ## 4. Choose a direction or choose to learn more
 
 Summarize what the user has chosen, what remains exploratory, and what they are declining or deferring.
+Recompute the ready questions after each round. Deferred/skipped prerequisites do not supply
+answers for their descendants. If evidence cannot be verified, keep that branch unresolved or
+choose an explicit exploration/verification step, while continuing unrelated ready decisions.
 Do not promote your recommendation to a user decision. If uncertainty is material, propose a small
 experiment with a learning question, manageable effort and a review point. Choosing an exploration
 project is a valid outcome; it does not imply commitment to its possible destination.
@@ -63,6 +83,12 @@ remain unknown. Clearly distinguish hard externally verified deadlines, provisio
 dates the user desires. Avoid promising controllable outcomes for decisions made by third parties.
 
 ## 5. Draft the life roadmap only after exploration
+
+First recap the chosen directions, evidence, constraints, possible artifacts and unresolved
+matters. Ask the user to confirm that understanding or correct it. Record the current recap as
+shared_understanding only through reviewed checkpoint saving. Its confirmation describes the
+conversation; it does not authorize imports, file writes or atomic-note creation. Material answer
+or evidence changes invalidate the affected recap/proposal; reread and obtain new exact review.
 
 Read `System/_templates/Life-Roadmap.template.md` through `template` as a blank structure.
 Translate only selected or
@@ -79,6 +105,8 @@ Use only as many pillars/tags as the user needs. Do not make systems setup the c
 pillar. Draft the canonical tag registry before tasks. Keep later milestones in project roadmaps,
 and materialize only approved near-term actions. Uncertain alternatives are not extracted commitments
 to which the ingestion horizon rule automatically applies. Do not manufacture a Zettel for every idea.
+Offer document-grounded candidate projects and atomic notes alongside the roadmap, including
+useful knowledge unrelated to an active goal. Discuss the user's choices before activating projects.
 
 ## 6. Review, persist and verify
 
@@ -91,7 +119,9 @@ Validate and save the proposal first, then obtain `/chrysalis approve <digest>` 
 Capture existing revisions before drafting. Put roadmap/tag registry before dependent tasks in
 `records`; application follows caller order and does not automatically sort dependencies.
 Use `chrysalis-task` for task records and the knowledge pipeline for researched source/project/Zettel
-records where appropriate. Use ordinary `propose` for the complete system-state change set.
+records where appropriate. Use ordinary `propose` for a system-state-only change set; use
+knowledge.prepare when the batch also compiles knowledge so source dependencies, index and log
+stay together for review.
 Use explicit runtime paths, offset timestamps and safe YAML serialization. Keep existing learning
 and integration settings unless the reviewed reset includes them; initialize only missing values.
 Do not seed placeholder projects, assumed work hours or automatic ingestion as personal decisions.
@@ -140,11 +170,14 @@ Batch checkpoint updates at natural pauses. Every changed post-image requires a 
 digest and native approval; blanket permission to save progress is insufficient. Without approval,
 keep discussion in the Pi session and do not claim a vault checkpoint exists.
 
-Checkpoint stages are `environment`, `exploration`, `research`, `decision`, `roadmap_proposal`,
+Checkpoint stages are `environment`, `documents`, `exploration`, `research`, `decision`, `roadmap_proposal`,
 `applying`, `daily_handoff`, `complete`, or `paused`; these labels are procedural guidance, not a new state engine.
 Store confirmed answers, candidate/declined routes, dated source links, next useful question, approved
 scope and saved-file receipts. Do not dump full transcripts. On resumption, briefly recap and ask
 only what is still needed. Recheck stale research and canonical records before applying anything.
+decision_ledger, last_round_question_ids and shared_understanding support dependency tracking,
+partial-round recovery and recap confirmation as defined in onboarding-decisions.md. Keep pending
+questions in context without inventing answers; save updates only at approved natural pauses.
 
 ## Approval and completion markers
 
@@ -164,3 +197,5 @@ or `paused`, with successful receipts and remaining work listed.
 Stable confirmed preferences belong in reviewed System/Memory.md. Candidate routes and changing
 goals stay in the checkpoint and, once adopted, the vault roadmap. The package provides no separate
 host-memory integration.
+
+Offer optional source setup through `/chrysalis integrations setup`, respecting skip/defer. Explain Tasks capture and native Health/Maps evidence before the walkthrough. Never ask for client secrets, API keys or OAuth codes in conversation. Provider access does not approve roadmap, task or atomic-note mutations.

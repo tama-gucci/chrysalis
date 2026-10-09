@@ -13,6 +13,7 @@ export interface Proposal {
   records: Change[];
   dependencies: Record<string, string | null>;
   ingestion?: Metadata;
+  knowledge?: Metadata;
 }
 export interface RuntimeContext {
   vault: string;

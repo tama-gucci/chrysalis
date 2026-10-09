@@ -8,6 +8,11 @@ for selected in-vault bytes. all:true fetches the first bounded page of each ena
 
 File drafting selects an original already inside Attachments/Originals. One byte observation supplies hash and extraction. Supplied hashes must agree. Relative locators and honest coverage/deferred outcomes are retained. Text-only/structured evidence has sha256:null and bytes_available:false; separate fingerprints never masquerade as binary hashes. XML quarantine escapes delimiters and attributes.
 
+The optional documents flow can copy selected files into Attachments/Originals/Onboarding after
+native folder selection and separate exact copy approval. Its verified result supplies a file
+envelope with raw hashes and in-vault locators. This explicit copy does not move external originals
+or approve source/roadmap/project/atomic-note records; extraction and record approval remain separate.
+
 Structured captures require integration/account/list/item identity. Date-only deadlines remain date-only. Repeat imports preserve completed/local work and report changed payloads for review. Accounts do not collide; missing pages cannot delete work and there is no write-back.
 
 Drafts use ordinary complete validated proposals, separate approval and resumable apply. Semantic evidence never automatically merges. Reconciliation is additive; replacement needs complete explicitly scoped evidence and preserves completed/user-modified deliverables.

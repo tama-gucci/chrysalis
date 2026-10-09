@@ -20,6 +20,7 @@ import {
   schemaFor,
   registeredTags,
   collection,
+  recordPath,
 } from "../storage/records.ts";
 import { stamp, zoneName, nowStamp, dateOnly } from "../time/timezone.ts";
 import {
@@ -88,7 +89,7 @@ export function checkRecord(
   resume = false,
   all: Change[] = [],
 ) {
-  const target = confined(ctx.vault, item.path),
+  const target = recordPath(ctx.vault, item.path),
     kind = schemaFor(item.path);
   if (
     typeof item.document !== "string" ||
@@ -135,6 +136,8 @@ export function checkRecord(
     "startedAt",
     "completedAt",
     "wake_time",
+    "content_updated_at",
+    "archived_at",
   ]) {
     const value = next[field];
     if (
@@ -145,6 +148,20 @@ export function checkRecord(
       continue;
     if (kind === "task" && field === "dateModified") continue;
     stamp(value, zone, true);
+  }
+  if (item.path === "System/Knowledge-Log.md" && exists(target)) {
+    const prior = readRecord(ctx.vault, item.path);
+    if (
+      next.record_kind !== "knowledge_log" ||
+      !Array.isArray(next.entries) ||
+      !Array.isArray(prior.frontmatter.entries) ||
+      !equal(
+        next.entries.slice(0, prior.frontmatter.entries.length),
+        prior.frontmatter.entries,
+      ) ||
+      !result.body.startsWith(prior.body)
+    )
+      throw new Error("knowledge_log_is_append_only");
   }
   if (kind === "task") {
     locationPolicy(next);
@@ -280,6 +297,8 @@ export function propose(
   changes: Change[],
   purpose = "review",
   ingestion?: Metadata,
+  observedDependencies: Record<string, string> = {},
+  knowledgeReview?: Metadata,
 ) {
   runtimeContext(ctx.vault, ctx.state);
   if (
@@ -300,6 +319,15 @@ export function propose(
     ...changes.map((c) => "_types/" + schemaFor(c.path) + ".md"),
   ]))
     dependencies[relative] = sha256(raw(confined(ctx.vault, relative)));
+  for (const [relative, expected] of Object.entries(observedDependencies)) {
+    schemaFor(relative);
+    if (
+      !/^[a-f0-9]{64}$/.test(expected) ||
+      sha256(raw(confined(ctx.vault, relative))) !== expected
+    )
+      throw new Error("stale_knowledge_evidence: " + relative);
+    dependencies[relative] = expected;
+  }
   const proposal: Proposal = {
     contract_version: "2",
     vault_root: ctx.vault,
@@ -308,12 +336,26 @@ export function propose(
     records: changes,
     dependencies,
     ...(ingestion ? { ingestion } : {}),
+    ...(knowledgeReview ? { knowledge: knowledgeReview } : {}),
   };
   if (Buffer.byteLength(canonical(proposal)) > MAX_REQUEST_BYTES)
     throw new Error("Proposal exceeds 4 MiB");
   const key = digest(proposal);
   atomicJSON(confined(vaultState(ctx), "proposals/" + key + ".json"), proposal);
-  return { status: "review_required", proposal_digest: key, proposal };
+  return {
+    status: "review_required",
+    proposal_digest: key,
+    proposal,
+    required_note_reviews: newNoteReviews(proposal),
+  };
+}
+export function newNoteReviews(proposal: Proposal) {
+  return proposal.records
+    .filter(
+      (item) =>
+        /^Slipbox\/[^/]+\.md$/.test(item.path) && item.if_revision === null,
+    )
+    .map((item) => ({ path: item.path, revision: sha256(item.document) }));
 }
 export function loadProposal(ctx: RuntimeContext, key: string): Proposal {
   if (!/^[a-f0-9]{64}$/.test(key)) throw new Error("Invalid proposal digest");
@@ -344,7 +386,12 @@ function dependencies(ctx: RuntimeContext, p: Proposal, resume = false) {
   }
 }
 /** Operator boundary: this function is never dispatched as a model operation. */
-export function approve(ctx: RuntimeContext, key: string, evidence: string) {
+export function approve(
+  ctx: RuntimeContext,
+  key: string,
+  evidence: string,
+  noteReviews: Array<{ path: string; revision: string }> = [],
+) {
   if (
     typeof evidence !== "string" ||
     !evidence.trim() ||
@@ -352,6 +399,13 @@ export function approve(ctx: RuntimeContext, key: string, evidence: string) {
   )
     throw new Error("Explicit operator approval evidence required");
   const proposal = loadProposal(ctx, key);
+  if (
+    !Array.isArray(noteReviews) ||
+    !equal(noteReviews, newNoteReviews(proposal))
+  )
+    throw new Error(
+      "zettel_review_required: review and confirm each new atomic note",
+    );
   dependencies(ctx, proposal);
   for (const item of proposal.records)
     checkRecord(ctx, item, false, proposal.records);
@@ -362,6 +416,7 @@ export function approve(ctx: RuntimeContext, key: string, evidence: string) {
     vault_id: proposal.vault_id,
     approved_at: nowStamp(configuredZone(ctx), ctx.now),
     evidence,
+    note_reviews: noteReviews,
   });
   return { status: "approved", proposal_digest: key };
 }
@@ -382,6 +437,10 @@ export async function apply(
     receipt.vault_id !== proposal.vault_id
   )
     throw new Error("approval_mismatch");
+  if (!equal(receipt.note_reviews ?? [], newNoteReviews(proposal)))
+    throw new Error(
+      "zettel_review_required: exact per-note approval evidence is absent",
+    );
   return withLock(confined(external, "locks"), "vault-writer", () => {
     dependencies(ctx, proposal, true);
     validateRelationships(ctx, proposal.records);

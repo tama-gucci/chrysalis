@@ -1,4 +1,11 @@
 import test from "node:test";
+import { runToolCall } from "@earendil-works/pi-agent-core";
+import {
+  installSources,
+  maskedInput,
+  memoryOnlyView,
+} from "../extensions/sources.ts";
+import { TOOL_SCHEMAS, SERVER_NAME } from "../src/integrations/contracts.ts";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -6,11 +13,20 @@ import { randomUUID } from "node:crypto";
 import chrysalis from "../extensions/chrysalis.ts";
 import { PACKAGE_ROOT, exists } from "../src/platforms/filesystem.ts";
 import { externalState, selectedContext } from "../src/storage/context.ts";
+import { dispatch } from "../src/app/operations.ts";
+import { serializeRecord, readRecord } from "../src/storage/records.ts";
+import { confined } from "../src/platforms/filesystem.ts";
+import { vaultState } from "../src/storage/context.ts";
+import { configuredZone } from "../src/core/runtime.ts";
+import { nowStamp } from "../src/time/timezone.ts";
+import { documentFolderStatus } from "../src/core/documents.ts";
 import {
   DefaultResourceLoader,
   SettingsManager,
   SessionManager,
   createAgentSession,
+  createCodemodeExtension,
+  createMcpExtension,
 } from "@earendil-works/pi-coding-agent";
 
 if (!process.env.TEST_SCRATCH) throw Error("Set external TEST_SCRATCH");
@@ -25,6 +41,11 @@ const handlers: Record<string, Function> = {},
   messages: string[] = [],
   notifications: string[] = [];
 const pi: any = {
+  registerMcpServer: () => {},
+  registerToolRenderer: () => {},
+  getSettings: () => ({}),
+  getMcpServers: () => [],
+  getAllTools: () => [],
   registerTool: (value: any) => {
     tool = value;
   },
@@ -51,6 +72,92 @@ const ctx: any = {
   },
 };
 
+test("source gate rejects effective registration overrides, wrong origins and drifted MCP schemas", () => {
+  let registered: any, info: any;
+  const api: any = {
+    ...pi,
+    registerMcpServer: (name: string, config: any) => {
+      registered = {
+        name,
+        config,
+        extensionPath: path.join(PACKAGE_ROOT, "extensions/chrysalis.ts"),
+      };
+    },
+    getMcpServers: () => [registered],
+    getAllTools: () => [info],
+  };
+  const gate = installSources(api);
+  const name = "mcp__" + SERVER_NAME + "__integration_status";
+  info = {
+    name,
+    parameters: TOOL_SCHEMAS.integration_status,
+    namespace: { name: "mcp__" + SERVER_NAME },
+    sourceInfo: { path: path.join(PACKAGE_ROOT, "extensions/chrysalis.ts") },
+  };
+  assert(gate(name));
+  info.parameters = { ...info.parameters, additionalProperties: true };
+  assert(!gate(name));
+  info.parameters = TOOL_SCHEMAS.integration_status;
+  info.sourceInfo.path = "untrusted.ts";
+  assert(!gate(name));
+  info.sourceInfo.path = path.join(PACKAGE_ROOT, "extensions/chrysalis.ts");
+  registered.config = { ...registered.config, command: "untrusted" };
+  assert(!gate(name));
+  assert(!gate("mcp__other__integration_status"));
+});
+
+test("native secret input masks and clears; restricted evidence cannot invoke an external editor", async () => {
+  let component: any;
+  const native: any = {
+    hasUI: true,
+    ui: {
+      editor: () => {
+        throw Error("External editor forbidden");
+      },
+      custom: async (factory: any) => {
+        let result: any;
+        component = factory(
+          { requestRender: () => {}, terminal: { rows: 25 } },
+          null,
+          null,
+          (value: any) => {
+            result = value;
+          },
+        );
+        component.handleInput("synthetic-private-key");
+        assert(
+          !component.render(80).join("\n").includes("synthetic-private-key"),
+        );
+        component.handleInput("\r");
+        return result;
+      },
+    },
+  };
+  assert.equal(await maskedInput(native, "API key"), "synthetic-private-key");
+  assert(!component.render(80).join("\n").includes("*"));
+  native.ui.custom = async (factory: any) => {
+    component = factory(
+      { requestRender: () => {}, terminal: { rows: 25 } },
+      null,
+      null,
+      () => {},
+    );
+    assert(
+      component.render(80).join("\n").includes("synthetic sleep evidence"),
+    );
+    component.handleInput("\u0007");
+    component.handleInput("\u001b");
+    assert(
+      !component.render(80).join("\n").includes("synthetic sleep evidence"),
+    );
+  };
+  await memoryOnlyView(
+    native,
+    "Health native review",
+    "synthetic sleep evidence",
+  );
+});
+
 test("native operator onboarding reviews before writes, resumes and requires human-path confirmation", async () => {
   process.env.CHRYSALIS_STATE_ROOT = state;
   delete process.env.CHRYSALIS_VAULT_PATH;
@@ -71,6 +178,9 @@ test("native operator onboarding reviews before writes, resumes and requires hum
   await registration.handler("onboard", ctx);
   assert.equal(messages.length, 2);
   assert.match(messages[0], /conversational/);
+  assert.match(messages[0], /optional folder/);
+  assert.match(messages[0], /project/);
+  assert.match(messages[0], /atomic.note/);
   delete process.env.CHRYSALIS_STATE_ROOT;
 });
 test("bootstrap errors are useful; model cannot run approval or bypass life tools", async () => {
@@ -122,6 +232,113 @@ test("bootstrap errors are useful; model cannot run approval or bypass life tool
   );
   delete process.env.CHRYSALIS_STATE_ROOT;
 });
+
+test("native per-note vetting rejects edits or any decline before the batch can write", async () => {
+  process.env.CHRYSALIS_STATE_ROOT = state;
+  const selected = selectedContext(state),
+    now = nowStamp(configuredZone(selected), "2026-10-08T17:00:00+00:00");
+  const records = ["lexer", "parser"].map((slug) => ({
+    path: "Slipbox/20261008120000-" + slug + ".md",
+    if_revision: null,
+    document: serializeRecord(
+      {
+        type: "zettel",
+        id: "20261008120000-" + slug,
+        title: "One " + slug + " claim",
+        dateCreated: now,
+        tags: ["concept/compilers"],
+        summary: "A single claim.",
+        provenance_kind: "inference",
+      },
+      "# One claim\n\nEvidence and uncertainty for " + slug + ".\n",
+    ),
+  }));
+  const draft: any = await dispatch(selected, "propose", { records });
+  const untouched = () => {
+    for (const record of records) assert(!exists(confined(vault, record.path)));
+    assert(
+      !exists(
+        confined(
+          vaultState(selected),
+          "approvals/" + draft.proposal_digest + ".json",
+        ),
+      ),
+    );
+  };
+  try {
+    let decisions = [true, false];
+    ctx.ui.editor = async (_title: string, text: string) => text;
+    ctx.ui.confirm = async () => decisions.shift() ?? false;
+    await registration.handler("approve " + draft.proposal_digest, ctx);
+    untouched();
+    decisions = [true, true, false];
+    await registration.handler("approve " + draft.proposal_digest, ctx);
+    untouched();
+    ctx.ui.editor = async (_title: string, text: string) => text + "edited";
+    ctx.ui.confirm = async () => {
+      throw Error("Edited note must not reach confirmation");
+    };
+    await registration.handler("approve " + draft.proposal_digest, ctx);
+    untouched();
+    const shown: string[] = [],
+      confirmations: string[] = [];
+    ctx.ui.editor = async (title: string, text: string) => {
+      if (title.startsWith("Vet atomic note:")) shown.push(text);
+      return text;
+    };
+    ctx.ui.confirm = async (title: string) => {
+      confirmations.push(title);
+      return true;
+    };
+    await registration.handler("approve " + draft.proposal_digest, ctx);
+    assert.deepEqual(
+      shown,
+      records.map((record) => record.document),
+    );
+    assert.deepEqual(confirmations, [
+      "Approve this atomic note?",
+      "Approve this atomic note?",
+      "Approve this exact saved proposal?",
+    ]);
+    for (const record of records)
+      assert.equal(readRecord(vault, record.path).document, record.document);
+  } finally {
+    ctx.ui.editor = async (_title: string, text: string) => text;
+    ctx.ui.confirm = async () => true;
+    delete process.env.CHRYSALIS_STATE_ROOT;
+  }
+});
+
+test("malformed private credential files produce only sanitized native notifications", async () => {
+  const file = path.join(base, "malformed-client.json");
+  const canary = "synthetic-private-import-canary";
+  fs.writeFileSync(file, '{"client_secret":"' + canary + '" broken');
+  process.env.CHRYSALIS_STATE_ROOT = state;
+  const notices: string[] = [];
+  try {
+    await registration.handler("integrations setup", {
+      ...ctx,
+      ui: {
+        ...ctx.ui,
+        select: async () => "google-tasks",
+        confirm: async () => true,
+        input: async (title: string) =>
+          title.includes("Unique")
+            ? "malformed-import"
+            : title.includes("account alias")
+              ? "primary"
+              : title.includes("project ID")
+                ? "fixture-project"
+                : file,
+        notify: (s: string) => notices.push(s),
+      },
+    });
+    assert.deepEqual(notices, ["invalid_credential_file"]);
+    assert(!JSON.stringify(notices).includes(canary));
+  } finally {
+    delete process.env.CHRYSALIS_STATE_ROOT;
+  }
+});
 test("actual Pi SDK discovers seven skills and invokes the new tool without Python", async () => {
   process.env.CHRYSALIS_STATE_ROOT = state;
   process.env.CHRYSALIS_VAULT_PATH = vault;
@@ -136,20 +353,40 @@ test("actual Pi SDK discovers seven skills and invokes the new tool without Pyth
       agentDir,
       settingsManager: settings,
       noContextFiles: true,
-      disabledBuiltinExtensions: ["mcp", "codemode"],
+      extensionFactories: [
+        {
+          name: "codemode",
+          factory: createCodemodeExtension(),
+          replaceable: true,
+        },
+        { name: "mcp", factory: createMcpExtension(), replaceable: true },
+      ],
     });
   await loader.reload();
   assert.equal(loader.getSkills().skills.length, 7);
   assert.deepEqual(loader.getExtensions().errors, []);
+  assert(
+    loader.getExtensions().extensions.some((e) => e.tools.has("codemode")),
+    JSON.stringify(
+      loader
+        .getExtensions()
+        .extensions.map((e) => ({ path: e.path, tools: [...e.tools.keys()] })),
+    ),
+  );
   const { session } = await createAgentSession({
     cwd,
     agentDir,
     resourceLoader: loader,
     settingsManager: settings,
     sessionManager: SessionManager.inMemory(cwd),
-    tools: ["read", "chrysalis_operation"],
+    tools: ["read", "chrysalis_operation", "codemode"],
   });
   try {
+    await session.bindExtensions({});
+    assert(
+      session.getActiveToolNames().includes("codemode"),
+      JSON.stringify(session.getActiveToolNames()),
+    );
     const usage = {
       input: 0,
       output: 0,
@@ -197,7 +434,44 @@ test("actual Pi SDK discovers seven skills and invokes the new tool without Pyth
       path: path.join(vault, "System/Memory.md"),
     });
     assert.match(JSON.stringify(denied), /reviewed operations|blocked/i);
+    const executeCode = (args: any) =>
+      runToolCall(
+        {
+          type: "toolCall",
+          id: "synthetic-codemode",
+          name: "codemode",
+          arguments: args,
+        },
+        {
+          tools: session.agent.state.tools,
+          assistantMessage: session.agent.state.messages.at(-1) as any,
+          context: session.agent.state,
+          beforeToolCall: session.agent.beforeToolCall,
+          afterToolCall: session.agent.afterToolCall,
+        },
+      );
+    const code = await executeCode({
+      code: 'const r = await tools.mcp__chrysalis_sources__integration_status({}); if (r.isError) throw Error("MCP error"); text({status:r.structuredContent.status, count:r.structuredContent.integrations.length, modelsAvailable:typeof models!=="undefined"});',
+    });
+    const output = JSON.stringify(code.result ?? code);
+    assert.match(output, /Script completed/);
+    assert.match(output, /modelsAvailable.*false/);
+    assert.match(output, /status.*ok/);
+    const blocked = await executeCode({
+      code:
+        "await tools.read({path:" +
+        JSON.stringify(path.join(vault, "System/Memory.md")) +
+        "});",
+    });
+    assert.match(
+      JSON.stringify(blocked),
+      /Script failed|blocked|reviewed operations/i,
+    );
   } finally {
+    await (session as any)._extensionRunner.emit({
+      type: "session_shutdown",
+      reason: "exit",
+    });
     session.dispose();
     delete process.env.CHRYSALIS_STATE_ROOT;
     delete process.env.CHRYSALIS_VAULT_PATH;
@@ -235,4 +509,95 @@ test("unapproved setup can restart with corrected folder and initial zone", asyn
   assert(!exists(oldVault));
   assert(notifications.some((n) => n.includes("replaced")));
   delete process.env.CHRYSALIS_STATE_ROOT;
+});
+
+test("native life-document selection and copies have separate cancel, edit and decline boundaries", async () => {
+  process.env.CHRYSALIS_STATE_ROOT = state;
+  delete process.env.CHRYSALIS_VAULT_PATH;
+  const selected = selectedContext(state),
+    source = path.join(base, "Life documents");
+  fs.mkdirSync(source, { recursive: true });
+  fs.writeFileSync(
+    path.join(source, "portfolio.txt"),
+    "A parser constructs a syntax tree.",
+  );
+  try {
+    assert.equal(documentFolderStatus(selected).status, "not_selected");
+    ctx.ui.input = async () => undefined;
+    await registration.handler("documents", ctx);
+    assert.equal(documentFolderStatus(selected).status, "not_selected");
+    ctx.ui.input = async () => source;
+    ctx.ui.editor = async (_title: string, value: string) => value;
+    ctx.ui.confirm = async () => false;
+    await registration.handler("documents", ctx);
+    assert.equal(documentFolderStatus(selected).status, "not_selected");
+    ctx.ui.editor = async (_title: string, value: string) => value + "edited";
+    ctx.ui.confirm = async () => {
+      throw Error("Edited scope must not reach confirmation");
+    };
+    await registration.handler("documents", ctx);
+    assert.equal(documentFolderStatus(selected).status, "not_selected");
+    const confirmationTitles: string[] = [];
+    ctx.ui.editor = async (_title: string, value: string) => value;
+    ctx.ui.confirm = async (title: string) => {
+      confirmationTitles.push(title);
+      return true;
+    };
+    await registration.handler("documents", ctx);
+    assert.equal(documentFolderStatus(selected).status, "selected");
+    assert.match(
+      messages.at(-1)!,
+      /roadmap context, candidate projects and individually vetted atomic notes/,
+    );
+    const plan: any = await dispatch(selected, "documents.prepare", {
+      paths: ["portfolio.txt"],
+    });
+    const target = confined(vault, plan.manifest.entries[0].destination);
+    assert(!exists(target));
+    await assert.rejects(
+      dispatch(selected, "documents.apply", {
+        proposal_digest: plan.proposal_digest,
+      }),
+      /approval_required/,
+    );
+    ctx.ui.confirm = async () => false;
+    await registration.handler("approve " + plan.proposal_digest, ctx);
+    assert(!exists(target));
+    ctx.ui.editor = async (_title: string, value: string) => value + "edited";
+    await registration.handler("approve " + plan.proposal_digest, ctx);
+    assert(!exists(target));
+    ctx.ui.editor = async (_title: string, value: string) => value;
+    ctx.ui.confirm = async (title: string) => {
+      confirmationTitles.push(title);
+      return true;
+    };
+    await registration.handler("approve " + plan.proposal_digest, ctx);
+    assert.equal(
+      fs.readFileSync(target, "utf8"),
+      "A parser constructs a syntax tree.",
+    );
+    assert.equal(
+      fs.readFileSync(path.join(source, "portfolio.txt"), "utf8"),
+      "A parser constructs a syntax tree.",
+    );
+    assert.deepEqual(confirmationTitles, [
+      "Use this life-documents folder?",
+      "Copy these exact originals into the vault?",
+    ]);
+    assert(
+      notifications.some((value) =>
+        value.includes('"knowledge_records_created":false'),
+      ),
+    );
+    const previous = documentFolderStatus(selected);
+    ctx.ui.input = async () => {
+      throw Error("Status must not prompt for a folder");
+    };
+    await registration.handler("documents --status", ctx);
+    assert.deepEqual(documentFolderStatus(selected), previous);
+  } finally {
+    ctx.ui.editor = async (_title: string, value: string) => value;
+    ctx.ui.confirm = async () => true;
+    delete process.env.CHRYSALIS_STATE_ROOT;
+  }
 });

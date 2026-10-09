@@ -2,12 +2,20 @@
 
 Treat onboarding as a collaborative conversation, not an intake exam. The goal is enough clarity
 to take a meaningful next step, not certainty about the rest of the user's life.
+Use [onboarding-decisions.md](onboarding-decisions.md) to track prerequisites, ready questions,
+evidence and current shared understanding. Keep the map scoped to useful choices and allow
+multiple branches to share constraints. An empty set of ready questions may require evidence or
+deferral rather than a declaration that every decision has been resolved.
 
 ## Adaptive question sequence
 
 Start broad: “What would you like to be different, even if you do not know how to get there?”
 Reflect the user's answer in plain words and check the intended meaning. Then choose only the next
 relevant questions from these categories; do not send the entire list as a form.
+Ask one to three independent ready questions, then wait for their answers. A milestone question
+whose answer depends on a route still under discussion belongs in a later round. Partial replies
+leave unanswered questions open. Offer recommendations selectively with reasons and alternatives;
+questions about personal ambitions and tradeoffs remain neutral and open.
 
 | Need | Example question | Why it matters |
 |---|---|---|
@@ -21,6 +29,12 @@ relevant questions from these categories; do not send the entire list as a form.
 
 Offer examples only to help thinking, not to steer toward a preferred biography. A declined answer
 is not permission to infer it from old conversations. Do not diagnose traits or assume incapacity.
+
+When the user opts into [life-document context](life-documents.md), use selected captured evidence
+to clarify preparation, constraints and opportunities. Check dates, extraction coverage and stale
+or conflicting facts with the user. Also offer grounded project and atomic-note candidates; a
+document need not contribute to the roadmap to contain useful knowledge. No inferred obligation
+or recommendation becomes a chosen goal automatically.
 
 ## Route comparison card
 
@@ -55,3 +69,6 @@ include that exploration project and its few initial tasks. Other routes stay in
 - If facts conflict, show the conflict and the next verification source; do not average incompatible rules.
 - If research is unavailable, produce a research plan with unanswered questions, not fabricated conclusions.
 - The final roadmap must be recognizable to the user as their chosen direction, in their own terms.
+- Recap and confirm enough shared understanding for the chosen next step, with unresolved or
+  deferred branches visible, before drafting adopted records. Exact record and per-note approvals
+  are still required before those records enter the vault.

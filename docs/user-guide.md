@@ -15,6 +15,32 @@ drafts missing active-project near-term, overdue and uncertain tasks. Uncertain 
 clarification before scheduling. Completed/local work survives supplementary reconciliation.
 Knowledge links use exact reciprocal associations.
 
+Onboarding uses a small decision ledger to ask one to three independent questions at a time,
+after their prerequisites are settled. Partial answers and skipped/deferred choices are retained;
+missing evidence delays only dependent questions. The agent recaps your choices and unresolved
+matters for confirmation before drafting adopted records. Recommendations include reasons and
+alternatives; personal goals and tradeoffs remain yours. A deeper stress-test is optional.
+Progress can be saved in the reviewed checkpoint at natural pauses. Read the
+[decision procedure](../skills/chrysalis-knowledge/references/onboarding-decisions.md).
+
+Onboarding optionally uses life documents to understand your circumstances, suggest projects and
+identify useful atomic knowledge. Select a dedicated external folder with `/chrysalis documents`,
+review the inventory and approve selected original copies into the vault. You can skip or return
+later. Copy approval does not activate projects or approve notes; discuss the evidence and review
+complete record proposals separately. See the [life-document procedure](../skills/chrysalis-knowledge/references/life-documents.md).
+
+For atomic notes use chrysalis-knowledge's Zettelkasten procedure. Review each complete proposed
+note, its evidence, uncertainty and links; nothing enters Slipbox as an unapproved candidate.
+The native approval command confirms each new note as Markdown before reviewing the complete
+batch. Declining one stops the batch. Revisions need a new proposal, including dependent links.
+
+knowledge.search reads full note text and explicit synonyms; knowledge.lint reports evidence,
+link/index and source-inventory issues without repairs. knowledge.prepare proposes compiled notes
+with an index and append-only knowledge log. Questions return cited answers without saving them.
+An explicit saved-answer request produces a separately reviewed dated System snapshot; later
+knowledge changes are reported without automatically rewriting it. See [knowledge design](knowledge-design.md)
+for limitations. Existing vault schemas are not upgraded by a package install.
+
 Planning requires actual wake/energy and fresh observed commitments. Explicitly observed empty is
 valid; absent/stale cannot establish free time. Staging creates an inert Memory prototype. Calibration
 proposes task, Memory and Daily changes, including owned native timeblocks. Low energy, weekends,
@@ -28,7 +54,7 @@ them. The package has no background scheduler.
 
 Ingestion follows discovery, selected extraction, draft, validation, review, approval, apply and
 verification. Discovery is paged metadata; `all:true` does not crawl every page. Put selected originals
-inside the vault first. PDF parsing is bounded by pages, 32 MiB input, 8 MiB decompressed streams,
+inside the vault first, manually or through the reviewed documents copy flow. PDF parsing is bounded by pages, 32 MiB input, 8 MiB decompressed streams,
 1 MiB text, time and memory. Scanned PDFs/images report OCR-required; opaque formats remain deferred.
 Duplicate candidates never automatically merge records.
 
@@ -42,6 +68,10 @@ TaskNotes uses `TaskNotes/Tasks`, the `task` tag, frontmatter titles, todo/in-pr
 statuses and none/low/normal/high/urgent priorities. The shared registry maps modality, urgency,
 energy, friction and knowledge links to native custom fields. Automatic archive movement is off.
 Google/Microsoft Calendar connections, API/MCP, webhooks and debug logging start disabled.
+Original storage is excluded from TaskNotes, so task-tagged Markdown evidence remains outside
+active tasks. Markdown imports verify this exclusion and disabled Dataview code settings, binding
+their hashes to copy approval. Existing vaults with unsafe settings require user correction in
+Obsidian and a new copy review; import does not change plugin configuration.
 
 Daily notes retain focus plans and native Pomodoro history. Timer defaults are 75-minute focus,
 15-minute short rest and 30-minute long rest every three cycles, with automatic starts off. Timers
@@ -53,3 +83,5 @@ have explicit placeholders to fill before validation.
 Run `/chrysalis timezone` after changing the computer setting. Existing records/schedules retain
 their meaning. Review a new plan if the prototype needs recalibration. Physical Obsidian behavior
 still needs the acceptance checks in [status](../STATUS.md).
+
+Optional sources use [native setup](integrations.md) through `/chrysalis integrations setup`. Read-only Tasks inboxes can supply selected captures through codemode. Health sleep and Maps travel use native review only; neither automatically changes a schedule or task duration.

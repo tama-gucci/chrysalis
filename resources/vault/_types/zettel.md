@@ -43,6 +43,26 @@ schema:
         items:
           type: string
         description: "Concept and domain tags, e.g. concept/algorithms, #chrysalis"
+      summary:
+        type: string
+        maxLength: 500
+        description: One sentence locating this atomic claim in the knowledge index
+      source_refs:
+        type: array
+        maxItems: 100
+        uniqueItems: true
+        items: {type: string}
+        description: Exact Sources WikiLinks supporting the note across multiple captures
+      provenance_kind:
+        enum: [source, personal, inference]
+        description: Source-grounded, user-confirmed personal knowledge, or explicitly labeled inference
+      knowledge_status:
+        enum: [current, disputed, outdated]
+        description: Claim status; contested claims also need cited explanations in the body
+      content_updated_at:
+        type: string
+        format: date-time
+        description: Local timestamp of the last knowledge-content change, not formatting or access
       source_ref:
         type: [string, "null"]
         description: "Wikilink to raw ingestion source in Sources/, e.g. [[Sources/<id>]]"

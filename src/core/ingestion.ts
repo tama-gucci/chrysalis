@@ -38,7 +38,8 @@ export async function discover(ctx: RuntimeContext, args: Metadata) {
     !Number.isInteger(size) ||
     size < 1 ||
     size > 100 ||
-    !/^\d{1,6}$/.test(String(token))
+    typeof token !== "string" ||
+    token.length > 500
   )
     throw new Error("Use a bounded discovery page");
   if (args.all) {
@@ -53,8 +54,18 @@ export async function discover(ctx: RuntimeContext, args: Metadata) {
     );
   }
   const c = sourceConfiguration(ctx, args.source_alias),
-    items: Metadata[] = [],
-    offset = Number(token);
+    items: Metadata[] = [];
+  if (c.native_authorization && c.integration === "google-tasks") {
+    const { sourceTool } = await import("../integrations/service.ts");
+    return sourceTool(ctx, "read_task_inbox", {
+      instance: c.instance,
+      list_id: c.collection_id,
+      page_size: size,
+      ...(args.page_token ? { cursor: args.page_token } : {}),
+    });
+  }
+  if (!/^\d{1,6}$/.test(token)) throw Error("Use a bounded discovery page");
+  const offset = Number(token);
   let truncated = false;
   if (c.integration === "google-tasks" || c.export_path) {
     if (!c.export_path || !exists(rejectRedirects(c.export_path)))

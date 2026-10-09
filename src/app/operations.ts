@@ -26,6 +26,16 @@ import { capability, integrationStatus, redact } from "../core/integrations.ts";
 import { inspectOriginal } from "../core/originals.ts";
 import { businessDate } from "../time/timezone.ts";
 import { environment } from "../platforms/environment.ts";
+import {
+  searchKnowledge,
+  lintKnowledge,
+  prepareKnowledge,
+} from "../core/wiki.ts";
+import {
+  discoverDocuments,
+  prepareDocumentImport,
+  applyDocumentImport,
+} from "../core/documents.ts";
 
 export const OPERATIONS: string[] = readJSON(
   path.join(PACKAGE_ROOT, "contracts/operations.json"),
@@ -116,8 +126,34 @@ export async function dispatch(
       return apply(ctx, args.proposal_digest);
     case "original.inspect":
       return inspectOriginal(ctx, args);
+    case "documents.discover":
+      return discoverDocuments(ctx, args);
+    case "documents.prepare":
+      return prepareDocumentImport(ctx, args);
+    case "documents.apply":
+      if (Object.keys(args).some((key) => key !== "proposal_digest"))
+        throw Error("Use only the saved document-import digest");
+      return applyDocumentImport(ctx, args.proposal_digest);
     case "duplicates":
       return knowledge.duplicateCandidates(ctx, args);
+    case "knowledge.search":
+      return searchKnowledge(ctx, args);
+    case "knowledge.lint":
+      return lintKnowledge(ctx, args);
+    case "knowledge.prepare": {
+      const candidate = prepareKnowledge(ctx, args);
+      return {
+        ...propose(
+          ctx,
+          candidate.changes,
+          "knowledge_compilation",
+          undefined,
+          candidate.dependencies,
+          candidate.review,
+        ),
+        knowledge_review: candidate.review,
+      };
+    }
     case "task.draft":
       return propose(ctx, [knowledge.taskDocument(ctx, args)], "task_capture");
     case "horizon": {
@@ -171,8 +207,18 @@ export async function dispatch(
       return doctor(ctx);
     case "environment":
       return environment(args);
-    case "integrations.status":
-      return redact(integrationStatus(ctx));
+    case "integrations.status": {
+      const status = redact(integrationStatus(ctx)),
+        native = await (
+          await import("../integrations/service.ts")
+        ).sourceTool(ctx, "integration_status");
+      for (const item of native.integrations)
+        status.integrations[item.instance] = {
+          integration: item.provider,
+          ...item,
+        };
+      return status;
+    }
     case "capability":
       return {
         status: "observed",

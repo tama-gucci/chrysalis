@@ -72,6 +72,42 @@ export function schemaFor(relative: string): string {
   if (/^Daily\/\d{4}-\d\d-\d\d\.md$/.test(relative)) return "daily_note";
   throw new Error("Only authoritative Markdown collections can be changed");
 }
+
+/** Mutation paths retain their on-disk spelling; case/short-name aliases cannot skip record policy. */
+export function recordPath(vault: string, relative: string): string {
+  schemaFor(relative);
+  const target = confined(vault, relative);
+  const reserved = [
+    "System/Memory.md",
+    "System/Life-Roadmap.md",
+    "System/Knowledge-Index.md",
+    "System/Knowledge-Log.md",
+  ];
+  if (
+    reserved.some(
+      (name) =>
+        name.toLowerCase() === relative.toLowerCase() && name !== relative,
+    )
+  )
+    throw new Error(
+      "noncanonical_record_path: use the canonical System filename",
+    );
+  let current = vault;
+  for (const part of relative.split("/")) {
+    const entries = exists(current) ? fs.readdirSync(current) : [];
+    const next = path.join(current, part);
+    if (
+      (entries.some((name) => name.toLowerCase() === part.toLowerCase()) ||
+        exists(next)) &&
+      !entries.includes(part)
+    )
+      throw new Error(
+        "noncanonical_record_path: use exact on-disk entry names",
+      );
+    current = next;
+  }
+  return target;
+}
 const ajv = new Ajv2020({
   allErrors: true,
   strict: false,

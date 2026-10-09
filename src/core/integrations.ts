@@ -17,6 +17,7 @@ export const ADAPTERS: Record<string, string[]> = {
   "local-filesystem": ["ingestion.discover", "ingestion.read"],
   "google-drive": ["ingestion.discover", "ingestion.read"],
   "google-tasks": ["ingestion.discover", "ingestion.read"],
+  "google-health": ["health.morning_context"],
   "google-maps": ["location.resolve", "routing.estimate"],
   "obsidian-maps": ["visualization.map_projection"],
   "tasknotes-calendar": ["calendar.commitments_read"],
@@ -103,7 +104,9 @@ export function integrationStatus(ctx: RuntimeContext) {
     const fixture = value.export_path ?? value.fixture_path,
       fixtureAvailable =
         typeof fixture === "string" && exists(rejectRedirects(fixture)),
-      credentialsPresent = !!credential(ctx, value.secret_ref);
+      credentialsPresent = value.native_authorization
+        ? false
+        : !!credential(ctx, value.secret_ref);
     instances[id] = {
       integration: value.integration,
       installed,
@@ -113,9 +116,7 @@ export function integrationStatus(ctx: RuntimeContext) {
       authenticated: fixture ? false : null,
       available:
         configured &&
-        (fixtureAvailable ||
-          value.integration === "obsidian-maps" ||
-          (value.integration === "google-maps" && credentialsPresent)),
+        (fixtureAvailable || value.integration === "obsidian-maps"),
       verified: false,
       reason: !installed
         ? "unsupported"
@@ -190,6 +191,56 @@ export async function capability(
     };
   if (!["read-only", "read_only"].includes(instance.access ?? "read-only"))
     throw new Error("Provider is not read-only");
+  if (instance.native_authorization) {
+    const { sourceTool } = await import("../integrations/service.ts");
+    const tool = {
+      "ingestion.discover": "read_task_inbox",
+      "ingestion.read": "read_task_inbox",
+      "health.morning_context": "get_morning_context",
+      "location.resolve": "resolve_location",
+      "routing.estimate": "estimate_travel_times",
+    }[name];
+    if (!tool) return { status: "unavailable", reason: "unsupported" };
+    if (name.startsWith("ingestion.")) {
+      allowed(request, [
+        "source_alias",
+        "page_size",
+        "page_token",
+        "selected_ids",
+        "include_completed",
+      ]);
+      const source = sourceConfiguration(ctx, request.source_alias);
+      if (source.instance !== selected.instance)
+        throw Error("source_binding_mismatch");
+      return sourceTool(ctx, tool, {
+        instance: selected.instance,
+        list_id: source.collection_id,
+        ...(request.page_size !== undefined
+          ? { page_size: request.page_size }
+          : {}),
+        ...(request.page_token !== undefined
+          ? { cursor: request.page_token }
+          : {}),
+        ...(request.selected_ids !== undefined
+          ? { selected_ids: request.selected_ids }
+          : {}),
+        ...(request.include_completed !== undefined
+          ? { include_completed: request.include_completed }
+          : {}),
+      });
+    }
+    allowed(
+      request,
+      name === "health.morning_context"
+        ? []
+        : name === "location.resolve"
+          ? ["query", "region_code"]
+          : ["pairs"],
+    );
+    return sourceTool(ctx, tool, { ...request, instance: selected.instance });
+  }
+  if (name === "health.morning_context")
+    return { status: "unavailable", reason: "native_source_setup_required" };
   if (name === "visualization.map_projection") {
     allowed(request, ["tasks"]);
     if (!Array.isArray(request.tasks) || request.tasks.length > 500)
@@ -232,64 +283,11 @@ export async function capability(
       return { status: "unavailable", reason: "fixture_unavailable" };
     response = readJSON(instance.export_path);
   } else {
-    const key = credential(ctx, instance.secret_ref);
-    if (!key) return { status: "unavailable", reason: "credentials_missing" };
-    // Live transport is opt-in in private operator configuration. No request can enable it.
-    if (instance.live_read_enabled !== true)
-      return { status: "unavailable", reason: "live_transport_not_enabled" };
-    const isLocation = name === "location.resolve",
-      endpoint = isLocation
-        ? "https://places.googleapis.com/v1/places:searchText"
-        : "https://routes.googleapis.com/directions/v2:computeRoutes";
-    const body = isLocation
-      ? {
-          textQuery: request.query,
-          languageCode: request.language_code,
-          regionCode: request.region_code,
-        }
-      : {
-          origin: { placeId: request.origin?.place_id },
-          destination: { placeId: request.destination?.place_id },
-          travelMode: {
-            driving: "DRIVE",
-            walking: "WALK",
-            bicycling: "BICYCLE",
-            transit: "TRANSIT",
-          }[request.travel_mode ?? "driving"],
-          ...(request.arrival_by ? { arrivalTime: request.arrival_by } : {}),
-          ...(request.departure_at
-            ? { departureTime: request.departure_at }
-            : {}),
-        };
-    const abort = AbortSignal.any([
-      AbortSignal.timeout(10000),
-      ...(ctx.signal ? [ctx.signal] : []),
-    ]);
-    const result = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": key,
-        "X-Goog-FieldMask": isLocation
-          ? "places.id,places.displayName,places.formattedAddress,places.location"
-          : "routes.duration,routes.distanceMeters",
-      },
-      body: JSON.stringify(body),
-      signal: abort,
-    });
-    if (!result.ok)
-      return {
-        status: "unavailable",
-        reason: "provider_http_" + result.status,
-      };
-    const chunks: Uint8Array[] = [];
-    let size = 0;
-    for await (const chunk of result.body! as any) {
-      if ((size += chunk.length) > 1024 * 1024)
-        throw new Error("Provider response limit exceeded");
-      chunks.push(chunk);
-    }
-    response = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    return {
+      status: "unavailable",
+      reason: "native_source_setup_required",
+      operator_command: "/chrysalis integrations setup",
+    };
   }
   if (name === "location.resolve") {
     if (!Array.isArray(response.places))

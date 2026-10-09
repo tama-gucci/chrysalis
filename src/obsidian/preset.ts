@@ -120,7 +120,7 @@ export function preset(timezone: string, id: string) {
       taskTag: fields.identification.tag,
       taskIdentificationMethod: "tag",
       excludedFolders:
-        "TaskNotes/Archive, _templates, _types, Projects/_templates, Slipbox/_templates, Environments/_templates",
+        "TaskNotes/Archive, Attachments/Originals, _templates, _types, Projects/_templates, Slipbox/_templates, Environments/_templates",
       defaultTaskStatus: "todo",
       defaultTaskPriority: "normal",
       taskFilenameFormat: "zettel",
@@ -388,7 +388,7 @@ export function preset(timezone: string, id: string) {
   result.set(
     "Dashboard.md",
     Buffer.from(
-      '# chrysalis\n\n[[Getting Started]] · [[TaskNotes/Views/tasks-default.base|Tasks]] · [[TaskNotes/Views/agenda-default.base|Agenda]] · [[TaskNotes/Views/calendar-default.base|Calendar]] · [[TaskNotes/Views/projects.base|Projects]] · [[TaskNotes/Views/pomodoro-stats.base|Sessions]]\n\n## Today\n\n```dataview\nTABLE priority, scheduled, timeEstimate, modality\nFROM "TaskNotes/Tasks"\nWHERE status != "done" AND status != "archived" AND !archived AND date(scheduled).day = date(today).day AND date(scheduled).month = date(today).month AND date(scheduled).year = date(today).year\nSORT scheduled ASC\n```\n\n## Backlog\n\n```dataview\nTABLE priority, due, projects, timeEstimate\nFROM "TaskNotes/Tasks"\nWHERE status != "done" AND status != "archived" AND !archived\nSORT priority ASC, due ASC\n```\n\n## Knowledge\n\n```dataview\nLIST FROM "Slipbox"\nWHERE file.name != "README"\nSORT file.mtime DESC\nLIMIT 10\n```\n',
+      '# chrysalis\n\n[[Getting Started]] · [[TaskNotes/Views/tasks-default.base|Tasks]] · [[TaskNotes/Views/agenda-default.base|Agenda]] · [[TaskNotes/Views/calendar-default.base|Calendar]] · [[TaskNotes/Views/projects.base|Projects]] · [[TaskNotes/Views/pomodoro-stats.base|Sessions]]\n\n## Today\n\n```dataview\nTABLE priority, scheduled, timeEstimate, modality\nFROM "TaskNotes/Tasks"\nWHERE status != "done" AND status != "archived" AND !archived AND date(scheduled).day = date(today).day AND date(scheduled).month = date(today).month AND date(scheduled).year = date(today).year\nSORT scheduled ASC\n```\n\n## Backlog\n\n```dataview\nTABLE priority, due, projects, timeEstimate\nFROM "TaskNotes/Tasks"\nWHERE status != "done" AND status != "archived" AND !archived\nSORT priority ASC, due ASC\n```\n\n## Knowledge\n\n[[System/Knowledge-Index|Knowledge index]]\n\n```dataview\nLIST FROM "Slipbox"\nWHERE file.name != "README"\nSORT file.mtime DESC\nLIMIT 10\n```\n',
     ),
   );
   result.set(
