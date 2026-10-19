@@ -58,7 +58,7 @@ choice IDs and deterministic grading. The authored answer key is not independent
 During onboarding, teach unfamiliar choices and offer small trials before proposing goals.
 
 Lesson capture is opt-in, bounded and private. It retains focused text and quiz responses rather
-than raw tool streams. Old entries are dropped to remain within the capture bound. Durable lesson
+than raw tool streams. New captures stop at the 100-file bound; use native retention review to remove eligible old entries. Durable lesson
 notes, roadmap choices and every new atomic note still require their normal native review.
 
 The pinned Blackhole engine supplies current-session recall/compaction and optional observational

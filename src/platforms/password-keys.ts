@@ -75,7 +75,12 @@ export class OSAccountPasswordKeys implements PasswordKeys {
       else {
         const reference = "password-key-" + randomUUID();
         await store.put(reference, { api_key: value });
-        atomicJSON(metadata, { version: 1, backend, reference });
+        try {
+          atomicJSON(metadata, { version: 1, backend, reference });
+        } catch (error) {
+          await store.remove(reference);
+          throw error;
+        }
       }
       return key;
     } catch {

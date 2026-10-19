@@ -8,8 +8,10 @@ export interface Quiz {
 export function validateQuiz(q: Quiz): Quiz {
   if (
     typeof q.question !== "string" ||
+    !q.question.trim() ||
     q.question.length > 3000 ||
     typeof q.explanation !== "string" ||
+    !q.explanation.trim() ||
     q.explanation.length > 6000 ||
     typeof q.multiple !== "boolean" ||
     !Array.isArray(q.options) ||
@@ -23,6 +25,7 @@ export function validateQuiz(q: Quiz): Quiz {
       !/^[a-z0-9-]{1,40}$/.test(o.id) ||
       ids.has(o.id) ||
       typeof o.label !== "string" ||
+      !o.label.trim() ||
       o.label.length > 1000 ||
       typeof o.correct !== "boolean"
     )

@@ -228,7 +228,8 @@ execution until reload; it never commits or pushes.
 The public Pi model runtime owns provider/authentication behavior for main chat and background
 routes. Memory invokes modelRegistry.streamSimple. A bounded private local stream route connects
 each fixed-role child to that same parent runtime, without loading provider packages in the child.
-The child receives one public chat-model definition and no provider credentials, hooks or tools.
+The child receives one public chat-model definition and fixed-role workspace/research/control
+tools. Provider credentials, hooks and tools are not imported.
 Missing or changed routes fail without fallback. Native provider/UI packages remain independently
 installed; see [compatibility and host limits](docs/compatibility.md).
 
@@ -246,7 +247,7 @@ The pinned nix-agent server performs installed-system operations; disko-install 
 installation; upstream raw EFI images provide writable USB persistence. Flake-parts/import-tree,
 Facter and Home Manager retain their existing responsibilities.
 
-~~~mermaid
+```mermaid
 flowchart LR
     Native[Native outcome and exact target] --> Pi[Ordinary Pi and short rules]
     Pi --> Files[Editable Nix feature modules]
@@ -254,7 +255,7 @@ flowchart LR
     Upstream --> Observe[Running closure / profile / boot evidence]
     Observe --> Receipt[Private durable receipts]
     Receipt --> Ledger[Fixed machine ledger in selected vault]
-~~~
+```
 
 The machine ledger is the sole outcome-approved vault exception. Its writer accepts stored
 receipt events, escapes content, checks ownership/revisions and deduplicates stable event IDs.

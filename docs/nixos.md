@@ -4,15 +4,15 @@ Chrysalis remains an ordinary Pi package. Its optional NixOS module adds a termi
 
 ## Reused components
 
-| Responsibility | Upstream implementation | Chrysalis addition |
-| --- | --- | --- |
-| Writable EFI USB image and growth | [NixOS disk-image module](https://github.com/NixOS/nixpkgs/blob/fe13242281a67641c0102cdb1087f0ebe586c7df/nixos/modules/virtualisation/disk-image.nix) | Installer profile |
-| Terminal session | Cage, Ghostty, tmux and [Pi](https://github.com/earendil-works/pi) | Normal package loading and startup |
-| User tools | [Home Manager Pi module](https://github.com/nix-community/home-manager/blob/640725978b99076e18e069f6e7d2959124584f8f/modules/programs/pi-coding-agent.nix) | Thin CLI extension flag; mutable settings stay unmanaged |
-| Disk setup and installation | [disko-install](https://github.com/nix-community/disko) | Exact native disk scope and recovery receipts |
-| Hardware behavior | NixOS Facter and [nixos-hardware](https://github.com/NixOS/nixos-hardware) | Discover facts; select applicable upstream modules |
-| Build, diff, activation and generations | [nix-agent 0.13.0](https://github.com/JEFF7712/nix-agent/tree/dc12e28b1917d677bf5bf9f6ea607001b0591e1c) | Native outcome scope and observed-result checks |
-| Configuration organization | flake-parts and import-tree | A minimal seed and the user's named features |
+| Responsibility                          | Upstream implementation                                                                                                                                    | Chrysalis addition                                                                   |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Writable EFI USB image and growth       | [NixOS disk-image module](https://github.com/NixOS/nixpkgs/blob/fe13242281a67641c0102cdb1087f0ebe586c7df/nixos/modules/virtualisation/disk-image.nix)      | Installer profile                                                                    |
+| Terminal session                        | Cage, Ghostty, tmux and [Pi](https://github.com/earendil-works/pi)                                                                                         | Normal package loading and startup                                                   |
+| User tools                              | [Home Manager Pi module](https://github.com/nix-community/home-manager/blob/640725978b99076e18e069f6e7d2959124584f8f/modules/programs/pi-coding-agent.nix) | Thin CLI extension flag; mutable settings stay unmanaged                             |
+| Disk setup and installation             | [disko-install](https://github.com/nix-community/disko)                                                                                                    | Exact native disk scope and recovery receipts                                        |
+| Hardware behavior                       | NixOS Facter and user-supplied hardware modules                                                                                                            | Discover measured facts; add applicable upstream modules in the target configuration |
+| Build, diff, activation and generations | [nix-agent 0.13.0](https://github.com/JEFF7712/nix-agent/tree/dc12e28b1917d677bf5bf9f6ea607001b0591e1c)                                                    | Native outcome scope and observed-result checks                                      |
+| Configuration organization              | flake-parts and import-tree                                                                                                                                | A minimal seed and the user's named features                                         |
 
 Pi owns MCP, codemode, authentication and the conversation. Native administration, durable receipts and the narrow ledger projection are the integration-specific code. The NixOS option namespace is programs.chrysalis-pi because programs.chrysalis already names another upstream application.
 
@@ -22,12 +22,12 @@ The flake exports nixosModules.default, nixosModules.installer, homeManagerModul
 
 Run these on an x86_64 Linux builder:
 
-~~~sh
+```sh
 nix flake check --no-build --all-systems
 nix build .#checks.x86_64-linux.system --out-link /tmp/chrysalis-module-test -L
 nix build .#installer --out-link /tmp/chrysalis-installer -L
 python3 nix/tests/raw-boot.py --image /tmp/chrysalis-installer --work /tmp/chrysalis-acceptance-new
-~~~
+```
 
 The acceptance directory must be new and empty. QEMU, OVMF and Python pexpect are CI dependencies; runtime Chrysalis needs no Python. The image is a writable raw EFI image with upstream first-boot partition/filesystem growth. Only an image that passes acceptance is packaged as a compressed image with SHA-256, input lock and source-commit record.
 
@@ -37,7 +37,7 @@ Home Manager loads the normal Pi package with --extension and leaves mutable aut
 
 ## User flow
 
-~~~mermaid
+```mermaid
 flowchart TD
     USB[Flash persistent USB image] --> UI[Cage / Ghostty / tmux / ordinary Pi]
     UI --> Network[Connect network and sign in through native controls]
@@ -49,7 +49,7 @@ flowchart TD
     Handoff --> Boot[Boot installed encrypted system]
     Boot --> Vault[Existing native vault setup and approval]
     Vault --> Ledger[Project machine receipt events into system ledger]
-~~~
+```
 
 Use /chrysalis system for an outcome, /chrysalis system status for readiness, and /chrysalis system reconcile after interruption or first boot. The model can request the same native setup through chrysalis_system; it cannot approve itself. Technical facts come from tools. Account preferences, target selection and secrets come from the operator.
 
@@ -63,7 +63,7 @@ The configuration, vault and private state must be disjoint. Native onboarding r
 
 Private write-ahead receipts distinguish approval, build, installation, activation, uncertainty and verification. The fixed ledger is System/System-Ledger.md in the native-selected initialized vault. Projection accepts neither arbitrary paths nor model Markdown. Event identifiers prevent duplicate projection, writer locks protect receipt binding, and raw revisions preserve concurrent ledger edits. Other personal records retain their existing exact approvals.
 
-~~~mermaid
+```mermaid
 flowchart LR
     Approved[Native approved outcome] --> Editing[Edit ordinary configuration]
     Editing --> Diff[Completed fresh diff for unchanged bytes]
@@ -73,7 +73,7 @@ flowchart LR
     Verified --> Ledger[Receipt-derived ledger]
     Uncertain --> Ledger
     Uncertain --> Recovery[Inspect and choose explicit recovery]
-~~~
+```
 
 The writable USB retains nonsecret checkpoints and sessions. Live provider credentials and installation secrets stay in runtime storage. Native handoff copies selected Pi auth/settings privately to the installed account; a hash-only transfer journal supports interruption during copying without putting provider-secret contents on the USB. Retry replaces only bytes belonging to its prior copy intent and preserves independent target edits. A completed handoff never recopies over later installed state.
 
@@ -90,3 +90,7 @@ The image job is manual-only. GitHub requires a workflow using workflow_dispatch
 The VM harness checks actual Pi startup, USB shutdown persistence, dedicated-disk installation, interruption before and during handoff, encrypted target boot, vault setup, real nix-agent activation/rollback, failed build behavior, ledger deduplication and an unchanged sentinel disk. It uses native fixture approvals and backend primitives; it does not run a model through every human dialog.
 
 Provider login, the Obsidian GUI return path, physical Surface/NVIDIA behavior and firmware compatibility still need their own acceptance. Test only disposable VM disks until the image gate passes. Generic images and CI artifacts must contain no personal vault, provider account or machine-specific runtime state.
+
+Nix images, packages and modules build from the reviewed Git flake, which includes its npm lockfile.
+The portable npm archive contains the runtime Nix rules and target templates only; use the Git
+source for Nix builds.

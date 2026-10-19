@@ -91,6 +91,7 @@ export interface SystemOperation {
   build?: { job: string; source: string; storePath?: string };
   installationId?: string;
   vault?: { root: string; id: string };
+  ledgerInstalled?: boolean;
   recovery?: { path: string; generation: number };
   installation?: { user: string; name: string; zone: string };
   pending?: {
@@ -198,7 +199,7 @@ export function systemRoot(c: SystemConfig) {
 }
 export function configurationIdentity(root: string): string {
   rejectRedirects(root);
-  const entries: [string, string][] = [];
+  const entries: [string, string, number][] = [];
   let count = 0,
     total = 0;
   function walk(dir: string) {
@@ -214,7 +215,11 @@ export function configurationIdentity(root: string): string {
       else if (s.isFile() && s.nlink === 1) {
         if ((total += s.size) > 32 * 1024 * 1024)
           throw Error("Configuration inventory exceeds byte limit");
-        entries.push([path.relative(root, p), sha256(raw(p, 8 * 1024 * 1024))]);
+        entries.push([
+          path.relative(root, p),
+          sha256(raw(p, 8 * 1024 * 1024)),
+          s.mode & 0o111,
+        ]);
       } else throw Error("Configuration contains a redirect or special file");
     }
   }
@@ -406,10 +411,11 @@ export function approveSystem(
     if (selectedVault) {
       const root = vaultRoot(selectedVault);
       assertSystemVault(c, root);
-      op.vault = {
-        root,
-        id: readJSON(confined(root, ".chrysalis-vault.json")).vault_id,
-      };
+      if (c.mode === "installed")
+        op.vault = {
+          root,
+          id: readJSON(confined(root, ".chrysalis-vault.json")).vault_id,
+        };
     }
     op.events.push({
       id: randomUUID(),
@@ -602,85 +608,82 @@ const prose = (s: string) =>
 export async function projectSystemLedger(
   c: SystemConfig,
   selectedVault: string,
+  authorize: () => SystemOperation = () => requireSystemScope(c),
 ) {
+  if (c.mode !== "installed")
+    throw Error(
+      "System ledger binding waits for the installed boot and native vault onboarding",
+    );
+  const expected = authorize().id;
   const vault = vaultRoot(selectedVault);
   assertSystemVault(c, vault);
   const marker = readJSON(confined(vault, ".chrysalis-vault.json"));
   return withLock(
     confined(systemRoot(c), "locks"),
     "ledger-" + marker.vault_id,
-    async () => {
-      const directory = confined(systemRoot(c), "operations");
-      const operations = exists(directory)
-        ? fs
-            .readdirSync(directory)
-            .filter((p) => /^[a-f0-9-]{36}\.json$/.test(p))
-            .sort()
-        : [];
-      const file = confined(vault, LEDGER_PATH),
-        before = exists(file) ? raw(file, 8 * 1024 * 1024) : null;
-      let output = before?.toString("utf8") ?? LEDGER_HEADER;
-      if (!output.startsWith(LEDGER_HEADER))
-        throw Error(
-          "Existing system ledger is not machine-owned; preserve and review it",
-        );
-      let appended = 0;
-      for (const name of operations) {
-        const id = name.slice(0, -5);
-        const op = await withLock(confined(systemRoot(c), "locks"), id, () => {
-          const receipt = operationFile(c, id),
-            bytes = raw(receipt, 1024 * 1024);
-          const current = JSON.parse(bytes.toString()) as SystemOperation;
+    () =>
+      withLock(confined(systemRoot(c), "locks"), expected, () =>
+        withSyncLock(systemRoot(c), "outcome-approval", () => {
+          const op = authorize();
           if (
-            current.id !== id ||
-            current.version !== 1 ||
-            !current.approvedAt ||
-            !Array.isArray(current.events)
+            op.id !== expected ||
+            currentOperation(c)?.id !== expected ||
+            ["closed", "failed"].includes(op.phase)
           )
-            throw Error("Invalid ledger receipt");
+            throw Error(
+              "System ledger outcome changed; native review required",
+            );
           if (
-            current.vault &&
-            (current.vault.root !== vault ||
-              current.vault.id !== marker.vault_id)
+            op.vault &&
+            (op.vault.root !== vault || op.vault.id !== marker.vault_id)
           )
-            return undefined;
-          if (!current.vault) {
-            current.vault = { root: vault, id: marker.vault_id };
-            atomic(receipt, canonical(current) + "\n", sha256(bytes));
+            return { status: "pending-vault", appended: 0, path: LEDGER_PATH };
+          const file = confined(vault, LEDGER_PATH),
+            before = exists(file) ? raw(file, 8 * 1024 * 1024) : null;
+          let output = before?.toString("utf8") ?? LEDGER_HEADER;
+          if (!output.startsWith(LEDGER_HEADER))
+            throw Error(
+              "Existing system ledger is not machine-owned; preserve and review it",
+            );
+          let appended = 0;
+          for (const event of op.events) {
+            const token = "<!-- chrysalis-system-event:" + event.id + " -->";
+            if (output.includes(token)) continue;
+            output +=
+              "\n" +
+              token +
+              "\n## " +
+              prose(event.at) +
+              " - " +
+              prose(event.phase) +
+              "\n\nRequest: " +
+              prose(op.goal) +
+              "\n\nOperation: " +
+              prose(op.id) +
+              "; host: " +
+              prose(op.host) +
+              ".\n\nObserved evidence: " +
+              prose(canonical(event.evidence)) +
+              "\n";
+            appended++;
+          }
+          // No await while holding shared approval authority: close/new approvals and receipt
+          // writers cannot interleave binding or the final compare-and-swap append.
+          if (authorize().id !== expected)
+            throw Error("System ledger outcome changed");
+          if (!op.vault) {
+            const receipt = operationFile(c, expected),
+              bytes = raw(receipt, 1024 * 1024);
+            op.vault = { root: vault, id: marker.vault_id };
+            atomic(receipt, canonical(op) + "\n", sha256(bytes));
             syncDirectoryTree(path.dirname(receipt), externalState(c.state));
           }
-          return current;
-        });
-        if (!op) continue;
-        for (const event of op.events) {
-          const token = "<!-- chrysalis-system-event:" + event.id + " -->";
-          if (output.includes(token)) continue;
-          output +=
-            "\n" +
-            token +
-            "\n## " +
-            prose(event.at) +
-            " - " +
-            prose(event.phase) +
-            "\n\n";
-          output +=
-            "Request: " +
-            prose(op.goal) +
-            "\n\nOperation: " +
-            prose(op.id) +
-            "; host: " +
-            prose(op.host) +
-            ".\n\n";
-          output +=
-            "Observed evidence: " + prose(canonical(event.evidence)) + "\n";
-          appended++;
-        }
-      }
-      if (appended) {
-        atomic(file, output, before === null ? null : sha256(before));
-        syncDirectoryTree(path.dirname(file), vault);
-      }
-      return { status: "verified", appended, path: LEDGER_PATH };
-    },
+          if (appended) {
+            atomic(file, output, before === null ? null : sha256(before));
+            syncDirectoryTree(path.dirname(file), vault);
+          }
+          return { status: "verified", appended, path: LEDGER_PATH };
+        }),
+      ),
   );
 }

@@ -120,6 +120,13 @@ export function installAssistantSettings(pi: ExtensionAPI) {
     }
     if (feature === "Gemini Web (deferred)") {
       if (
+        process.platform !== "linux" ||
+        Number(process.versions.node.split(".")[0]) < 24
+      ) {
+        ctx.ui.notify("Managed media setup requires Linux Node 24.", "warning");
+        return;
+      }
+      if (
         await ctx.ui.confirm(
           "Prepare optional media client?",
           "Install pinned web-access privately. No sign-in, cookie reads, video requests or paid API fallback. Gemini acceptance remains deferred.",
@@ -157,6 +164,16 @@ export function installAssistantSettings(pi: ExtensionAPI) {
       return;
     }
     if (enable === "Enable" && ["browser", "research"].includes(feature)) {
+      if (
+        process.platform !== "linux" ||
+        Number(process.versions.node.split(".")[0]) < 24
+      ) {
+        ctx.ui.notify(
+          "Managed browser setup requires Linux Node 24. Other capabilities remain available.",
+          "warning",
+        );
+        return;
+      }
       try {
         packRoot(state, "browser");
       } catch {
@@ -181,12 +198,13 @@ export function installAssistantSettings(pi: ExtensionAPI) {
           enable +
           ". Account sign-in and vault record adoption require their own controls.",
       )
-    )
+    ) {
       saveProfile(state, p);
-    ctx.ui.notify(
-      "Settings saved. Use /reload before starting new optional work.",
-      "info",
-    );
+      ctx.ui.notify(
+        "Settings saved. Use /reload before starting new optional work.",
+        "info",
+      );
+    }
   }
   async function workspace(ctx: ExtensionCommandContext) {
     const choice = await ctx.ui.select("Execution workspace", [

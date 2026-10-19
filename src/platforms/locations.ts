@@ -208,7 +208,17 @@ export function directorySuggestions(
     return Object.entries(phrases)
       .filter(
         ([phrase, key]) =>
-          normalized(phrase).startsWith(query) && !!locations[key],
+          normalized(phrase).startsWith(query) &&
+          !!locations[key] &&
+          (() => {
+            try {
+              return fs
+                .statSync(rejectRedirects(locations[key]!))
+                .isDirectory();
+            } catch {
+              return false;
+            }
+          })(),
       )
       .map(([label, key]) => ({ label, value: locations[key]! }))
       .slice(0, limit);

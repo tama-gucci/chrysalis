@@ -4,7 +4,10 @@ import { createRequire } from "node:module";
 import { createJiti } from "jiti";
 import { Type } from "typebox";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { defaultStateRoot, selectedContext } from "../src/storage/context.ts";
+import {
+  defaultStateRoot,
+  optionalSelectedContext,
+} from "../src/storage/context.ts";
 import {
   PACKAGE_ROOT,
   inside,
@@ -37,11 +40,7 @@ async function risk(command: string) {
   ]);
 }
 function vault(): string | undefined {
-  try {
-    return selectedContext().vault;
-  } catch {
-    return undefined;
-  }
+  return optionalSelectedContext()?.vault;
 }
 const quote = (s: string) => "'" + s.replace(/'/g, "'\\''") + "'";
 /** Constant program executes inside the namespace. User paths/data are encoded, never shell code. */
@@ -50,7 +49,7 @@ const root='/workspace'; if(typeof a.path!=='string'||a.path.includes('\\\\')||a
 const f=path.resolve(root,a.path);if(f!==root&&!f.startsWith(root+'/'))throw Error('Path escapes workspace');
 let p=f;while(p!==root){if(fs.existsSync(p)){const s=fs.lstatSync(p);if(s.isSymbolicLink()||(!s.isDirectory()&&!s.isFile())||s.isFile()&&s.nlink!==1)throw Error('Unsupported link or special file');}p=path.dirname(p);}
 if(a.op==='read'){const fd=fs.openSync(f,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW|fs.constants.O_NONBLOCK);try{const s=fs.fstatSync(fd);if(!s.isFile()||s.size>1048576)throw Error('Read requires a bounded regular file');const t=fs.readFileSync(fd,'utf8');const lines=t.split('\\n');console.log(lines.slice(a.offset-1,a.offset-1+a.limit).join('\\n'));}finally{fs.closeSync(fd)}}
-else {fs.mkdirSync(path.dirname(f),{recursive:true});let content=a.content;if(a.op==='edit'){const t=fs.readFileSync(f,'utf8');if(t.length>1048576||!a.oldText||t.split(a.oldText).length!==2)throw Error('Edit must match exactly once');content=t.replace(a.oldText,a.newText)}if(typeof content!=='string'||Buffer.byteLength(content)>1048576)throw Error('Write limit');const temp=f+'.pending-'+require('crypto').randomUUID();try{fs.writeFileSync(temp,content,{flag:'wx',mode:0o600});fs.renameSync(temp,f);console.log('Workspace file written')}finally{if(fs.existsSync(temp))fs.unlinkSync(temp)}}`;
+else {fs.mkdirSync(path.dirname(f),{recursive:true});let content=a.content;if(a.op==='edit'){const t=fs.readFileSync(f,'utf8');if(t.length>1048576||!a.oldText||t.split(a.oldText).length!==2)throw Error('Edit must match exactly once');content=t.replace(a.oldText,a.newText)}if(typeof content!=='string'||Buffer.byteLength(content)>1048576)throw Error('Write limit');const temp=f+'.pending-'+require('crypto').randomUUID();try{fs.writeFileSync(temp,content,{flag:'wx',mode:a.op==='edit'?fs.statSync(f).mode&0o777:0o600});fs.renameSync(temp,f);console.log('Workspace file written')}finally{if(fs.existsSync(temp))fs.unlinkSync(temp)}}`;
 function relativeInput(input: string) {
   if (input.split(/[\\/]/).some(excluded))
     throw Error("Protected workspace file");

@@ -15,7 +15,7 @@ import {
   atomic,
 } from "../platforms/filesystem.ts";
 import { excluded } from "./workspace.ts";
-import { assertWriterLease } from "./lease.ts";
+import { assertWriterLease, processStart } from "./lease.ts";
 import { delegationReady, serviceEnvironment } from "./cgroup.ts";
 
 const trustedHelpers = ["job.mjs", "workspace-export.mjs"].map((name) => {
@@ -149,108 +149,111 @@ export async function runIsolated(
           "Runner source changed; reload and review the new execution policy first",
         );
     const sealed = path.join(privateRoot, "helpers-" + randomUUID());
-    fs.mkdirSync(sealed, { mode: 0o700 });
-    for (const helper of trustedHelpers)
-      atomic(path.join(sealed, helper.name), helper.bytes, null);
-    const image = snapshotWorkspace(w.root, privateRoot);
+    let image: ReturnType<typeof snapshotWorkspace> | undefined;
     const received = path.join(privateRoot, randomUUID());
-    fs.mkdirSync(received, { mode: 0o700 });
     const filter = path.join(privateRoot, randomUUID() + ".bpf");
-    fs.writeFileSync(
-      filter,
-      syscallPolicy(process.arch, w.network === "loopback"),
-      { mode: 0o600, flag: "wx" },
-    );
     const jobFile = received + ".job.json",
       inputFile = received + ".input",
       controlFile = received + ".control";
-    const node = runtime.node;
-    const binds = runtimeBindings(runtime);
-    binds.push("--ro-bind", node, "/runner/node");
-    const workspaceArgs = options.readOnly
-      ? ["--ro-bind", image.directory, "/workspace"]
-      : [
-          "--ro-bind",
-          image.directory,
-          "/input",
-          "--size",
-          "67108864",
-          "--tmpfs",
-          "/workspace",
-          "--ro-bind",
-          path.join(sealed, "workspace-export.mjs"),
-          "/runner/export.mjs",
-        ];
-    const script = options.readOnly
-      ? command
-      : 'cp -a /input/. /workspace/ || exit 125; /bin/bash --noprofile --norc -c "$1"; result=$?; node /runner/export.mjs > /runner/results || exit 125; exit "$result"';
-    const args = [
-      "--unshare-all",
-      "--unshare-user",
-      "--disable-userns",
-      "--new-session",
-      "--die-with-parent",
-      ...binds,
-      "--proc",
-      "/proc",
-      "--dev",
-      "/dev",
-      "--size",
-      "33554432",
-      "--tmpfs",
-      "/tmp",
-      "--dir",
-      "/tmp/home",
-      ...workspaceArgs,
-      "--bind-fd",
-      "4",
-      "/runner/results",
-      "--chdir",
-      "/workspace",
-      "--clearenv",
-      "--setenv",
-      "PATH",
-      "/runner:/usr/bin:/bin",
-      "--setenv",
-      "HOME",
-      "/tmp/home",
-      "--setenv",
-      "TMPDIR",
-      "/tmp",
-      "--setenv",
-      "LANG",
-      "C.UTF-8",
-      "--seccomp",
-      "3",
-      "/usr/bin/prlimit",
-      "--nofile=128",
-      "--fsize=134217728",
-      "--cpu=300",
-      "--as=2147483648",
-      "/bin/bash",
-      "--noprofile",
-      "--norc",
-      "-c",
-      script,
-      "chrysalis-task",
-      ...(options.readOnly ? [] : [command]),
-    ];
-    const started = Date.now(),
-      limit = 65536;
     let retain = false;
-    const unit = "chrysalis-job-" + randomUUID();
-    fs.writeFileSync(inputFile, options.input ?? "", {
-      mode: 0o600,
-      flag: "wx",
-    });
-    atomicJSON(jobFile, {
-      args,
-      bwrap: runtime.bwrap,
-      filter,
-      input: inputFile,
-      control: controlFile,
-    });
     try {
+      fs.mkdirSync(sealed, { mode: 0o700 });
+      for (const helper of trustedHelpers)
+        atomic(path.join(sealed, helper.name), helper.bytes, null);
+      image = snapshotWorkspace(w.root, privateRoot);
+      fs.mkdirSync(received, { mode: 0o700 });
+      fs.writeFileSync(
+        filter,
+        syscallPolicy(process.arch, w.network === "loopback"),
+        { mode: 0o600, flag: "wx" },
+      );
+      const node = runtime.node;
+      const binds = runtimeBindings(runtime);
+      binds.push("--ro-bind", node, "/runner/node");
+      const workspaceArgs = options.readOnly
+        ? ["--ro-bind", image.directory, "/workspace"]
+        : [
+            "--ro-bind",
+            image.directory,
+            "/input",
+            "--size",
+            "67108864",
+            "--tmpfs",
+            "/workspace",
+            "--ro-bind",
+            path.join(sealed, "workspace-export.mjs"),
+            "/runner/export.mjs",
+          ];
+      const script = options.readOnly
+        ? command
+        : 'cp -a /input/. /workspace/ || exit 125; /bin/bash --noprofile --norc -c "$1"; result=$?; node /runner/export.mjs > /runner/results || exit 125; exit "$result"';
+      const args = [
+        "--unshare-all",
+        "--unshare-user",
+        "--disable-userns",
+        "--new-session",
+        "--die-with-parent",
+        ...binds,
+        "--proc",
+        "/proc",
+        "--dev",
+        "/dev",
+        "--size",
+        "33554432",
+        "--tmpfs",
+        "/tmp",
+        "--dir",
+        "/tmp/home",
+        ...workspaceArgs,
+        "--bind-fd",
+        "4",
+        "/runner/results",
+        "--chdir",
+        "/workspace",
+        "--clearenv",
+        "--setenv",
+        "PATH",
+        "/runner:/usr/bin:/bin",
+        "--setenv",
+        "HOME",
+        "/tmp/home",
+        "--setenv",
+        "TMPDIR",
+        "/tmp",
+        "--setenv",
+        "LANG",
+        "C.UTF-8",
+        "--seccomp",
+        "3",
+        "/usr/bin/prlimit",
+        "--nofile=128",
+        "--fsize=134217728",
+        "--cpu=300",
+        "--as=2147483648",
+        "/bin/bash",
+        "--noprofile",
+        "--norc",
+        "-c",
+        script,
+        "chrysalis-task",
+        ...(options.readOnly ? [] : [command]),
+      ];
+      const started = Date.now(),
+        limit = 65536;
+      const unit = "chrysalis-job-" + randomUUID();
+      fs.writeFileSync(inputFile, options.input ?? "", {
+        mode: 0o600,
+        flag: "wx",
+      });
+      atomicJSON(jobFile, {
+        args,
+        bwrap: runtime.bwrap,
+        ownerPid: process.pid,
+        ownerStart: processStart(process.pid),
+        filter,
+        input: inputFile,
+        control: controlFile,
+      });
       const result: RunResult = await new Promise((resolve, reject) => {
         const child = spawn(
           runtime.systemdRun,
@@ -286,13 +289,16 @@ export async function runIsolated(
         let output = Buffer.alloc(0),
           truncated = false,
           cancelled = false;
-        const stop = () => {
-          cancelled = true;
+        const killUnit = () => {
           spawnSync(
             runtime.systemctl,
             ["--user", "kill", "--signal=KILL", "--kill-whom=all", unit],
             { env: serviceEnvironment(), timeout: 3000, stdio: "ignore" },
           );
+        };
+        const stop = () => {
+          cancelled = true;
+          killUnit();
         };
         const timer = setTimeout(
           stop,
@@ -363,7 +369,7 @@ export async function runIsolated(
               throw Error("Output entry limit");
           } catch {
             invalid = true;
-            stop();
+            killUnit();
           }
         };
         const clean = () => {
@@ -383,8 +389,7 @@ export async function runIsolated(
           }
           if (
             !options.readOnly &&
-            !cancelled &&
-            (!final || invalid || encoded.length)
+            (invalid || (!cancelled && (!final || encoded.length)))
           )
             reject(
               Error(
@@ -432,10 +437,10 @@ export async function runIsolated(
       return result;
     } finally {
       fs.rmSync(sealed, { recursive: true, force: true });
-      fs.unlinkSync(filter);
+      fs.rmSync(filter, { force: true });
       for (const p of [jobFile, inputFile, controlFile])
         if (fs.existsSync(p)) fs.unlinkSync(p);
-      fs.rmSync(image.directory, { recursive: true, force: true });
+      if (image) fs.rmSync(image.directory, { recursive: true, force: true });
       if (!retain) fs.rmSync(received, { recursive: true, force: true });
     }
   });

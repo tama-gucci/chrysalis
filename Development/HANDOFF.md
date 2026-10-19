@@ -1,5 +1,25 @@
 # Current engineering handoff
 
+Date: 2026-10-19. Expanded review corrections cover all 227 GitHub candidate comments, including
+duplicates. Separate frozen reviews accept the corrected implementation with no remaining confirmed
+finding. Both complete Node 22.19.0/24.20.0 suites pass 175 cases: 169 passed, six optional/platform
+skips and zero failures. TypeScript, source checks, both-architecture Nix evaluation, production
+archive/Pi and synthetic Chromium acceptance pass. Fault injection verifies source-promotion
+recovery; actual root/nonroot fixtures verify installation-proof permissions. Evidence stays external.
+
+Ledger projection binds only the current authorized outcome. The installed-boot proof permits one
+native-selected final-vault binding without granting system administration. Installer projection
+waits for that boot. Source promotion keeps durable reviewed before-images and partial progress;
+workspace deletion handles separate filesystems while preserving concurrent edits. The npm archive
+contains runtime Nix rules/templates; use the reviewed Git flake for Nix builds.
+
+Publish the reviewed source, require matching portable CI and pin the dotfiles consumer to that
+public revision before merging. The synthetic-user VM prompt is the next acceptance handoff.
+The native x86 image/VM/model-led loop remains unrun. Preserve the original dirty source baseline,
+private vault, existing sessions and credentials. No npm release or live runtime promotion is included.
+
+## Prior review handoff
+
 Date: 2026-10-19. Review correction batch after published source 3db96019087bb1a635ef0c5d18a5cec006321119.
 All 60 candidate findings were assessed; confirmed issues and independent review follow-ups are
 corrected. Both complete suites on Node 22.19.0 and 24.20.0 pass 163 cases: 157 passed, six skips,

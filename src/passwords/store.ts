@@ -16,6 +16,8 @@ import {
   rejectRedirects,
   sha256,
   withLock,
+  quarantineReviewedFile,
+  inside,
 } from "../platforms/filesystem.ts";
 import {
   OSAccountPasswordKeys,
@@ -234,9 +236,22 @@ export class PasswordStore {
       return { status: "imported", ...plan.summary };
     });
   }
+  async withRevision<T>(
+    revision: string,
+    action: () => Promise<T>,
+  ): Promise<T> {
+    return withLock(this.root, "password-store", async () => {
+      if (this.revision() !== revision)
+        throw Error("Saved login changed; review again");
+      return action();
+    });
+  }
   removeReviewedInput(plan: PasswordImportPlan) {
-    if (sha256(regularInput(plan.file)) !== plan.sourceHash)
-      throw Error("password_input_changed_keep_file");
-    fs.unlinkSync(plan.file);
+    const file = rejectRedirects(path.resolve(plan.file));
+    if (!inside(file, this.inbox) || file === this.inbox)
+      throw Error("password_input_outside_inbox");
+    const recovery = confined(this.root, "removed/" + randomUUID());
+    quarantineReviewedFile(file, plan.sourceHash, recovery);
+    fs.unlinkSync(recovery);
   }
 }

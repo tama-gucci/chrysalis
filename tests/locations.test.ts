@@ -29,23 +29,24 @@ test("folder phrases use Windows known folders and portable macOS/Linux location
     resolveDirectoryText("My Documents Folder", windows),
     "X:\\Redirected\\Documents",
   );
-  const mac = buildKnownFolders("darwin", base);
+  const posixHome = "/synthetic-profile";
+  const mac = buildKnownFolders("darwin", posixHome);
   assert.equal(
     resolveDirectoryText("my documents folder", mac),
-    path.join(base, "Documents"),
+    path.posix.join(posixHome, "Documents"),
   );
   assert.equal(
     resolveDirectoryText("desktop", mac),
-    path.join(base, "Desktop"),
+    path.posix.join(posixHome, "Desktop"),
   );
   const linux = buildKnownFolders(
     "linux",
-    base,
+    posixHome,
     {},
     'XDG_DOCUMENTS_DIR="$HOME/Local Documents"\nXDG_DOWNLOAD_DIR="$HOME/Downloads"\nXDG_DESKTOP_DIR="$(untrusted-command)"',
   );
-  assert.equal(linux.documents, path.join(base, "Local Documents"));
-  assert.equal(linux.desktop, path.join(base, "Desktop"));
+  assert.equal(linux.documents, path.posix.join(posixHome, "Local Documents"));
+  assert.equal(linux.desktop, path.posix.join(posixHome, "Desktop"));
   assert.throws(
     () => resolveDirectoryText("my project workspace", mac),
     /supported phrase/,
@@ -62,8 +63,12 @@ test("directory completion is bounded, directory-only and never follows redirect
   for (const name of ["Documents", "Downloads", "Other"])
     fs.mkdirSync(path.join(root, name));
   fs.writeFileSync(path.join(root, "private-file.txt"), "synthetic-canary");
+  fs.symlinkSync(
+    base,
+    path.join(root, "Redirected"),
+    process.platform === "win32" ? "junction" : "dir",
+  );
   if (process.platform !== "win32") {
-    fs.symlinkSync(base, path.join(root, "Redirected"));
     fs.mkdirSync(path.join(root, "unsafe\x1bname"));
   }
   const locations = { home: root, documents: path.join(root, "Documents") };
@@ -172,11 +177,22 @@ test("Linux folder discovery honors XDG_CONFIG_HOME and ignores oversized or non
   fs.mkdirSync(config);
   const file = path.join(config, "user-dirs.dirs");
   fs.writeFileSync(file, 'XDG_DOCUMENTS_DIR="$HOME/Local Documents"');
-  assert.equal(
-    buildKnownFolders("linux", base, {}, readXdgDirectories(base, config))
-      .documents,
-    path.join(base, "Local Documents"),
-  );
+  const previous = process.env.XDG_CONFIG_HOME;
+  process.env.XDG_CONFIG_HOME = config;
+  try {
+    assert.equal(
+      buildKnownFolders(
+        "linux",
+        "/synthetic-profile",
+        {},
+        readXdgDirectories(base),
+      ).documents,
+      "/synthetic-profile/Local Documents",
+    );
+  } finally {
+    if (previous === undefined) delete process.env.XDG_CONFIG_HOME;
+    else process.env.XDG_CONFIG_HOME = previous;
+  }
   fs.writeFileSync(file, "x".repeat(64 * 1024 + 1));
   assert.equal(readXdgDirectories(base, config), "");
   fs.unlinkSync(file);

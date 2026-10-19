@@ -10,7 +10,7 @@ A completed installation can finish handoff after restart without formatting. A 
 
 An interrupted switch may already have changed the system profile. Compare the profile, running closure and services. Its privileged child may still be running after a disconnect or structured timeout failure. The persistent busy marker survives outcome closure and blocks later mutation until confirmed completion or a new boot. Observation alone cannot clear it. Status, inspection and reconciliation remain available.
 
-The installed outcome binds an observed recovery generation. Use that exact target with the pinned generations rollback tool. A different historical generation needs native /chrysalis system rollback <number>, which shows the observed target and authorizes recovery. Do not overlap a live operation. Observe the actual profile and running closure afterward; rollback does not restore arbitrary vault data or service migrations.
+A native generation-recovery outcome binds an observed recovery generation. Use that exact target with the pinned generations rollback tool. A different historical generation needs native /chrysalis system rollback <number>, which shows the observed target and authorizes recovery. Do not overlap a live operation. Observe the actual profile and running closure afterward; rollback does not restore arbitrary vault data or service migrations.
 
 Native controls can revoke an outcome after its in-flight context finishes. Revocation does not undo changes or certify success. Reconciliation preserves uncertainty even if the expected closure appears correct without adequate completion/health evidence.
 

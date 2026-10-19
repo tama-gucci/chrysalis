@@ -94,3 +94,6 @@ Pi guards. This harness does not prove a real-model installation conversation, O
 login, Obsidian GUI behavior, Secure Boot enrollment or physical hardware support.
 
 The image job is manual-only and requires a registered default-branch workflow before feature-ref dispatch. See docs/nixos.md for the bootstrap prerequisite. The raw harness kills the actual handoff helper after a durable copy, power-cycles the USB and resumes with changed source state; target-only edits must remain protected. It also asserts actual Pi pane startup, mutable account state and exclusion of the USB transfer journal. These are authored acceptance cases until the x86 runner records a passing run.
+
+Windows interop denial is exercised only when the WSL fixture executable is present. Ordinary
+Ubuntu CI does not establish WSL interop acceptance; keep that platform result separate.

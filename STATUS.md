@@ -1,6 +1,33 @@
 # Implementation status
 
-## Review corrections (2026-10-19)
+## Expanded review corrections (2026-10-19)
+
+All 227 GitHub review candidate comments, including duplicates, were assessed. Confirmed issues
+are corrected; candidates that described existing prerequisites, intended behavior or authority
+outside the trusted native-host boundary have explicit dispositions in external review evidence.
+Separate frozen reviews accepted the final implementation with no remaining confirmed findings.
+
+Both complete Linux ARM64 suites pass on Node 22.19.0 and 24.20.0: 175 cases, 169 passed, six
+optional/platform skips and zero failures each. Strict TypeScript and whole-source privacy checks
+pass. Stronger regressions exercise an actual production child/runtime route, provider binding,
+observable descendant cancellation, late hardlink preservation, cross-filesystem deletion,
+malformed recovery metadata and closed/superseded ledger scopes.
+
+Installer ledger binding waits for an exact verified installed-boot proof and native final-vault
+onboarding. A transferred temporary-vault binding can move once under that narrow proof; this
+does not grant installed administration. The nonsecret proof remains root-owned, readable by the
+installed user and unwritable by that user. Actual root/nonroot fixture acceptance verifies those
+permissions. Source-promotion fault injection verifies durable before-images, rejected changed
+recovery bytes and exact approved retry after a partial failure.
+
+Locked Nix outputs evaluate for both architectures, including real architecture-specific module
+fixtures and the retained x86 VM check. Nix build entrypoints use the reviewed Git source and its
+lockfiles; the portable npm archive retains runtime rules and templates. Production archive/Pi
+and synthetic managed Chromium acceptance pass. Native x86 image construction, installed NixOS
+execution and the complete USB-to-target model conversation remain separate, unrun acceptance.
+No personal runtime, account, physical disk or firmware was changed.
+
+## Initial review corrections (2026-10-19)
 
 All 60 review candidates were assessed against the implementation and pinned upstreams. Confirmed
 issues were corrected, including redaction and credential exclusions, focused lesson capture,

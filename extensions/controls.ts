@@ -214,12 +214,22 @@ export function installAssistantControls(pi: ExtensionAPI) {
         JSON.stringify(item.metadata, null, 2) +
         (item.metadata.kind === "svg" || item.metadata.kind === "mermaid"
           ? "\n\n" + item.bytes.toString("utf8")
-          : "\n\nPNG preview is not available in this text dialog; inspect the private artifact file before adoption.");
+          : "\n\nInspect the actual PNG pixels in a local image viewer before adoption: " +
+            confined(assistantRoot(state), "artifacts/" + id + ".png"));
       const seen = await ctx.ui.editor("Private artifact " + id, text);
       if (seen === undefined) return true;
       if (seen !== text)
         throw Error("Artifact review was edited; create a new artifact");
       if (action === "adopt") {
+        if (
+          item.metadata.kind === "png" &&
+          !(await ctx.ui.confirm(
+            "Have you inspected the actual PNG image?",
+            confined(assistantRoot(state), "artifacts/" + id + ".png") +
+              "\nText metadata does not establish visual inspection.",
+          ))
+        )
+          return true;
         const runtime = selectedContext(state),
           plan = prepareArtifactAdoption(runtime, id);
         const exact = JSON.stringify(plan, null, 2);
@@ -241,24 +251,61 @@ export function installAssistantControls(pi: ExtensionAPI) {
       }
     } else {
       const root = path.join(assistantRoot(state), "runner");
-      if (tokens.length)
+      if (
+        tokens.length > 1 ||
+        (tokens.length && !/^[0-9]{1,9}$/.test(tokens[0]))
+      )
         throw Error(
-          "Recovery lists retained conflict handles; no automatic overwrite is permitted",
+          "Use recovery [offset] to list retained handles; no automatic overwrite is permitted",
         );
-      const records = fs.existsSync(root)
+      const offset = tokens.length ? Number(tokens[0]) : 0;
+      const names = fs.existsSync(root)
         ? fs
             .readdirSync(root)
             .filter((n) => /^[a-f0-9-]{36}\.conflict\.json$/.test(n))
-            .slice(0, 100)
-            .map((n) => ({
-              handle: n.replace(/\.conflict\.json$/, ""),
-              ...readJSON(confined(root, n)),
-            }))
+            .sort()
         : [];
+      const records = names.slice(offset, offset + 25).map((n) => {
+        const handle = n.replace(/\.conflict\.json$/, "");
+        try {
+          const item = readJSON(confined(root, n));
+          const workspace =
+            typeof item.workspace === "string"
+              ? item.workspace
+              : item.workspace?.root;
+          if (
+            typeof workspace !== "string" ||
+            workspace.length > 1024 ||
+            typeof item.candidate !== "string" ||
+            item.candidate.length > 1024
+          )
+            throw Error("Invalid recovery metadata");
+          return {
+            handle,
+            workspace,
+            candidate: item.candidate,
+            revision_count: Object.keys(item.revisions ?? {}).length,
+          };
+        } catch {
+          return {
+            handle,
+            metadata: "unavailable; inspect retained private receipt",
+          };
+        }
+      });
+      while (Buffer.byteLength(JSON.stringify(records)) > 64 * 1024)
+        records.pop();
       ctx.ui.notify(
         JSON.stringify(
           {
             conflicts: records,
+            total: names.length,
+            offset,
+            omitted: Math.max(0, names.length - offset - records.length),
+            next_offset:
+              offset + records.length < names.length
+                ? offset + records.length
+                : null,
             worker_lease: writerLeaseStatus(state),
             action:
               "Inspect the candidate and reconcile it in the selected workspace. Retry work after resolving concurrent edits; retained results never overwrite automatically.",

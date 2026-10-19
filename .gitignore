@@ -29,6 +29,11 @@
 !/tests/**
 !/Development/
 !/Development/**
+!/flake.nix
+!/nix/
+!/nix/**
+!/.github/
+!/.github/**
 **/node_modules/
 **/.obsidian/
 **/.agent/
@@ -47,9 +52,4 @@
 Thumbs.db
 .DS_Store
 
-!/flake.nix
 !/flake.lock
-!/nix/
-!/nix/**
-!/.github/
-!/.github/**

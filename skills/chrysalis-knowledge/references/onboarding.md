@@ -204,7 +204,7 @@ Offer optional source setup through `/chrysalis integrations setup`, respecting 
 ## Optional assistant choices and learning
 
 Native vault onboarding offers assistant setup once; Later is a valid choice. Use
-`/chrysalis models` for inexpensive authenticated background routes and `/chrysalis capabilities`
+`/chrysalis models` to choose authenticated background routes and an economical usage preset and `/chrysalis capabilities`
 for optional memory, specialists, research, browser or lesson capture. Explain privacy, overhead
 and availability using the chrysalis-learning skill. Do not select routes or authorize workspace
 execution through chat. Use enabled public research for current primary-source advice with generic

@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { selectedContext } from "../storage/context.ts";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -16,6 +17,8 @@ import {
 } from "../platforms/filesystem.ts";
 import {
   assertSameDisk,
+  requireSystemScope,
+  type SystemOperation,
   assertSystemIdle,
   beginPrivileged,
   completePrivileged,
@@ -460,7 +463,10 @@ export async function installTarget(
     );
   assertSystemIdle(c);
   if (!recovery) assertSameDisk(op.disk, await diskInventory(c));
-  assertExpectedMapper(await inspectTarget(c, op.disk));
+  const observed = await inspectTarget(c, op.disk);
+  assertExpectedMapper(observed);
+  if (!recovery && (observed.mounts.length || observed.foreignMounts.length))
+    throw Error("Formatting refuses mounted or foreign target filesystems");
   if (
     !fs.lstatSync(op.disk.path).isSymbolicLink() ||
     !fs.statSync(op.disk.path).isBlockDevice()
@@ -471,6 +477,15 @@ export async function installTarget(
   ) as InstallChoices & { operation: string };
   if (choices.operation !== op.id)
     throw Error("Installation choices belong to a different approval");
+  if (
+    !op.installation ||
+    ["user", "name", "zone"].some(
+      (key) =>
+        choices[key as keyof InstallChoices] !==
+        op.installation![key as keyof typeof op.installation],
+    )
+  )
+    throw Error("Installation preferences changed; native review required");
   for (const f of ["luks.key", "user-password"])
     if (!exists("/run/chrysalis/" + f))
       throw Error("Use native system setup to supply installation secrets");
@@ -532,6 +547,13 @@ export async function installTarget(
   if (configurationIdentity(c.configuration) !== source)
     throw Error("Configuration changed during installation preflight");
   await checked("/run/current-system/sw/bin/sync", ["-f", c.configuration]);
+  if (!recovery) {
+    assertSameDisk(op.disk, await diskInventory(c));
+    const finalTarget = await inspectTarget(c, op.disk);
+    assertExpectedMapper(finalTarget);
+    if (finalTarget.mounts.length || finalTarget.foreignMounts.length)
+      throw Error("Formatting refuses mounted or foreign target filesystems");
+  }
   // disko-install itself builds its exact install closure before executing its disk script.
   const lease = systemLease("install-" + randomUUID(), "install", source);
   await recordSystem(
@@ -626,6 +648,116 @@ export async function installTarget(
   );
   return { status: "installed", operation: op.id, needsHandoff: true };
 }
+const INSTALL_PROOF = "/var/lib/chrysalis/install.json";
+/** A nonsecret, root-owned handoff proof must be readable, but never user-writable. */
+export function normalizeInstallProofPermissions(file: string) {
+  rejectRedirects(file);
+  const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+  try {
+    const stat = fs.fstatSync(fd);
+    if (!stat.isFile() || stat.nlink !== 1 || stat.uid !== 0)
+      throw Error("Installation proof must be a root-owned regular file");
+    fs.fchmodSync(fd, 0o644);
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+function readInstallProof() {
+  const stat = fs.lstatSync(rejectRedirects(INSTALL_PROOF));
+  if (!stat.isFile() || stat.nlink !== 1 || stat.uid !== 0 || stat.mode & 0o022)
+    throw Error("Installation proof ownership or permissions changed");
+  return readJSON(INSTALL_PROOF);
+}
+/** Ledger-only first-boot evidence; it deliberately grants no installed administration scope. */
+export function assertInstalledLedgerProof(
+  c: SystemConfig,
+  op: SystemOperation,
+  proof: any,
+  observation: ReturnType<typeof runtimeObservation>,
+  rootUuid: string,
+) {
+  if (
+    c.mode !== "installed" ||
+    op.mode !== "installer" ||
+    op.phase !== "verified" ||
+    op.installationId !== op.id ||
+    proof.handoffComplete !== true ||
+    proof.operation !== op.id ||
+    proof.host !== c.host ||
+    op.host !== c.host ||
+    !rootUuid ||
+    proof.rootUuid !== rootUuid ||
+    !observation.running ||
+    proof.running !== observation.running ||
+    !op.events.some(
+      (e) =>
+        e.phase === "verified" &&
+        e.evidence.bootVerified === true &&
+        e.evidence.running === observation.running,
+    )
+  )
+    throw Error("No exact verified installed ledger proof");
+}
+export async function systemLedgerAuthorization(
+  c: SystemConfig,
+  backend: string | (() => string),
+  selectedVault?: string,
+) {
+  const currentBackend =
+    typeof backend === "function" ? backend : () => backend;
+  try {
+    const expected = requireSystemScope(c, currentBackend()).id;
+    return () => {
+      const current = requireSystemScope(c, currentBackend());
+      if (current.id !== expected) throw Error("System ledger outcome changed");
+      return current;
+    };
+  } catch {
+    const op = currentOperation(c);
+    if (
+      !op ||
+      c.mode !== "installed" ||
+      op.mode !== "installer" ||
+      op.phase !== "verified"
+    )
+      throw Error("No current system ledger authorization");
+    const rootUuid = await checked(c.commands.findmnt, [
+      "--noheadings",
+      "--output",
+      "UUID",
+      "/",
+    ]);
+    const rootDevice = fs.statSync("/").dev;
+    const authorize = () => {
+      const current = currentOperation(c);
+      if (
+        !current ||
+        current.id !== op.id ||
+        fs.statSync("/").dev !== rootDevice
+      )
+        throw Error("Installed ledger outcome changed");
+      assertInstalledLedgerProof(
+        c,
+        current,
+        readInstallProof(),
+        runtimeObservation(),
+        rootUuid,
+      );
+      if (!selectedVault || selectedContext(c.state).vault !== selectedVault)
+        throw Error("Native installed vault selection changed");
+      // Old transferred receipts may bind a temporary live vault. Move that binding once,
+      // under exact installed-boot proof and native final-path vault selection only.
+      return {
+        ...current,
+        vault: current.ledgerInstalled ? current.vault : undefined,
+        ledgerInstalled: true,
+      };
+    };
+    authorize();
+    return authorize;
+  }
+}
 export async function reconcileInstalled(c: SystemConfig) {
   const op = currentOperation(c);
   if (!op) return { status: "unavailable" };
@@ -658,7 +790,7 @@ export async function reconcileInstalled(c: SystemConfig) {
   }
   const marker = "/var/lib/chrysalis/install.json";
   if (c.mode === "installed" && exists(marker)) {
-    const proof = readJSON(marker);
+    const proof = readInstallProof();
     const rootUuid = await checked(c.commands.findmnt, [
       "--noheadings",
       "--output",
@@ -666,6 +798,7 @@ export async function reconcileInstalled(c: SystemConfig) {
       "/",
     ]);
     if (
+      proof.handoffComplete === true &&
       proof.operation === op.id &&
       proof.host === c.host &&
       proof.running === observation.running &&
@@ -802,6 +935,15 @@ export async function handoffTarget(c: SystemConfig, agentDirectory?: string) {
   const choices = readJSON(
     confined(systemRoot(c), "installation.json"),
   ) as InstallChoices;
+  if (
+    !op.installation ||
+    ["user", "name", "zone"].some(
+      (key) =>
+        choices[key as keyof InstallChoices] !==
+        op.installation![key as keyof typeof op.installation],
+    )
+  )
+    throw Error("Installation preferences changed; native review required");
   const installedSource = op.events
     .filter((e) => e.phase === "installed")
     .at(-1)?.evidence.source;
@@ -824,44 +966,61 @@ export async function handoffTarget(c: SystemConfig, agentDirectory?: string) {
   );
   if (!/^\/nix\/store\/[a-z0-9]{32}-[^\n]+$/.test(script))
     throw Error("Unexpected mount script output");
-  await checked(script, [], { timeout: 60_000 });
-  const mounted = await inspectTarget(c, op.disk);
-  const mountedRoot = await checked(c.commands.findmnt, [
-    "--noheadings",
-    "--output",
-    "MAJ:MIN",
-    "--mountpoint",
-    "/mnt",
-  ]);
-  if (!mounted.devices.includes(mountedRoot) || mounted.foreignMounts.length)
-    throw Error("Mounted target ancestry does not match the approved disk");
-  let copiedFiles = 0,
-    copiedBytes = 0;
-  function copyDirectory(source: string, target: string) {
-    rejectRedirects(source);
-    rejectRedirects(target);
-    fs.mkdirSync(target, { recursive: true, mode: 0o700 });
-    for (const item of fs.readdirSync(source, { withFileTypes: true })) {
-      if (["locks", ".git", "result"].includes(item.name)) continue;
-      if (
-        source === systemRoot(c) &&
-        /^handoff-[a-f0-9-]{36}\.json$/.test(item.name)
-      )
-        continue;
-      const from = rejectRedirects(path.join(source, item.name)),
-        to = rejectRedirects(path.join(target, item.name)),
-        s = fs.lstatSync(from);
-      if (s.isDirectory()) copyDirectory(from, to);
-      else if (s.isFile() && s.nlink === 1) {
-        if (++copiedFiles > 4096 || (copiedBytes += s.size) > 512 * 1024 * 1024)
-          throw Error("Handoff checkpoint exceeds its supported limit");
-        copyHandoffFile(c, operation, raw(from, 32 * 1024 * 1024), to, "/mnt");
-      } else throw Error("Handoff refuses redirected or special state");
-      fs.chownSync(to, account.uid, account.gid);
-    }
-    fs.chownSync(target, account.uid, account.gid);
-  }
   try {
+    await checked(script, [], { timeout: 60_000 });
+    const mounted = await inspectTarget(c, op.disk);
+    const mountedRoot = await checked(c.commands.findmnt, [
+      "--noheadings",
+      "--output",
+      "MAJ:MIN",
+      "--mountpoint",
+      "/mnt",
+    ]);
+    if (!mounted.devices.includes(mountedRoot) || mounted.foreignMounts.length)
+      throw Error("Mounted target ancestry does not match the approved disk");
+    let copiedFiles = 0,
+      copiedBytes = 0;
+    function copyDirectory(
+      source: string,
+      target: string,
+      configuration = false,
+    ) {
+      rejectRedirects(source);
+      rejectRedirects(target);
+      fs.mkdirSync(target, { recursive: true, mode: 0o700 });
+      for (const item of fs.readdirSync(source, { withFileTypes: true })) {
+        if (
+          ["locks", ".git", "result"].includes(item.name) ||
+          (configuration && item.name === "node_modules")
+        )
+          continue;
+        if (
+          source === systemRoot(c) &&
+          /^handoff-[a-f0-9-]{36}\.json$/.test(item.name)
+        )
+          continue;
+        const from = rejectRedirects(path.join(source, item.name)),
+          to = rejectRedirects(path.join(target, item.name)),
+          s = fs.lstatSync(from);
+        if (s.isDirectory()) copyDirectory(from, to, configuration);
+        else if (s.isFile() && s.nlink === 1) {
+          if (
+            ++copiedFiles > 4096 ||
+            (copiedBytes += s.size) > 512 * 1024 * 1024
+          )
+            throw Error("Handoff checkpoint exceeds its supported limit");
+          copyHandoffFile(
+            c,
+            operation,
+            raw(from, 32 * 1024 * 1024),
+            to,
+            "/mnt",
+          );
+        } else throw Error("Handoff refuses redirected or special state");
+        fs.chownSync(to, account.uid, account.gid);
+      }
+      fs.chownSync(target, account.uid, account.gid);
+    }
     const marker = "/mnt/var/lib/chrysalis/install.json";
     if (exists(marker)) {
       const previous = readJSON(marker);
@@ -869,15 +1028,20 @@ export async function handoffTarget(c: SystemConfig, agentDirectory?: string) {
         throw Error(
           "Mounted system belongs to a different installation receipt",
         );
-      if (previous.handoffComplete)
+      if (previous.handoffComplete) {
+        normalizeInstallProofPermissions(marker);
+        syncDirectoryTree(path.dirname(marker), path.dirname(marker));
+        for (const name of ["luks.key", "user-password"])
+          fs.rmSync(confined("/run/chrysalis", name), { force: true });
         return {
           status: "handoff-ready",
           operation: op.id,
           bootVerified: false,
           unchanged: true,
         };
+      }
     }
-    copyDirectory(c.configuration, "/mnt" + c.configuration);
+    copyDirectory(c.configuration, "/mnt" + c.configuration, true);
     copyDirectory(c.state, "/mnt" + c.state);
     const installedRunning = installedSystemProfile("/mnt");
     fs.chownSync("/mnt/var/lib/chrysalis/user-password", 0, 0);
@@ -920,12 +1084,13 @@ export async function handoffTarget(c: SystemConfig, agentDirectory?: string) {
       rootUuid,
       handoffComplete: true,
     });
+    normalizeInstallProofPermissions(marker);
     syncDirectoryTree(path.dirname(marker), path.dirname(marker));
     await checked("/run/current-system/sw/bin/sync", []);
     for (const name of ["luks.key", "user-password"])
       fs.rmSync(confined("/run/chrysalis", name), { force: true });
   } finally {
-    await checked("/run/current-system/sw/bin/umount", ["-R", "/mnt"]);
+    await unmountRecoveryTarget(c, op.disk);
   }
   return { status: "handoff-ready", operation: op.id, bootVerified: false };
 }

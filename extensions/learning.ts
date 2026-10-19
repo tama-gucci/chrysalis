@@ -75,14 +75,29 @@ export function installLearning(pi: ExtensionAPI) {
             else {
               const found = choices.indexOf(answer ?? "");
               if (found >= 0) answer = q.options[found];
-              else if (answer === "Skip") status = "skipped";
-              else if (answer === "Later") status = "deferred";
+              else if (answer === "Skip") {
+                status = "skipped";
+                answer = undefined;
+              } else if (answer === "Later") {
+                status = "deferred";
+                answer = undefined;
+              }
             }
-          } else answer = await ctx.ui.input(label + " (cancel to skip)");
+          } else {
+            const control = await ctx.ui.select(label, [
+              "Write my answer",
+              "Skip",
+              "Later",
+            ]);
+            if (control === "Later") status = "deferred";
+            else if (control === "Write my answer")
+              answer = await ctx.ui.input(label);
+            else status = "skipped";
+          }
           if (answer && answer.length > 4000) throw Error("Answer limit");
           answers.push({
             question: q.question,
-            status: !answer ? "skipped" : status,
+            status: !answer && status === "answered" ? "skipped" : status,
             answer: answer ?? null,
             authority: "conversation_only",
           });

@@ -30,6 +30,9 @@ test("startup fence rejects absent/drifted policy and requires the loaded operat
     },
   ];
   assert.equal(handlers.tool_call(), undefined);
+  tools[0].sourceInfo.path = path.join(PACKAGE_ROOT, "extensions/other.ts");
+  assert.equal(handlers.tool_call().block, true);
+  tools[0].sourceInfo.path = path.join(PACKAGE_ROOT, "extensions/chrysalis.ts");
   tools[0].description = "Overridden";
   assert.equal(handlers.tool_call().block, true);
   const url = new URL("../extensions/bootstrap-guard.mjs", import.meta.url)

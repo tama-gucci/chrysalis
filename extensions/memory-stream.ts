@@ -44,10 +44,12 @@ export function memoryStream(
     if (!completed) {
       completed = true;
       clearTimeout(timer);
+      signal.removeEventListener("abort", onAbort);
       done(usage);
     }
   };
   const fail = () => {
+    if (completed) return;
     const message: any = {
       role: "assistant",
       content: [],
@@ -74,13 +76,8 @@ export function memoryStream(
     controller.abort();
     fail();
   }, 60000);
-  signal.addEventListener(
-    "abort",
-    () => {
-      if (!completed) fail();
-    },
-    { once: true },
-  );
+  const onAbort = () => fail();
+  signal.addEventListener("abort", onAbort, { once: true });
   void (async () => {
     try {
       if (signal.aborted) throw Error("Cancelled");

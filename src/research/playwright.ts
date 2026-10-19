@@ -57,6 +57,7 @@ export class ManagedBrowser {
       "browser/" + this.profileName,
     );
     fs.mkdirSync(profile, { recursive: true, mode: 0o700 });
+    fs.chmodSync(profile, 0o700);
     const lease = acquirePack(this.state, "browser"),
       root = lease.root;
     this.releasePack = lease.release;
@@ -199,7 +200,15 @@ export class ManagedBrowser {
     const target = this.page.locator(selector);
     if (
       action === "fill" &&
-      (await target.getAttribute("type"))?.toLowerCase() === "password"
+      ((await target.getAttribute("type"))?.toLowerCase() === "password" ||
+        /(?:current-password|new-password|one-time-code)/i.test(
+          (await target.getAttribute("autocomplete")) ?? "",
+        ) ||
+        /(?:password|passwd|passcode|secret|otp)/i.test(
+          ((await target.getAttribute("name")) ?? "") +
+            " " +
+            ((await target.getAttribute("id")) ?? ""),
+        ))
     )
       throw Error("Enter credentials yourself in the managed browser");
     if (action === "click") await target.click({ timeout: 5000 });

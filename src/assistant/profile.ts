@@ -99,12 +99,16 @@ export function validateProfile(p: any): AssistantProfile {
   const d = defaults();
   if (
     !p.features ||
+    typeof p.features !== "object" ||
+    Array.isArray(p.features) ||
     Object.keys(p.features).some((k) => !(k in d.features)) ||
     Object.values(p.features).some((v) => typeof v !== "boolean")
   )
     throw Error("Invalid assistant capabilities");
   if (
     !p.routes ||
+    typeof p.routes !== "object" ||
+    Array.isArray(p.routes) ||
     Object.keys(p.routes).some((k) => !ROLES.includes(k as Role))
   )
     throw Error("Invalid model roles");
@@ -170,6 +174,7 @@ export function saveProfile(state: string, p: AssistantProfile) {
   const root = assistantRoot(state);
   rejectRedirects(root);
   fs.mkdirSync(root, { recursive: true, mode: 0o700 });
+  fs.chmodSync(root, 0o700);
   atomicJSON(path.join(root, "profile.json"), validateProfile(p));
 }
 export function protectedRoots(state: string, vault?: string): string[] {

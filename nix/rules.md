@@ -1,6 +1,7 @@
 Chrysalis NixOS rules
 
 Apply these rules only to the explicitly configured system capability.
+
 1. Obtain one native approval for the OS outcome and exact target. Installation, another disk, expanded destruction and changed backend identity cannot inherit unrelated authority. Personal vault records retain their existing native review.
 2. Write ordinary Nix. Keep the entrypoint thin, compose named features, centralize preferences, and put machine facts and feature selection in the host.
 3. Use upstream modules and tools. Pi owns its runtime, MCP and codemode. The system backend owns Nix operations; disko owns partitioning and installation.
@@ -12,4 +13,4 @@ Apply these rules only to the explicitly configured system capability.
 9. Record observed results through native receipts and the fixed machine ledger. Never pass arbitrary Markdown through that route. Keep uncertainty and failed attempts visible.
 10. Ordinary Bash remains isolated. System-context tools are trusted host administration, not a sandbox. Use the documented system tools and backend so outcomes can be reconciled.
 
-Read chrysalis-system for the current workflow and references. Ask for preferences and credentials, and discover technical facts with tools.
+Read chrysalis-system for the current workflow and references. Ask for preferences, collect credentials only through masked native controls (never chat), and discover technical facts with tools.

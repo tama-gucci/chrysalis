@@ -27,6 +27,7 @@ export function installPasswords() {
         "\nPlace an export here, then run /chrysalis passwords import. You can return later.",
       "info",
     );
+    return true;
   }
   return {
     configured() {
@@ -43,6 +44,9 @@ export function installPasswords() {
         return null;
       }
     },
+    async withRevision<T>(revision: string, action: () => Promise<T>) {
+      return store().withRevision(revision, action);
+    },
     async secrets() {
       return (await store().records()).map((r) => r.password);
     },
@@ -56,7 +60,9 @@ export function installPasswords() {
         "Optional saved-password import for the browser",
         ["Set up private CSV/JSON inbox", "Later", "Skip"],
       );
-      if (choice === "Set up private CSV/JSON inbox") await setup(ctx);
+      if (!choice) return;
+      if (choice === "Set up private CSV/JSON inbox" && !(await setup(ctx)))
+        return;
       atomicJSON(file, {
         version: 1,
         offered: true,
@@ -161,7 +167,7 @@ export function installPasswords() {
             origin +
               "\nFields: " +
               JSON.stringify(fields) +
-              "\nOnly this exact HTTPS origin and these fields are authorized. This tool does not click submit; the trusted page may react to input. Password values stay internal; subsequent clicks/requests retain native approval. Cross-origin requests are blocked while these credentials are in use.",
+              "\nOnly this exact HTTPS origin and these fields are authorized. This tool does not click submit; the trusted page may react to input. Password values stay internal; subsequent model clicks and non-GET/HEAD requests retain native approval; trusted same-origin GET/HEAD requests may run without a new dialog. Cross-origin requests are blocked while these credentials are in use.",
           ))
         )
           return;

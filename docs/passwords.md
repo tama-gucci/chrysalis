@@ -31,7 +31,8 @@ credentials; the workspace runner never receives the store, key or import folder
 
 Enable the optional browser capability when ready. The saved-login tool asks you to select a matching
 account and approve its exact HTTPS origin and target fields. It fills primary-frame username and/or
-password inputs internally and returns only status. It does not click submit; trusted page input handlers may react to filling or transmit data. Subsequent clicks
+password inputs internally and returns non-secret status metadata: status, approved origin and
+whether submission occurred. It does not click submit; trusted page input handlers may react to filling or transmit data. Subsequent clicks
 and account-changing requests retain native approvals. Cross-origin requests are blocked while
 credentials are in use; close the private browser before changing credential origins. Federated
 cross-origin login flows may need the user-controlled visible browser.

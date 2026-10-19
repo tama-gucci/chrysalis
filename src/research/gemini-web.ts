@@ -34,7 +34,9 @@ export async function analyzeYouTube(
   if (!question || question.length > 4000)
     throw Error("Use a bounded video question");
   try {
+    if (signal?.aborted) throw Error("cancelled");
     const cookies = await ports.cookies();
+    if (signal?.aborted) throw Error("cancelled");
     if (!cookies["__Secure-1PSID"])
       return {
         status: "unavailable",

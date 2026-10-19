@@ -8,4 +8,4 @@ Use the system-context tools for configuration work. Refresh and inspect the tar
 
 Run chrysalis_system action=install only for the approved live target. Its native adapter invokes disko-install, transfers the editable configuration and selected private Pi state, and leaves boot verification pending.
 
-After handoff, reboot into the installed system. Continue existing native vault onboarding at its final path, then use action=reconcile. Keep the USB until successful boot and ledger projection are observed.
+After handoff, reboot into the installed system. Run /chrysalis onboard to create or resume the vault binding at its final path, then use action=reconcile. Keep the USB until successful boot and ledger projection are observed.

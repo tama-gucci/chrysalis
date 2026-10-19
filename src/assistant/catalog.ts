@@ -1,8 +1,14 @@
-import { loadProfile } from "./profile.ts";
+import { optionalSelectedContext } from "../storage/context.ts";
+import { loadProfile, currentWorkspace } from "./profile.ts";
 import { runnerStatus } from "../execution/linux.ts";
 import { packRoot } from "./install.ts";
 export function capabilityStatus(state: string) {
   const p = loadProfile(state);
+  let workspaceReady = false;
+  try {
+    currentWorkspace(state, optionalSelectedContext(state)?.vault);
+    workspaceReady = true;
+  } catch {}
   const installed = (pack: "browser" | "media") => {
     try {
       packRoot(state, pack);
@@ -18,7 +24,7 @@ export function capabilityStatus(state: string) {
         enabled: p.features.execution,
         state: !p.features.execution
           ? "disabled"
-          : runnerStatus().available && p.workspace
+          : runnerStatus().available && workspaceReady
             ? "configured"
             : "needs_setup",
         network: p.workspace?.network ?? "off",
@@ -30,14 +36,24 @@ export function capabilityStatus(state: string) {
       },
       memory: {
         enabled: p.features.memory,
-        state: p.features.memory ? "configured" : "disabled",
+        state: !p.features.memory
+          ? "disabled"
+          : !p.features.observations ||
+              ["observer", "reflector", "dropper"].every(
+                (r) => p.routes[r as "observer"],
+              )
+            ? "configured"
+            : "needs_setup",
         observations: p.features.observations,
       },
       specialists: {
         enabled: p.features.specialists,
         state: !p.features.specialists
           ? "disabled"
-          : process.env.TMUX && p.features.execution && p.workspace
+          : process.env.TMUX &&
+              p.features.execution &&
+              workspaceReady &&
+              p.routes.worker
             ? "configured"
             : "needs_setup",
       },

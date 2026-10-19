@@ -138,6 +138,8 @@ test("programmatic child host refuses a broken required extension before any mod
     [
       "--import",
       require.resolve("tsx/esm"),
+      "--import",
+      path.join(PACKAGE_ROOT, "src/platforms/dependencies.mjs"),
       path.join(PACKAGE_ROOT, "extensions/child-host.mjs"),
     ],
     {
@@ -158,4 +160,171 @@ test("programmatic child host refuses a broken required extension before any mod
     /Required child extensions failed to load; no model started/,
   );
   assert(!fs.existsSync(path.join(base, "subagent-sessions/session.jsonl")));
+});
+
+test("production child host loads its persisted runtime route and only fixed tools", async () => {
+  const { spawn } = await import("node:child_process");
+  const { createRequire } = await import("node:module");
+  const { openRuntimeRoute } = await import(
+    "../extensions/provider-runtime.ts"
+  );
+  const { createAssistantMessageEventStream } = await import(
+    "@earendil-works/pi-ai"
+  );
+  const require = createRequire(import.meta.url),
+    base = path.join(
+      process.env.TEST_SCRATCH!,
+      "child-runtime-" + randomUUID(),
+    );
+  const state = path.join(base, "state"),
+    cwd = path.join(state, "assistant/tasks", randomUUID()),
+    agentDir = path.join(base, "agent"),
+    workspace = path.join(base, "workspace");
+  for (const dir of [cwd, agentDir, workspace])
+    fs.mkdirSync(dir, { recursive: true });
+  const route = {
+    provider: "synthetic-child",
+    model: "fixture",
+    thinking: "off" as const,
+  };
+  const model: any = {
+    id: route.model,
+    provider: route.provider,
+    name: "Offline",
+    api: "openai-completions",
+    reasoning: false,
+    input: ["text"],
+    contextWindow: 8192,
+    maxTokens: 1024,
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+  };
+  let calls = 0,
+    seen: string[] = [];
+  const registry: any = {
+    find: () => model,
+    getAvailable: () => [model],
+    streamSimple: (_m: any, context: any) => {
+      calls++;
+      const current = new Set<string>();
+      for (const message of context.messages) {
+        if (message.role !== "system") continue;
+        for (const tool of message.toolsRemoved ?? [])
+          current.delete(tool.name);
+        for (const tool of message.toolsAdded ?? []) current.add(tool.name);
+      }
+      seen = [...current];
+      const out = createAssistantMessageEventStream();
+      const message: any = {
+        role: "assistant",
+        provider: model.provider,
+        model: model.id,
+        api: model.api,
+        content: [
+          {
+            type: "toolCall",
+            id: "synthetic-done",
+            name: "subagent_done",
+            arguments: {},
+          },
+        ],
+        usage: {
+          input: 1,
+          output: 1,
+          cacheRead: 0,
+          cacheWrite: 0,
+          totalTokens: 2,
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+        },
+        stopReason: "toolUse",
+        timestamp: Date.now(),
+      };
+      out.push({ type: "done", reason: "toolUse", message });
+      out.end(message);
+      return out;
+    },
+  };
+  const runtime = await openRuntimeRoute(registry, route, {
+    turns: 1,
+    timeoutSeconds: 15,
+  });
+  const p = defaults();
+  p.routes.reviewer = route;
+  p.workspace = registerWorkspace(state, workspace);
+  p.features.execution = true;
+  saveProfile(state, p);
+  const prepared = prepareEngine(state),
+    task = path.join(cwd, "task.json"),
+    sessionFile = path.join(base, "subagent-sessions/session.jsonl");
+  atomicJSON(task, {
+    version: 1,
+    role: "reviewer",
+    brief: "Complete this synthetic transport probe",
+    turns: 1,
+    profileDigest: digest(p),
+    route,
+    runtimeRoute: runtime.endpoint,
+    doneExtension: prepared.done,
+    doneSha256: sha256(raw(prepared.done)),
+    childSha256: sha256(raw(path.join(PACKAGE_ROOT, "extensions/child.ts"))),
+  });
+  try {
+    const child = spawn(
+      process.execPath,
+      [
+        "--import",
+        require.resolve("tsx/esm"),
+        "--import",
+        path.join(PACKAGE_ROOT, "src/platforms/dependencies.mjs"),
+        path.join(PACKAGE_ROOT, "extensions/child-host.mjs"),
+      ],
+      {
+        env: {
+          ...process.env,
+          CHRYSALIS_STATE_ROOT: state,
+          CHRYSALIS_CHILD_TASK: task,
+          PI_CODING_AGENT_DIR: agentDir,
+          PI_SUBAGENT_SESSION: sessionFile,
+          PI_SUBAGENT_NUDGE_DISABLE: "1",
+        },
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+    let diagnostic = "";
+    child.stderr.on("data", (b) => {
+      diagnostic += b.toString();
+    });
+    child.stdout.resume();
+    const timeout = setTimeout(() => child.kill("SIGKILL"), 20000);
+    const code = await new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", resolve);
+    });
+    clearTimeout(timeout);
+    assert.equal(code, 0, diagnostic);
+    assert.equal(calls, 1);
+    assert.deepEqual(seen.sort(), [
+      "bash",
+      "caller_ping",
+      "read",
+      "subagent_done",
+    ]);
+    assert.deepEqual(Object.keys(runtime.endpoint.model).sort(), [
+      "api",
+      "contextWindow",
+      "cost",
+      "id",
+      "input",
+      "maxTokens",
+      "name",
+      "provider",
+      "reasoning",
+    ]);
+    assert(!JSON.stringify(runtime.endpoint).includes("independent_ui"));
+    assert.equal(
+      JSON.parse(fs.readFileSync(sessionFile + ".exit", "utf8")).type,
+      "done",
+    );
+  } finally {
+    runtime.dispose();
+  }
 });

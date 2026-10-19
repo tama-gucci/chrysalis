@@ -178,7 +178,10 @@ test("password store is encrypted, rejected imports write nothing, stale input/s
     /stale/,
   );
   fs.writeFileSync(input, csv(secret + "-other"));
-  assert.throws(() => s.removeReviewedInput(p1), /changed_keep/);
+  assert.throws(
+    () => s.removeReviewedInput(p1),
+    /Removal candidate changed; private recovery preserved/,
+  );
   const file = path.join(s.root, "passwords.encrypted.json"),
     data = JSON.parse(fs.readFileSync(file, "utf8"));
   data.tag = Buffer.alloc(16).toString("base64");
@@ -292,6 +295,27 @@ test(
     await s.apply(await s.prepare("export.csv"), async () => true);
     const reloaded = new PasswordStore(ctx);
     assert.equal((await reloaded.records())[0].password, secret);
+    const key = JSON.parse(
+      fs.readFileSync(path.join(s.root, "key.json"), "utf8"),
+    );
+    assert.equal(key.version, 1);
+    if (key.backend === "windows-dpapi") {
+      assert.deepEqual(Object.keys(key).sort(), [
+        "backend",
+        "encrypted",
+        "version",
+      ]);
+      assert.equal(typeof key.encrypted, "string");
+      assert(key.encrypted.length > 40);
+    } else {
+      assert.equal(key.backend, "os-secret-store");
+      assert.deepEqual(Object.keys(key).sort(), [
+        "backend",
+        "reference",
+        "version",
+      ]);
+      assert.match(key.reference, /^password-key-[a-f0-9-]{36}$/);
+    }
     for (const name of ["key.json", "passwords.encrypted.json"]) {
       const text = fs.readFileSync(path.join(s.root, name), "utf8");
       assert(!text.includes(secret));

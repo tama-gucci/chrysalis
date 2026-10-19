@@ -20,7 +20,7 @@ import { defaults, saveProfile } from "../src/assistant/profile.ts";
 import { memoryStream } from "../extensions/memory-stream.ts";
 if (!process.env.TEST_SCRATCH) throw Error("Set external TEST_SCRATCH");
 
-test("public Pi provider runtime serves main, memory and fixed child routes without importing provider tools or credentials", async () => {
+test("public Pi provider runtime serves main, memory and a fixed provider registration without serializing credentials", async () => {
   const base = path.join(process.env.TEST_SCRATCH!, "runtime-" + randomUUID());
   fs.mkdirSync(base, { recursive: true });
   const route = {
@@ -143,6 +143,14 @@ test("public Pi provider runtime serves main, memory and fixed child routes with
       timeoutSeconds: 15,
     });
     assert(!JSON.stringify(runtime.endpoint).includes("synthetic-offline"));
+    assert.throws(
+      () =>
+        registerRuntimeRoute({ registerProvider() {} }, runtime.endpoint, {
+          ...route,
+          provider: "different",
+        }),
+      /Invalid/,
+    );
     const childSession = await host(
       (pi: any) => registerRuntimeRoute(pi, runtime.endpoint, route),
       (r: any) => (child = r),
@@ -233,7 +241,7 @@ test("fixed runtime route rejects forged tokens, changed models and cancelled st
   }
 });
 
-test("runtime cancellation reaches the parent stream and cleanup prevents another request", async () => {
+test("runtime cancellation reaches the parent stream and the disposed endpoint rejects another request", async () => {
   const model: any = {
     provider: "independent",
     id: "small",
@@ -246,12 +254,14 @@ test("runtime cancellation reaches the parent stream and cleanup prevents anothe
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
   };
   let started = false,
-    aborted = false;
+    aborted = false,
+    calls = 0;
   const registry: any = {
     find: () => model,
     getAvailable: () => [model],
     streamSimple: (_m: any, _c: any, options: any) => {
       started = true;
+      calls++;
       const out = createAssistantMessageEventStream();
       options.signal.addEventListener(
         "abort",
@@ -285,6 +295,7 @@ test("runtime cancellation reaches the parent stream and cleanup prevents anothe
     for (let i = 0; i < 100 && !aborted; i++)
       await new Promise((r) => setTimeout(r, 5));
     assert(aborted);
+    assert.equal(calls, 1);
     runtime.dispose();
     assert.equal(
       (await runtimeStream(runtime.endpoint, model, { messages: [] }).result())

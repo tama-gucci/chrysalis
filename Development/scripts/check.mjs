@@ -60,13 +60,20 @@ export function check(root) {
       )
     )
       issue("runtime_collection_in_source", relative);
-    if (/\.(pyc|py|sqlite|db|zip|tgz|env|log|tmp|bak)$/.test(relative) && relative !== "nix/tests/raw-boot.py")
+    if (
+      /\.(pyc|py|sqlite|db|zip|tgz|env|log|tmp|bak)$/.test(relative) &&
+      relative !== "nix/tests/raw-boot.py"
+    )
       issue("obsolete_or_generated_file", relative);
+    if (fs.statSync(full).size > 32 * 1024 * 1024) {
+      issue("oversized_source_file", relative);
+      continue;
+    }
     const bytes = fs.readFileSync(full),
       asset = vendor.get(relative);
     if (isPasswordExport(bytes)) issue("password_export_in_source", relative);
     if (
-      /passwords\/inbox\/|(?:^|\/)passwords\.encrypted\.json$|passwords\/key\.json$/.test(
+      /(?:^|\/)passwords\/inbox\/|(?:^|\/)passwords\.encrypted\.json$|(?:^|\/)passwords\/key\.json$/.test(
         relative,
       )
     )
@@ -79,7 +86,8 @@ export function check(root) {
         issue("third_party_asset_changed", relative);
       continue;
     }
-    if (!/\.(md|json|yaml|yml|base|ts|mjs|js|txt|nix|sh|in|py)$/.test(relative)) continue;
+    if (!/\.(md|json|yaml|yml|base|ts|mjs|js|txt|nix|sh|in|py)$/.test(relative))
+      continue;
     let text;
     try {
       text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);

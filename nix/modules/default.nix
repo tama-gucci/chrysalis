@@ -10,6 +10,14 @@ let
   system = pkgs.stdenv.hostPlatform.system;
   tmpfilesPath =
     value: lib.replaceStrings [ "\\" " " "%" "'" "\"" ] [ "\\x5c" "\\x20" "%%" "\\x27" "\\x22" ] value;
+  normalized = value: toString (builtins.toPath value);
+  disjoint =
+    a: b:
+    let
+      x = normalized a;
+      y = normalized b;
+    in
+    x != "/" && y != "/" && x != y && !(lib.hasPrefix (x + "/") y) && !(lib.hasPrefix (y + "/") x);
   packageRoot = "${cfg.package}/lib/node_modules/chrysalis";
   agent =
     if cfg.mode == "installer" then
@@ -142,14 +150,17 @@ in
         message = "Chrysalis requires one explicit host attribute.";
       }
       {
-        assertion = cfg.user != "root" && config.users.users.${cfg.user}.isNormalUser;
+        assertion =
+          cfg.user != "root"
+          && builtins.hasAttr cfg.user config.users.users
+          && config.users.users.${cfg.user}.isNormalUser;
         message = "Chrysalis must run as a normal configured user.";
       }
       {
         assertion =
           lib.hasPrefix "/" cfg.configurationDirectory
           && lib.hasPrefix "/" cfg.stateDirectory
-          && cfg.configurationDirectory != cfg.stateDirectory
+          && disjoint cfg.configurationDirectory cfg.stateDirectory
           &&
             lib.all (value: lib.all (c: builtins.match "[[:cntrl:]]" c == null) (lib.stringToCharacters value))
               [

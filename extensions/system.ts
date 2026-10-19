@@ -49,6 +49,7 @@ import {
   installTarget,
   inspectTarget,
   reconcileInstalled,
+  systemLedgerAuthorization,
   runtimeObservation,
   observedGeneration,
   saveInstallSecrets,
@@ -183,7 +184,7 @@ export function installSystem(pi: ExtensionAPI) {
     );
   };
   const scope = (ctx?: any) => requireSystemScope(c, backendIdentity(ctx));
-  async function ledger() {
+  async function ledger(ctx?: any) {
     let selected;
     try {
       selected = selectedContext(c.state);
@@ -195,7 +196,15 @@ export function installSystem(pi: ExtensionAPI) {
       };
     }
     try {
-      return await projectSystemLedger(c, selected.vault);
+      return await projectSystemLedger(
+        c,
+        selected.vault,
+        await systemLedgerAuthorization(
+          c,
+          () => backendIdentity(ctx),
+          selected.vault,
+        ),
+      );
     } catch {
       return {
         status: "pending-projection",
@@ -471,7 +480,10 @@ export function installSystem(pi: ExtensionAPI) {
         if (!op.disk) throw Error("No approved installation disk");
         result = await inspectTarget(c, op.disk);
       } else if (args.action === "reconcile")
-        result = { ...(await reconcileInstalled(c)), ledger: await ledger() };
+        result = {
+          ...(await reconcileInstalled(c)),
+          ledger: await ledger(ctx),
+        };
       else {
         scope(ctx);
         result = await withLock(
@@ -758,7 +770,7 @@ export function installSystem(pi: ExtensionAPI) {
       return { block: true, reason: e.message };
     }
   }
-  pi.on("tool_result", async (event: any) => {
+  pi.on("tool_result", async (event: any, ctx) => {
     const call = pendingCalls.get(event.toolCallId);
     if (!call) return;
     pendingCalls.delete(event.toolCallId);
@@ -893,7 +905,7 @@ export function installSystem(pi: ExtensionAPI) {
         },
         release,
       );
-      await ledger();
+      await ledger(ctx);
     }
   });
   pi.on("before_agent_start", async (event: any) => ({
@@ -936,7 +948,7 @@ export function installSystem(pi: ExtensionAPI) {
         pi.sendUserMessage(
           "The installed Chrysalis system has booted. Continue the existing native vault onboarding with /chrysalis onboard. Do not reuse approvals from temporary mount paths. Then reconcile the machine ledger.",
         );
-      else await ledger();
+      else await ledger(ctx);
     }
   });
   pi.on("session_shutdown", () => pi.unregisterMcpServer(SERVER));
@@ -962,7 +974,7 @@ export function installSystem(pi: ExtensionAPI) {
         ctx.ui.notify(
           JSON.stringify({
             ...(await reconcileInstalled(c)),
-            ledger: await ledger(),
+            ledger: await ledger(ctx),
           }),
           "info",
         );

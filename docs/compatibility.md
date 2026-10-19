@@ -14,17 +14,18 @@ is visible in /mcp and fails chrysalis's exact server/configuration gate.
 
 Model calls use one policy, whether direct or nested through ctx.executeTool:
 
-| Operation | Authority |
-| --- | --- |
-| Provider registration, native quota/UI commands and hooks | Ordinary trusted Pi extension features; no model-tool grant |
-| Pi-owned orchestration with public reachesTools metadata | May discover/orchestrate; every reached tool is checked again |
-| chrysalis source tools | Exact server name, owner, launch configuration, namespace, callable exposure and input schema |
-| chrysalis capabilities | Exact package registration and enabled native capability |
-| External read-only tool | Explicit native grant for the exact effective definition and origin |
-| Other external action | Exact native scope grant, then native confirmation of each call and its complete input |
-| Unknown, changed or hidden tool | Scoped denial with a native review remedy |
-| Selected workspace work | Existing isolated executor and native-selected workspace |
-| Authoritative vault changes | Saved proposal, per-note vetting, final native approval, raw revisions and apply |
+| Operation                                                 | Authority                                                                                     |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Provider registration, native quota/UI commands and hooks | Ordinary trusted Pi extension features; no model-tool grant                                   |
+| Pi-owned orchestration with public reachesTools metadata  | May discover/orchestrate; every reached tool is checked again                                 |
+| chrysalis source tools                                    | Exact server name, owner, launch configuration, namespace, callable exposure and input schema |
+| chrysalis capabilities                                    | Exact package registration and enabled native capability                                      |
+| External read-only tool                                   | Explicit native grant for the exact effective definition and origin                           |
+| Other external action                                     | Exact native scope grant, then native confirmation of each call and its complete input        |
+| Unknown or changed tool                                   | Scoped denial with a native review remedy                                                     |
+| Hidden tool                                               | Native Pi exposure/resource configuration first, then exact scope review                      |
+| Selected workspace work                                   | Existing isolated executor and native-selected workspace                                      |
+| Authoritative vault changes                               | Saved proposal, per-note vetting, final native approval, raw revisions and apply              |
 
 Visibility is not permission. MCP codemode tools may be reported as deferred by Pi.
 Annotations are unverified hints; a friendly name, readOnlyHint or absent metadata grants nothing.
@@ -84,17 +85,17 @@ provider quality, live quota accuracy or permission to send personal data.
 
 ## Compatibility matrix
 
-| Component / feature | Classification | Acceptance boundary |
-| --- | --- | --- |
-| Pi 1.2.0 built-in MCP/codemode with chrysalis | Verified compatible | Synthetic SDK/installed-archive startup and calls; no built-in exclusions |
-| Existing user MCP servers | Supported with documented configuration | Pi loads configuration; each external tool requires its own scoped native grant |
-| Exact chrysalis server override or duplicate resource names | Incompatible feature | Fail closed; resolve the conflict with pi config or manifest/settings filters |
-| pi-quotas 0.5.0 | Verified installation/registration compatibility | All six original resources load; native quota/token commands retained. Live authenticated quotas remain untested |
-| pi-antigravity 0.10.0 | Verified installation/registration compatibility | All three original resources and eight chat catalog entries load. Google sign-in/live inference/background service acceptance remain untested |
-| Public provider runtime for main/memory/specialists | Verified offline routing | Synthetic registered provider and child stream; no live service claim |
-| Competing observational-memory engines | Incompatible feature together | Choose one memory engine through ordinary resource selection |
-| Direct authoritative-vault writer | Incompatible feature | Use proposal/native approval/CAS instead |
-| Other Pi versions, native Windows/macOS | Untested | Declared ranges are not platform/version acceptance |
+| Component / feature                                         | Classification                                   | Acceptance boundary                                                                                                                           |
+| ----------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pi 1.2.0 built-in MCP/codemode with chrysalis               | Verified compatible                              | Synthetic SDK/installed-archive startup and calls; no built-in exclusions                                                                     |
+| Existing user MCP servers                                   | Supported with documented configuration          | Pi loads configuration; each external tool requires its own scoped native grant                                                               |
+| Exact chrysalis server override or duplicate resource names | Incompatible feature                             | Fail closed; resolve the conflict with pi config or manifest/settings filters                                                                 |
+| pi-quotas 0.5.0                                             | Verified installation/registration compatibility | All six original resources load; native quota/token commands retained. Live authenticated quotas remain untested                              |
+| pi-antigravity 0.10.0                                       | Verified installation/registration compatibility | All three original resources and eight chat catalog entries load. Google sign-in/live inference/background service acceptance remain untested |
+| Public provider runtime for main/memory/specialists         | Verified offline routing                         | Synthetic registered provider and child stream; no live service claim                                                                         |
+| Competing observational-memory engines                      | Incompatible feature together                    | Choose one memory engine through ordinary resource selection                                                                                  |
+| Direct authoritative-vault writer                           | Incompatible feature                             | Use proposal/native approval/CAS instead                                                                                                      |
+| Other Pi versions, native Windows/macOS                     | Untested                                         | Declared ranges are not platform/version acceptance                                                                                           |
 
 pi-antigravity 0.10.0 resolves Undici 8.12.1, which requires Node >=22.19. Pi 1.2.0 also declares that floor, so chrysalis now requires Node >=22.19.0 for its supported Pi adapter. This minimum is not attributed solely to the add-on. Use a runtime satisfying the entire selected loadout.
 Do not install local duplicate copies of globally installed packages. Apply filters to the existing

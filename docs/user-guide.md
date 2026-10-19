@@ -4,7 +4,9 @@ Pi discovers eight families through `/skill:chrysalis-<family>`: daily, task, kn
 environment, integrations, maintenance and learning. Optional NixOS work adds the system skill. Read the canonical skill and necessary references,
 including the shared [operation API](operations.md). A reviewed host can enable bounded Ketch
 research, current-session recall and structured questions through [host add-ons](host-addons.md).
-General browser executors, arbitrary file access and child agents need a separate session.
+General browser executors, arbitrary file access and unreviewed child agents remain unavailable.
+Reviewed assistant setup can enable the controlled browser, isolated workspace and fixed-role
+specialists in this conversation.
 
 Use bounded query/read operations and draft complete records. `task.draft` needs a title and actual
 local `now`; it creates an unscheduled task with native projects links. Show complete post-images

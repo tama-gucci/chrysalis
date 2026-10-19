@@ -30,6 +30,8 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_succeeds("su - chrysalis -c 'tmux list-panes -t chrysalis -F \"#{pane_current_command}\" | grep -xE \"pi|node|bun\"'")
         restarts = machine.succeed("systemctl show --value --property=NRestarts cage-tty1")
         machine.succeed("sleep 5")
+        machine.succeed("systemctl is-active --quiet cage-tty1")
+        machine.succeed("su - chrysalis -c 'tmux list-panes -t chrysalis -F \"#{pane_current_command}\" | grep -xE \"pi|node|bun\"'")
         assert machine.succeed("systemctl show --value --property=NRestarts cage-tty1") == restarts
 
     start_all()

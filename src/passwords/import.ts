@@ -82,10 +82,11 @@ const URL_COLUMNS = ["url", "uri", "website", "loginuri", "loginurl"];
 /** Strong export signatures, used only to refuse ordinary document copies/extraction. */
 export function isPasswordExport(bytes: Buffer): boolean {
   try {
-    const text = new TextDecoder("utf-8", { fatal: true })
-      .decode(bytes)
+    const text = new TextDecoder("utf-8", { fatal: false })
+      .decode(bytes.subarray(0, PASSWORD_INPUT_LIMIT))
       .replace(/^\uFEFF/, "");
     if (/^\s*[\[{]/.test(text)) {
+      if (bytes.length > PASSWORD_INPUT_LIMIT) return true;
       // Detect export-shaped truncated JSON before parsing can fail open.
       if (
         /"(?:password|loginpassword)"\s*:/i.test(text) &&
@@ -180,7 +181,7 @@ export function parsePasswordExport(bytes: Buffer): PasswordSnapshot {
   try {
     if (bytes.length > PASSWORD_INPUT_LIMIT) throw Error("limit");
     const text = new TextDecoder("utf-8", { fatal: true })
-      .decode(bytes)
+      .decode(bytes.subarray(0, PASSWORD_INPUT_LIMIT))
       .replace(/^\uFEFF/, "");
     let source: any[], adapter: string;
     if (/^\s*[\[{]/.test(text)) {
@@ -275,7 +276,11 @@ export function mergePasswordSnapshot(
       duplicate.length &&
       duplicate.some(
         (r) =>
-          r.password !== incoming.password || r.username !== incoming.username,
+          r.password !== incoming.password ||
+          r.username !== incoming.username ||
+          r.name !== incoming.name ||
+          r.folder !== incoming.folder ||
+          JSON.stringify(r.origins) !== JSON.stringify(incoming.origins),
       )
     )
       throw Error("password_import_ambiguous_duplicates");

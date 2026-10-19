@@ -27,15 +27,20 @@ export function storeArtifact(
       throw Error("Artifact retention limit; review private outputs");
     const id = randomUUID();
     atomic(confined(root, id + "." + kind), data, null);
-    atomicJSON(confined(root, id + ".json"), {
-      version: 1,
-      id,
-      kind,
-      sha256: sha256(data),
-      bytes: data.length,
-      provenance,
-      authority: "private_unreviewed_artifact",
-    });
+    try {
+      atomicJSON(confined(root, id + ".json"), {
+        version: 1,
+        id,
+        kind,
+        sha256: sha256(data),
+        bytes: data.length,
+        provenance,
+        authority: "private_unreviewed_artifact",
+      });
+    } catch (error) {
+      fs.unlinkSync(confined(root, id + "." + kind));
+      throw error;
+    }
     return {
       handle: id,
       kind,
@@ -57,7 +62,12 @@ export function inspectArtifact(state: string, id: string) {
   )
     throw Error("Artifact metadata changed");
   const bytes = raw(confined(root, id + "." + metadata.kind), 2 * 1024 * 1024);
-  if (sha256(bytes) !== metadata.sha256) throw Error("Artifact bytes changed");
+  if (
+    metadata.bytes !== bytes.length ||
+    !/^[a-f0-9]{64}$/.test(metadata.sha256) ||
+    sha256(bytes) !== metadata.sha256
+  )
+    throw Error("Artifact bytes changed");
   return { metadata, bytes };
 }
 export function prepareArtifactAdoption(ctx: RuntimeContext, id: string) {
@@ -90,7 +100,9 @@ export function adoptArtifact(
   if (plan.digest !== reviewedDigest) throw Error("Artifact adoption changed");
   const { bytes } = inspectArtifact(ctx.state, id);
   const target = confined(ctx.vault, plan.path);
-  atomic(target, bytes, null);
+  if (!fs.existsSync(target)) atomic(target, bytes, null);
+  else if (sha256(raw(target, 2 * 1024 * 1024)) !== plan.sha256)
+    throw Error("Artifact target changed; preserve concurrent bytes");
   if (sha256(raw(target, 2 * 1024 * 1024)) !== plan.sha256)
     throw Error("Artifact verification failed");
   atomicJSON(

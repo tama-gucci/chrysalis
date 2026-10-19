@@ -60,20 +60,27 @@ class VM:
             command += ["-drive", f"file={file},if=none,id=d{i},format={fmt}",
                         "-device", f"virtio-blk-pci,drive=d{i},serial={serial},bootindex={i+1}"]
         self.log = (work / (name + ".log")).open("w", encoding="utf8")
-        self.child = pexpect.spawn(command[0], command[1:], encoding="utf8", codec_errors="replace", timeout=600)
-        self.child.logfile_read = self.log
-        if not live:
-            self.child.expect(r"(?i)(passphrase|password).*(chrysalis-root|crypt|disk)|(?i:Please enter passphrase)")
-            self.child.sendline("fixture-encryption-2026")
-        self.child.expect(r"login:\s*$")
-        self.child.sendline("chrysalis")
-        if not live:
-            self.child.expect("Password:")
-            self.child.sendline("fixture-account-2026")
-        ready = uuid.uuid4().hex
-        self.child.sendline("printf '\\nCHRYSALIS_SHELL_%s\\n' " + ready)
-        self.child.expect("CHRYSALIS_SHELL_" + ready)
-        self.run("stty -echo; export PS1='acceptance$ '")
+        try:
+            self.child = pexpect.spawn(command[0], command[1:], encoding="utf8", codec_errors="replace", timeout=600)
+            self.child.logfile_read = self.log
+            if not live:
+                self.child.expect(r"(?i)(passphrase|password).*(chrysalis-root|crypt|disk)|(?i:Please enter passphrase)")
+                self.child.sendline("fixture-encryption-2026")
+            self.child.expect(r"login:\s*$")
+            self.child.sendline("chrysalis")
+            if not live:
+                self.child.expect("Password:")
+                self.child.sendline("fixture-account-2026")
+            ready = uuid.uuid4().hex
+            self.child.sendline("printf '\\nCHRYSALIS_SHELL_%s\\n' " + ready)
+            self.child.expect("CHRYSALIS_SHELL_" + ready)
+            self.run("stty -echo; export PS1='acceptance$ '")
+        except BaseException:
+            if hasattr(self, "child"):
+                self.child.close(force=True)
+            self.log.close()
+            raise
+
 
     def run(self, command, timeout=2400, admin=False):
         token = "CHRYSALIS_RESULT_" + uuid.uuid4().hex

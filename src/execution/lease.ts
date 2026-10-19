@@ -14,11 +14,16 @@ import {
 const leasePath = (state: string) =>
   confined(assistantRoot(state), "workspace-writer.json");
 export function processStart(pid: number) {
+  if (!Number.isSafeInteger(pid) || pid < 1)
+    throw Error("Invalid worker process identity");
   if (process.platform !== "linux")
     throw Error("Worker process identity requires Linux");
   try {
     const stat = fs.readFileSync("/proc/" + pid + "/stat", "utf8");
-    return stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
+    const start = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
+    if (!/^[0-9]+$/.test(start ?? "") || BigInt(start) <= 0n)
+      throw Error("Invalid worker kernel identity");
+    return start;
   } catch (e: any) {
     if (e.code === "ENOENT") return null;
     throw e;
@@ -30,6 +35,13 @@ export function writerLeaseStatus(state: string) {
   const record = readJSON(file);
   if (
     !Number.isSafeInteger(record.pid) ||
+    record.pid < 1 ||
+    ((record.childPid !== undefined || record.childStart !== undefined) &&
+      (!Number.isSafeInteger(record.childPid) ||
+        record.childPid < 1 ||
+        typeof record.childStart !== "string" ||
+        !/^[0-9]+$/.test(record.childStart) ||
+        BigInt(record.childStart) <= 0n)) ||
     typeof record.task !== "string" ||
     typeof record.token !== "string"
   )
@@ -43,7 +55,9 @@ export function assertWriterLease(state: string) {
     owner &&
     (path.resolve(process.env.CHRYSALIS_CHILD_TASK ?? "") !==
       path.resolve(owner.task) ||
-      (owner.childPid && owner.childPid !== process.pid))
+      (owner.childPid &&
+        (owner.childPid !== process.pid ||
+          processStart(process.pid) !== owner.childStart)))
   )
     throw Error(
       "Workspace is leased to a worker; wait, interrupt or use native reconciliation",
@@ -82,7 +96,7 @@ export function reserveWriterLease(state: string, task: string) {
       if (released) return true;
       const file = leasePath(state);
       if (fs.existsSync(file)) {
-        const owner = readJSON(file);
+        const owner = writerLeaseStatus(state);
         if (owner.token !== record.token) {
           released = true;
           return true;
@@ -106,7 +120,10 @@ export function reconcileWriterLease(state: string, approved: string) {
       throw Error("Worker lease review changed");
     if (
       !Number.isSafeInteger(record.childPid) ||
-      typeof record.childStart !== "string"
+      record.childPid < 1 ||
+      typeof record.childStart !== "string" ||
+      !/^[0-9]+$/.test(record.childStart) ||
+      BigInt(record.childStart) <= 0n
     )
       throw Error(
         "Worker startup identity is uncertain; inspect/terminate its tmux window before operator recovery",

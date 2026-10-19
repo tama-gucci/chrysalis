@@ -1,3 +1,4 @@
+import { readJSON } from "../src/platforms/filesystem.ts";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -11,7 +12,7 @@ import {
 import { loadProfile, assistantRoot } from "../src/assistant/profile.ts";
 import { defaultStateRoot } from "../src/storage/context.ts";
 import { assistantUI } from "../src/assistant/ui.ts";
-import { acquirePack } from "../src/assistant/install.ts";
+import { acquirePack, packRoot } from "../src/assistant/install.ts";
 import { sharedBudget } from "../src/assistant/budgets.ts";
 import { createJiti } from "jiti";
 import { ManagedBrowser } from "../src/research/playwright.ts";
@@ -115,6 +116,13 @@ export function installResearch(
         }));
       }
       const cap = loadProfile(state).limits.resultChars;
+      if (typeof result.answer === "string") {
+        result.omitted_answer_chars = Math.max(
+          0,
+          result.answer.length - Math.floor(cap / 2),
+        );
+        result.answer = result.answer.slice(0, Math.floor(cap / 2));
+      }
       while (
         JSON.stringify(result).length > cap &&
         Array.isArray(result.links) &&
@@ -274,15 +282,14 @@ export function installResearch(
           };
         return run(
           ctx,
-          () => {
-            if (passwords.revision() !== choice.revision)
-              throw Error("Saved login changed; review again");
-            return browser.fillCredentials(
-              choice.record,
-              choice.selectors,
-              choice.approvedOrigin,
-            );
-          },
+          () =>
+            passwords.withRevision(choice.revision, () =>
+              browser.fillCredentials(
+                choice.record,
+                choice.selectors,
+                choice.approvedOrigin,
+              ),
+            ),
           browser,
           signal,
         );
@@ -294,8 +301,10 @@ export function installResearch(
     description:
       "Experimental Gemini Web-only video question capability. Native account acceptance is deferred; no paid API or provider fallback. Cookies are never returned.",
     parameters: Type.Object({ url: Type.String(), question: Type.String() }),
-    async execute(_id: any, p: any, signal: any) {
+    async execute(_id: any, p: any, signal: any, _update: any, ctx: any) {
       if (readOnly) throw Error("Child media access is disabled");
+      if (!loadProfile(state).features.browser)
+        throw Error("Enable managed browser through native capabilities");
       const accepted = path.join(
         assistantRoot(state),
         "gemini-native-acceptance.json",
@@ -317,31 +326,32 @@ export function installResearch(
       const record = JSON.parse(fs.readFileSync(accepted, "utf8"));
       if (record.version !== 1 || record.enabled !== true)
         throw Error("Gemini access disabled");
-      const lease = acquirePack(state, "media");
-      let done: (() => void) | undefined;
-      try {
-        const jiti = createJiti(import.meta.url, { fsCache: false });
-        const module: any = await jiti.import(
-          path.join(lease.root, "node_modules/pi-web-access/gemini-web.ts"),
-        );
-        done = budget().reserve("gemini_web");
-        const result = await analyzeYouTube(
-          p.url,
-          p.question,
-          {
-            cookies: () => browser.googleCookies(),
-            query: module.queryWithCookies,
-          },
-          signal,
-        );
-        return {
-          content: [{ type: "text", text: JSON.stringify(result) }],
-          details: { verified: false },
-        };
-      } finally {
-        done?.();
-        lease.release();
-      }
+      return run(
+        ctx,
+        async () => {
+          const lease = acquirePack(state, "media");
+          try {
+            const jiti = createJiti(import.meta.url, { fsCache: false });
+            const module: any = await jiti.import(
+              path.join(lease.root, "node_modules/pi-web-access/gemini-web.ts"),
+            );
+            const result = await analyzeYouTube(
+              p.url,
+              p.question,
+              {
+                cookies: () => browser.googleCookies(),
+                query: module.queryWithCookies,
+              },
+              signal,
+            );
+            return result;
+          } finally {
+            lease.release();
+          }
+        },
+        browser,
+        signal,
+      );
     },
   });
   pi.on("session_shutdown", async () => {
@@ -359,11 +369,19 @@ export function installResearch(
               ...(passwords?.configured() ? ["chrysalis_browser_login"] : []),
             ]
           : []),
-        ...(fs.existsSync(
-          path.join(assistantRoot(state), "gemini-native-acceptance.json"),
-        )
-          ? ["chrysalis_youtube"]
-          : []),
+        ...(() => {
+          try {
+            const r = readJSON(
+              path.join(assistantRoot(state), "gemini-native-acceptance.json"),
+            );
+            if (p.features.browser && r.version === 1 && r.enabled === true) {
+              packRoot(state, "browser");
+              packRoot(state, "media");
+              return ["chrysalis_youtube"];
+            }
+          } catch {}
+          return [];
+        })(),
       ];
     },
     allowed(name: string) {

@@ -2,12 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { ManagedBrowser } from "../src/research/playwright.ts";
 import http from "node:http";
+import { randomUUID } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { PACKAGE_ROOT } from "../src/platforms/filesystem.ts";
 test(
   "managed Chromium retains a synthetic login and loads pinned adblock without host-network access",
   { skip: !process.env.CHRYSALIS_BROWSER_ACCEPTANCE_STATE },
   async () => {
     const browser = new ManagedBrowser(
         process.env.CHRYSALIS_BROWSER_ACCEPTANCE_STATE!,
+        "acceptance-" + randomUUID(),
       ),
       internal = browser as any;
     let hits = 0;
@@ -59,6 +64,15 @@ test(
         chrome.runtime.getManifest(),
       );
       assert.match(manifest.name, /uBlock/i);
+      assert.equal(
+        manifest.version,
+        JSON.parse(
+          fs.readFileSync(
+            path.join(PACKAGE_ROOT, "resources/browser.lock.json"),
+            "utf8",
+          ),
+        ).adblock.version,
+      );
       await browser.close();
       await browser.open();
       assert(

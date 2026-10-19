@@ -32,7 +32,41 @@ export function mcpConfiguration(
       throw Error(
         "MCP configuration is not a bounded regular file; inspect it natively",
       );
-    const bytes = fs.readFileSync(file);
+    const fd = fs.openSync(
+      file,
+      fs.constants.O_RDONLY |
+        (fs.constants.O_NOFOLLOW ?? 0) |
+        (fs.constants.O_NONBLOCK ?? 0),
+    );
+    let bytes: Buffer;
+    try {
+      const opened = fs.fstatSync(fd);
+      if (
+        !opened.isFile() ||
+        opened.dev !== stat.dev ||
+        opened.ino !== stat.ino ||
+        opened.size > 512 * 1024
+      )
+        throw Error("MCP configuration changed");
+      const data = Buffer.alloc(512 * 1024 + 1);
+      let n = 0;
+      while (n < data.length) {
+        const count = fs.readSync(fd, data, n, data.length - n, n);
+        if (!count) break;
+        n += count;
+      }
+      const after = fs.fstatSync(fd);
+      if (
+        n > 512 * 1024 ||
+        after.size !== opened.size ||
+        after.mtimeMs !== opened.mtimeMs ||
+        after.ctimeMs !== opened.ctimeMs
+      )
+        throw Error("MCP configuration changed");
+      bytes = data.subarray(0, n);
+    } finally {
+      fs.closeSync(fd);
+    }
     let data: any;
     try {
       data = JSON.parse(bytes.toString("utf8"));

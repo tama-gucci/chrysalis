@@ -71,8 +71,27 @@ export async function publicRequest(
     signal?: AbortSignal;
   } = {},
 ) {
-  const url = publicURL(input),
-    hosts = await lookup(url.hostname.replace(/^\[|\]$/g, ""), { all: true });
+  const url = publicURL(input);
+  const deadline = AbortSignal.timeout(15000);
+  const signal = options.signal
+    ? AbortSignal.any([options.signal, deadline])
+    : deadline;
+  signal.throwIfAborted();
+  let abortLookup: () => void = () => {};
+  const stopped = new Promise<never>((_resolve, reject) => {
+    abortLookup = () => reject(Error("Public request cancelled or timed out"));
+    signal.addEventListener("abort", abortLookup, { once: true });
+  });
+  let hosts;
+  try {
+    hosts = await Promise.race([
+      lookup(url.hostname.replace(/^\[|\]$/g, ""), { all: true }),
+      stopped,
+    ]);
+  } finally {
+    signal.removeEventListener("abort", abortLookup);
+  }
+  signal.throwIfAborted();
   if (!hosts.length || hosts.some((h) => !publicAddress(h.address)))
     throw Error("Private destination blocked");
   const selected = hosts[0];
@@ -86,7 +105,7 @@ export async function publicRequest(
       {
         method: options.method ?? "GET",
         headers: { ...options.headers, "accept-encoding": "identity" },
-        signal: options.signal,
+        signal,
         lookup: ((_h: any, o: any, cb: any) =>
           o?.all
             ? cb(null, [selected])

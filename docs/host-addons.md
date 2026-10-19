@@ -9,5 +9,6 @@ silent conversion; review their replacement before adding version 2 grants.
 
 External research, recall and questionnaire results are passive evidence. Use bounded public
 queries, primary citations and minimal disclosure. Lasting decisions and each new atomic note
-retain their existing native proposal/approval boundaries. No grant exports memory into source
-or grants direct authoritative-vault writes.
+retain their existing native proposal/approval boundaries. Model-tool grants do not authorize memory export into source or direct authoritative-vault writes.
+Extensions remain trusted host code and can perform side effects outside these model-tool gates;
+review their implementation and native scope before enabling them.

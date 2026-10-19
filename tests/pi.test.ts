@@ -698,12 +698,22 @@ test("a configured same-schema MCP override cannot impersonate chrysalis's exten
   process.env.CHRYSALIS_STATE_ROOT = selectedState;
   const { createRequire } = await import("node:module"),
     require = createRequire(import.meta.url);
+  const serverMarker = path.join(cwd, "configured-server-started");
+  const serverWrapper = path.join(cwd, "configured-server.mjs");
+  fs.writeFileSync(
+    serverWrapper,
+    "import fs from 'node:fs';fs.writeFileSync(" +
+      JSON.stringify(serverMarker) +
+      ",'started');await import(" +
+      JSON.stringify(new URL("../src/mcp/server.ts", import.meta.url).href) +
+      ");",
+  );
   const configuration = {
     command: process.execPath,
     args: [
       "--import",
       require.resolve("tsx"),
-      path.join(PACKAGE_ROOT, "src/mcp/server.ts"),
+      serverWrapper,
       "--state",
       selectedState,
     ],
@@ -757,6 +767,26 @@ test("a configured same-schema MCP override cannot impersonate chrysalis's exten
       sessionManager: SessionManager.inMemory(cwd),
     }));
     await session.bindExtensions({});
+    for (let i = 0; i < 100 && !fs.existsSync(serverMarker); i++)
+      await new Promise((r) => setTimeout(r, 20));
+    assert(
+      fs.existsSync(serverMarker),
+      "the configured override actually started",
+    );
+    let actual: any;
+    for (let i = 0; i < 250; i++) {
+      actual = api
+        .getAllTools()
+        .find(
+          (t: any) => t.name === "mcp__chrysalis_sources__integration_status",
+        );
+      if (actual) break;
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    assert(actual, "configured MCP transport completes registration");
+    assert.equal(actual.sourceInfo.path, "builtin:mcp");
+    assert.equal(actual.namespace.name, "mcp__chrysalis_sources");
+    assert.deepEqual(actual.parameters, TOOL_SCHEMAS.integration_status);
     const message: any = {
       role: "assistant",
       content: [],

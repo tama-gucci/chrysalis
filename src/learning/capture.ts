@@ -24,7 +24,8 @@ export function captureLesson(
       throw Error("Lesson capture limit");
     const data = JSON.stringify({
       version: 1,
-      ...lesson,
+      topic: lesson.topic,
+      entries: lesson.entries,
       authority: "unreviewed_private_lesson",
     });
     if (Buffer.byteLength(data) > 256 * 1024)

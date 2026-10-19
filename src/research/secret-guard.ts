@@ -9,8 +9,11 @@ export class BrowserSecretGuard {
     try {
       if (this.failed) throw Error("failed");
       const patterns = new Set(this.patterns);
+      let size = [...patterns].reduce((n, p) => n + p.length, 0);
+      if (values.length > 16000) throw Error("limit");
       for (const v of values)
         if (v) {
+          if (v.length > 65536) throw Error("limit");
           for (const p of [
             v,
             v.trim(),
@@ -21,7 +24,12 @@ export class BrowserSecretGuard {
             JSON.stringify(v).slice(1, -1),
             Buffer.from(v).toString("hex"),
           ])
-            if (p) patterns.add(p);
+            if (p && !patterns.has(p)) {
+              size += p.length;
+              if (size > 512 * 1024 || patterns.size >= 16000)
+                throw Error("limit");
+              patterns.add(p);
+            }
         }
       if (
         patterns.size > 16000 ||
@@ -111,6 +119,8 @@ export class BrowserSecretGuard {
     if (!this.enabled) return value;
     try {
       const u = new URL(value);
+      const decoded = u.origin + decodeURIComponent(u.pathname);
+      if (this.text(decoded) !== decoded) return "";
       return this.text(u.origin + u.pathname);
     } catch {
       return "";

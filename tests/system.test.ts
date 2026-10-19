@@ -33,6 +33,8 @@ import {
 } from "../src/system/state.ts";
 import {
   command,
+  assertInstalledLedgerProof,
+  systemLedgerAuthorization,
   installedSystemProfile,
   copyHandoffFile,
   inspectTarget,
@@ -441,15 +443,15 @@ test("a persisted installation interruption never becomes an automatic formattin
   await assert.rejects(installTarget(c), /interrupted/);
   assert.equal(currentOperation(c)?.phase, "uncertain");
   const v = vault();
-  await projectSystemLedger(c, v);
-  const body = fs.readFileSync(path.join(v, LEDGER_PATH), "utf8");
-  assert(body.includes("installing") && body.includes("uncertain"));
-  assert(!body.includes("bootVerified"));
+  await assert.rejects(projectSystemLedger(c, v), /installed boot/);
+  assert(!fs.existsSync(path.join(v, LEDGER_PATH)));
+  assert(currentOperation(c)?.events.some((e) => e.phase === "installing"));
+  assert(currentOperation(c)?.events.some((e) => e.phase === "uncertain"));
 });
 test("selecting a vault without an approved OS outcome creates no system ledger", async () => {
   const { c } = fixture(),
     v = vault();
-  assert.equal((await projectSystemLedger(c, v)).appended, 0);
+  await assert.rejects(projectSystemLedger(c, v), /native/);
   assert(!fs.existsSync(path.join(v, LEDGER_PATH)));
 });
 test(
@@ -1269,4 +1271,125 @@ test("configuration/vault overlap is refused before approval, later use and nati
   } finally {
     a.restore();
   }
+});
+
+test("ledger projection refuses closed, superseded and backend-drift outcomes", async () => {
+  const { c } = fixture(),
+    selected = vault();
+  const op = approveSystem(c, "Ledger authority", "backend-A");
+  await assert.rejects(
+    systemLedgerAuthorization(c, "backend-B"),
+    /authorization/,
+  );
+  assert.equal(currentOperation(c)?.vault, undefined);
+  const guard = await systemLedgerAuthorization(c, "backend-A");
+  await recordSystem(c, op.id, "closed");
+  await assert.rejects(projectSystemLedger(c, selected, guard), /native/);
+  assert(!fs.existsSync(path.join(selected, LEDGER_PATH)));
+  approveSystem(c, "New outcome", "backend-A");
+  await assert.rejects(projectSystemLedger(c, selected, guard), /changed/);
+  let backend = "backend-A";
+  const freshGuard = await systemLedgerAuthorization(c, () => backend);
+  backend = "backend-B";
+  await assert.rejects(projectSystemLedger(c, selected, freshGuard), /backend/);
+  assert(!fs.existsSync(path.join(selected, LEDGER_PATH)));
+});
+test("first installed-boot ledger evidence is exact and grants no administrative scope", async () => {
+  const { c } = fixture("installer"),
+    disk = {
+      path: "/dev/disk/by-id/synthetic",
+      kernel: "/dev/sdz",
+      majorMinor: "8:240",
+      size: 1024,
+      serial: "fixture",
+      model: "fixture",
+    };
+  const liveVault = vault();
+  const op = approveSystem(
+    c,
+    "Synthetic install",
+    "installer-backend",
+    disk,
+    liveVault,
+  );
+  assert.equal(currentOperation(c)?.vault, undefined);
+  const running = "/nix/store/" + "a".repeat(32) + "-system";
+  const verified = await recordSystem(
+    c,
+    op.id,
+    "verified",
+    { bootVerified: true, running },
+    (o) => {
+      o.installationId = op.id;
+    },
+  );
+  const installed = { ...c, mode: "installed" as const },
+    proof = {
+      handoffComplete: true,
+      operation: op.id,
+      host: c.host,
+      running,
+      rootUuid: "root-uuid",
+    },
+    observation: any = { running, profile: running };
+  assertInstalledLedgerProof(
+    installed,
+    verified,
+    proof,
+    observation,
+    "root-uuid",
+  );
+  assert.throws(() => requireSystemScope(installed), /scope/);
+  for (const bad of [
+    { ...proof, host: "other" },
+    { ...proof, operation: randomUUID() },
+    { ...proof, running: "different" },
+    { ...proof, handoffComplete: false },
+  ])
+    assert.throws(
+      () =>
+        assertInstalledLedgerProof(
+          installed,
+          verified,
+          bad,
+          observation,
+          "root-uuid",
+        ),
+      /proof/,
+    );
+  assert.throws(
+    () =>
+      assertInstalledLedgerProof(
+        installed,
+        verified,
+        proof,
+        observation,
+        "wrong-root",
+      ),
+    /proof/,
+  );
+  const selected = vault();
+  const authorize = () => {
+    const current = currentOperation(c)!;
+    assertInstalledLedgerProof(
+      installed,
+      current,
+      proof,
+      observation,
+      "root-uuid",
+    );
+    return current;
+  };
+  assert(
+    (await projectSystemLedger(installed, selected, authorize)).appended > 0,
+  );
+  assert.equal(
+    (await projectSystemLedger(installed, selected, authorize)).appended,
+    0,
+  );
+  await recordSystem(c, op.id, "closed");
+  await assert.rejects(
+    projectSystemLedger(installed, selected, authorize),
+    /proof/,
+  );
 });

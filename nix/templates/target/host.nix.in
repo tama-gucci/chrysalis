@@ -3,7 +3,7 @@
   networking.hostName = "@NAME@";
   time.timeZone = "@ZONE@";
   system.stateVersion = "26.05";
-  users.users.@USER@ = {
+  users.users."@USER@" = {
     isNormalUser = true;
     uid = 1000;
     extraGroups = [ "wheel" "networkmanager" ];

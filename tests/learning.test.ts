@@ -1,3 +1,4 @@
+import { sanitizeSVG } from "../src/learning/visuals.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -5,6 +6,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { validateQuiz, gradeQuiz, shuffled } from "../src/learning/quiz.ts";
 import { captureLesson } from "../src/learning/capture.ts";
+import { PACKAGE_ROOT } from "../src/platforms/filesystem.ts";
 import { defaults, saveProfile } from "../src/assistant/profile.ts";
 test("quiz IDs survive shuffle and grading cannot approve records", () => {
   const q = {
@@ -26,10 +28,8 @@ test("quiz IDs survive shuffle and grading cannot approve records", () => {
     validateQuiz({ ...q, options: [q.options[0], q.options[0]] }),
   );
   assert.deepEqual(
-    shuffled(q.options, () => 0)
-      .map((x) => x.id)
-      .sort(),
-    ["a", "b", "c"],
+    shuffled(q.options, () => 0).map((x) => x.id),
+    ["b", "c", "a"],
   );
 });
 test("lesson capture is opt-in, bounded and outside vault/source", () => {
@@ -47,6 +47,16 @@ test("lesson capture is opt-in, bounded and outside vault/source", () => {
     entries: [{ text: "Example" }],
   });
   assert.equal(r.status, "captured");
+  assert(
+    !fs.existsSync(
+      path.join(PACKAGE_ROOT, "assistant/lessons", r.handle + ".json"),
+    ),
+  );
+  const vault = path.join(state, "Synthetic Vault");
+  fs.mkdirSync(vault);
+  assert(
+    !fs.existsSync(path.join(vault, "assistant/lessons", r.handle + ".json")),
+  );
   assert.equal(r.authority, "unreviewed_private_lesson");
   assert(
     fs.existsSync(path.join(state, "assistant/lessons", r.handle + ".json")),
@@ -59,4 +69,9 @@ test("lesson capture is opt-in, bounded and outside vault/source", () => {
       }),
     /limit/,
   );
+});
+
+test("SVG source bounds precede scanning and malformed nested openings fail closed", () => {
+  assert.throws(() => sanitizeSVG("<".repeat(64001)), /source limit/);
+  assert.throws(() => sanitizeSVG("<svg>" + "<".repeat(60000)), /Malformed/);
 });

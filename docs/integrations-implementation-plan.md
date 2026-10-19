@@ -29,8 +29,8 @@ checks. Every new atomic note still requires individual vetting.
 
 ## Verified starting point and provider constraints
 
-Current source has 36 operations, a static adapter registry, private capability bindings and a
-eight-family skill layout. integrations.status and capability already exist. Tasks currently
+Current source has 36 operations, a static adapter registry, private capability bindings and a layout of
+eight skill families. integrations.status and capability already exist. Tasks currently
 reads normalized snapshots/exports. Maps has opt-in live Places/Routes requests. Health is
 deferred. Credential collection, OAuth and an MCP server are not implemented. The current
 extensions/chrysalis.ts activates read/chrysalis_operation and blocks other calls: adding a

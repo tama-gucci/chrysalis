@@ -6,6 +6,15 @@ export class UsageBudget {
   readonly calls: number;
   readonly concurrency: number;
   constructor(calls: number, concurrency: number) {
+    if (
+      !Number.isSafeInteger(calls) ||
+      calls < 1 ||
+      calls > 100 ||
+      !Number.isSafeInteger(concurrency) ||
+      concurrency < 1 ||
+      concurrency > 4
+    )
+      throw Error("Invalid usage budget");
     this.calls = calls;
     this.concurrency = concurrency;
   }
@@ -34,7 +43,7 @@ export class UsageBudget {
       reservedCalls: this.used,
       active: this.running,
       callLimit: this.calls,
-      observations: this.observations,
+      observations: structuredClone(this.observations),
       tokensKnown:
         this.observations.length > 0 &&
         this.observations.every((o) => o.usage !== null),

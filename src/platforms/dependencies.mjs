@@ -22,11 +22,25 @@ if (roots.length)
           throw error;
         for (const root of roots)
           try {
+            if (context.conditions?.includes("require"))
+              return nextResolve(
+                createRequire(path.join(root, "package.json")).resolve(
+                  specifier,
+                ),
+                context,
+              );
             return nextResolve(specifier, {
               ...context,
               parentURL: pathToFileURL(path.join(root, "package.json")).href,
             });
-          } catch {}
+          } catch (fallback) {
+            if (
+              !["ERR_MODULE_NOT_FOUND", "MODULE_NOT_FOUND"].includes(
+                fallback.code,
+              )
+            )
+              throw fallback;
+          }
         throw error;
       }
     },

@@ -9,6 +9,7 @@ import {
   sha256,
   raw,
   exists,
+  quarantineReviewedFile,
 } from "../platforms/filesystem.ts";
 export interface WorkspaceImage {
   directory: string;
@@ -158,9 +159,11 @@ export function mergeWorkspace(root: string, image: WorkspaceImage) {
     for (const rel of changed) {
       const target = confined(root, rel);
       if (after.revisions[rel] === undefined) {
-        if (sha256(raw(target, 32 * 1024 * 1024)) !== image.revisions[rel])
-          throw Error("Workspace conflict");
-        fs.unlinkSync(target);
+        quarantineReviewedFile(
+          target,
+          image.revisions[rel],
+          confined(image.directory, ".removed-" + randomUUID()),
+        );
       } else {
         atomic(
           target,

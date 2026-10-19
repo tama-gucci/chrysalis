@@ -13,6 +13,10 @@ import {
   raw,
   rejectRedirects,
   atomicJSON,
+  atomic,
+  sha256,
+  canonical,
+  withSyncLock,
 } from "../src/platforms/filesystem.ts";
 import { assistantUI } from "../src/assistant/ui.ts";
 
@@ -277,6 +281,9 @@ export function installCompanions(pi: ExtensionAPI) {
         throw Error(
           "Tool has no reviewable external registration; reserved tools retain their own policy",
         );
+      const policyRevision = exists(file)
+        ? sha256(raw(file, 128 * 1024))
+        : null;
       const identity = conversationToolDigest(t);
       const mcp = mcpOrigin(t)
         ? mcpConfiguration(pi, t.namespace?.name ?? "", ctx)
@@ -303,6 +310,9 @@ export function installCompanions(pi: ExtensionAPI) {
           exposure: t.exposure,
           annotations: t.annotations ?? "absent",
           parameters: t.parameters,
+          description: t.description,
+          promptGuidelines: t.promptGuidelines,
+          reachesTools: t.reachesTools ? String(t.reachesTools) : null,
           definition_sha256: identity,
         },
         null,
@@ -343,7 +353,9 @@ export function installCompanions(pi: ExtensionAPI) {
         ...(mcp ? { mcp_configuration: mcp.identity } : {}),
         mode: mode.startsWith("Trust") ? "read-only" : "review",
       });
-      atomicJSON(file, p);
+      withSyncLock(defaultStateRoot(), "host-addons-policy", () =>
+        atomic(file, canonical(p) + "\n", policyRevision),
+      );
       pi.setActiveTools([...new Set([...pi.getActiveTools(), name])]);
       ctx.ui.notify(
         "Scoped grant saved. Each call rechecks the effective registration.",

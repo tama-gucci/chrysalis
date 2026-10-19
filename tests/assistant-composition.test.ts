@@ -145,7 +145,10 @@ test("diagrams reject encoded external resources; private artifacts require exac
     adoptArtifact(ctx, artifact.handle, proposal.digest).records_approved,
     false,
   );
-  assert.throws(() => adoptArtifact(ctx, artifact.handle, proposal.digest));
+  assert.equal(
+    adoptArtifact(ctx, artifact.handle, proposal.digest).records_approved,
+    false,
+  );
   fs.appendFileSync(
     path.join(state, "assistant/artifacts", artifact.handle + ".svg"),
     "changed",
@@ -195,47 +198,51 @@ test("ordinary browser transport cannot bypass native health/maps/tasks/calendar
   );
 });
 
-test("parent death never releases a live child lease; native reconciliation verifies child exit", async () => {
-  const { spawn } = await import("node:child_process");
-  const { claimWorkerLease, writerLeaseStatus, reconcileWriterLease } =
-    await import("../src/execution/lease.ts");
-  const { digest } = await import("../src/platforms/filesystem.ts");
-  const state = path.join(base, "surviving-child"),
-    task = path.join(base, "surviving-task.json"),
-    release = reserveWriterLease(state, task);
-  const module = new URL("../src/execution/lease.ts", import.meta.url).href;
-  const child = spawn(
-    process.execPath,
-    [
-      "--input-type=module",
-      "-e",
-      `import {claimWorkerLease} from ${JSON.stringify(module)};claimWorkerLease(${JSON.stringify(state)},${JSON.stringify(task)});console.log("ready");setInterval(()=>{},1000);`,
-    ],
-    { stdio: ["ignore", "pipe", "pipe"] },
-  );
-  try {
-    await new Promise<void>((resolve, reject) => {
-      child.stdout.once("data", () => resolve());
-      child.once("error", reject);
-      child.once("exit", () => reject(Error("Child startup failed")));
-    });
-    const file = path.join(state, "assistant/workspace-writer.json"),
-      record = writerLeaseStatus(state);
-    record.pid = 99999999;
-    fs.writeFileSync(file, JSON.stringify(record));
-    assert.throws(() => assertWriterLease(state), /leased/);
-    assert.throws(() => reserveWriterLease(state, task), /owns/);
-    assert.throws(() => reconcileWriterLease(state, digest(record)), /alive/);
-    const exited = new Promise((r) => child.once("exit", r));
-    child.kill("SIGKILL");
-    await exited;
-    assert.equal(
-      reconcileWriterLease(state, digest(record)).child_verified_exited,
-      true,
+test(
+  "parent death never releases a live child lease; native reconciliation verifies child exit",
+  { skip: process.platform !== "linux" },
+  async () => {
+    const { spawn } = await import("node:child_process");
+    const { claimWorkerLease, writerLeaseStatus, reconcileWriterLease } =
+      await import("../src/execution/lease.ts");
+    const { digest } = await import("../src/platforms/filesystem.ts");
+    const state = path.join(base, "surviving-child"),
+      task = path.join(base, "surviving-task.json"),
+      release = reserveWriterLease(state, task);
+    const module = new URL("../src/execution/lease.ts", import.meta.url).href;
+    const child = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `import {claimWorkerLease} from ${JSON.stringify(module)};claimWorkerLease(${JSON.stringify(state)},${JSON.stringify(task)});console.log("ready");setInterval(()=>{},1000);`,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
     );
-    assertWriterLease(state);
-  } finally {
-    child.kill("SIGKILL");
-    release();
-  }
-});
+    try {
+      await new Promise<void>((resolve, reject) => {
+        child.stdout.once("data", () => resolve());
+        child.once("error", reject);
+        child.once("exit", () => reject(Error("Child startup failed")));
+      });
+      const file = path.join(state, "assistant/workspace-writer.json"),
+        record = writerLeaseStatus(state);
+      record.pid = 99999999;
+      fs.writeFileSync(file, JSON.stringify(record));
+      assert.throws(() => assertWriterLease(state), /leased/);
+      assert.throws(() => reserveWriterLease(state, task), /owns/);
+      assert.throws(() => reconcileWriterLease(state, digest(record)), /alive/);
+      const exited = new Promise((r) => child.once("exit", r));
+      child.kill("SIGKILL");
+      await exited;
+      assert.equal(
+        reconcileWriterLease(state, digest(record)).child_verified_exited,
+        true,
+      );
+      assertWriterLease(state);
+    } finally {
+      child.kill("SIGKILL");
+      release();
+    }
+  },
+);

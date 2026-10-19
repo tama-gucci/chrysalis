@@ -22,9 +22,28 @@ export function selectedModel(registry: any, route: any) {
 }
 function catalog(model: any) {
   // Public model fields only. Headers, URLs, credentials and provider internals never cross.
-  const { id, name, api, reasoning, input, cost, contextWindow, maxTokens } =
-    model;
-  return { id, name, api, reasoning, input, cost, contextWindow, maxTokens };
+  const {
+    id,
+    provider,
+    name,
+    api,
+    reasoning,
+    input,
+    cost,
+    contextWindow,
+    maxTokens,
+  } = model;
+  return {
+    id,
+    provider,
+    name,
+    api,
+    reasoning,
+    input,
+    cost,
+    contextWindow,
+    maxTokens,
+  };
 }
 export interface RuntimeRoute {
   address: string;
@@ -261,6 +280,7 @@ export function registerRuntimeRoute(
     !endpoint ||
     digest(endpoint.model) !== endpoint.identity ||
     endpoint.model.id !== route.model ||
+    endpoint.model.provider !== route.provider ||
     !/^[a-f0-9]{64}$/.test(endpoint.token)
   )
     throw Error("Invalid fixed provider route");

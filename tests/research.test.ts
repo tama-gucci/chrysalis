@@ -13,7 +13,10 @@ test("public destinations reject local protocols, credentials and special addres
     "::1",
     "::ffff:127.0.0.1",
     "fc00::1",
-    "2001:db8::1","2002:0a00:0001::1","2001:2::1","3fff::1",
+    "2001:db8::1",
+    "2002:0a00:0001::1",
+    "2001:2::1",
+    "3fff::1",
   ])
     assert(!publicAddress(ip), ip);
   assert(publicAddress("8.8.8.8"));
@@ -47,6 +50,7 @@ test("YouTube adapter uses web-only transport and never leaks synthetic cookies"
     ports,
   );
   assert.equal(calls, 1);
+  assert.equal(result.status, "ok");
   assert(!JSON.stringify(result).includes("synthetic-cookie-canary"));
   ports.query = async () => {
     calls++;

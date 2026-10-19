@@ -25,6 +25,8 @@ export function doctor(ctx: RuntimeContext) {
     "environment",
     "integrations",
     "maintenance",
+    "learning",
+    "system",
   ]) {
     const file = path.join(
       PACKAGE_ROOT,

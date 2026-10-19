@@ -14,6 +14,7 @@ import {
   PACKAGE_ROOT,
   inside,
   rejectPackageAncestry,
+  rejectRedirects,
   confined,
   exists,
   raw,
@@ -49,7 +50,8 @@ function checkName(root: string) {
     throw new Error("Invalid vault name");
 }
 function assertWorkspaceBoundary(state: string, root: string) {
-  const workspace = loadProfile(state).workspace?.root;
+  const configured = loadProfile(state).workspace?.root;
+  const workspace = configured ? rejectRedirects(configured) : undefined;
   if (workspace && (inside(root, workspace) || inside(workspace, root)))
     throw Error("Vault and execution workspace must be disjoint");
 }

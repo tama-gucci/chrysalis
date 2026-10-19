@@ -124,7 +124,9 @@ export async function installSpecialists(pi: ExtensionAPI) {
   const state = defaultStateRoot(),
     defs = new Map<string, string>(),
     jobs = new Map<string, any>();
-  let engine: any;
+  let engine: any,
+    shuttingDown = false;
+  const startupAborters = new Set<() => void>();
   async function load() {
     if (engine) return engine;
     if (!process.env.TMUX)
@@ -224,7 +226,11 @@ export async function installSpecialists(pi: ExtensionAPI) {
             details: {},
           };
         }
-        if (p.action === "interrupt") job.abort();
+        if (
+          p.action === "interrupt" &&
+          ["running", "awaiting_child_exit"].includes(job.status)
+        )
+          job.abort();
         return {
           content: [
             {
@@ -240,6 +246,8 @@ export async function installSpecialists(pi: ExtensionAPI) {
           details: {},
         };
       }
+      if (signal?.aborted || shuttingDown)
+        throw Error("Specialist launch cancelled");
       if (!profile.features.specialists)
         throw Error(
           "Enable specialists and choose model routes through native settings",
@@ -270,16 +278,31 @@ export async function installSpecialists(pi: ExtensionAPI) {
       let cancelRunning: (() => void) | undefined;
       let completion: Promise<void> | undefined;
       let runtime: Awaited<ReturnType<typeof openRuntimeRoute>> | undefined;
+      let startupCancelled = false;
+      const cancelStartup = () => {
+        startupCancelled = true;
+        runtime?.dispose();
+        cancelRunning?.();
+      };
+      startupAborters.add(cancelStartup);
+      signal?.addEventListener("abort", cancelStartup, { once: true });
+      const checkStartup = () => {
+        if (startupCancelled || signal?.aborted || shuttingDown)
+          throw Error("Specialist launch cancelled");
+      };
       try {
+        checkStartup();
         const e = await load(),
           id = randomUUID(),
           cwd = path.join(assistantRoot(state), "tasks", id);
+        checkStartup();
         fs.mkdirSync(cwd, { recursive: true, mode: 0o700 });
         runtime = await openRuntimeRoute(
           ctx.modelRegistry,
           route,
           profile.limits,
         );
+        checkStartup();
         atomicJSON(path.join(cwd, "task.json"), {
           version: 1,
           role: p.role,
@@ -315,6 +338,7 @@ export async function installSpecialists(pi: ExtensionAPI) {
           getSessionDir: () =>
             path.join(assistantRoot(state), "task-artifacts"),
         };
+        checkStartup();
         launchAttempted = true;
         const running = await e.launchSubagent(
           {
@@ -386,7 +410,8 @@ export async function installSpecialists(pi: ExtensionAPI) {
           .then(() => e.watchSubagent(running, controller.signal))
           .then(
             (result: any) => {
-              job.status = result.exitCode === 0 ? "finished" : "failed";
+              if (job.status !== "interrupted")
+                job.status = result.exitCode === 0 ? "finished" : "failed";
               job.summary = String(result.summary ?? "").slice(
                 0,
                 profile.limits.resultChars,
@@ -398,7 +423,7 @@ export async function installSpecialists(pi: ExtensionAPI) {
               settle(!result.error && Number.isInteger(result.exitCode));
             },
             () => {
-              job.status = "failed";
+              if (job.status !== "interrupted") job.status = "failed";
               saveStatus();
               settle(false);
             },
@@ -407,7 +432,7 @@ export async function installSpecialists(pi: ExtensionAPI) {
             clearTimeout(timer);
             signal?.removeEventListener("abort", abort);
           });
-        if (signal?.aborted) {
+        if (startupCancelled || signal?.aborted || shuttingDown) {
           abort();
           throw Error("Specialist launch cancelled");
         }
@@ -439,10 +464,15 @@ export async function installSpecialists(pi: ExtensionAPI) {
           if (releaseWriter(!launchAttempted)) done();
         }
         throw e;
+      } finally {
+        startupAborters.delete(cancelStartup);
+        signal?.removeEventListener("abort", cancelStartup);
       }
     },
   };
   pi.on("session_shutdown", async () => {
+    shuttingDown = true;
+    for (const abort of startupAborters) abort();
     for (const job of jobs.values())
       if (["running", "awaiting_child_exit"].includes(job.status)) job.abort();
   });

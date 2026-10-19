@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import {
@@ -51,6 +52,7 @@ test("call reservation is atomic, bounded and released once; UI cancellation rel
   assert.throws(() => budget.reserve("research"), /running/);
   done();
   done();
+  assert.equal(budget.status().active, 0);
   const end = budget.reserve("reviewer");
   end({ input: 4, output: 2 });
   assert.throws(() => budget.reserve("worker"), /limit/);
@@ -72,7 +74,7 @@ test("call reservation is atomic, bounded and released once; UI cancellation rel
   assert.deepEqual(results, [1, 2]);
 });
 test(
-  "Linux runner writes only workspace, hides state and blocks network/host IPC and Windows interop",
+  "Linux runner writes only workspace, hides state and blocks network/host IPC",
   { skip: process.platform !== "linux" },
   async () => {
     assert(
@@ -117,14 +119,31 @@ test(
   "runner cancellation kills descendants and bounded output reports truncation",
   { skip: process.platform !== "linux" },
   async () => {
-    const c = new AbortController();
-    setTimeout(() => c.abort(), 150);
-    const stopped = await runIsolated(state, "sleep 20 & wait", {
-      signal: c.signal,
-      timeout: 3,
-    });
+    const c = new AbortController(),
+      marker = "chrysalis-desc-" + randomUUID();
+    const pending = runIsolated(
+      state,
+      "node -e '" +
+        'process.title="' +
+        marker +
+        '";setInterval(()=>{},1000)' +
+        "' & wait",
+      { signal: c.signal, timeout: 10 },
+    );
+    const alive = () =>
+      spawnSync("pgrep", ["-f", "^" + marker + "$"], { encoding: "utf8" })
+        .status === 0;
+    for (let i = 0; i < 300 && !alive(); i++)
+      await new Promise((r) => setTimeout(r, 10));
+    assert(alive(), "the sandbox descendant actually started");
+    const cancelledAt = Date.now();
+    c.abort();
+    const stopped = await pending;
     assert(stopped.cancelled);
-    assert(stopped.wallSeconds < 3);
+    assert(Date.now() - cancelledAt < 3000);
+    for (let i = 0; i < 100 && alive(); i++)
+      await new Promise((r) => setTimeout(r, 10));
+    assert(!alive(), "no descendant survives cancellation");
     const r = await runIsolated(state, "head -c 90000 /dev/zero", {
       timeout: 3,
     });
@@ -133,7 +152,7 @@ test(
   },
 );
 test(
-  "late hardlinks cannot mutate protected inodes and command input bypasses no shell quoting",
+  "pre-existing and post-snapshot hardlinks preserve protected inodes; command input bypasses no shell quoting",
   { skip: process.platform !== "linux" },
   async () => {
     const secret = path.join(state, "protected-inode");
@@ -143,6 +162,11 @@ test(
       runIsolated(state, "printf changed > late-link"),
       /links/,
     );
+    assert.equal(fs.readFileSync(secret, "utf8"), "original");
+    fs.unlinkSync(path.join(workspace, "late-link"));
+    const late = runIsolated(state, "sleep 0.3; printf changed > late-link");
+    fs.linkSync(secret, path.join(workspace, "late-link"));
+    await assert.rejects(late, /conflict/);
     assert.equal(fs.readFileSync(secret, "utf8"), "original");
     fs.unlinkSync(path.join(workspace, "late-link"));
     const content = "literal-$(false)-`false`-" + "x".repeat(200000);

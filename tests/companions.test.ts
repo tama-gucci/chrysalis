@@ -108,6 +108,18 @@ test("actual host admits research, recall and questions without allowing direct 
       ") pi.registerTool({...t, label:t.name, execute:async()=>({content:[{type:'text',text:'Synthetic passive evidence: yes'}],details:{}})}); }",
   );
   process.env.CHRYSALIS_STATE_ROOT = state;
+  const onboarding = await import("../src/app/onboarding.ts");
+  const setup = onboarding.prepareOnboarding({
+    vault: path.join(cwd, "Synthetic Vault"),
+    state,
+    timezone: "Etc/UTC",
+  });
+  onboarding.approveSetup(
+    state,
+    setup.proposal_digest,
+    "synthetic native fixture",
+  );
+  await onboarding.applySetup(state, setup.proposal_digest);
   policy(state, addon, defs);
   const settings = SettingsManager.inMemory({});
   const loader = new DefaultResourceLoader({
@@ -207,7 +219,7 @@ test("actual host admits research, recall and questions without allowing direct 
           arguments: {},
         }),
       ),
-      /error/i,
+      /Validation failed for tool.*chrysalis_operation/,
     );
     assert(!session.getActiveToolNames().includes("subagent"));
   } finally {

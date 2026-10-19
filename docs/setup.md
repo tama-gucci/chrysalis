@@ -17,9 +17,9 @@ or terminal; never paste tokens, password exports or OAuth callback URLs into ch
 
 For a reviewed private archive, install with ordinary Pi package management:
 
-~~~text
+```text
 pi install --local npm:chrysalis@file:/absolute/path/chrysalis-2.0.0.tgz
-~~~
+```
 
 This uses the supplied archive and does not publish or fetch an unrelated registry release with
 the same bare name. Preserve other package declarations and authentication. For a published
@@ -85,8 +85,8 @@ See [storage](storage.md). Profiles, credentials, locks, approvals and recovery 
 | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | /chrysalis onboard                               | Prepared folder creation/recovery or goal onboarding                               |
 | /chrysalis onboard --restart                     | Replace unapproved setup and choose details again                                  |
-| /chrysalis compatibility                        | Effective registrations and scoped external-tool authority                        |
-| /chrysalis tools review &lt;name&gt;             | Native review of an external tool scope                                             |
+| /chrysalis compatibility                         | Effective registrations and scoped external-tool authority                         |
+| /chrysalis tools review &lt;name&gt;             | Native review of an external tool scope                                            |
 | /chrysalis status                                | Selected root and pending setup; no integrity/UI check                             |
 | /chrysalis documents                             | Select/review an optional external life-document folder                            |
 | /chrysalis documents --status                    | Inspect current folder authorization without scanning                              |
@@ -118,12 +118,8 @@ then `/chrysalis workspace`. Planning and vault review do not require the execut
 Browser/media setup currently requires accepted Linux Node 24 and downloads only after native
 permission. Gemini account/video verification remains deferred. See [commands and safeguards](assistant.md).
 
-For a live source checkout, install exact production dependencies in a separate private prefix.
-A managed launcher sets CHRYSALIS_DEPENDENCIES_ROOT and CHRYSALIS_PI_ROOT, supplies the package
-`src/platforms/dependencies.mjs` through Node `--import`, and uses the corresponding NODE_PATH for
-Pi's TypeScript extension loader. The Pi root is the installed coding-agent package, not its auth
-directory. This does not copy personal files into source; ordinary Pi-managed npm/Git installation
-uses normal dependency resolution. Keep the previous launcher/dependency identity for rollback.
+For development, use the prepared external package-folder workflow above. Ordinary Pi-managed
+npm/Git installation uses normal dependency resolution and requires no managed launcher.
 
 ## Optional saved-password import
 

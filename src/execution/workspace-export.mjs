@@ -30,6 +30,7 @@ function walk(root, relative = "") {
       )
     )
       continue;
+    if (++files > 20000) throw Error("Workspace output limit");
     const file = path.join(root, name),
       s = fs.lstatSync(file);
     if (
@@ -40,19 +41,49 @@ function walk(root, relative = "") {
       throw Error("Unsupported output entry");
     if (s.isDirectory()) walk(root, name);
     else {
-      if (
-        ++files > 20000 ||
-        s.size > 16 * 1024 * 1024 ||
-        (bytes += s.size) > 64 * 1024 * 1024
-      )
+      if (s.size > 16 * 1024 * 1024 || (bytes += s.size) > 64 * 1024 * 1024)
         throw Error("Workspace output limit");
-      process.stdout.write(
-        JSON.stringify({
-          path: name,
-          data: fs.readFileSync(file).toString("base64"),
-          mode: s.mode & 0o777,
-        }) + "\n",
+      const fd = fs.openSync(
+        file,
+        fs.constants.O_RDONLY |
+          fs.constants.O_NOFOLLOW |
+          fs.constants.O_NONBLOCK,
       );
+      try {
+        const opened = fs.fstatSync(fd);
+        if (
+          !opened.isFile() ||
+          opened.nlink !== 1 ||
+          opened.dev !== s.dev ||
+          opened.ino !== s.ino ||
+          opened.size !== s.size
+        )
+          throw Error("Workspace output changed");
+        const data = Buffer.alloc(s.size + 1);
+        let length = 0;
+        while (length < data.length) {
+          const n = fs.readSync(fd, data, length, data.length - length, length);
+          if (!n) break;
+          length += n;
+        }
+        const after = fs.fstatSync(fd);
+        if (
+          length !== s.size ||
+          after.size !== s.size ||
+          after.mtimeMs !== opened.mtimeMs ||
+          after.ctimeMs !== opened.ctimeMs
+        )
+          throw Error("Workspace output changed");
+        process.stdout.write(
+          JSON.stringify({
+            path: name,
+            data: data.subarray(0, length).toString("base64"),
+            mode: opened.mode & 0o777,
+          }) + "\n",
+        );
+      } finally {
+        fs.closeSync(fd);
+      }
     }
   }
 }
