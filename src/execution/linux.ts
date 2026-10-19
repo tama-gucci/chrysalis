@@ -94,6 +94,9 @@ export function runnerStatus() {
       "--symlink",
       "usr/lib",
       "/lib",
+      "--symlink",
+      "usr/lib64",
+      "/lib64",
       "--proc",
       "/proc",
       "--dev",
@@ -175,7 +178,7 @@ export async function runIsolated(
       "usr/lib",
       "/lib",
       "--symlink",
-      "usr/lib",
+      "usr/lib64",
       "/lib64",
     ];
     binds.push("--ro-bind", node, "/runner/node");
