@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { loadProfile } from "../assistant/profile.ts";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { preset, DIRECTORIES, pluginLock } from "../obsidian/preset.ts";
@@ -11,7 +12,9 @@ import { validate, readRecord } from "../storage/records.ts";
 import { zoneName, nowStamp } from "../time/timezone.ts";
 import {
   PACKAGE_ROOT,
+  inside,
   rejectPackageAncestry,
+  rejectRedirects,
   confined,
   exists,
   raw,
@@ -46,6 +49,12 @@ function checkName(root: string) {
   )
     throw new Error("Invalid vault name");
 }
+function assertWorkspaceBoundary(state: string, root: string) {
+  const configured = loadProfile(state).workspace?.root;
+  const workspace = configured ? rejectRedirects(configured) : undefined;
+  if (workspace && (inside(root, workspace) || inside(workspace, root)))
+    throw Error("Vault and execution workspace must be disjoint");
+}
 export function prepareOnboarding(input: {
   vault: string;
   state: string;
@@ -54,6 +63,7 @@ export function prepareOnboarding(input: {
 }) {
   const root = rejectPackageAncestry(input.vault);
   checkName(root);
+  assertWorkspaceBoundary(input.state, root);
   const state = externalState(input.state, root),
     timezone = zoneName(input.timezone);
   if (exists(root) && fs.readdirSync(root).length)
@@ -127,6 +137,7 @@ export function loadSetup(state: string, key: string): SetupPlan {
   rejectPackageAncestry(plan.vault_root);
   externalState(state, plan.vault_root);
   checkName(plan.vault_root);
+  assertWorkspaceBoundary(state, plan.vault_root);
   for (const [relative, expected] of Object.entries(plan.files) as Array<
     [string, any]
   >) {
@@ -171,6 +182,7 @@ export async function applySetup(
   )
     throw new Error("Setup approval mismatch");
   return withLock(confined(state, "setup-locks"), plan.vault_root, () => {
+    assertWorkspaceBoundary(state, plan.vault_root);
     const root = plan.vault_root,
       ledgerPath = confined(state, "setup-applications/" + key + ".json"),
       ledger = exists(ledgerPath) ? readJSON(ledgerPath) : { applied: {} };

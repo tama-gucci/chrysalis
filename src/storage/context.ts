@@ -78,3 +78,15 @@ export function selectedContext(state = defaultStateRoot()): RuntimeContext {
     throw new Error("Vault identity changed; review a new binding");
   return ctx;
 }
+
+/** Unconfigured differs from a broken or changed authoritative binding. */
+export function optionalSelectedContext(
+  state = defaultStateRoot(),
+): RuntimeContext | undefined {
+  if (
+    !process.env.CHRYSALIS_VAULT_PATH &&
+    !exists(confined(state, "profile.json"))
+  )
+    return;
+  return selectedContext(state);
+}

@@ -1,3 +1,4 @@
+import { isPasswordExport } from "../../src/passwords/import.ts";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,10 +60,24 @@ export function check(root) {
       )
     )
       issue("runtime_collection_in_source", relative);
-    if (/\.(pyc|py|sqlite|db|zip|tgz|env|log|tmp|bak)$/.test(relative))
+    if (
+      /\.(pyc|py|sqlite|db|zip|tgz|env|log|tmp|bak)$/.test(relative) &&
+      relative !== "nix/tests/raw-boot.py"
+    )
       issue("obsolete_or_generated_file", relative);
+    if (fs.statSync(full).size > 32 * 1024 * 1024) {
+      issue("oversized_source_file", relative);
+      continue;
+    }
     const bytes = fs.readFileSync(full),
       asset = vendor.get(relative);
+    if (isPasswordExport(bytes)) issue("password_export_in_source", relative);
+    if (
+      /(?:^|\/)passwords\/inbox\/|(?:^|\/)passwords\.encrypted\.json$|(?:^|\/)passwords\/key\.json$/.test(
+        relative,
+      )
+    )
+      issue("password_runtime_in_source", relative);
     if (asset) {
       if (
         bytes.length !== asset.bytes ||
@@ -71,7 +86,8 @@ export function check(root) {
         issue("third_party_asset_changed", relative);
       continue;
     }
-    if (!/\.(md|json|yaml|yml|base|ts|mjs|js|txt)$/.test(relative)) continue;
+    if (!/\.(md|json|yaml|yml|base|ts|mjs|js|txt|nix|sh|in|py)$/.test(relative))
+      continue;
     let text;
     try {
       text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
@@ -89,7 +105,9 @@ export function check(root) {
       issue("credential_pattern", relative);
     if (
       relative.endsWith(".md") &&
-      /antigravity|codex|claude\s+code|hermes|syncthing/i.test(text)
+      /antigravity|codex|claude\s+code|hermes|syncthing/i.test(
+        text.replace(/\bpi-antigravity\b/g, ""),
+      )
     )
       issue("outdated_documentation", relative);
     try {

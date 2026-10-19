@@ -1,0 +1,14 @@
+{
+  description = "Chrysalis NixOS configuration";
+  inputs = {
+    chrysalis.url = "@SOURCE@";
+    nixpkgs.follows = "chrysalis/nixpkgs";
+    disko.follows = "chrysalis/disko";
+    flake-parts.follows = "chrysalis/flake-parts";
+    import-tree.follows = "chrysalis/import-tree";
+  };
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+    systems = [ "x86_64-linux" ];
+    imports = [ (inputs.import-tree ./modules) ];
+  };
+}

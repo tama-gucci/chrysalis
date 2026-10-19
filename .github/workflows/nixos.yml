@@ -1,0 +1,109 @@
+name: NixOS prototype
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [chrysalis-nixos]
+permissions:
+  contents: read
+concurrency:
+  group: nixos-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  portable:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        node: ["22.19.0", "24.20.0"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Prepare workspace isolation
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y bubblewrap apparmor
+          # Ubuntu requires an explicit userns allowance for the sandbox helper.
+          # https://discourse.ubuntu.com/t/ubuntu-24-04-lts-noble-numbat-release-notes/39890
+          if test -f /etc/apparmor.d/bwrap-userns-restrict; then
+            sudo apparmor_parser -r /etc/apparmor.d/bwrap-userns-restrict
+          else
+            cat > "$RUNNER_TEMP/chrysalis-ci-bwrap.apparmor" <<'EOF'
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile chrysalis-ci-bwrap /usr/bin/bwrap flags=(unconfined) {
+            userns,
+          }
+          EOF
+            sudo apparmor_parser -r "$RUNNER_TEMP/chrysalis-ci-bwrap.apparmor"
+          fi
+          test -S "/run/user/$(id -u)/bus"
+          /usr/bin/bwrap --unshare-all --new-session --die-with-parent --ro-bind /usr /usr --symlink usr/bin /bin --symlink usr/lib /lib --symlink usr/lib64 /lib64 --proc /proc --dev /dev /bin/true
+      - name: Test outside reusable source
+        env:
+          TEST_SCRATCH: ${{ runner.temp }}/fixtures
+        run: |
+          mkdir -p "$RUNNER_TEMP/tests"
+          cp -a "$GITHUB_WORKSPACE/." "$RUNNER_TEMP/tests/"
+          cd "$RUNNER_TEMP/tests"
+          npm ci --ignore-scripts --legacy-peer-deps
+          npm run typecheck
+          npm test
+          node Development/scripts/check.mjs --root "$GITHUB_WORKSPACE"
+  image-and-vm:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Prepare disposable hosted runner
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          sudo rm -rf -- /usr/local/lib/android /usr/share/dotnet
+          sudo apt-get update -qq
+          sudo apt-get install -y qemu-system-x86 qemu-utils ovmf python3-pexpect zstd
+          if test -e /dev/kvm; then sudo chmod a+rw /dev/kvm; fi
+      - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - name: Evaluate locked outputs
+        run: nix flake check --no-build --all-systems
+      - name: Test graphical module and reboot
+        run: nix build .#checks.x86_64-linux.system --out-link "$RUNNER_TEMP/module-test" -L
+      - name: Build persistent raw EFI image
+        run: nix build .#installer --out-link "$RUNNER_TEMP/installer" -L
+      - name: Boot image, install disposable disk, boot target and recover
+        run: |
+          mkdir -p "$RUNNER_TEMP/acceptance"
+          python3 nix/tests/raw-boot.py --image "$RUNNER_TEMP/installer" --work "$RUNNER_TEMP/acceptance"
+      - name: Package the accepted generic image
+        run: |
+          mapfile -t images < <(find -L "$RUNNER_TEMP/installer" -type f \( -name '*.img' -o -name '*.raw' \))
+          test "${#images[@]}" -eq 1
+          zstd -T0 -10 "${images[0]}" -o "$RUNNER_TEMP/chrysalis-installer.img.zst"
+          cd "$RUNNER_TEMP"
+          sha256sum chrysalis-installer.img.zst > chrysalis-installer.img.zst.sha256
+          cp "$GITHUB_WORKSPACE/flake.lock" chrysalis-installer.inputs.lock
+          printf 'Source commit: %s\n' "$GITHUB_SHA" > chrysalis-installer.build.txt
+      - name: Retain the accepted image and checksum
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: chrysalis-installer-prototype
+          path: |
+            ${{ runner.temp }}/chrysalis-installer.img.zst
+            ${{ runner.temp }}/chrysalis-installer.img.zst.sha256
+            ${{ runner.temp }}/chrysalis-installer.inputs.lock
+            ${{ runner.temp }}/chrysalis-installer.build.txt
+          compression-level: 0
+          retention-days: 7
+      - name: Retain diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: nixos-diagnostics
+          path: |
+            ${{ runner.temp }}/acceptance/*.log
+            ${{ runner.temp }}/acceptance/result.json
+          if-no-files-found: ignore
+          retention-days: 7

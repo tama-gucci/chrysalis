@@ -53,7 +53,7 @@ User: “I want to contribute to open-source software, but I do not know where t
 
 Assistant first clarifies whether the attraction is learning, collaboration, impact or experience;
 asks about current familiarity and available time; then reviews supplied contribution guides or
-requests cited findings from a separate research session. It compares documentation, issue reproduction and a small code change
+uses reviewed research tools when available, or requests cited findings from a separate research session. It compares documentation, issue reproduction and a small code change
 without presenting code contribution as inherently superior.
 
 If the user is unsure, propose an exploration: inspect two communities, try reproducing one issue,

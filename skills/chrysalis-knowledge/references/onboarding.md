@@ -3,7 +3,7 @@
 Use this procedure for first setup, a fresh roadmap, or a deliberate reconsideration of direction.
 It is part of `chrysalis-knowledge`, using Pi conversation, clarification,
 session continuation and reviewed domain writes. Research guidance below requires supplied evidence
-or a separate research session; the life profile has no web or external memory tool. Do not build another agent or interview engine.
+or enabled bounded public research. Protected providers retain their native integration controls. Do not build another agent or interview engine.
 
 Read [onboarding-decisions.md](onboarding-decisions.md). Maintain a small decision ledger with
 prerequisites and evidence in the session or reviewed checkpoint. Ask ready independent questions,
@@ -50,9 +50,10 @@ limitations inform near-term execution, not the range of aspirations the user is
 
 For an uncertain aspiration, develop two or three credible alternatives when available, including a
 bounded exploration route if the user is not ready to commit. Keep supplied evidence in this
-onboarding session/checkpoint. Browser tools and other packages' research skills are unavailable
-in this life profile. Offer a separate research session and bring its cited findings back for review;
-do not bypass the tool policy or imply that unchecked facts were researched.
+onboarding session/checkpoint. Use the enabled bounded public research capability with generic
+queries; external tools still require their native scope. If research is unavailable, offer a
+separate research session and bring its cited findings back for review. Do not bypass the tool
+policy or imply that unchecked facts were researched.
 
 Use current primary sources for requirements, eligibility, admissions, costs, timelines or software
 compatibility. Establish the relevant jurisdiction before researching regulated qualifications.
@@ -199,3 +200,22 @@ goals stay in the checkpoint and, once adopted, the vault roadmap. The package p
 host-memory integration.
 
 Offer optional source setup through `/chrysalis integrations setup`, respecting skip/defer. Explain Tasks capture and native Health/Maps evidence before the walkthrough. Never ask for client secrets, API keys or OAuth codes in conversation. Provider access does not approve roadmap, task or atomic-note mutations.
+
+## Optional assistant choices and learning
+
+Native vault onboarding offers assistant setup once; Later is a valid choice. Use
+`/chrysalis models` to choose authenticated background routes and an economical usage preset and `/chrysalis capabilities`
+for optional memory, specialists, research, browser or lesson capture. Explain privacy, overhead
+and availability using the chrysalis-learning skill. Do not select routes or authorize workspace
+execution through chat. Use enabled public research for current primary-source advice with generic
+queries. Offer small optional learning trials before candidate roadmap/project choices. Quizzes,
+lessons, diagrams, memory and child findings remain context; exact vault review stays separate.
+
+## Optional browser credentials
+
+Explicitly offer saved-password CSV/JSON import through `/chrysalis passwords setup` and
+`/chrysalis passwords import`, with skip/defer. Direct the user to the dedicated private inbox,
+never the life-document folder. Do not ask them to paste exports or passwords into chat.
+Password imports are private credential setup, not source evidence for roadmaps, projects or notes.
+Anonymous research and ordinary browsing require their enabled capability; they need no saved login. Saved-login autofill additionally requires native account/origin/field selection.
+Future manager sync is not connected by this offer.

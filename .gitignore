@@ -12,6 +12,7 @@
 !/AGENTS.md
 !/CHANGELOG.md
 !/LICENSE
+!/NOTICE.md
 !/src/
 !/src/**
 !/extensions/
@@ -28,6 +29,11 @@
 !/tests/**
 !/Development/
 !/Development/**
+!/flake.nix
+!/nix/
+!/nix/**
+!/.github/
+!/.github/**
 **/node_modules/
 **/.obsidian/
 **/.agent/
@@ -45,3 +51,5 @@
 *.lock
 Thumbs.db
 .DS_Store
+
+!/flake.lock

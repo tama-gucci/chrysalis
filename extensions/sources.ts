@@ -1,22 +1,104 @@
 import path from "node:path";
+import fs from "node:fs";
+import { getAgentDir, CONFIG_DIR_NAME } from "@earendil-works/pi-coding-agent";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
-import {
-  createCodemodeExtension,
-  createMcpExtension,
-} from "@earendil-works/pi-coding-agent";
 import type {
   ExtensionAPI,
   ExtensionCommandContext,
 } from "@earendil-works/pi-coding-agent";
 import { defaultStateRoot } from "../src/storage/context.ts";
-import { PACKAGE_ROOT, digest } from "../src/platforms/filesystem.ts";
+import { PACKAGE_ROOT, digest, sha256 } from "../src/platforms/filesystem.ts";
 import { SERVER_NAME, TOOL_SCHEMAS } from "../src/integrations/contracts.ts";
 
-/** Reuse upstream implementations with explicit life-profile loadout, not a new engine. */
+/** Public config-file contract supplements getMcpServers(), which lists extension registrations only. */
+export function mcpConfiguration(
+  pi: Pick<ExtensionAPI, "getMcpServers">,
+  namespace: string,
+  ctx?: any,
+) {
+  const files = [path.join(getAgentDir(), "mcp.json")];
+  if (ctx?.isProjectTrusted?.())
+    files.push(path.join(ctx.cwd, CONFIG_DIR_NAME, "mcp.json"));
+  const identities: any[] = [],
+    names: string[] = [];
+  for (const file of files) {
+    if (!fs.existsSync(file)) {
+      identities.push({ file, hash: null });
+      continue;
+    }
+    const stat = fs.lstatSync(file);
+    if (!stat.isFile() || stat.size > 512 * 1024)
+      throw Error(
+        "MCP configuration is not a bounded regular file; inspect it natively",
+      );
+    const fd = fs.openSync(
+      file,
+      fs.constants.O_RDONLY |
+        (fs.constants.O_NOFOLLOW ?? 0) |
+        (fs.constants.O_NONBLOCK ?? 0),
+    );
+    let bytes: Buffer;
+    try {
+      const opened = fs.fstatSync(fd);
+      if (
+        !opened.isFile() ||
+        opened.dev !== stat.dev ||
+        opened.ino !== stat.ino ||
+        opened.size > 512 * 1024
+      )
+        throw Error("MCP configuration changed");
+      const data = Buffer.alloc(512 * 1024 + 1);
+      let n = 0;
+      while (n < data.length) {
+        const count = fs.readSync(fd, data, n, data.length - n, n);
+        if (!count) break;
+        n += count;
+      }
+      const after = fs.fstatSync(fd);
+      if (
+        n > 512 * 1024 ||
+        after.size !== opened.size ||
+        after.mtimeMs !== opened.mtimeMs ||
+        after.ctimeMs !== opened.ctimeMs
+      )
+        throw Error("MCP configuration changed");
+      bytes = data.subarray(0, n);
+    } finally {
+      fs.closeSync(fd);
+    }
+    let data: any;
+    try {
+      data = JSON.parse(bytes.toString("utf8"));
+    } catch {
+      throw Error("MCP configuration is invalid; inspect it natively");
+    }
+    if (
+      !data ||
+      typeof data !== "object" ||
+      Array.isArray(data) ||
+      (data.mcpServers !== undefined &&
+        (!data.mcpServers ||
+          typeof data.mcpServers !== "object" ||
+          Array.isArray(data.mcpServers)))
+    )
+      throw Error("MCP configuration shape is invalid");
+    identities.push({ file, hash: sha256(bytes) });
+    names.push(...Object.keys(data.mcpServers ?? {}));
+  }
+  const matching = (name: string) =>
+    !namespace || "mcp__" + name.replace(/-/g, "_") === namespace;
+  const registered = pi.getMcpServers().filter((s) => matching(s.name));
+  return {
+    filesIdentity: digest(identities),
+    identity: digest({ files: identities, registered }),
+    configured: names.some(matching),
+    registered: registered.length > 0,
+  };
+}
+
+/** Pi owns orchestration and user MCP configuration; chrysalis owns only this server. */
 export function installSources(pi: ExtensionAPI) {
-  createCodemodeExtension({ models: false, mode: "on", inlineBudget: 0 })(pi);
-  createMcpExtension({ loadConfig: () => ({ servers: [], errors: [] }) })(pi);
   const config = {
     type: "stdio" as const,
     command: process.execPath,
@@ -37,8 +119,26 @@ export function installSources(pi: ExtensionAPI) {
       "Optional native-authorized read-only chrysalis sources; Health and Maps content require native review.",
   };
   pi.registerMcpServer(SERVER_NAME, config);
-  return (name: string) => {
+  let loadedConfiguration: string | undefined;
+  pi.on("session_start", (_event, ctx) => {
+    loadedConfiguration = mcpConfiguration(
+      pi,
+      "mcp__" + SERVER_NAME,
+      ctx,
+    ).filesIdentity;
+  });
+  pi.on("session_shutdown", () => {
+    pi.unregisterMcpServer(SERVER_NAME);
+  });
+  return (name: string, ctx?: any) => {
     try {
+      const configuration = mcpConfiguration(pi, "mcp__" + SERVER_NAME, ctx);
+      if (
+        configuration.configured ||
+        (loadedConfiguration &&
+          loadedConfiguration !== configuration.filesIdentity)
+      )
+        return false;
       const server = pi.getMcpServers().find((s) => s.name === SERVER_NAME);
       if (
         !server ||
@@ -50,15 +150,15 @@ export function installSources(pi: ExtensionAPI) {
       const tool = pi.getAllTools().find((t) => t.name === name);
       if (
         !tool ||
-        path.resolve(tool.sourceInfo.path) !==
-          path.join(PACKAGE_ROOT, "extensions/chrysalis.ts")
+        tool.sourceInfo.path !== "builtin:mcp" ||
+        tool.sourceInfo.source !== "builtin"
       )
         return false;
-      if (name === "codemode") return true;
       const prefix = "mcp__" + SERVER_NAME + "__",
         short = name.startsWith(prefix) ? name.slice(prefix.length) : "";
       return (
         !!TOOL_SCHEMAS[short] &&
+        ["codemode", "deferred"].includes(tool.exposure) &&
         tool.namespace?.name === "mcp__" + SERVER_NAME &&
         digest(tool.parameters) === digest(TOOL_SCHEMAS[short])
       );

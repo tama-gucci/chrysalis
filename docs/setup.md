@@ -1,13 +1,29 @@
 # Setup
 
-Use Node 22.18 or later with ICU and Pi in the supported range `>=1.0.4 <2`.
-SDK 1.0.4 is the tested host version; the whole supported range has not been individually tested.
-The pinned TaskNotes release requires Obsidian 1.12.2 or later.
+Use Node 22.19.0 or later with ICU and Pi in the supported range >=1.2.0 <2.
+Pi 1.2.0 is the tested SDK/host. Other versions in the declared range are untested.
+TaskNotes requires Obsidian 1.12.2 or later. Independent add-ons may need a newer Node runtime;
+Pi 1.2.0 itself requires Node >=22.19.0. pi-antigravity's resolved Undici 8.12.1 independently has that requirement.
 
-Use a dedicated Pi life profile. Set `PI_CODING_AGENT_DIR` to an absolute external profile directory
-before installation and whenever launching this profile. This is Pi's supported configuration-directory
-override, not a chrysalis command. Keep general development/research sessions separate: the extension
-restricts life tools to chrysalis operations, canonical skill reads and gated source codemode.
+Install chrysalis as an ordinary Pi package. Leave default MCP and codemode enabled. Pi owns these
+built-ins and the user's MCP configuration; chrysalis registers only its source server/capabilities.
+Use pi config for genuine resource conflicts and /chrysalis compatibility to inspect effective
+origins and scoped permissions. Unrelated provider/UI resources remain independent. No custom
+launcher or built-in exclusion is required. See the [compatibility rulebook](compatibility.md).
+
+PI_CODING_AGENT_DIR may select an external Pi settings/auth/session directory. Keep existing login,
+settings and conversations when updating a package. Authentication belongs in the native browser
+or terminal; never paste tokens, password exports or OAuth callback URLs into chat.
+
+For a reviewed private archive, install with ordinary Pi package management:
+
+```text
+pi install --local npm:chrysalis@file:/absolute/path/chrysalis-2.0.0.tgz
+```
+
+This uses the supplied archive and does not publish or fetch an unrelated registry release with
+the same bare name. Preserve other package declarations and authentication. For a published
+reviewed source revision, use Git transport:
 
 Install a reviewed Git revision through Pi:
 
@@ -23,8 +39,15 @@ there, then use `pi install <absolute-prepared-package-folder>`. Never put node_
 checkout. npm registry installation requires an actually published registry release; source on GitHub
 does not establish that publication. See [Pi packages](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md).
 
-Run `/chrysalis onboard` interactively. Choose a vault name (default `chrysalis`) and absolute parent
-folder. The command detects the computer timezone and prepares TaskNotes 4.13.8, Dataview 0.5.68,
+Run `/chrysalis onboard` interactively. Choose a vault name (default `chrysalis`) and parent folder. The location prompt accepts
+phrases such as `my documents folder`, `my home folder`, `desktop` and `downloads`, or an
+absolute path. Matching existing folders appear as you type; use Up/Down to highlight a suggestion
+and Tab to complete it. Enter confirms the resolved existing parent, and Escape cancels. The exact
+vault path appears in the setup review before any creation. Windows uses known folders, WSL maps
+Windows known folders, macOS uses standard user folders, and Linux honors XDG user-directory settings
+and `XDG_CONFIG_HOME`. Valid redirected Windows folders are respected; if the native Documents
+lookup is unavailable, an existing standard profile Documents folder is offered instead.
+An unavailable known folder or an unrecognized phrase requires an explicit existing path. The command detects the computer timezone and prepares TaskNotes 4.13.8, Dataview 0.5.68,
 schemas, views and empty state. Review the destination, minimum Obsidian version, settings and hashes
 before approval. Declining leaves the target unchanged; interrupted approved setup resumes its exact scope.
 
@@ -62,6 +85,8 @@ See [storage](storage.md). Profiles, credentials, locks, approvals and recovery 
 | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | /chrysalis onboard                               | Prepared folder creation/recovery or goal onboarding                               |
 | /chrysalis onboard --restart                     | Replace unapproved setup and choose details again                                  |
+| /chrysalis compatibility                         | Effective registrations and scoped external-tool authority                         |
+| /chrysalis tools review &lt;name&gt;             | Native review of an external tool scope                                            |
 | /chrysalis status                                | Selected root and pending setup; no integrity/UI check                             |
 | /chrysalis documents                             | Select/review an optional external life-document folder                            |
 | /chrysalis documents --status                    | Inspect current folder authorization without scanning                              |
@@ -83,3 +108,22 @@ or the roadmap. Noninteractive execution cannot supply approval; the life tool c
 Source setup can be skipped/deferred during onboarding or run later. No source connects simply
 because its module is installed. Read [source setup](integrations.md) for scope, billing,
 protected-storage requirements and Health/Maps native-only limitations.
+
+## Optional assistant setup
+
+First successful vault onboarding offers `/chrysalis assistant-setup`; Later preserves the basic
+workflow. Choose authenticated background model routes and optional capabilities, then use `/reload`.
+Use `/chrysalis runner-setup` inside Linux tmux for the reviewed minimal Debian/Ubuntu prerequisites,
+then `/chrysalis workspace`. Planning and vault review do not require the execution runner.
+Browser/media setup currently requires accepted Linux Node 24 and downloads only after native
+permission. Gemini account/video verification remains deferred. See [commands and safeguards](assistant.md).
+
+For development, use the prepared external package-folder workflow above. Ordinary Pi-managed
+npm/Git installation uses normal dependency resolution and requires no managed launcher.
+
+## Optional saved-password import
+
+Onboarding explicitly offers a private CSV/JSON password inbox, with Later/Skip. Use
+`/chrysalis passwords setup`, then place an export in that folder and run
+`/chrysalis passwords import`. Native import review precedes encrypted append/update; it does not
+copy credentials into Obsidian or enable a password-manager sync. Read [formats and browser use](passwords.md).

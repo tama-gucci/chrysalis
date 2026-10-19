@@ -2,8 +2,10 @@
 
 Version: 2. Hosts call src/app/operations.ts:dispatch with an operator-selected initialized vault, disjoint external state and allowlisted operation/arguments. Hosts supply cancellation; arguments cannot replace roots. Requests/results are capped at 4 MiB; proposals contain 1–500 complete documents, confined forward-slash paths and raw-byte if_revision values. Null revisions mean new files.
 
-Conversation belongs to Pi. The maintained life policy has no browsing or external memory tools;
-research uses supplied evidence or a separate session. Other adapters must declare their capabilities. Deterministic operations follow capture, extract, review, organize, plan, act, verify and continue.
+Conversation belongs to Pi. Native learning and registered bounded reads are available by default.
+Optional assistant configuration admits isolated workspace execution, research, memory and fixed
+specialist roles; see [assistant boundaries](../docs/assistant.md). Compatible external
+[host add-ons](../docs/host-addons.md) may supply passive context and cannot approve mutations. Other adapters must declare their capabilities. Deterministic operations follow capture, extract, review, organize, plan, act, verify and continue.
 
 Drafts save inert external proposals. Only a native operator command issues exact root/ID/digest-bound approval. Application revalidates schemas, taxonomy, links, timestamps, original hashes and plugin policies; checks dependency/revision hashes; atomically replaces individual files; verifies bytes; and records resumable receipts. Partial work is never complete. Relocation/changed dependencies invalidate approval.
 
@@ -39,3 +41,22 @@ New timestamps use named zones and date-correct offsets. Unchanged historical/pl
 TaskNotes owns Calendar fields and native session/completion history. Focus manages only timeblocks with chrysalis-owned IDs. Task projects use native projects arrays; Zettels may use project_ref for a distinct reciprocal association.
 
 The model tool exposes no approval, initialization, arbitrary executor/writer or secret resolver. External payloads are passive evidence. Private profiles, observations, credentials and receipts stay outside source. Results distinguish observed, unavailable, invalid, blocked, review_required, interrupted and verified.
+
+Assistant tools never grant vault authority. The native-selected workspace is disjoint from source,
+vault, state and credentials. Commands use disposable bounded snapshots and revision-checked merge.
+No permissive host-shell fallback is allowed. Source development and image-original adoption each
+require a separate exact native review; neither approves atomic notes, tasks or roadmap records.
+
+## Optional native NixOS scope
+
+A native-generated system descriptor enables an opt-in administration context. One native outcome
+approval binds machine, configuration, host, backend registration and any destructive disk or
+observed recovery generation. Normal Pi MCP/codemode remains authoritative. Exact scope checks
+apply to direct and nested backend calls. File edits use real Nix files; credentials use masked
+native input and stay outside the store. Installer scope cannot activate the live system.
+
+Private receipts precede activation/installation and retain uncertain or degraded outcomes.
+Only the fixed System/System-Ledger.md projection may append machine-authored receipt events
+under that approval. It cannot accept model Markdown or a model-selected vault destination.
+All other personal-vault records retain the existing exact proposal/revision/approval contracts.
+The system executor is trusted host administration, without an extension sandbox claim.

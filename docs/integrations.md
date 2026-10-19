@@ -77,12 +77,13 @@ storage design. Current native display/account behavior still needs live accepta
 
 ## Pi codemode
 
-The package reuses Pi's MCP and codemode extensions with model helpers disabled. It registers a
-package-owned stdio namespace `mcp__chrysalis_sources` with six strict read-only tools. The life
-session ignores file-configured MCP servers and admits only the expected package registration,
-origin and input schemas. Your global Pi settings are unchanged. General executors, arbitrary
-reads and unrelated MCP tools remain blocked, including nested calls. Use a separate development
-session for broader tools. This gate is not an OS sandbox.
+Pi owns the built-in MCP and codemode extensions. chrysalis registers the strict read-only
+mcp__chrysalis_sources stdio namespace through public registerMcpServer. The gate checks the
+exact server owner/configuration, Pi-owned MCP tool origin, namespace, callable exposure and
+input schemas on every direct or nested call. Pi's user-configured servers remain loaded and
+unrelated tools retain the [scoped compatibility policy](compatibility.md). No built-in exclusions
+or replacement launcher are required. A same-name user override is visible in /mcp and refused
+by the chrysalis gate. Health/Maps model paths still return readiness only.
 
 Each provider response is bounded to 1 MiB; each provider request times out after 10 seconds.
 The shared HTTP transport limits concurrency to four per process. Source tool calls have a

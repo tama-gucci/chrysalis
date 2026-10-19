@@ -190,6 +190,111 @@ export async function withLock<T>(
       fs.unlinkSync(lock);
   }
 }
+/** Short synchronous transitions; an abandoned lock requires native inspection. */
+export function withSyncLock<T>(
+  directory: string,
+  identity: string,
+  action: () => T,
+): T {
+  rejectRedirects(directory);
+  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  const file = path.join(directory, sha256(identity) + ".sync.lock");
+  const owner = { pid: process.pid, token: randomUUID() };
+  let fd: number;
+  try {
+    fd = fs.openSync(file, "wx", 0o600);
+  } catch {
+    throw Error(
+      "writer_busy: inspect an active or abandoned transition before retrying",
+    );
+  }
+  try {
+    fs.writeFileSync(fd, canonical(owner));
+    fs.fsyncSync(fd);
+    return action();
+  } finally {
+    fs.closeSync(fd);
+    if (exists(file) && readJSON(file).token === owner.token)
+      fs.unlinkSync(file);
+  }
+}
+/** Move first, then verify; conflicting bytes are restored or kept in recovery. */
+export function quarantineReviewedFile(
+  target: string,
+  expected: string,
+  recovery: string,
+  identity?: {
+    dev: number;
+    ino: number;
+    mtimeMs: number;
+    ctimeMs: number;
+    bytes: number;
+  },
+) {
+  rejectRedirects(target);
+  rejectRedirects(recovery);
+  const before = fs.lstatSync(target);
+  if (
+    !before.isFile() ||
+    before.nlink !== 1 ||
+    (identity &&
+      (before.dev !== identity.dev ||
+        before.ino !== identity.ino ||
+        before.mtimeMs !== identity.mtimeMs ||
+        before.ctimeMs !== identity.ctimeMs ||
+        before.size !== identity.bytes))
+  )
+    throw Error("Removal candidate changed; review again");
+  fs.mkdirSync(path.dirname(recovery), { recursive: true, mode: 0o700 });
+  if (exists(recovery)) throw Error("Recovery target already exists");
+  // The workspace/source may live on a different filesystem from private state.
+  // First move to a private unpredictable sibling when a direct rename is impossible.
+  let movedPath = recovery;
+  try {
+    fs.renameSync(target, recovery);
+  } catch (error: any) {
+    if (error.code !== "EXDEV") throw error;
+    movedPath = path.join(
+      path.dirname(target),
+      ".chrysalis-removed-" + randomUUID(),
+    );
+    fs.renameSync(target, movedPath);
+  }
+  try {
+    const moved = fs.lstatSync(movedPath);
+    if (
+      !moved.isFile() ||
+      moved.nlink !== 1 ||
+      moved.dev !== before.dev ||
+      moved.ino !== before.ino ||
+      moved.mtimeMs !== before.mtimeMs ||
+      sha256(raw(movedPath, 32 * 1024 * 1024)) !== expected
+    )
+      throw Error("Removal candidate changed; private recovery preserved");
+    if (movedPath !== recovery) {
+      atomic(recovery, raw(movedPath, 32 * 1024 * 1024), null);
+      const copied = fs.lstatSync(movedPath);
+      if (
+        copied.dev !== moved.dev ||
+        copied.ino !== moved.ino ||
+        copied.nlink !== 1 ||
+        copied.size !== moved.size ||
+        copied.mtimeMs !== moved.mtimeMs ||
+        copied.ctimeMs !== moved.ctimeMs ||
+        sha256(raw(movedPath, 32 * 1024 * 1024)) !== expected
+      )
+        throw Error("Removal candidate changed; private recovery preserved");
+      fs.unlinkSync(movedPath);
+    }
+    return recovery;
+  } catch (error) {
+    try {
+      fs.linkSync(movedPath, target);
+      fs.unlinkSync(movedPath);
+    } catch {}
+    throw error;
+  }
+}
 export function files(root: string, limit = 10000): string[] {
   const found: string[] = [];
   function walk(dir: string) {

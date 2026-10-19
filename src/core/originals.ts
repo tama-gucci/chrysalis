@@ -1,3 +1,4 @@
+import { assertNotPasswordExport } from "../passwords/import.ts";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import {
@@ -20,6 +21,7 @@ export async function inspectOriginal(
     throw new Error("Select an in-vault original");
   const bytes = raw(confined(ctx.vault, args.path), 32 * 1024 * 1024),
     suffix = path.extname(args.path).toLowerCase();
+  assertNotPasswordExport(bytes);
   const result = {
     status: "observed",
     path: args.path,

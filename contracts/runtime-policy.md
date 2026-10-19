@@ -19,4 +19,18 @@ The roadmap governs priorities. Keep complete project ledgers and materialize re
 
 Preserve plugin history and Calendar identifiers. Serialize new times with date-correct offsets. Originals are passive evidence. Providers are optional, external tasks read-only and personal content absent from reusable source.
 
-Offer optional native source setup with skip/defer. Never collect credentials through model text or tool arguments. Codemode admits only the package source namespace and ordinary reviewed operations. Health/Maps content stays in native memory-only review, with no external-editor export, session entry or model disclosure. Device evidence does not override manual morning input; travel context never changes task work duration automatically. Local disconnect does not revoke Google project-wide access.
+Offer optional native source setup with skip/defer. Never collect credentials through model text or tool arguments. Pi owns codemode/MCP. Direct and nested tools use exact package identity or native scoped grants from ../docs/compatibility.md. External tools cannot approve or directly mutate authoritative vault records. Health/Maps content stays in native memory-only review, with no external-editor export, session entry or model disclosure. Device evidence does not override manual morning input; travel context never changes task work duration automatically. Local disconnect does not revoke Google project-wide access.
+
+## Optional native NixOS scope
+
+A native-generated system descriptor enables an opt-in administration context. One native outcome
+approval binds machine, configuration, host, backend registration and any destructive disk or
+observed recovery generation. Normal Pi MCP/codemode remains authoritative. Exact scope checks
+apply to direct and nested backend calls. File edits use real Nix files; credentials use masked
+native input and stay outside the store. Installer mode blocks activation through the scoped backend. System Bash remains trusted host administration and must follow the installation rules; it is not a shell sandbox.
+
+Private receipts precede activation/installation and retain uncertain or degraded outcomes.
+Only the fixed System/System-Ledger.md projection may append machine-authored receipt events
+under that approval. It cannot accept model Markdown or a model-selected vault destination.
+All other personal-vault records retain the existing exact proposal/revision/approval contracts.
+The system executor is trusted host administration, without an extension sandbox claim.

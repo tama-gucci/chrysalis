@@ -1,7 +1,7 @@
 {
   "name": "chrysalis",
   "version": "2.0.0",
-  "description": "Pi skills and tools for a portable Markdown knowledge and daily-work vault",
+  "description": "Portable Pi assistant for planning, learning, research and reviewed Markdown vault work",
   "license": "MIT",
   "keywords": [
     "pi-package",
@@ -13,11 +13,13 @@
       "./skills"
     ],
     "extensions": [
+      "./extensions/bootstrap-guard.mjs",
       "./extensions/chrysalis.ts"
     ]
   },
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": ">=1.0.4 <2",
+    "@earendil-works/pi-coding-agent": ">=1.2.0 <2",
+    "@sinclair/typebox": "*",
     "typebox": ">=1.3.27 <2"
   },
   "files": [
@@ -35,30 +37,40 @@
     "Development",
     "tests",
     "tsconfig.json",
-    "AGENTS.md"
+    "AGENTS.md",
+    "NOTICE.md",
+    "nix/rules.md",
+    "nix/templates"
   ],
   "type": "module",
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=22.19.0"
   },
   "dependencies": {
-    "tsx": "4.23.15",
+    "@aliou/pi-guardrails": "0.19.0",
+    "@js-temporal/polyfill": "0.5.1",
+    "@maplezzk/pi-interactive-subagents": "3.16.4",
     "@modelcontextprotocol/sdk": "1.32.1",
-    "google-auth-library": "10.9.1",
-    "yaml": "2.9.1",
+    "@thednp/dommatrix": "3.1.2",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
-    "@js-temporal/polyfill": "0.5.1",
+    "fflate": "0.8.3",
+    "google-auth-library": "10.9.1",
+    "grok-mermaid": "0.2.3",
+    "jiti": "2.7.0",
     "pdfjs-dist": "6.4.299",
-    "@thednp/dommatrix": "3.1.2"
+    "pi-blackhole": "0.5.12",
+    "tsx": "4.23.15",
+    "yaml": "2.9.1"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
-    "@types/node": "26.6.4",
+    "@earendil-works/pi-coding-agent": "1.2.0",
+    "@sinclair/typebox": "0.34.49",
     "@tasknotes/model": "0.3.0-rc.9",
+    "@types/node": "26.6.4",
     "prettier": "3.6.2",
-    "@earendil-works/pi-coding-agent": "1.0.4",
-    "typebox": "1.3.27"
+    "typebox": "1.3.27",
+    "typescript": "5.9.3"
   },
   "scripts": {
     "test": "node --test tests/*.test.ts",
