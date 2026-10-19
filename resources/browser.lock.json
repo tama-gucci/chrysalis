@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "adblock": {
+    "name": "uBlock Origin Lite",
+    "version": "2026.1006.1931",
+    "license": "GPL-3.0",
+    "url": "https://github.com/uBlockOrigin/uBOL-home/releases/download/2026.1006.1931/uBOLite_2026.1006.1931.chromium.zip",
+    "sha256": "1670f92590f5ad5b20f02d0a75e144572567b4ba979b3dc3204c41f651206fe7",
+    "bytes": 9673290
+  }
+}

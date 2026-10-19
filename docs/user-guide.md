@@ -1,9 +1,10 @@
 # Daily use
 
-Pi discovers seven families through `/skill:chrysalis-<family>`: daily, task, knowledge, diagnostics,
+Pi discovers eight families through `/skill:chrysalis-<family>`: daily, task, knowledge, diagnostics,
 environment, integrations and maintenance. Read the canonical skill and necessary references,
-including the shared [operation API](operations.md). The life profile supplies no browser,
-general executor or external memory tool; use supplied evidence or a separate research session.
+including the shared [operation API](operations.md). A reviewed host can enable bounded Ketch
+research, current-session recall and structured questions through [host add-ons](host-addons.md).
+General browser executors, arbitrary file access and child agents need a separate session.
 
 Use bounded query/read operations and draft complete records. `task.draft` needs a title and actual
 local `now`; it creates an unscheduled task with native projects links. Show complete post-images
@@ -57,6 +58,9 @@ verification. Discovery is paged metadata; `all:true` does not crawl every page.
 inside the vault first, manually or through the reviewed documents copy flow. PDF parsing is bounded by pages, 32 MiB input, 8 MiB decompressed streams,
 1 MiB text, time and memory. Scanned PDFs/images report OCR-required; opaque formats remain deferred.
 Duplicate candidates never automatically merge records.
+Saved-password exports instead use the optional [private password inbox](passwords.md), never
+vault originals or life-document ingestion. Native import reviews encrypted append/update;
+browser login needs a separate account/origin approval.
 
 ## Prepared Obsidian settings
 
@@ -85,3 +89,10 @@ their meaning. Review a new plan if the prototype needs recalibration. Physical 
 still needs the acceptance checks in [status](../STATUS.md).
 
 Optional sources use [native setup](integrations.md) through `/chrysalis integrations setup`. Read-only Tasks inboxes can supply selected captures through codemode. Health sleep and Maps travel use native review only; neither automatically changes a schedule or task duration.
+
+## Assistant work
+
+Use the [assistant guide](assistant.md) to choose models, private memory, research, specialists and
+a workspace. Ask the learning skill for explanations, optional checks or diagrams. Source/project
+execution remains isolated; adopted notes, roadmaps and tasks retain exact native review. Native
+usage/status distinguish unknown tokens and configured prerequisites from actual verification.

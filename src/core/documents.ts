@@ -1,3 +1,4 @@
+import { assertNotPasswordExport } from "../passwords/import.ts";
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
@@ -59,6 +60,7 @@ function regularBytes(target: string, limit: number) {
     if (length !== opened.size || fs.fstatSync(fd).size !== opened.size)
       throw Error("Document file changed during read");
     rejectRedirects(target);
+    assertNotPasswordExport(buffer.subarray(0, length));
     return buffer.subarray(0, length);
   } finally {
     fs.closeSync(fd);

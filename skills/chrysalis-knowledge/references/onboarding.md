@@ -199,3 +199,22 @@ goals stay in the checkpoint and, once adopted, the vault roadmap. The package p
 host-memory integration.
 
 Offer optional source setup through `/chrysalis integrations setup`, respecting skip/defer. Explain Tasks capture and native Health/Maps evidence before the walkthrough. Never ask for client secrets, API keys or OAuth codes in conversation. Provider access does not approve roadmap, task or atomic-note mutations.
+
+## Optional assistant choices and learning
+
+Native vault onboarding offers assistant setup once; Later is a valid choice. Use
+`/chrysalis models` for inexpensive authenticated background routes and `/chrysalis capabilities`
+for optional memory, specialists, research, browser or lesson capture. Explain privacy, overhead
+and availability using the chrysalis-learning skill. Do not select routes or authorize workspace
+execution through chat. Use enabled public research for current primary-source advice with generic
+queries. Offer small optional learning trials before candidate roadmap/project choices. Quizzes,
+lessons, diagrams, memory and child findings remain context; exact vault review stays separate.
+
+## Optional browser credentials
+
+Explicitly offer saved-password CSV/JSON import through `/chrysalis passwords setup` and
+`/chrysalis passwords import`, with skip/defer. Direct the user to the dedicated private inbox,
+never the life-document folder. Do not ask them to paste exports or passwords into chat.
+Password imports are private credential setup, not source evidence for roadmaps, projects or notes.
+Browser use requires enabled capability and native saved-login account/origin/field selection.
+Future manager sync is not connected by this offer.

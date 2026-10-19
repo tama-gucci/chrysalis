@@ -10,7 +10,7 @@ npm test
 node Development/scripts/check.mjs --root <absolute-source-checkout>
 ```
 
-Replace the root placeholder with the source checkout. Run the retained suite on minimum Node 22.18.0
+Replace the root placeholder with the source checkout. Run the retained suite on minimum Node 22.19.0
 when verifying the supported runtime floor. Typecheck covers production src/extensions; tests execute
 through Node. Run `node Development/scripts/agent_context.mjs show` from source.
 
@@ -30,9 +30,8 @@ These cases now run in the complete suite after the guardrail/skill review phase
 Document cases cover operator-only root selection, metadata-only scans, excluded/depth-limited
 files, separate copy approval, stale sources/authorization, raw provenance, recovery, collisions,
 links/traversal and byte/cancellation limits. A combined source/note case retains per-note vetting.
-Native tests exercise canceled/edited/declined scope and copy reviews. Actual onboarding dialogue
-still needs model acceptance for an early optional offer, skip/defer respect, evidence quality and
-grounded roadmap/project/atomic-note suggestions.
+Native tests exercise canceled/edited/declined scope and copy reviews. A narrow synthetic teaching/onboarding dialogue has model acceptance; broader early optional offers,
+skip/defer, evidence quality and grounded roadmap/project/atomic-note scenarios remain separate checks.
 Additional authored cases reject unsafe/drifted TaskNotes/Dataview settings for Markdown originals
 and source/destination replacements by nonregular files. Plugin behavior and POSIX special-file
 acceptance need platform/UI acceptance; source inspection is separate from physical Obsidian acceptance.
@@ -41,8 +40,41 @@ Decision-led onboarding changes are skill instructions, native handoff text and 
 checkpoint fields, without a new operation or interview engine. The behavior matrix records
 pending model scenarios for dependency order, partial replies, changed answers, shared constraints,
 missing evidence, neutral recommendations and recap/approval separation. Static links, YAML and
-TypeScript checks do not prove those conversational outcomes. Deterministic/native-control acceptance now runs; model conversation quality remains pending.
+TypeScript checks do not prove those conversational outcomes. Deterministic/native-control acceptance now runs; broader model conversation quality remains pending; STATUS records the narrow accepted dialogue.
 
 Provider tests and codemode.test.ts exercise protected synthetic storage, native activation, OAuth loopback/refresh, scope/HTTP bounds, omission/freshness and shared-service result reduction. The actual Pi test reaches production stdio through codemode and enforces nested gates. The benchmark uses chars/4 estimates and preserves failure/coverage semantics; no live-account or billed-token claims follow. Native Health/Maps evidence uses a custom in-memory viewer without external-editor export.
 
 Retain platform optional dependencies: the pinned tsx loader needs its esbuild platform package. The MCP launch uses an absolute package-resolved loader, package tsconfig and disabled transform cache; bare native type stripping cannot execute TypeScript inside an installed node_modules package. No user build or shell launch is needed.
+
+Assistant acceptance adds namespace/Windows-interop/host-IPC denial, bounded stdin/output, cancellation,
+aggregate resource prerequisites, worker leases, selected memory stream lifetime, encoded-SVG refusal,
+artifact adoption and fixed child SDK roles. Optional browser acceptance uses
+CHRYSALIS_BROWSER_ACCEPTANCE_STATE pointing to an external installed browser pack fixture. It checks
+synthetic-cookie persistence, page interaction and pinned adblock loading; it never reads real cookies.
+Use the package dependency resolver for actual live-checkout acceptance. Separate real model dialogue,
+Gemini authentication/video work and physical visual inspection remain explicit boundaries.
+
+Password acceptance adds bounded CSV/JSON normalization, append/update/no-deletion identities,
+ambiguous matching refusal, encrypted stores, declined/stale/changed plans, corrupt ciphertext,
+ordinary-ingestion/workspace exclusions and exact origin/held-field redaction guards. Set
+CHRYSALIS_PASSWORD_DPAPI_ACCEPTANCE=1 only for explicit synthetic OS-account acceptance in an
+external fixture. The optional browser fixture also exercises synthetic saved-login fields and
+echoed values with no real accounts/cookies. Native installed-package checks separately exercise
+setup/import, encrypted external state, origin/revision review and headless refusal. These controls
+do not prove secrecy against arbitrary transformations by an approved trusted website.
+
+## Modular Pi compatibility acceptance
+
+Use Pi SDK/CLI 1.2.0 and Node >=22.19.0. The older SDK floor no longer describes the current
+public model-runtime contract. Test direct calls, actual codemode descendants, native proposal
+review, per-note/batch approval and stale revisions. The retained native cases include actual
+reload, late tools, configured same-schema namespace overrides, MCP grant configuration drift,
+legacy skill layouts and fixed child stream cancellation. Hints alone cannot authorize a call.
+
+Pack/install production-only into an external prefix. Separately invoke the normal Pi CLI with
+default built-ins and isolated home/auth/state. Native /mcp and SDK source calls must work without
+built-in exclusions. Load the actual independently installed add-on package paths through their
+ordinary manifests in both orders; do not create redundant local copies or patch their contents.
+Offline registration/catalog acceptance is separate from real authentication/inference/quotas.
+Private test probes, stream fixtures and recovery stay outside physical source. Complete latest
+evidence and scope are recorded in STATUS.

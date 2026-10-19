@@ -1,5 +1,8 @@
 # Modular source integrations through Pi codemode
 
+Historical integration design. The final host ownership, provider propagation and permission policy
+are documented in [compatibility](compatibility.md); current verification is in [status](../STATUS.md).
+
 The modular package implementation has been delivered against this design. See [current status](../STATUS.md) and [source usage](integrations.md) for implemented behavior and acceptance limits. Authenticated account, physical UI and publication gates remain separate. The baseline below describes the starting point, not the current package.
 
 Original design date: 2026-10-08. This document does not enable providers, collect credentials,
@@ -27,7 +30,7 @@ checks. Every new atomic note still requires individual vetting.
 ## Verified starting point and provider constraints
 
 Current source has 36 operations, a static adapter registry, private capability bindings and a
-seven-family skill layout. integrations.status and capability already exist. Tasks currently
+eight-family skill layout. integrations.status and capability already exist. Tasks currently
 reads normalized snapshots/exports. Maps has opt-in live Places/Routes requests. Health is
 deferred. Credential collection, OAuth and an MCP server are not implemented. The current
 extensions/chrysalis.ts activates read/chrysalis_operation and blocks other calls: adding a
@@ -236,7 +239,7 @@ chrysalis_operation and canonical skill reads available. Do not change the user'
 settings or activate unrelated servers. Choose the supported Pi minimum after the native proof.
 
 Update the life-profile gate to admit built-in codemode orchestration and the exact approved
-chrysalis_sources tools. Continue blocking shell, arbitrary files, unrelated MCP/resources and
+chrysalis_sources tools. Continue blocking host shell, vault-bypassing file tools, unrelated MCP/resources and
 model/classifier paths not included in the approved data-use policy. Test those paths explicitly;
 do not claim the tool gate controls codemode's models API unless verified. If the host cannot
 enforce a required disclosure boundary, keep sensitive capabilities unavailable.

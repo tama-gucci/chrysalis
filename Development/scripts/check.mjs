@@ -1,3 +1,4 @@
+import { isPasswordExport } from "../../src/passwords/import.ts";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -63,6 +64,13 @@ export function check(root) {
       issue("obsolete_or_generated_file", relative);
     const bytes = fs.readFileSync(full),
       asset = vendor.get(relative);
+    if (isPasswordExport(bytes)) issue("password_export_in_source", relative);
+    if (
+      /passwords\/inbox\/|(?:^|\/)passwords\.encrypted\.json$|passwords\/key\.json$/.test(
+        relative,
+      )
+    )
+      issue("password_runtime_in_source", relative);
     if (asset) {
       if (
         bytes.length !== asset.bytes ||
@@ -89,7 +97,9 @@ export function check(root) {
       issue("credential_pattern", relative);
     if (
       relative.endsWith(".md") &&
-      /antigravity|codex|claude\s+code|hermes|syncthing/i.test(text)
+      /antigravity|codex|claude\s+code|hermes|syncthing/i.test(
+        text.replace(/\bpi-antigravity\b/g, ""),
+      )
     )
       issue("outdated_documentation", relative);
     try {

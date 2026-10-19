@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { loadProfile } from "../assistant/profile.ts";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { preset, DIRECTORIES, pluginLock } from "../obsidian/preset.ts";
@@ -11,6 +12,7 @@ import { validate, readRecord } from "../storage/records.ts";
 import { zoneName, nowStamp } from "../time/timezone.ts";
 import {
   PACKAGE_ROOT,
+  inside,
   rejectPackageAncestry,
   confined,
   exists,
@@ -54,6 +56,8 @@ export function prepareOnboarding(input: {
 }) {
   const root = rejectPackageAncestry(input.vault);
   checkName(root);
+  const workspace = loadProfile(input.state).workspace?.root;
+  if (workspace && (inside(root,workspace) || inside(workspace,root))) throw Error("Vault and execution workspace must be disjoint");
   const state = externalState(input.state, root),
     timezone = zoneName(input.timezone);
   if (exists(root) && fs.readdirSync(root).length)

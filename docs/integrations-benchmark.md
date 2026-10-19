@@ -1,8 +1,10 @@
 # Codemode measurement
 
-The retained codemode test uses the actual Pi 1.0.4 sandbox and the shared Tasks provider service
-with an in-process synthetic MCP-shaped wrapper. Production stdio reachability and nested gating
-are tested separately by pi.test.ts. No account or model API is used.
+The figures below are historical measurements recorded with the actual Pi 1.0.4 sandbox and the
+shared Tasks provider service, using an in-process synthetic MCP-shaped wrapper. The retained
+suite now runs against the declared Pi SDK version; these recorded estimates have not been
+remeasured for Pi 1.2.0. Production stdio reachability and nested gating are tested separately by
+pi.test.ts. No account or model API is used.
 
 The user-selected result is the subset whose synthetic title starts with Chosen. Direct calls
 return the same bounded pages; the model would then perform that selection. Codemode selects in

@@ -11,7 +11,7 @@ query/default-filling engine. See the [operation API](docs/operations.md).
 ```mermaid
 flowchart TD
     Pi[Pi conversation and operator commands] --> Adapter[extensions/chrysalis.ts]
-    Skills[Seven canonical skill families] --> Adapter
+    Skills[Eight canonical skill families] --> Adapter
     Adapter --> App[src/app orchestration]
     App --> Core[src/core workflows]
     App --> Preset[src/obsidian preset]
@@ -135,23 +135,29 @@ generated index and append-only journal in the exact proposal. Search/lint are r
 snapshots are explicit new reviewed System records. See [knowledge design](docs/knowledge-design.md)
 for the compilation/query flowchart, upstream adaptation and bounded-storage limits.
 
-The life policy permits canonical skill reads, chrysalis operations and gated package-source codemode. General executors, web research, external memory tools and arbitrary reads/writers require a separate session.
-The shared operation API lives inside the readable skill root. This policy is not an OS sandbox.
+The Pi adapter applies the [scoped model-tool policy](docs/compatibility.md) to direct and nested
+calls. Pi-owned orchestration has no authority over reached tools. Package capability checks and
+native grants bind effective metadata/origin; missing hints grant nothing. Active tool changes
+are additive. Authoritative vault writes retain proposals, individual note vetting, native batch
+approval, revisions and apply. External native extensions/commands/hooks are trusted host code;
+model-tool checks cannot sandbox their direct filesystem operations.
 
 ## Source modules
 
 The package-owned MCP server is a thin transport over src/integrations/service.ts. Provider
 modules share normalization with ordinary named-capability operations; none imports Pi. Native
 setup stores protected credentials externally and proposes nonsecret Memory bindings. Both the
-native profile and the approved binding must agree. extensions/sources.ts reuses upstream Pi
-codemode and MCP implementations with explicit session configuration and model helpers disabled.
+native profile and the approved binding must agree. extensions/sources.ts registers only the
+namespaced server. Pi owns its default MCP/codemode extensions and user server configuration.
 The life gate validates effective registration, tool origin and schemas, including nested calls.
 Health/Maps content is native-only; their model paths return non-content readiness without reads.
 See [source setup and limits](docs/integrations.md).
 
 ```mermaid
 flowchart TD
-    Pi[Pi skills and codemode] --> Gate[Exact source tool gate]
+    Pi[Pi-owned MCP and codemode plus user servers] --> Gate[Per-call adapter policy]
+    Adapter[Chrysalis Pi adapter] --> Registration[Register namespaced server only]
+    Registration --> Pi
     Gate --> MCP[Bundled stdio MCP server]
     MCP --> Service[Host-neutral source service]
     Ops[Ordinary capability operations] --> Service
@@ -186,3 +192,47 @@ Detection reads the computer setting. It does not infer geographical location or
 Future adapters call the operation module with explicit roots, cancellation, canonical skills and an equivalent operator boundary. No daemon or parallel task database is required. Static capability bindings keep ingestion, location, routing, map projection and observed commitments separate. TaskNotes owns Calendar identifiers and history.
 
 See [runtime](contracts/agent-runtime.contract.md), [ingestion](contracts/ingestion-input.contract.md) and [capabilities](contracts/integration-capabilities.contract.md).
+
+## Optional assistant layer
+
+The [assistant capability design](docs/assistant.md) extends one conversation with learning,
+private memory, fixed-role specialists, controlled browser research and isolated execution.
+Host-specific memory streaming and registration remain in extensions; portable profile/budget,
+quiz, artifact, execution and browser services are separate from the vault mutation backend.
+Optional provider code cannot approve records. Native model/workspace controls and exact source
+promotion reviews keep configuration outside model arguments. Source dependency installations
+remain external; an optional managed resolver supports the live checkout without node_modules.
+
+```mermaid
+flowchart LR
+    Pi[Pi adapter] --> Assistant[Optional assistant services]
+    Pi --> Operations[Reviewed vault operations]
+    Assistant --> State[External private state]
+    Assistant --> Runner[Linux namespace and resource runner]
+    Runner --> Copy[Disposable workspace copy]
+    Copy --> Merge[Revision checked workspace merge]
+    Assistant --> Browser[Controlled persistent Chromium]
+    Assistant --> Findings[Unreviewed findings and artifacts]
+    Findings --> Operations
+    Operations --> Approval[Native exact approval and CAS]
+    Approval --> Vault[Selected vault]
+```
+
+Research uses an anonymous profile separate from persistent account automation. Every deliberate
+automation navigation/click/fill has native review; HTTP method alone does not imply harmlessness.
+Memory provider-stream reservations last through completion, cancellation or timeout. Diagram-makers
+produce private artifacts without workspace writes; worker tasks alone acquire a writer lease.
+Source promotion deliberately requires full external verification before publication and disables
+execution until reload; it never commits or pushes.
+
+The public Pi model runtime owns provider/authentication behavior for main chat and background
+routes. Memory invokes modelRegistry.streamSimple. A bounded private local stream route connects
+each fixed-role child to that same parent runtime, without loading provider packages in the child.
+The child receives one public chat-model definition and no provider credentials, hooks or tools.
+Missing or changed routes fail without fallback. Native provider/UI packages remain independently
+installed; see [compatibility and host limits](docs/compatibility.md).
+
+Password sources use a separate private adapter/snapshot port, bounded normalization, native merge
+review, encrypted file storage and OS-protected keys. Browser filling consumes credentials through
+a native origin/account gate without returning values to the model. Credential data never enters
+vault ingestion or execution workspaces. See [password architecture](docs/passwords.md).
