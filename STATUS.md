@@ -39,11 +39,12 @@ approvals substitute for human dialogs. It does not establish a model-led instal
 provider authentication, Obsidian GUI interaction, physical Surface/NVIDIA behavior or firmware
 trust for the unsigned installer. No physical disk or personal vault was used.
 
-The operator authorized publication of the reviewed Pi baseline and NixOS integration on feature
-branches. Publish the dotfiles consumer only after pinning its input to the actual published
-Chrysalis revision; local development paths must not enter its public lockfile. No npm/distribution
-release, firmware enrollment or default-branch merge is included. The original live source and
-personal runtime remain preserved.
+The operator authorized committing, pushing and merging the reviewed Pi baseline, NixOS
+integration and realigned dotfiles as prototypes. Publish the dotfiles consumer only after
+pinning its input to the actual published Chrysalis revision; local development paths must not
+enter its public lockfile. A merge does not establish the outstanding x86 image/VM acceptance.
+No npm/distribution release, firmware enrollment or live runtime promotion is included. The
+original live source and personal runtime remain preserved.
 
 The frozen ARM Nix package builds. It and a fresh production archive load all nine skills through
 actual Pi 1.2.0, retain the built-ins, complete synthetic offline vault/doctor work, reach actual MCP

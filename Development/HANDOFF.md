@@ -22,17 +22,18 @@ mutations until completion proof or reboot; close does not bypass that guard. A 
 preserves later installed edits. Mutable Pi auth/settings remain outside Nix store ownership.
 Do not broaden these controls into claims of whole-process isolation or complete machine auditing.
 
-The x86 image/VM gate remains outstanding. The manual workflow must first be registered on the
-default branch, or an explicitly authorized manual PR-label trigger must be added for pre-merge
-acceptance. Do not merge unverified OS code just to test it. Runtime/provider authentication,
-Obsidian UI, physical hardware and firmware trust remain separate checks.
+The x86 image/VM gate remains outstanding. The operator requested merging the implementation
+as a prototype; merging its manual workflow registers the default-branch dispatch prerequisite.
+Keep that remaining acceptance requirement explicit. Runtime/provider authentication, Obsidian
+UI, physical hardware and firmware trust remain separate checks.
 
-The user has now authorized committing and pushing the reviewed Pi baseline and NixOS integration.
-Keep those as separate commits and publish feature branches; the dotfiles consumer must pin the
-actual published Chrysalis revision. The ARM package build and production archive/Pi acceptance
-passed after the final frozen read-only review. External evidence retains their exact identities.
-No npm/distribution release, default-branch merge or live runtime promotion is authorized here.
-Preserve the original trial, active sessions, credentials and personal vault.
+The user has authorized committing, pushing and merging the reviewed Pi baseline, NixOS
+integration and realigned dotfiles as prototypes. Keep the baseline and NixOS implementation in
+separate commits; the dotfiles consumer must pin the actual published Chrysalis revision. The ARM
+package build and production archive/Pi acceptance passed after the final frozen read-only review.
+External evidence retains their exact identities. The next handoff is a synthetic-user VM test.
+No npm/distribution release or live runtime promotion is authorized here. Preserve the original
+trial, active sessions, credentials and personal vault.
 
 ## Previous compatibility handoff
 
