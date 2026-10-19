@@ -189,13 +189,6 @@ export function installAssistantSettings(pi: ExtensionAPI) {
     );
   }
   async function workspace(ctx: ExtensionCommandContext) {
-    if (!runnerStatus().available) {
-      ctx.ui.notify(
-        "The accepted Linux runner is unavailable. Install Bubblewrap through the capability setup; planning remains available.",
-        "warning",
-      );
-      return;
-    }
     const choice = await ctx.ui.select("Execution workspace", [
       "Create a private workspace",
       "Use an existing project directory",
@@ -208,6 +201,13 @@ export function installAssistantSettings(pi: ExtensionAPI) {
     if (choice === "Disable execution") {
       p.features.execution = false;
       saveProfile(state, p);
+      return;
+    }
+    if (!runnerStatus().available) {
+      ctx.ui.notify(
+        "The accepted Linux runner is unavailable. Install Bubblewrap through the capability setup; planning remains available.",
+        "warning",
+      );
       return;
     }
     let root: string | undefined;

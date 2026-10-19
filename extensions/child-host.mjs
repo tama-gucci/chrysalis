@@ -22,6 +22,7 @@ const inherited = new Set([
   "CHRYSALIS_CHILD_TASK",
   "CHRYSALIS_DEPENDENCIES_ROOT",
   "CHRYSALIS_PI_ROOT",
+  "CHRYSALIS_EXECUTION_CONFIG",
   "PI_CODING_AGENT_DIR",
 ]);
 for (const key of Object.keys(process.env))
@@ -133,7 +134,11 @@ const hardStop = setTimeout(() => {
 try {
   const errors = [];
   await session.bindExtensions({
-    onError: (e) => errors.push(e),
+    onError: (e) => {
+      errors.push(e);
+      policyFailure = true;
+      void session.abort();
+    },
     shutdownHandler: () => {
       finished = true;
       void session.abort();
@@ -149,13 +154,6 @@ try {
   if (!model) throw Error("Selected child model unavailable; no fallback");
   await session.setModel(model);
   session.setThinkingLevel(task.route.thinking);
-  // A policy callback failure aborts the request instead of allowing SDK error recovery to continue.
-  await session.bindExtensions({
-    onError: () => {
-      policyFailure = true;
-      void session.abort();
-    },
-  });
   if (digest(loadProfile(state)) !== task.profileDigest)
     throw Error("Child policy changed before prompt");
   await session.prompt(task.brief);

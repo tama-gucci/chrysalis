@@ -1,7 +1,7 @@
 # Daily use
 
 Pi discovers eight families through `/skill:chrysalis-<family>`: daily, task, knowledge, diagnostics,
-environment, integrations and maintenance. Read the canonical skill and necessary references,
+environment, integrations, maintenance and learning. Optional NixOS work adds the system skill. Read the canonical skill and necessary references,
 including the shared [operation API](operations.md). A reviewed host can enable bounded Ketch
 research, current-session recall and structured questions through [host add-ons](host-addons.md).
 General browser executors, arbitrary file access and child agents need a separate session.

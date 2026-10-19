@@ -11,7 +11,7 @@ node Development/scripts/check.mjs --root <absolute-source-checkout>
 ```
 
 Replace the root placeholder with the source checkout. Run the retained suite on minimum Node 22.19.0
-when verifying the supported runtime floor. Typecheck covers production src/extensions; tests execute
+when verifying the supported runtime floor. Linux execution acceptance requires Bubblewrap, a native user systemd bus and functioning cgroup resource controls; provision these prerequisites rather than skipping isolation assertions. Planning remains usable without the optional runner. Typecheck covers production src/extensions; tests execute
 through Node. Run `node Development/scripts/agent_context.mjs show` from source.
 
 Do not connect reusable dependency directories through junctions when running package managers. Tests use the pinned TaskNotes model and actual Pi SDK with synthetic assistant calls. They cover onboarding, protected fields, timezone/DST, originals/PDF limits, provider policies, knowledge workflows, planning/learning/pauses and approval/CAS recovery.

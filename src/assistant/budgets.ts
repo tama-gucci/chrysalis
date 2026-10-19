@@ -47,11 +47,21 @@ export function sharedBudget(
   calls: number,
   concurrency: number,
 ) {
-  if (!budgets.has(state))
-    budgets.set(state, new UsageBudget(calls, concurrency));
+  const current = budgets.get(state);
+  if (
+    current &&
+    (current.calls !== calls || current.concurrency !== concurrency)
+  ) {
+    if (current.status().active)
+      throw Error("Wait for optional work before changing limits");
+    return resetBudget(state, calls, concurrency);
+  }
+  if (!current) budgets.set(state, new UsageBudget(calls, concurrency));
   return budgets.get(state)!;
 }
 export function resetBudget(state: string, calls: number, concurrency: number) {
+  if (budgets.get(state)?.status().active)
+    throw Error("Optional work is still active");
   const b = new UsageBudget(calls, concurrency);
   budgets.set(state, b);
   return b;

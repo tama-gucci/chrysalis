@@ -11,7 +11,7 @@ import {
 import { loadProfile, assistantRoot } from "../src/assistant/profile.ts";
 import { defaultStateRoot } from "../src/storage/context.ts";
 import { assistantUI } from "../src/assistant/ui.ts";
-import { packRoot } from "../src/assistant/install.ts";
+import { acquirePack } from "../src/assistant/install.ts";
 import { sharedBudget } from "../src/assistant/budgets.ts";
 import { createJiti } from "jiti";
 import { ManagedBrowser } from "../src/research/playwright.ts";
@@ -134,8 +134,11 @@ export function installResearch(
         );
         result.omitted_text_chars += remove;
       }
+      const serialized = JSON.stringify(result);
+      if (serialized.length > cap)
+        throw Error("Research result metadata exceeds the output limit");
       return {
-        content: [{ type: "text", text: JSON.stringify(result) }],
+        content: [{ type: "text", text: serialized }],
         details: { status: "ok", usage: null },
       };
     } catch {
@@ -199,7 +202,7 @@ export function installResearch(
         throw Error("Browser automation is disabled");
       if (_signal?.aborted) throw Error("Browser action cancelled");
       if (
-        ["navigate", "click", "fill"].includes(p.action) &&
+        ["navigate", "click", "fill", "screenshot"].includes(p.action) &&
         (!ctx.hasUI ||
           !(await assistantUI.run(() =>
             ctx.ui.confirm(
@@ -314,13 +317,14 @@ export function installResearch(
       const record = JSON.parse(fs.readFileSync(accepted, "utf8"));
       if (record.version !== 1 || record.enabled !== true)
         throw Error("Gemini access disabled");
-      const root = packRoot(state, "media"),
-        jiti = createJiti(import.meta.url, { fsCache: false }),
-        module: any = await jiti.import(
-          path.join(root, "node_modules/pi-web-access/gemini-web.ts"),
-        );
-      const done = budget().reserve("gemini_web");
+      const lease = acquirePack(state, "media");
+      let done: (() => void) | undefined;
       try {
+        const jiti = createJiti(import.meta.url, { fsCache: false });
+        const module: any = await jiti.import(
+          path.join(lease.root, "node_modules/pi-web-access/gemini-web.ts"),
+        );
+        done = budget().reserve("gemini_web");
         const result = await analyzeYouTube(
           p.url,
           p.question,
@@ -335,7 +339,8 @@ export function installResearch(
           details: { verified: false },
         };
       } finally {
-        done();
+        done?.();
+        lease.release();
       }
     },
   });

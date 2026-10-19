@@ -4,13 +4,16 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
-import os from "node:os";
 import { assistantRoot } from "../assistant/profile.ts";
-import { packRoot } from "../assistant/install.ts";
+import { acquirePack } from "../assistant/install.ts";
+import { confined } from "../platforms/filesystem.ts";
 import { publicRequest, publicURL } from "./http.ts";
 import { storeArtifact } from "../assistant/artifacts.ts";
 export class ManagedBrowser {
   private context: any;
+  private releasePack: (() => void) | undefined;
+  private opening: Promise<void> | undefined;
+  private closing: Promise<void> | undefined;
   private secrets = new BrowserSecretGuard();
   private credentialOrigins: Set<string> | undefined;
   configureSecrets(values: string[]) {
@@ -34,30 +37,46 @@ export class ManagedBrowser {
     headed = false,
     permitWrite?: (url: string, method: string) => Promise<boolean>,
   ) {
+    if (this.closing) await this.closing;
+    if (this.opening) return this.opening;
     if (this.context) return;
-    const root = packRoot(this.state, "browser"),
-      profile = path.join(
-        assistantRoot(this.state),
-        "browser/" + this.profileName,
-      );
+    const pending = this.startOpen(headed, permitWrite);
+    this.opening = pending;
+    try {
+      await pending;
+    } finally {
+      if (this.opening === pending) this.opening = undefined;
+    }
+  }
+  private async startOpen(
+    headed: boolean,
+    permitWrite?: (url: string, method: string) => Promise<boolean>,
+  ) {
+    const profile = confined(
+      assistantRoot(this.state),
+      "browser/" + this.profileName,
+    );
     fs.mkdirSync(profile, { recursive: true, mode: 0o700 });
-    const library: any = await import(
-      pathToFileURL(path.join(root, "node_modules/playwright/index.mjs")).href
-    );
-    const oldPath = process.env.PLAYWRIGHT_BROWSERS_PATH;
-    process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(
-      os.homedir(),
-      ".cache/ms-playwright",
-    );
+    const lease = acquirePack(this.state, "browser"),
+      root = lease.root;
+    this.releasePack = lease.release;
     const adblock = path.join(root, "adblock");
     try {
+      const library: any = await import(
+        pathToFileURL(path.join(root, "node_modules/playwright/index.mjs")).href
+      );
       this.context = await library.chromium.launchPersistentContext(profile, {
         channel: "chromium",
+        executablePath: lease.browserExecutable,
         headless: !headed,
         serviceWorkers: "block",
         acceptDownloads: false,
         chromiumSandbox: true,
         args: [
+          // CPU rendering avoids stalled animation frames on headless hosts without a GPU.
+          ...(!headed
+            ? ["--disable-gpu", "--disable-software-rasterizer"]
+            : []),
           "--disable-extensions-except=" + adblock,
           "--load-extension=" + adblock,
           "--proxy-server=http://127.0.0.1:9",
@@ -65,9 +84,12 @@ export class ManagedBrowser {
           "--force-webrtc-ip-handling-policy=disable_non_proxied_udp",
         ],
       });
-    } finally {
-      if (oldPath === undefined) delete process.env.PLAYWRIGHT_BROWSERS_PATH;
-      else process.env.PLAYWRIGHT_BROWSERS_PATH = oldPath;
+    } catch (error) {
+      if (!this.context) {
+        this.releasePack?.();
+        this.releasePack = undefined;
+      }
+      throw error;
     }
     await this.context.routeWebSocket("**/*", (socket: any) => socket.close());
     await this.context.route("**/*", async (route: any) => {
@@ -294,9 +316,24 @@ export class ManagedBrowser {
     );
   }
   async close() {
-    await this.context?.close();
-    this.context = undefined;
-    this.credentialOrigins = undefined;
-    this.page = undefined;
+    if (this.closing) return this.closing;
+    const pending = (async () => {
+      // An abort during launch must retain the pack until the returned context closes.
+      try {
+        await this.opening;
+      } catch {}
+      await this.context?.close();
+      this.context = undefined;
+      this.releasePack?.();
+      this.releasePack = undefined;
+      this.credentialOrigins = undefined;
+      this.page = undefined;
+    })();
+    this.closing = pending;
+    try {
+      await pending;
+    } finally {
+      if (this.closing === pending) this.closing = undefined;
+    }
   }
 }

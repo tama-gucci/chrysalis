@@ -160,15 +160,40 @@ export function installCompanions(pi: ExtensionAPI) {
       return;
     }
   };
-  const protectedInput = (input: unknown) => {
+  const protectedInput = (input: unknown, ctx: any) => {
     const roots = [PACKAGE_ROOT, defaultStateRoot()];
     try {
       roots.push(selectedContext().vault);
     } catch {}
-    const normalize = (s: string) =>
-      s.split(String.fromCharCode(92)).join("/").toLowerCase();
-    const text = normalize(JSON.stringify(input ?? {}));
-    return roots.some((r) => text.includes(normalize(r)));
+    const normalize = (value: string) =>
+      path
+        .normalize(value.split(String.fromCharCode(92)).join(path.sep))
+        .toLowerCase();
+    const normalizedRoots = roots.map(normalize);
+    const inspect = (value: unknown, key = ""): boolean => {
+      if (typeof value === "string") {
+        if (normalizedRoots.some((root) => normalize(value).includes(root)))
+          return true;
+        if (
+          path.isAbsolute(value) ||
+          /^(?:\.{1,2}[\\/]|[a-z]:[\\/])/i.test(value) ||
+          /(?:path|file|directory|root|cwd)$/i.test(key)
+        ) {
+          const resolved = normalize(
+            path.resolve(ctx?.cwd ?? process.cwd(), value),
+          );
+          return normalizedRoots.some(
+            (root) => inside(resolved, root) || inside(root, resolved),
+          );
+        }
+        return false;
+      }
+      if (Array.isArray(value)) return value.some((v) => inspect(v, key));
+      if (value && typeof value === "object")
+        return Object.entries(value).some(([k, v]) => inspect(v, k));
+      return false;
+    };
+    return inspect(input);
   };
   return {
     allowed: (name: string) => binding(name)?.mode === "read-only",
@@ -191,7 +216,7 @@ export function installCompanions(pi: ExtensionAPI) {
             event.toolName +
             " to review its origin and scope. Vault mutations require chrysalis proposals and native approval.",
         };
-      if (protectedInput(event.input))
+      if (protectedInput(event.input, ctx))
         return {
           block: true,
           reason:
@@ -319,6 +344,7 @@ export function installCompanions(pi: ExtensionAPI) {
         mode: mode.startsWith("Trust") ? "read-only" : "review",
       });
       atomicJSON(file, p);
+      pi.setActiveTools([...new Set([...pi.getActiveTools(), name])]);
       ctx.ui.notify(
         "Scoped grant saved. Each call rechecks the effective registration.",
         "info",

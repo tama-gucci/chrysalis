@@ -12,6 +12,7 @@ import {
 import {
   PACKAGE_ROOT,
   atomic,
+  quarantineReviewedFile,
   atomicJSON,
   confined,
   files,
@@ -139,9 +140,11 @@ export async function promoteDevelopment(
   for (const c of plan.changes) {
     const target = confined(PACKAGE_ROOT, c.file);
     if (c.after === null) {
-      if (sha256(raw(target, 32 * 1024 * 1024)) !== c.before)
-        throw Error("Live source changed");
-      fs.unlinkSync(target);
+      quarantineReviewedFile(
+        target,
+        c.before!,
+        confined(recovery, "removed/" + c.file),
+      );
     } else atomic(target, c.text, c.before);
   }
   atomicJSON(

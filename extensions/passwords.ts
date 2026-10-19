@@ -5,7 +5,7 @@ import {
   selectedContext,
   vaultState,
 } from "../src/storage/context.ts";
-import { atomicJSON, exists } from "../src/platforms/filesystem.ts";
+import { atomicJSON, exists, digest } from "../src/platforms/filesystem.ts";
 import { assistantUI } from "../src/assistant/ui.ts";
 import type { ManagedBrowser } from "../src/research/playwright.ts";
 
@@ -110,7 +110,15 @@ export function installPasswords() {
       const result = await s.apply(plan, () =>
         ctx.ui.confirm(
           "Import these saved browser logins?",
-          JSON.stringify(plan.summary, null, 2) +
+          JSON.stringify(
+            {
+              summary: plan.summary,
+              records: plan.records.map(({ password, ...account }) => account),
+              digest: digest(plan),
+            },
+            null,
+            2,
+          ) +
             "\nNew accounts append; matching accounts update. Missing accounts are retained. Passwords/usernames are encrypted, not copied to the vault, chat, memory or workers. File and store revisions will be checked again.",
         ),
       );

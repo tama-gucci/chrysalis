@@ -44,6 +44,7 @@ import {
 } from "../src/system/state.ts";
 import {
   checked,
+  command,
   diskInventory,
   installTarget,
   inspectTarget,
@@ -492,7 +493,7 @@ export function installSystem(pi: ExtensionAPI) {
                 currentOperation(c)!.id,
                 "handoff",
               );
-              const output = await checked(
+              const handoff = await command(
                 c.commands.sudo,
                 [
                   "-n",
@@ -507,9 +508,15 @@ export function installSystem(pi: ExtensionAPI) {
                 { timeout: 3_600_000, signal },
               );
               completePrivileged(c, privileged);
+              if (handoff.code !== 0)
+                throw Error(
+                  "Handoff exited (" +
+                    handoff.code +
+                    "); inspect the target and resume its copy journal",
+                );
               result = {
                 ...installed,
-                handoff: JSON.parse(output),
+                handoff: JSON.parse(handoff.output.trim()),
                 next: "Reboot into the installed system; preserve the USB until boot verification",
               };
             } finally {
@@ -895,12 +902,20 @@ export function installSystem(pi: ExtensionAPI) {
       "\n" +
       fs.readFileSync(path.join(PACKAGE_ROOT, "nix/rules.md"), "utf8"),
   }));
+  const activeSystemTools = () => {
+    try {
+      requireSystemScope(c);
+      return [...identities.keys()];
+    } catch {
+      return ["chrysalis_system"];
+    }
+  };
   pi.on("session_start", async (_event, ctx) => {
     sessionContext = ctx;
     loadedFiles = mcpConfiguration(pi, "mcp__" + SERVER, ctx).filesIdentity;
     if (currentOperation(c)) await reconcileInstalled(c);
     pi.setActiveTools([
-      ...new Set([...pi.getActiveTools(), "chrysalis_system"]),
+      ...new Set([...pi.getActiveTools(), ...activeSystemTools()]),
     ]);
     if (c.mode === "installer" && ctx.hasUI && !currentOperation(c)) {
       pi.sendUserMessage(
@@ -926,7 +941,7 @@ export function installSystem(pi: ExtensionAPI) {
   });
   pi.on("session_shutdown", () => pi.unregisterMcpServer(SERVER));
   return {
-    active: () => ["chrysalis_system"],
+    active: activeSystemTools,
     allowed: owned,
     validateVault: (vault: string) => assertSystemVault(c, vault),
     authorize,

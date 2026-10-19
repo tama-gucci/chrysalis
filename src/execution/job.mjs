@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 const job = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const filter = fs.openSync(job.filter, "r"),
   control = fs.openSync(job.control, "wx", 0o600);
-const child = spawn("/usr/bin/bwrap", job.args, {
+const child = spawn(job.bwrap, job.args, {
   stdio: ["pipe", "inherit", "inherit", filter, control],
   env: { PATH: "/usr/bin:/bin" },
 });

@@ -31,9 +31,11 @@ export interface RuntimeRoute {
   token: string;
   model: any;
   identity: string;
+  timeoutSeconds?: number;
 }
 /** One parent-owned model route, limited to one child and its turn/lifetime budget. */
 export async function openRuntimeRoute(registry: any, route: any, limits: any) {
+  const timeoutSeconds = Math.min(900, Math.max(5, limits.timeoutSeconds));
   const model = selectedModel(registry, route),
     metadata = catalog(model),
     identity = digest(metadata),
@@ -57,9 +59,7 @@ export async function openRuntimeRoute(registry: any, route: any, limits: any) {
       sockets.delete(socket);
       controller.abort();
     });
-    socket.setTimeout(Math.min(limits.timeoutSeconds * 1000, 120000), () =>
-      socket.destroy(),
-    );
+    socket.setTimeout(timeoutSeconds * 1000, () => socket.destroy());
     let request = "",
       accepted = false;
     socket.on("data", async (chunk) => {
@@ -150,7 +150,13 @@ export async function openRuntimeRoute(registry: any, route: any, limits: any) {
     throw error;
   }
   return {
-    endpoint: { address, token, model: metadata, identity } as RuntimeRoute,
+    endpoint: {
+      address,
+      token,
+      model: metadata,
+      identity,
+      timeoutSeconds,
+    } as RuntimeRoute,
     dispose,
   };
 }
@@ -201,7 +207,10 @@ export function runtimeStream(
     socket.destroy();
   };
   const abort = () => finish();
-  const timer = setTimeout(abort, 120000);
+  const timer = setTimeout(
+    abort,
+    Math.min(900, Math.max(5, endpoint.timeoutSeconds ?? 120)) * 1000,
+  );
   options.signal?.addEventListener("abort", abort, { once: true });
   socket.on("error", abort);
   socket.on("close", () => {

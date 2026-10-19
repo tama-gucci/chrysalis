@@ -15,6 +15,7 @@ import {
   rejectRedirects,
   sha256,
   withLock,
+  withSyncLock,
 } from "../platforms/filesystem.ts";
 import { nowStamp, zoneName } from "../time/timezone.ts";
 import {
@@ -295,17 +296,21 @@ export function beginPrivileged(
   operation: string,
   tool: string,
 ) {
-  assertSystemIdle(c);
-  const token = randomUUID();
-  persistSystemJSON(c, confined(systemRoot(c), "privileged.json"), {
-    version: 1,
-    token,
-    operation,
-    tool,
-    boot: systemBootId(),
-    busy: true,
+  return withSyncLock(systemRoot(c), "outcome-approval", () => {
+    if (currentOperation(c)?.id !== operation)
+      throw Error("System outcome changed before privileged mutation");
+    assertSystemIdle(c);
+    const token = randomUUID();
+    persistSystemJSON(c, confined(systemRoot(c), "privileged.json"), {
+      version: 1,
+      token,
+      operation,
+      tool,
+      boot: systemBootId(),
+      busy: true,
+    });
+    return token;
   });
-  return token;
 }
 export function completePrivileged(c: SystemConfig, token: string) {
   const file = confined(systemRoot(c), "privileged.json");
@@ -365,66 +370,73 @@ export function approveSystem(
   recovery?: SystemOperation["recovery"],
   installation?: SystemOperation["installation"],
 ): SystemOperation {
-  assertSystemIdle(c);
-  goal = boundedText(goal, 4000, "system outcome");
-  const old = currentOperation(c);
-  if (
-    old &&
-    (old.pending || !["verified", "failed", "closed"].includes(old.phase))
-  )
-    throw Error("Resume or close the pending system outcome first");
-  if (c.mode === "installer" && !disk)
-    throw Error("Installation approval requires an observed exact target disk");
-  const now = nowStamp(
-    c.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
-  );
-  const op: SystemOperation = {
-    version: 1,
-    id: randomUUID(),
-    goal,
-    approvedAt: now,
-    configIdentity: configIdentity(c),
-    machine: machineIdentity(),
-    configuration: c.configuration,
-    host: c.host,
-    mode: c.mode,
-    disk,
-    phase: "approved",
-    events: [],
-    backendIdentity,
-    recovery,
-    installation,
-  };
-  if (selectedVault) {
-    const root = vaultRoot(selectedVault);
-    assertSystemVault(c, root);
-    op.vault = {
-      root,
-      id: readJSON(confined(root, ".chrysalis-vault.json")).vault_id,
-    };
-  }
-  op.events.push({
-    id: randomUUID(),
-    at: now,
-    phase: "approved",
-    evidence: {
+  return withSyncLock(systemRoot(c), "outcome-approval", () => {
+    assertSystemIdle(c);
+    goal = boundedText(goal, 4000, "system outcome");
+    const old = currentOperation(c);
+    if (
+      old &&
+      (old.pending || !["verified", "failed", "closed"].includes(old.phase))
+    )
+      throw Error("Resume or close the pending system outcome first");
+    if (c.mode === "installer" && !disk)
+      throw Error(
+        "Installation approval requires an observed exact target disk",
+      );
+    const now = nowStamp(
+      c.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+    );
+    const op: SystemOperation = {
+      version: 1,
+      id: randomUUID(),
+      goal,
+      approvedAt: now,
+      configIdentity: configIdentity(c),
+      machine: machineIdentity(),
       configuration: c.configuration,
       host: c.host,
-      recovery: recovery ?? null,
-      installation: installation ?? null,
-      disk: disk
-        ? { model: disk.model, size: disk.size, identity: digest(disk) }
-        : null,
-    },
+      mode: c.mode,
+      disk,
+      phase: "approved",
+      events: [],
+      backendIdentity,
+      recovery,
+      installation,
+    };
+    if (selectedVault) {
+      const root = vaultRoot(selectedVault);
+      assertSystemVault(c, root);
+      op.vault = {
+        root,
+        id: readJSON(confined(root, ".chrysalis-vault.json")).vault_id,
+      };
+    }
+    op.events.push({
+      id: randomUUID(),
+      at: now,
+      phase: "approved",
+      evidence: {
+        configuration: c.configuration,
+        host: c.host,
+        recovery: recovery ?? null,
+        installation: installation ?? null,
+        disk: disk
+          ? { model: disk.model, size: disk.size, identity: digest(disk) }
+          : null,
+      },
+    });
+    fs.mkdirSync(path.dirname(operationFile(c, op.id)), {
+      recursive: true,
+      mode: 0o700,
+    });
+    persistSystemJSON(c, operationFile(c, op.id), op);
+    persistSystemJSON(c, confined(systemRoot(c), "current.json"), {
+      id: op.id,
+    });
+    return op;
   });
-  fs.mkdirSync(path.dirname(operationFile(c, op.id)), {
-    recursive: true,
-    mode: 0o700,
-  });
-  persistSystemJSON(c, operationFile(c, op.id), op);
-  persistSystemJSON(c, confined(systemRoot(c), "current.json"), { id: op.id });
-  return op;
 }
+
 export function requireSystemScope(
   c: SystemConfig,
   backendIdentity?: string,
@@ -440,7 +452,16 @@ export function requireSystemScope(
     op.mode !== c.mode
   )
     throw Error("System scope changed; native review is required");
-  if (op.vault) assertSystemVault(c, op.vault.root);
+  if (op.vault) {
+    const root = vaultRoot(op.vault.root);
+    assertSystemVault(c, root);
+    if (
+      readJSON(confined(root, ".chrysalis-vault.json")).vault_id !== op.vault.id
+    )
+      throw Error(
+        "Approved system vault identity changed; native review is required",
+      );
+  }
   let selected: { vault: string } | undefined;
   try {
     selected = selectedContext(c.state);
@@ -461,26 +482,30 @@ export async function recordSystem(
 ) {
   if (!phases.includes(phase) || Buffer.byteLength(canonical(evidence)) > 16384)
     throw Error("Invalid system evidence");
-  return withLock(confined(systemRoot(c), "locks"), id, () => {
-    const file = operationFile(c, id),
-      before = raw(file, 1024 * 1024),
-      op = JSON.parse(before.toString()) as SystemOperation;
-    if (op.events.length >= 1024)
-      throw Error("System receipt event limit reached");
-    update?.(op);
-    op.phase = phase;
-    op.events.push({
-      id: randomUUID(),
-      at: nowStamp(
-        c.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
-      ),
-      phase,
-      evidence,
-    });
-    atomic(file, canonical(op) + "\n", sha256(before));
-    syncDirectoryTree(path.dirname(file), externalState(c.state));
-    return op;
-  });
+  return withLock(confined(systemRoot(c), "locks"), id, () =>
+    withSyncLock(systemRoot(c), "outcome-approval", () => {
+      if (currentOperation(c)?.id !== id)
+        throw Error("System outcome changed; stale receipt cannot be mutated");
+      const file = operationFile(c, id),
+        before = raw(file, 1024 * 1024),
+        op = JSON.parse(before.toString()) as SystemOperation;
+      if (op.events.length >= 1024)
+        throw Error("System receipt event limit reached");
+      update?.(op);
+      op.phase = phase;
+      op.events.push({
+        id: randomUUID(),
+        at: nowStamp(
+          c.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ),
+        phase,
+        evidence,
+      });
+      atomic(file, canonical(op) + "\n", sha256(before));
+      syncDirectoryTree(path.dirname(file), externalState(c.state));
+      return op;
+    }),
+  );
 }
 export function assertBackendTarget(c: SystemConfig, input: any) {
   if (input.mode && input.mode !== "nixos")

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { ManagedBrowser } from "../src/research/playwright.ts";
-import { publicRequest } from "../src/research/http.ts";
+import http from "node:http";
 test(
   "managed Chromium retains a synthetic login and loads pinned adblock without host-network access",
   { skip: !process.env.CHRYSALIS_BROWSER_ACCEPTANCE_STATE },
@@ -10,6 +10,20 @@ test(
         process.env.CHRYSALIS_BROWSER_ACCEPTANCE_STATE!,
       ),
       internal = browser as any;
+    let hits = 0;
+    const canary = http.createServer((_req, res) => {
+      hits++;
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.end("host-canary");
+    });
+    await new Promise<void>((resolve) =>
+      canary.listen(0, "127.0.0.1", resolve),
+    );
+    const port = (canary.address() as any).port;
+    assert.equal(
+      await (await fetch("http://127.0.0.1:" + port)).text(),
+      "host-canary",
+    );
     try {
       await browser.open();
       await internal.context.addCookies([
@@ -54,12 +68,16 @@ test(
             c.value === "synthetic-session-canary",
         ),
       );
-      await assert.rejects(
-        publicRequest("https://127.0.0.1/"),
-        /Private destination/,
+      const baselineHits = hits;
+      await internal.page.goto("http://127.0.0.1:" + port).catch(() => {});
+      assert.equal(
+        hits,
+        baselineHits,
+        "Managed Chromium must not reach the host canary",
       );
     } finally {
       await browser.close();
+      await new Promise<void>((resolve) => canary.close(() => resolve()));
     }
   },
 );

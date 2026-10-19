@@ -1,3 +1,4 @@
+import { executionRuntime, runtimeBindings } from "./runtime.ts";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
@@ -79,42 +80,38 @@ export function syscallPolicy(arch = process.arch, loopback = false): Buffer {
 export function runnerStatus() {
   if (process.platform !== "linux" || !["arm64", "x64"].includes(process.arch))
     return { available: false, reason: "unsupported_host" };
-  const r = spawnSync(
-    "/usr/bin/bwrap",
-    [
-      "--unshare-all",
-      "--new-session",
-      "--die-with-parent",
-      "--ro-bind",
-      "/usr",
-      "/usr",
-      "--symlink",
-      "usr/bin",
-      "/bin",
-      "--symlink",
-      "usr/lib",
-      "/lib",
-      "--symlink",
-      "usr/lib64",
-      "/lib64",
-      "--proc",
-      "/proc",
-      "--dev",
-      "/dev",
-      "/bin/true",
-    ],
-    { timeout: 5000, stdio: "ignore", env: { PATH: "/usr/bin:/bin" } },
-  );
-  return {
-    available: r.status === 0 && delegationReady(),
-    reason:
-      r.status !== 0
-        ? "bubblewrap_or_namespaces_unavailable"
-        : !delegationReady()
-          ? "native_cgroup_setup_required"
-          : "namespace_and_resource_controls_available",
-  };
+  try {
+    const runtime = executionRuntime();
+    const r = spawnSync(
+      runtime.bwrap,
+      [
+        "--unshare-all",
+        "--new-session",
+        "--die-with-parent",
+        ...runtimeBindings(runtime),
+        "--proc",
+        "/proc",
+        "--dev",
+        "/dev",
+        "/bin/true",
+      ],
+      { timeout: 5000, stdio: "ignore", env: { PATH: "/usr/bin:/bin" } },
+    );
+    const resources = r.status === 0 && delegationReady(runtime);
+    return {
+      available: resources,
+      reason:
+        r.status !== 0
+          ? "bubblewrap_or_namespaces_unavailable"
+          : resources
+            ? "namespace_and_resource_controls_available"
+            : "native_cgroup_setup_required",
+    };
+  } catch {
+    return { available: false, reason: "invalid_native_execution_runtime" };
+  }
 }
+
 export async function runIsolated(
   state: string,
   command: string,
@@ -134,7 +131,8 @@ export async function runIsolated(
     Buffer.byteLength(command) > 65536
   )
     throw Error("Command limit exceeded");
-  if (!delegationReady())
+  const runtime = executionRuntime();
+  if (!delegationReady(runtime))
     throw Error("Native runner resource setup required; no host fallback");
   assertWriterLease(state);
   const w = currentWorkspace(state, options.vault);
@@ -166,21 +164,8 @@ export async function runIsolated(
     const jobFile = received + ".job.json",
       inputFile = received + ".input",
       controlFile = received + ".control";
-    const node = fs.realpathSync(process.execPath);
-    const binds = [
-      "--ro-bind",
-      "/usr",
-      "/usr",
-      "--symlink",
-      "usr/bin",
-      "/bin",
-      "--symlink",
-      "usr/lib",
-      "/lib",
-      "--symlink",
-      "usr/lib64",
-      "/lib64",
-    ];
+    const node = runtime.node;
+    const binds = runtimeBindings(runtime);
     binds.push("--ro-bind", node, "/runner/node");
     const workspaceArgs = options.readOnly
       ? ["--ro-bind", image.directory, "/workspace"]
@@ -260,6 +245,7 @@ export async function runIsolated(
     });
     atomicJSON(jobFile, {
       args,
+      bwrap: runtime.bwrap,
       filter,
       input: inputFile,
       control: controlFile,
@@ -267,7 +253,7 @@ export async function runIsolated(
     try {
       const result: RunResult = await new Promise((resolve, reject) => {
         const child = spawn(
-          "/usr/bin/systemd-run",
+          runtime.systemdRun,
           [
             "--user",
             "--wait",
@@ -303,7 +289,7 @@ export async function runIsolated(
         const stop = () => {
           cancelled = true;
           spawnSync(
-            "/usr/bin/systemctl",
+            runtime.systemctl,
             ["--user", "kill", "--signal=KILL", "--kill-whom=all", unit],
             { env: serviceEnvironment(), timeout: 3000, stdio: "ignore" },
           );
@@ -420,7 +406,14 @@ export async function runIsolated(
       if (!options.readOnly && !result.cancelled) {
         try {
           assertWriterLease(state);
-          currentWorkspace(state, options.vault);
+          const current = currentWorkspace(state, options.vault);
+          if (
+            current.id !== w.id ||
+            current.root !== w.root ||
+            current.dev !== w.dev ||
+            current.ino !== w.ino
+          )
+            throw Error("Workspace selection changed during execution");
           mergeWorkspace(w.root, { ...image, directory: received });
         } catch {
           retain = true;

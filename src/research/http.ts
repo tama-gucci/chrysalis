@@ -2,7 +2,19 @@ import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import https from "node:https";
 export function publicAddress(ip: string) {
-  if(isIP(ip)===6){const fields=ip.toLowerCase().split(":");return /^[23][0-9a-f]{3}:/i.test(ip)&&fields[0]!=="2002"&&fields[0]!=="3fff"&&!(fields[0]==="2001"&&(parseInt(fields[1]||"0",16)<0x200||parseInt(fields[1]||"0",16)===0xdb8));}
+  if (isIP(ip) === 6) {
+    const fields = ip.toLowerCase().split(":");
+    return (
+      /^[23][0-9a-f]{3}:/i.test(ip) &&
+      fields[0] !== "2002" &&
+      fields[0] !== "3fff" &&
+      !(
+        fields[0] === "2001" &&
+        (parseInt(fields[1] || "0", 16) < 0x200 ||
+          parseInt(fields[1] || "0", 16) === 0xdb8)
+      )
+    );
+  }
   if (isIP(ip) !== 4) return false;
   const [a, b, c] = ip.split(".").map(Number);
   return !(
@@ -19,8 +31,10 @@ export function publicAddress(ip: string) {
   );
 }
 export function publicURL(input: string) {
-  if(typeof input!=="string"||input.length>2000)throw Error("Public URL limit");
+  if (typeof input !== "string" || input.length > 2000)
+    throw Error("Public URL limit");
   const url = new URL(input);
+  url.hostname = url.hostname.toLowerCase().replace(/\.+$/, "");
   if (
     url.protocol !== "https:" ||
     url.username ||
@@ -58,7 +72,7 @@ export async function publicRequest(
   } = {},
 ) {
   const url = publicURL(input),
-    hosts = await lookup(url.hostname, { all: true });
+    hosts = await lookup(url.hostname.replace(/^\[|\]$/g, ""), { all: true });
   if (!hosts.length || hosts.some((h) => !publicAddress(h.address)))
     throw Error("Private destination blocked");
   const selected = hosts[0];

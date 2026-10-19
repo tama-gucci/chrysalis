@@ -37,7 +37,7 @@ export function capabilityStatus(state: string) {
         enabled: p.features.specialists,
         state: !p.features.specialists
           ? "disabled"
-          : process.env.TMUX && p.workspace
+          : process.env.TMUX && p.features.execution && p.workspace
             ? "configured"
             : "needs_setup",
       },

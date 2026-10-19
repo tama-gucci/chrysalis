@@ -8,6 +8,8 @@
 let
   cfg = config.programs.chrysalis-pi;
   system = pkgs.stdenv.hostPlatform.system;
+  tmpfilesPath =
+    value: lib.replaceStrings [ "\\" " " "%" "'" "\"" ] [ "\\x5c" "\\x20" "%%" "\\x27" "\\x22" ] value;
   packageRoot = "${cfg.package}/lib/node_modules/chrysalis";
   agent =
     if cfg.mode == "installer" then
@@ -35,9 +37,40 @@ let
       };
     }
   );
+  executionFHS =
+    (pkgs.buildFHSEnv {
+      name = "chrysalis-execution-runtime";
+      targetPkgs = p: [
+        p.bash
+        p.coreutils
+        p.nodejs_24
+        p.util-linux
+      ];
+      multiPkgs = _: [ ];
+      multiArch = false;
+    }).fhsenv;
+  executionClosure = pkgs.closureInfo {
+    rootPaths = [
+      executionFHS
+      pkgs.nodejs_24
+    ];
+  };
+  execution = pkgs.writeText "chrysalis-execution.json" (
+    builtins.toJSON {
+      version = 1;
+      arch = if pkgs.stdenv.hostPlatform.isx86_64 then "x64" else "arm64";
+      bwrap = "${pkgs.bubblewrap}/bin/bwrap";
+      systemdRun = "${config.systemd.package}/bin/systemd-run";
+      systemctl = "${config.systemd.package}/bin/systemctl";
+      node = "${pkgs.nodejs_24}/bin/node";
+      usr = "${executionFHS}/usr";
+      storePaths = "${executionClosure}/store-paths";
+    }
+  );
   session = pkgs.writeShellScriptBin "chrysalis-session" ''
     set -eu
     export CHRYSALIS_SYSTEM_CONFIG=/etc/chrysalis/system.json
+    export CHRYSALIS_EXECUTION_CONFIG=${execution}
     export CHRYSALIS_STATE_ROOT=${lib.escapeShellArg cfg.stateDirectory}
     if [ ${lib.escapeShellArg cfg.mode} = installer ]; then
       export PI_CODING_AGENT_DIR="''${XDG_RUNTIME_DIR:?}/chrysalis-pi"
@@ -105,7 +138,7 @@ in
   config = lib.mkIf cfg.enable {
     assertions = [
       {
-        assertion = builtins.match "[a-zA-Z0-9_-]+" cfg.host != null;
+        assertion = builtins.match "[a-zA-Z0-9_-]{1,63}" cfg.host != null;
         message = "Chrysalis requires one explicit host attribute.";
       }
       {
@@ -116,7 +149,13 @@ in
         assertion =
           lib.hasPrefix "/" cfg.configurationDirectory
           && lib.hasPrefix "/" cfg.stateDirectory
-          && cfg.configurationDirectory != cfg.stateDirectory;
+          && cfg.configurationDirectory != cfg.stateDirectory
+          &&
+            lib.all (value: lib.all (c: builtins.match "[[:cntrl:]]" c == null) (lib.stringToCharacters value))
+              [
+                cfg.configurationDirectory
+                cfg.stateDirectory
+              ];
         message = "Chrysalis configuration and state require distinct absolute directories.";
       }
     ];
@@ -130,6 +169,7 @@ in
       session
       terminal
       pkgs.tmux
+      pkgs.bubblewrap
       pkgs.nodejs_24
       pkgs.git
       pkgs.nixos-facter
@@ -137,6 +177,8 @@ in
       pkgs.networkmanager
       pkgs.mkpasswd
     ];
+    environment.variables.CHRYSALIS_EXECUTION_CONFIG = "${execution}";
+    environment.etc."chrysalis/execution.json".source = execution;
     environment.etc."chrysalis/system.json".source = native;
     environment.etc."chrysalis/package".source = packageRoot;
     environment.etc."chrysalis/package-source".source = self.outPath;
@@ -147,10 +189,11 @@ in
       set -g mouse on
     '';
     systemd.tmpfiles.rules = [
-      "d ${cfg.configurationDirectory} 0700 ${cfg.user} users -"
-      "d ${cfg.stateDirectory} 0700 ${cfg.user} users -"
+      "d ${tmpfilesPath cfg.configurationDirectory} 0700 ${tmpfilesPath cfg.user} users -"
+      "d ${tmpfilesPath cfg.stateDirectory} 0700 ${tmpfilesPath cfg.user} users -"
     ]
     ++ lib.optionals (cfg.mode == "installer") [ "d /run/chrysalis 0700 ${cfg.user} users -" ];
+    services.dbus.enable = true;
     networking.networkmanager.enable = true;
     programs.nix-agent = lib.mkIf (cfg.mode == "installed") {
       enable = true;
@@ -173,6 +216,7 @@ in
         home.stateVersion = lib.mkDefault config.system.stateVersion;
         home.sessionVariables = {
           CHRYSALIS_SYSTEM_CONFIG = "/etc/chrysalis/system.json";
+          CHRYSALIS_EXECUTION_CONFIG = "${execution}";
           CHRYSALIS_STATE_ROOT = cfg.stateDirectory;
         };
       };

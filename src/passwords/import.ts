@@ -86,6 +86,12 @@ export function isPasswordExport(bytes: Buffer): boolean {
       .decode(bytes)
       .replace(/^\uFEFF/, "");
     if (/^\s*[\[{]/.test(text)) {
+      // Detect export-shaped truncated JSON before parsing can fail open.
+      if (
+        /"(?:password|loginpassword)"\s*:/i.test(text) &&
+        /"(?:username|loginusername|url|urls|uris)"\s*:/i.test(text)
+      )
+        return true;
       const data = JSON.parse(text);
       if (
         data?.encrypted === true &&
@@ -163,7 +169,8 @@ function item(raw: any, adapter: string): PasswordRecord | undefined {
     source: {
       adapter,
       ...(typeof raw.externalId === "string" &&
-      /^[a-zA-Z0-9-]{1,100}$/.test(raw.externalId)
+      raw.externalId.length > 0 &&
+      raw.externalId.length <= 1000
         ? { externalId: raw.externalId }
         : {}),
     },

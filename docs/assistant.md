@@ -114,12 +114,12 @@ prepared workspace; private credentials and general host access are not granted 
 ## Browser, search and optional media
 
 Native capability setup installs pinned Playwright and full Chromium outside source, reusing the
-matching standard browser cache. It loads a hash-pinned uBlock Origin Lite extension. The optional
+matching pack-owned browser binaries. Optional npm dependencies use committed complete lockfiles and npm ci. It loads a hash-pinned uBlock Origin Lite extension. The optional
 browser download is large; no browser or media pack is downloaded for basic vault use.
 
 Public research uses a separate anonymous profile, public HTTPS only, bounded visible text/links
-and primary-source citations. It has no account interaction permission and no extra summarizer.
-The automation profile is private and persistent. Navigation, click and fill each require native
+and bounded source links. Primary-source selection and citation quality remain the agent's research responsibility. It has no account interaction permission and no extra summarizer.
+The automation profile is private and persistent. Navigation, click, fill and screenshots each require native
 action approval, because GET requests can also change accounts. Non-GET requests need additional
 native permission. Generic fill cannot enter password fields; native-approved saved-login filling
 uses the private [password store](passwords.md). Tools cannot evaluate JavaScript, export cookies,

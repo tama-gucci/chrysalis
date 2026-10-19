@@ -44,7 +44,7 @@ results = []
 class VM:
     def __init__(self, name, live):
         self.live = live
-        shutil.copyfile(variables, work / "efi-vars.fd")
+        # Keep firmware boot entries across USB/target transitions.
         command = [
             "qemu-system-x86_64", "-machine", "q35", "-m", "4096", "-smp", "2",
             "-accel", "kvm" if os.access("/dev/kvm", os.W_OK) else "tcg",

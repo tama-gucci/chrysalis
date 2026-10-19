@@ -87,7 +87,11 @@ export function memoryStream(
       const upstream = await registry.streamSimple(selected, context, {
         ...options,
         signal,
-        maxTokens: Math.min(options.maxTokens ?? 1500, 1500),
+        maxTokens: Math.min(
+          options.maxTokens ?? 1500,
+          1500,
+          selected.maxTokens ?? 1500,
+        ),
       });
       for await (const event of upstream) {
         if (completed) break;

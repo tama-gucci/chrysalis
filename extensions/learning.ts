@@ -161,10 +161,48 @@ export function installLearning(pi: ExtensionAPI) {
     description:
       "Begin or finish a focused lesson. Private capture occurs only if enabled in native settings. Keeping durable lesson/project/atomic-note records requires separate native review.",
     parameters: Type.Object({
-      action: Type.Union([Type.Literal("begin"), Type.Literal("finish")]),
+      action: Type.Union([
+        Type.Literal("begin"),
+        Type.Literal("capture"),
+        Type.Literal("finish"),
+      ]),
       topic: Type.Optional(Type.String()),
+      text: Type.Optional(Type.String()),
     }),
-    async execute(_id: string, p: any) {
+    async execute(_id: string, p: any, _signal: any, _update: any, ctx: any) {
+      if (p.action === "capture") {
+        if (!topic || !loadProfile(defaultStateRoot()).features.lessonCapture)
+          throw Error("Enable private capture and start a lesson first");
+        if (!p.text || p.text.length > 12000)
+          throw Error("Choose bounded lesson text");
+        const selected = { topic, text: p.text };
+        if (
+          !ctx.hasUI ||
+          !(await assistantUI.run(() =>
+            ctx.ui.confirm(
+              "Keep this selected lesson text privately?",
+              selected.text,
+            ),
+          ))
+        )
+          throw Error("Lesson text capture declined");
+        if (
+          _signal?.aborted ||
+          topic !== selected.topic ||
+          !loadProfile(defaultStateRoot()).features.lessonCapture
+        )
+          throw Error("Lesson capture context changed");
+        append({ selected_text: selected.text });
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Selected lesson text kept for private capture.",
+            },
+          ],
+          details: {},
+        };
+      }
       if (p.action === "begin") {
         if (!p.topic || p.topic.length > 500)
           throw Error("Choose a short lesson topic");
@@ -190,22 +228,6 @@ export function installLearning(pi: ExtensionAPI) {
         details: result,
       };
     },
-  });
-  pi.on("message_end", async (e: any) => {
-    if (!topic || !loadProfile(defaultStateRoot()).features.lessonCapture)
-      return;
-    if (!["user", "assistant"].includes(e.message.role)) return;
-    const content = e.message.content;
-    const text =
-      typeof content === "string"
-        ? content
-        : Array.isArray(content)
-          ? content
-              .filter((c: any) => c.type === "text")
-              .map((c: any) => c.text)
-              .join("\n")
-          : "";
-    if (text) append({ role: e.message.role, text: text.slice(0, 12000) });
   });
   return {
     active: () => [...defs.keys()],

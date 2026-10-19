@@ -18,9 +18,24 @@ export interface WorkspaceImage {
 }
 export function excluded(name: string) {
   return (
-    [".git", ".pi"].includes(name) ||
+    [
+      ".git",
+      ".pi",
+      ".ssh",
+      ".gnupg",
+      ".aws",
+      ".azure",
+      ".gcloud",
+      ".kube",
+      ".docker",
+      ".npmrc",
+      ".netrc",
+      ".git-credentials",
+      ".pypirc",
+      ".yarnrc",
+    ].includes(name.toLowerCase()) ||
     /^\.env(?:\.|$)/.test(name) ||
-    /^(auth\.json|credentials.*|id_(rsa|ed25519)|.*\.(key|pem|p12))$/i.test(
+    /^(auth\.json|credentials.*|id_(rsa|dsa|ecdsa|ed25519)(?:_sk)?|.*\.(key|pem|p12))$/i.test(
       name,
     )
   );
@@ -152,10 +167,25 @@ export function mergeWorkspace(root: string, image: WorkspaceImage) {
           raw(confined(after.directory, rel), 32 * 1024 * 1024),
           image.revisions[rel] ?? null,
         );
-        fs.chmodSync(
+        const descriptor = fs.openSync(
           target,
-          fs.statSync(confined(after.directory, rel)).mode & 0o777,
+          fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW,
         );
+        try {
+          const actual = fs.fstatSync(descriptor);
+          if (
+            !actual.isFile() ||
+            actual.nlink !== 1 ||
+            sha256(raw(target, 32 * 1024 * 1024)) !== after.revisions[rel]
+          )
+            throw Error("Workspace changed before mode update");
+          fs.fchmodSync(
+            descriptor,
+            fs.statSync(confined(after.directory, rel)).mode & 0o777,
+          );
+        } finally {
+          fs.closeSync(descriptor);
+        }
       }
     }
     return { changedFiles: changed.length };

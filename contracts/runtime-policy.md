@@ -27,7 +27,7 @@ A native-generated system descriptor enables an opt-in administration context. O
 approval binds machine, configuration, host, backend registration and any destructive disk or
 observed recovery generation. Normal Pi MCP/codemode remains authoritative. Exact scope checks
 apply to direct and nested backend calls. File edits use real Nix files; credentials use masked
-native input and stay outside the store. Installer scope cannot activate the live system.
+native input and stay outside the store. Installer mode blocks activation through the scoped backend. System Bash remains trusted host administration and must follow the installation rules; it is not a shell sandbox.
 
 Private receipts precede activation/installation and retain uncertain or degraded outcomes.
 Only the fixed System/System-Ledger.md projection may append machine-authored receipt events

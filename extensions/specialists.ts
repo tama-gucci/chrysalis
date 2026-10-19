@@ -84,6 +84,7 @@ export function prepareEngine(state: string) {
   const environment = [
     "CHRYSALIS_DEPENDENCIES_ROOT",
     "CHRYSALIS_PI_ROOT",
+    "CHRYSALIS_EXECUTION_CONFIG",
     "PI_CODING_AGENT_DIR",
     "NODE_PATH",
   ]
@@ -263,7 +264,11 @@ export async function installSpecialists(pi: ExtensionAPI) {
         profile.limits.calls,
         profile.limits.concurrency,
       ).reserve("specialist", profile.limits.turns);
-      let releaseWriter: () => boolean = () => true;
+      let releaseWriter: (unclaimedExitProved?: boolean) => boolean = () =>
+        true;
+      let launchAttempted = false;
+      let cancelRunning: (() => void) | undefined;
+      let completion: Promise<void> | undefined;
       let runtime: Awaited<ReturnType<typeof openRuntimeRoute>> | undefined;
       try {
         const e = await load(),
@@ -310,6 +315,7 @@ export async function installSpecialists(pi: ExtensionAPI) {
           getSessionDir: () =>
             path.join(assistantRoot(state), "task-artifacts"),
         };
+        launchAttempted = true;
         const running = await e.launchSubagent(
           {
             name: "chrysalis-" + p.role,
@@ -329,63 +335,87 @@ export async function installSpecialists(pi: ExtensionAPI) {
           },
           { cwd, sessionManager: manager },
         );
-        atomicJSON(path.join(cwd, "runtime.json"), {
-          sessionFile: running.sessionFile,
-          surface: running.surface,
-        });
         const job: any = { running, status: "running", summary: null };
         jobs.set(id, job);
         const controller = new AbortController();
+        const saveStatus = () => {
+          try {
+            persist(job.status, job.summary);
+          } catch {
+            job.persistenceFailed = true;
+          }
+        };
         const abort = () => {
           runtime?.dispose();
           controller.abort();
           job.status = "interrupted";
-          persist(job.status);
+          saveStatus();
         };
+        cancelRunning = abort;
+        job.abort = abort;
         signal?.addEventListener("abort", abort, { once: true });
         const timer = setTimeout(abort, profile.limits.timeoutSeconds * 1000);
-        job.abort = abort;
-        persist("running");
-        const settle = () => {
+        const release = (proof: boolean) => {
+          try {
+            return releaseWriter(proof);
+          } catch {
+            return false;
+          }
+        };
+        const settle = (unclaimedExitProved: boolean) => {
           runtime?.dispose();
           const outcome = job.status;
-          if (releaseWriter()) {
+          if (release(unclaimedExitProved)) {
             done(job.usage ?? undefined);
             return;
           }
           job.status = "awaiting_child_exit";
-          persist(job.status, job.summary);
+          saveStatus();
           const poll = setInterval(() => {
-            if (releaseWriter()) {
+            if (release(unclaimedExitProved)) {
               clearInterval(poll);
               done(job.usage ?? undefined);
               job.status = outcome;
-              persist(job.status, job.summary);
+              saveStatus();
             }
           }, 1000);
           poll.unref();
         };
-        void e
-          .watchSubagent(running, controller.signal)
-          .then((result: any) => {
+        // Watch/abort ownership is established before any fallible persistence.
+        completion = Promise.resolve()
+          .then(() => e.watchSubagent(running, controller.signal))
+          .then(
+            (result: any) => {
+              job.status = result.exitCode === 0 ? "finished" : "failed";
+              job.summary = String(result.summary ?? "").slice(
+                0,
+                profile.limits.resultChars,
+              );
+              try {
+                job.usage = specialistUsage(running.sessionFile);
+              } catch {}
+              saveStatus();
+              settle(!result.error && Number.isInteger(result.exitCode));
+            },
+            () => {
+              job.status = "failed";
+              saveStatus();
+              settle(false);
+            },
+          )
+          .finally(() => {
             clearTimeout(timer);
-            job.status = result.exitCode === 0 ? "finished" : "failed";
-            job.summary = String(result.summary ?? "").slice(
-              0,
-              profile.limits.resultChars,
-            );
-            persist(job.status, job.summary);
-            job.usage = specialistUsage(running.sessionFile);
-            settle();
-            signal?.removeEventListener("abort", abort);
-          })
-          .catch(() => {
-            clearTimeout(timer);
-            job.status = "failed";
-            persist(job.status);
-            settle();
             signal?.removeEventListener("abort", abort);
           });
+        if (signal?.aborted) {
+          abort();
+          throw Error("Specialist launch cancelled");
+        }
+        atomicJSON(path.join(cwd, "runtime.json"), {
+          sessionFile: running.sessionFile,
+          surface: running.surface,
+        });
+        persist("running");
         return {
           content: [
             {
@@ -401,8 +431,13 @@ export async function installSpecialists(pi: ExtensionAPI) {
           details: {},
         };
       } catch (e) {
-        runtime?.dispose();
-        if (releaseWriter()) done();
+        if (cancelRunning) {
+          cancelRunning();
+          await completion;
+        } else {
+          runtime?.dispose();
+          if (releaseWriter(!launchAttempted)) done();
+        }
         throw e;
       }
     },

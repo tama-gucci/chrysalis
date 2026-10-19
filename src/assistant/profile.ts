@@ -114,6 +114,7 @@ export function validateProfile(p: any): AssistantProfile {
       Object.keys(r).some(
         (k) => !["provider", "model", "thinking"].includes(k),
       ) ||
+      typeof r.provider !== "string" ||
       !/^[a-zA-Z0-9_.-]{1,100}$/.test(r.provider) ||
       typeof r.model !== "string" ||
       !/^[a-zA-Z0-9_.:/-]{1,160}$/.test(r.model) ||
@@ -132,7 +133,8 @@ export function validateProfile(p: any): AssistantProfile {
   bounded(l.timeoutSeconds, 5, 900);
   if (
     p.workspace &&
-    (!/^[a-z0-9-]{8,80}$/.test(p.workspace.id) ||
+    (typeof p.workspace.id !== "string" ||
+      !/^[a-z0-9-]{8,80}$/.test(p.workspace.id) ||
       !path.isAbsolute(p.workspace.root) ||
       !Number.isSafeInteger(p.workspace.dev) ||
       !Number.isSafeInteger(p.workspace.ino))

@@ -37,6 +37,7 @@ pkgs.testers.runNixOSTest {
     machine.wait_until_succeeds("pgrep -x ghostty")
     machine.wait_until_succeeds("su - chrysalis -c 'tmux has-session -t chrysalis'")
     wait_for_pi()
+    machine.succeed("su - chrysalis -c '${pkgs.nodejs_24}/bin/node --import /etc/chrysalis/package/node_modules/tsx/dist/loader.mjs ${./runner.mts}'")
     machine.succeed("systemctl start getty@tty2.service")
     machine.wait_for_unit("getty@tty2.service")
     machine.succeed("su - chrysalis -c 'echo retained > /var/lib/chrysalis/state/acceptance-checkpoint'")

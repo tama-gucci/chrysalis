@@ -94,6 +94,14 @@ export class BrowserSecretGuard {
           hidden = false;
         }
       }
+      // A fixed marker or joined fragments must never recreate a secret.
+      n = 0;
+      for (let i = 0; i < output.length; i++) {
+        const c = output[i];
+        while (n && !this.nodes[n].next.has(c)) n = this.nodes[n].fail;
+        n = this.nodes[n].next.get(c) ?? 0;
+        if (this.nodes[n].length) return "";
+      }
       return output;
     } catch {
       throw Error("Private browser text unavailable; automation refused");
@@ -105,7 +113,7 @@ export class BrowserSecretGuard {
       const u = new URL(value);
       return this.text(u.origin + u.pathname);
     } catch {
-      return "[private browser location]";
+      return "";
     }
   }
 }

@@ -3,8 +3,9 @@
 The native outcome scope includes the selected configuration, exact NixOS host and backend identity. Work within it. Do not widen the target or substitute another tool with a matching name.
 
 Use the pinned nix-agent MCP tools:
+
 - build starts or polls jobs. Save the job identity and poll until terminal status.
-- diff builds synchronously and compares against the running closure. A successful fresh result with a store path supplies activation evidence.
+- diff builds synchronously and compares against the running closure. A successful fresh result with a store path supplies fresh build evidence.
 - switch activates. A degraded result means new services failed; an interrupted call needs observation before retry.
 - generations lists recovery choices. Generation changes require a separately bound native recovery target.
 - eval_config and locate_option inspect the actual configuration.

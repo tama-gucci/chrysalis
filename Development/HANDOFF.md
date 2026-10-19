@@ -1,5 +1,21 @@
 # Current engineering handoff
 
+Date: 2026-10-19. Review correction batch after published source 3db96019087bb1a635ef0c5d18a5cec006321119.
+All 60 candidate findings were assessed; confirmed issues and independent review follow-ups are
+corrected. Both complete suites on Node 22.19.0 and 24.20.0 pass 163 cases: 157 passed, six skips,
+no failures each. Real
+synthetic managed Chromium/password acceptance passes nine with one OS-account skip. Review
+identities, full dispositions and logs remain external. The final source must receive matching
+portable CI before merge and the dotfiles consumer must pin that published revision.
+
+The Nix runner uses an immutable descriptor and pinned upstream FHS tree with the existing
+sandbox and exact closure mounts. Native x86 VM execution is still pending. Earlier ARM package
+acceptance predates this correction batch. Fresh production archive/Pi acceptance passes after
+the corrections, with all nine skills, default built-ins, offline vault/doctor and MCP. Preserve the original live
+checkout and all baseline file hashes; do not promote the trial/runtime or use personal accounts.
+
+## Prior integration handoff
+
 Date: 2026-10-18. NixOS integration implementation with separate frozen read-only reviews.
 Branch chrysalis-nixos; base HEAD remains 3b6c579e5656bb5d491a7320d1b473286be742d0.
 The original source checkout and all 210 baseline file hashes are preserved. Work is isolated.
@@ -67,7 +83,6 @@ driven or reloaded. Preserve working Pi authentication, global packages, persona
 No commit, push or npm publication occurred.
 
 ## Historical handoff
-
 
 Date: 2026-10-12. Role: assistant integration implementation with separate frozen read-only review.
 Branch main; unchanged base HEAD 3b6c579e5656bb5d491a7320d1b473286be742d0. Changes remain

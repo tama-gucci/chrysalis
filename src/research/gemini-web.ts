@@ -1,3 +1,4 @@
+import { BrowserSecretGuard } from "./secret-guard.ts";
 export function youtubeURL(input: string): string {
   const u = new URL(input);
   if (u.protocol !== "https:" || u.username || u.password || u.port)
@@ -32,24 +33,25 @@ export async function analyzeYouTube(
   const canonical = youtubeURL(url);
   if (!question || question.length > 4000)
     throw Error("Use a bounded video question");
-  const cookies = await ports.cookies();
-  if (!cookies["__Secure-1PSID"])
-    return {
-      status: "unavailable",
-      reason: "native_sign_in_required",
-      verified: false,
-    };
   try {
-    let answer = (
-      await ports.query(question, cookies, {
-        youtubeUrl: canonical,
-        signal,
-        timeoutMs: 60000,
-      })
-    ).slice(0, 16000);
-    for (const value of Object.values(cookies))
-      if (value.length >= 8)
-        answer = answer.split(value).join("[redacted credential]");
+    const cookies = await ports.cookies();
+    if (!cookies["__Secure-1PSID"])
+      return {
+        status: "unavailable",
+        reason: "native_sign_in_required",
+        verified: false,
+      };
+    const guard = new BrowserSecretGuard();
+    guard.configure(Object.values(cookies));
+    const answer = guard
+      .text(
+        await ports.query(question, cookies, {
+          youtubeUrl: canonical,
+          signal,
+          timeoutMs: 60000,
+        }),
+      )
+      .slice(0, 16000);
     return {
       status: "ok",
       answer,

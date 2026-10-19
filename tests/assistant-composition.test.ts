@@ -28,6 +28,8 @@ test("memory reservation covers stream lifetime, caps tokens and reports actual 
     p = defaults();
   p.features.memory = true;
   p.features.observations = true;
+  p.limits.calls = 2;
+  p.limits.concurrency = 1;
   p.routes.observer = {
     provider: "openai",
     model: "small",
@@ -45,10 +47,15 @@ test("memory reservation covers stream lifetime, caps tokens and reports actual 
       return upstream;
     },
   };
-  const model = { provider: "openai", id: "small", api: "synthetic" };
+  const model = {
+    provider: "openai",
+    id: "small",
+    api: "synthetic",
+    maxTokens: 800,
+  };
   const out = memoryStream(state, registry, model, {}, { maxTokens: 50000 });
   assert.equal(budget.status().active, 1);
-  assert.equal(options.maxTokens, 1500);
+  assert.equal(options.maxTokens, 800);
   assert.throws(() => budget.reserve("specialist"), /running/);
   const msg: any = {
     role: "assistant",

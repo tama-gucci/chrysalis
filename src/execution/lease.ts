@@ -9,10 +9,11 @@ import {
   raw,
   sha256,
   digest,
+  withSyncLock,
 } from "../platforms/filesystem.ts";
 const leasePath = (state: string) =>
   confined(assistantRoot(state), "workspace-writer.json");
-function processStart(pid: number) {
+export function processStart(pid: number) {
   if (process.platform !== "linux")
     throw Error("Worker process identity requires Linux");
   try {
@@ -48,63 +49,71 @@ export function assertWriterLease(state: string) {
       "Workspace is leased to a worker; wait, interrupt or use native reconciliation",
     );
 }
+const transition = <T>(state: string, action: () => T) =>
+  withSyncLock(assistantRoot(state), "workspace-writer-transition", action);
 export function claimWorkerLease(state: string, task: string) {
-  const file = leasePath(state),
-    bytes = raw(file),
-    record = JSON.parse(bytes.toString("utf8"));
-  if (record.task !== task || record.childPid)
-    throw Error("Worker lease cannot be inherited or resumed silently");
-  atomic(
-    file,
-    JSON.stringify({
-      ...record,
-      childPid: process.pid,
-      childStart: processStart(process.pid),
-    }),
-    sha256(bytes),
-  );
+  return transition(state, () => {
+    const file = leasePath(state),
+      bytes = raw(file),
+      record = JSON.parse(bytes.toString("utf8"));
+    if (record.task !== task || record.childPid)
+      throw Error("Worker lease cannot be inherited or resumed silently");
+    atomic(
+      file,
+      JSON.stringify({
+        ...record,
+        childPid: process.pid,
+        childStart: processStart(process.pid),
+      }),
+      sha256(bytes),
+    );
+  });
 }
 export function reserveWriterLease(state: string, task: string) {
-  if (writerLeaseStatus(state))
-    throw Error("Another worker owns this workspace");
-  const file = leasePath(state),
-    record = { pid: process.pid, task, token: randomUUID() };
-  atomic(file, JSON.stringify(record), null);
+  const record = { pid: process.pid, task, token: randomUUID() };
+  transition(state, () => {
+    if (writerLeaseStatus(state))
+      throw Error("Another worker owns this workspace");
+    atomic(leasePath(state), JSON.stringify(record), null);
+  });
   let released = false;
-  return () => {
-    if (!released) {
+  return (unclaimedExitProved = false) =>
+    transition(state, () => {
+      if (released) return true;
+      const file = leasePath(state);
       if (fs.existsSync(file)) {
         const owner = readJSON(file);
-        if (owner.token !== record.token) return true;
+        if (owner.token !== record.token) {
+          released = true;
+          return true;
+        }
         if (
-          !Number.isSafeInteger(owner.childPid) ||
-          typeof owner.childStart !== "string" ||
-          processStart(owner.childPid) === owner.childStart
-        )
-          return false;
+          Number.isSafeInteger(owner.childPid) &&
+          typeof owner.childStart === "string"
+        ) {
+          if (processStart(owner.childPid) === owner.childStart) return false;
+        } else if (!unclaimedExitProved) return false;
         fs.unlinkSync(file);
       }
       released = true;
       return true;
-    }
-    return true;
-  };
+    });
 }
 export function reconcileWriterLease(state: string, approved: string) {
-  const record = writerLeaseStatus(state);
-  if (!record || digest(record) !== approved)
-    throw Error("Worker lease review changed");
-  if (
-    !Number.isSafeInteger(record.childPid) ||
-    typeof record.childStart !== "string"
-  )
-    throw Error(
-      "Worker startup identity is uncertain; retain the lease and inspect/terminate its tmux window before operator recovery",
-    );
-  if (processStart(record.childPid) === record.childStart)
-    throw Error("Worker is still alive; interrupt it before reconciliation");
-  if (digest(writerLeaseStatus(state)) !== approved)
-    throw Error("Worker lease changed");
-  fs.unlinkSync(leasePath(state));
-  return { status: "released", child_verified_exited: true };
+  return transition(state, () => {
+    const record = writerLeaseStatus(state);
+    if (!record || digest(record) !== approved)
+      throw Error("Worker lease review changed");
+    if (
+      !Number.isSafeInteger(record.childPid) ||
+      typeof record.childStart !== "string"
+    )
+      throw Error(
+        "Worker startup identity is uncertain; inspect/terminate its tmux window before operator recovery",
+      );
+    if (processStart(record.childPid) === record.childStart)
+      throw Error("Worker is still alive; interrupt it before reconciliation");
+    fs.unlinkSync(leasePath(state));
+    return { status: "released", child_verified_exited: true };
+  });
 }

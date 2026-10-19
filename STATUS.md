@@ -1,5 +1,32 @@
 # Implementation status
 
+## Review corrections (2026-10-19)
+
+All 60 review candidates were assessed against the implementation and pinned upstreams. Confirmed
+issues were corrected, including redaction and credential exclusions, focused lesson capture,
+workspace/worker ownership, concurrent source and retention cleanup, model budgets, optional-pack
+installation/lifetime, restored system tools, scope/vault identity and outcome-approval races.
+Four candidates described existing upstream behavior, required test prerequisites or authority
+outside the trusted native-extension boundary; those were documented rather than treated as defects.
+
+Both expanded Linux ARM64 suites pass on Node 22.19.0 and 24.20.0: 163 cases, 157 passed, six
+optional/platform skips, zero failures each. Seventeen focused regressions include a real second-process approval race,
+concurrent source preservation and active optional-pack users. Actual managed Chromium synthetic
+acceptance passes nine cases with one OS-account-protection skip, covering cookie persistence,
+page interaction, pinned adblock, host-canary request denial and saved-login field safeguards.
+Headless Chromium uses CPU rendering; headed sessions retain their normal graphics configuration.
+No real account, private browser profile or model request was used.
+
+Nix workspace execution now reuses the pinned upstream FHS tree builder, an immutable runtime
+descriptor and its exact store closure with the existing Bubblewrap sandbox. Native cgroup
+readiness probes effective transient-unit resource limits. Worker children retain this descriptor.
+Nix evaluation and synthetic Linux runner acceptance do not establish execution on a booted NixOS
+target. The earlier ARM package/archive acceptance below predates these review corrections.
+Fresh production archive acceptance loads all nine skills through actual Pi with its built-ins,
+completes offline synthetic onboarding/doctor, reaches MCP and denies arbitrary vault reads.
+Locked all-system Nix evaluation and the actual module's escaped tmpfiles parser pass. Native x86
+image/VM acceptance remains outstanding.
+
 ## NixOS integration prototype (2026-10-18)
 
 The ordinary Pi package now has optional NixOS/Home Manager modules, a persistent raw EFI
@@ -91,7 +118,6 @@ untested. Existing per-note/batch review, CAS, native-only Health/Maps and read-
 No personal-vault writes or Git/npm publication occurred.
 
 Historical verification below records its original build.
-
 
 Version 2.0.0 is a self-contained Pi package with a portable TypeScript/Node core, eight canonical
 skill families and 36 reviewed vault operations. Onboarding prepares a user-named Obsidian vault

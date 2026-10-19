@@ -150,7 +150,7 @@ export function knownFolders(): KnownFolders {
       const native = JSON.parse(output.replace(/^\uFEFF/, "")) as KnownFolders;
       return mapNativeKnownFolders(native, wsl ? windowsPathInWSL : undefined);
     } catch {
-      return { home };
+      return buildKnownFolders(process.platform, home);
     }
   }
   return buildKnownFolders(
@@ -178,8 +178,10 @@ export function resolveDirectoryText(
       throw Error("That known folder is unavailable; enter its absolute path");
     return resolved;
   }
-  if (value === "~" || value.startsWith("~/") || value.startsWith("~\\"))
-    return path.resolve(os.homedir(), value.slice(2));
+  if (value === "~" || value.startsWith("~/") || value.startsWith("~\\")) {
+    if (!locations.home) throw Error("The selected home folder is unavailable");
+    return path.resolve(locations.home, value.slice(2));
+  }
   if (isWSL() && /^[a-z]:[\\/]/i.test(value)) return windowsPathInWSL(value);
   if (!path.isAbsolute(value))
     throw Error(

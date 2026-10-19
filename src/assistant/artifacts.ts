@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { assistantRoot } from "./profile.ts";
 import {
   atomic,
+  withSyncLock,
   atomicJSON,
   confined,
   readJSON,
@@ -18,30 +19,33 @@ export function storeArtifact(
   data: Buffer,
   provenance: any = {},
 ) {
-  if (data.length > 2 * 1024 * 1024) throw Error("Artifact limit");
-  const root = path.join(assistantRoot(state), "artifacts");
-  fs.mkdirSync(root, { recursive: true, mode: 0o700 });
-  if (fs.readdirSync(root).length >= 200)
-    throw Error("Artifact retention limit; review private outputs");
-  const id = randomUUID();
-  atomic(confined(root, id + "." + kind), data, null);
-  atomicJSON(confined(root, id + ".json"), {
-    version: 1,
-    id,
-    kind,
-    sha256: sha256(data),
-    bytes: data.length,
-    provenance,
-    authority: "private_unreviewed_artifact",
+  return withSyncLock(assistantRoot(state), "private-output-retention", () => {
+    if (data.length > 2 * 1024 * 1024) throw Error("Artifact limit");
+    const root = path.join(assistantRoot(state), "artifacts");
+    fs.mkdirSync(root, { recursive: true, mode: 0o700 });
+    if (fs.readdirSync(root).length >= 200)
+      throw Error("Artifact retention limit; review private outputs");
+    const id = randomUUID();
+    atomic(confined(root, id + "." + kind), data, null);
+    atomicJSON(confined(root, id + ".json"), {
+      version: 1,
+      id,
+      kind,
+      sha256: sha256(data),
+      bytes: data.length,
+      provenance,
+      authority: "private_unreviewed_artifact",
+    });
+    return {
+      handle: id,
+      kind,
+      sha256: sha256(data),
+      bytes: data.length,
+      authority: "private_unreviewed_artifact",
+    };
   });
-  return {
-    handle: id,
-    kind,
-    sha256: sha256(data),
-    bytes: data.length,
-    authority: "private_unreviewed_artifact",
-  };
 }
+
 export function inspectArtifact(state: string, id: string) {
   if (!/^[a-f0-9-]{36}$/.test(id)) throw Error("Invalid artifact handle");
   const root = path.join(assistantRoot(state), "artifacts"),

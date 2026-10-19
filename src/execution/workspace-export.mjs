@@ -8,9 +8,24 @@ function walk(root, relative = "") {
   })) {
     const name = relative ? relative + "/" + entry.name : entry.name;
     if (
-      [".git", ".pi"].includes(entry.name) ||
+      [
+        ".git",
+        ".pi",
+        ".ssh",
+        ".gnupg",
+        ".aws",
+        ".azure",
+        ".gcloud",
+        ".kube",
+        ".docker",
+        ".npmrc",
+        ".netrc",
+        ".git-credentials",
+        ".pypirc",
+        ".yarnrc",
+      ].includes(entry.name.toLowerCase()) ||
       /^\.env(?:\.|$)/.test(entry.name) ||
-      /^(auth\.json|credentials.*|id_(rsa|ed25519)|.*\.(key|pem|p12))$/i.test(
+      /^(auth\.json|credentials.*|id_(rsa|dsa|ecdsa|ed25519)(?:_sk)?|.*\.(key|pem|p12))$/i.test(
         entry.name,
       )
     )
