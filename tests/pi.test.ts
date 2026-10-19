@@ -365,7 +365,7 @@ test("malformed private credential files produce only sanitized native notificat
     delete process.env.CHRYSALIS_STATE_ROOT;
   }
 });
-test("actual Pi SDK discovers eight skills and invokes the new tool without Python", async () => {
+test("actual Pi SDK discovers nine skills and invokes the new tool without Python", async () => {
   process.env.CHRYSALIS_STATE_ROOT = state;
   process.env.CHRYSALIS_VAULT_PATH = vault;
   delete process.env.CHRYSALIS_PYTHON;
@@ -405,7 +405,7 @@ test("actual Pi SDK discovers eight skills and invokes the new tool without Pyth
       ],
     });
   await loader.reload();
-  assert.equal(loader.getSkills().skills.length, 8);
+  assert.equal(loader.getSkills().skills.length, 9);
   assert(
     loader.getSkills().skills.some((s) => s.name === "chrysalis-learning"),
   );

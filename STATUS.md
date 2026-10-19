@@ -1,5 +1,58 @@
 # Implementation status
 
+## NixOS integration prototype (2026-10-18)
+
+The ordinary Pi package now has optional NixOS/Home Manager modules, a persistent raw EFI
+installer profile and ordinary Nix target templates. Cage launches Ghostty, tmux and upstream Pi.
+NixOS, disko-install, Facter, flake-parts/import-tree, Home Manager and pinned nix-agent retain
+their existing responsibilities. The personal dotfiles candidate consumes this integration,
+retains optional desktop features and preserves existing hardware identities and stateVersion.
+
+One native outcome scope binds the host/configuration/backend and exact dedicated disk or
+recovery generation. Configuration/vault/state roots are disjoint. Private durable receipts,
+stale-result guards, process ownership, a privileged busy marker and hash-only handoff intents
+preserve interrupted work. Ambiguous privileged children require completion proof or a new boot
+before mutation, including after outcome closure. The fixed machine ledger is the narrow
+outcome-approved vault exception; exact approval for other records remains unchanged.
+
+Both complete Linux ARM64 suites pass on Node 22.19.0 and 24.20.0: 146 cases, 140 passed, six
+optional/platform skips, zero failures each. The 23 system cases include actual Pi 1.2.0
+MCP/codemode registration and calls, inactive same-name server refusal on direct/nested paths,
+native approval/headless refusal, fresh build evidence, late results, target ancestry, interrupted
+copy recovery, revocation, durable receipts and configuration/vault separation. Tests use synthetic
+state and forbid model requests. TypeScript and physical-source checks are separate gates.
+
+Locked flake outputs evaluate for both package architectures, the raw installer and graphical
+VM test. The generated encrypted Btrfs/Facter target and both realigned personal host toplevel
+derivations evaluate. Evaluation does not establish a successful build or boot.
+
+Separate frozen reviews identified inactive-namespace authorization, interrupted privileged-child,
+partial handoff, log-tail, action-pin, revocation and root-separation defects. Corrections have
+targeted regressions. Frozen manifests and reports remain outside source, alongside the untouched
+initial dirty baseline. No source files from that baseline were removed.
+
+Actual x86_64 package/image construction and USB-to-target VM execution remain unrun. The authored
+workflow is manual-only and needs a registered default-branch workflow before feature-ref dispatch.
+The raw harness covers Pi startup, USB persistence, interrupted installation/handoff, target boot,
+real backend activation/rollback, vault/ledger primitives and a sentinel disk; native fixture
+approvals substitute for human dialogs. It does not establish a model-led installation conversation,
+provider authentication, Obsidian GUI interaction, physical Surface/NVIDIA behavior or firmware
+trust for the unsigned installer. No physical disk or personal vault was used.
+
+The operator authorized publication of the reviewed Pi baseline and NixOS integration on feature
+branches. Publish the dotfiles consumer only after pinning its input to the actual published
+Chrysalis revision; local development paths must not enter its public lockfile. No npm/distribution
+release, firmware enrollment or default-branch merge is included. The original live source and
+personal runtime remain preserved.
+
+The frozen ARM Nix package builds. It and a fresh production archive load all nine skills through
+actual Pi 1.2.0, retain the built-ins, complete synthetic offline vault/doctor work, reach actual MCP
+and deny arbitrary vault reads. Normal Pi CLI startup/exit passes without exclusions or duplicate
+conflicts. Production source hashes match the reviewed candidate. These checks make no model calls
+and do not establish x86 image boot acceptance.
+
+See [integration and bootstrap](docs/nixos.md) and [recovery procedure](skills/chrysalis-system/references/recovery.md).
+
 ## Current modular Pi compatibility (2026-10-15)
 
 Current requirements: Pi >=1.2.0 <2 and Node >=22.19.0, following Pi's public runtime API and

@@ -41,3 +41,12 @@ uses native account/origin selection; the model and child agents never receive c
 
 Pi owns its default MCP and codemode extensions; keep both enabled. Independent provider/UI packages
 use ordinary Pi resources. See the [compatibility matrix and scoped tool policy](docs/compatibility.md).
+
+## Optional NixOS system
+
+The same Pi package now has an optional NixOS module and persistent x86_64 UEFI USB image.
+Cage opens Ghostty, tmux and ordinary Pi; disko installs the dedicated encrypted Btrfs target.
+After boot, existing native onboarding creates the Obsidian vault. One reviewed OS outcome
+authorizes its system work and fixed machine ledger; personal records retain their exact reviews.
+See [NixOS setup and acceptance](docs/nixos.md). The prototype requires the documented VM gate
+before physical installation; package/evaluation checks alone do not establish boot acceptance.

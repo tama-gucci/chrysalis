@@ -11,7 +11,7 @@ query/default-filling engine. See the [operation API](docs/operations.md).
 ```mermaid
 flowchart TD
     Pi[Pi conversation and operator commands] --> Adapter[extensions/chrysalis.ts]
-    Skills[Eight canonical skill families] --> Adapter
+    Skills[Nine canonical skill families] --> Adapter
     Adapter --> App[src/app orchestration]
     App --> Core[src/core workflows]
     App --> Preset[src/obsidian preset]
@@ -236,3 +236,35 @@ Password sources use a separate private adapter/snapshot port, bounded normaliza
 review, encrypted file storage and OS-protected keys. Browser filling consumes credentials through
 a native origin/account gate without returning values to the model. Credential data never enters
 vault ingestion or execution workspaces. See [password architecture](docs/passwords.md).
+
+## Optional NixOS administration
+
+The portable package has no implicit OS capability. A NixOS-generated native descriptor enables
+extensions/system.ts and src/system: exact outcome scopes, upstream calls, write-ahead receipts,
+installation handoff and the fixed ledger projection. Pi retains native MCP/codemode ownership.
+The pinned nix-agent server performs installed-system operations; disko-install performs disk
+installation; upstream raw EFI images provide writable USB persistence. Flake-parts/import-tree,
+Facter and Home Manager retain their existing responsibilities.
+
+~~~mermaid
+flowchart LR
+    Native[Native outcome and exact target] --> Pi[Ordinary Pi and short rules]
+    Pi --> Files[Editable Nix feature modules]
+    Pi --> Upstream[nix-agent or disko-install]
+    Upstream --> Observe[Running closure / profile / boot evidence]
+    Observe --> Receipt[Private durable receipts]
+    Receipt --> Ledger[Fixed machine ledger in selected vault]
+~~~
+
+The machine ledger is the sole outcome-approved vault exception. Its writer accepts stored
+receipt events, escapes content, checks ownership/revisions and deduplicates stable event IDs.
+Configuration, state and vault roots are disjoint. A confirmed install remains pending until its
+root filesystem and running closure match the handoff marker after boot. Interruptions retain
+uncertainty and require inspection or bounded recovery. Generations restore system closures,
+not arbitrary mutable data. Trusted system Bash is intentionally separate from ordinary isolated
+workspace execution; extension hooks do not provide OS privilege isolation.
+
+Privileged-call intent survives transport loss and outcome closure. Confirmed completion or a new
+boot establishes quiescence before further mutations. Handoff uses only opaque copies with durable
+before/after hashes, preserving independent target edits without persisting provider-secret bytes
+on the USB. Per-operation writer locks also protect first-vault receipt binding.

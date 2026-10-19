@@ -46,3 +46,17 @@ Assistant tools never grant vault authority. The native-selected workspace is di
 vault, state and credentials. Commands use disposable bounded snapshots and revision-checked merge.
 No permissive host-shell fallback is allowed. Source development and image-original adoption each
 require a separate exact native review; neither approves atomic notes, tasks or roadmap records.
+
+## Optional native NixOS scope
+
+A native-generated system descriptor enables an opt-in administration context. One native outcome
+approval binds machine, configuration, host, backend registration and any destructive disk or
+observed recovery generation. Normal Pi MCP/codemode remains authoritative. Exact scope checks
+apply to direct and nested backend calls. File edits use real Nix files; credentials use masked
+native input and stay outside the store. Installer scope cannot activate the live system.
+
+Private receipts precede activation/installation and retain uncertain or degraded outcomes.
+Only the fixed System/System-Ledger.md projection may append machine-authored receipt events
+under that approval. It cannot accept model Markdown or a model-selected vault destination.
+All other personal-vault records retain the existing exact proposal/revision/approval contracts.
+The system executor is trusted host administration, without an extension sandbox claim.

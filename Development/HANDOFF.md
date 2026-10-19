@@ -1,5 +1,41 @@
 # Current engineering handoff
 
+Date: 2026-10-18. NixOS integration implementation with separate frozen read-only reviews.
+Branch chrysalis-nixos; base HEAD remains 3b6c579e5656bb5d491a7320d1b473286be742d0.
+The original source checkout and all 210 baseline file hashes are preserved. Work is isolated.
+Dependencies, synthetic fixtures, archives, logs, before-images and frozen manifests stay external.
+
+The reusable package stays portable. The optional NixOS module owns integration, while native
+NixOS images, upstream Pi/Home Manager, disko-install, Facter and pinned nix-agent do the work.
+Read docs/nixos.md, nix/rules.md and chrysalis-system. Personal dotfiles consume the shared module;
+publish their consumer lock only after pinning the actual published reviewed Git revision.
+
+Node 22.19.0 and 24.20.0 complete suites each pass 146 cases: 140 passed, six optional/platform
+skips, zero failures. All 23 system cases pass, including actual Pi direct/nested policy behavior.
+Production TypeScript and whole-source checking are required. Locked root outputs, generated
+target and both personal host toplevel derivations evaluate. Final package/archive identities and
+independent review reports belong with the external candidate evidence, not private source files.
+
+Recovery uses durable intent before privileged operations, exact stable device ancestry, bounded
+mount-only recovery and a private copy-hash journal. Ambiguous privileged descendants block later
+mutations until completion proof or reboot; close does not bypass that guard. A completed handoff
+preserves later installed edits. Mutable Pi auth/settings remain outside Nix store ownership.
+Do not broaden these controls into claims of whole-process isolation or complete machine auditing.
+
+The x86 image/VM gate remains outstanding. The manual workflow must first be registered on the
+default branch, or an explicitly authorized manual PR-label trigger must be added for pre-merge
+acceptance. Do not merge unverified OS code just to test it. Runtime/provider authentication,
+Obsidian UI, physical hardware and firmware trust remain separate checks.
+
+The user has now authorized committing and pushing the reviewed Pi baseline and NixOS integration.
+Keep those as separate commits and publish feature branches; the dotfiles consumer must pin the
+actual published Chrysalis revision. The ARM package build and production archive/Pi acceptance
+passed after the final frozen read-only review. External evidence retains their exact identities.
+No npm/distribution release, default-branch merge or live runtime promotion is authorized here.
+Preserve the original trial, active sessions, credentials and personal vault.
+
+## Previous compatibility handoff
+
 Date: 2026-10-15. Modular Pi compatibility implementation, with separate frozen read-only review.
 Branch main; unchanged base HEAD 3b6c579e5656bb5d491a7320d1b473286be742d0. Prior dirty work is
 preserved. External initial/final hash manifests and before-images identify the uncommitted build.

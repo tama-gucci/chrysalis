@@ -1,0 +1,15 @@
+{ config, pkgs, ... }:
+{
+  networking.hostName = "@NAME@";
+  time.timeZone = "@ZONE@";
+  system.stateVersion = "26.05";
+  users.users.@USER@ = {
+    isNormalUser = true;
+    uid = 1000;
+    extraGroups = [ "wheel" "networkmanager" ];
+    hashedPasswordFile = "/var/lib/chrysalis/user-password";
+  };
+  programs.chrysalis-pi = { enable = true; user = "@USER@"; host = "@HOST@"; };
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (pkgs.lib.getName pkg) [ "obsidian" ];
+  environment.systemPackages = [ pkgs.obsidian ];
+}

@@ -78,3 +78,19 @@ ordinary manifests in both orders; do not create redundant local copies or patch
 Offline registration/catalog acceptance is separate from real authentication/inference/quotas.
 Private test probes, stream fixtures and recovery stay outside physical source. Complete latest
 evidence and scope are recorded in STATUS.
+
+## NixOS prototype
+
+Use the locked flake. Local Nix evaluation is separate from a build or boot. The portable package
+and module export both Linux architectures; the installer is x86_64 UEFI. The GitHub Actions
+workflow runs the retained suite outside source, a NixOS graphical module/reboot test, builds the
+native raw image, and boots that image with disposable target/sentinel disks. Test images, logs,
+firmware state and provider-free fixture vaults remain in external runner temporary storage.
+
+nix/tests/raw-boot.py is CI tooling only, not a runtime Python dependency. Its native fixture
+approvals stand in for human dialogs. The real installer primitives, fact discovery, target boot,
+vault setup and nix-agent MCP operations execute in the VM. Portable SDK tests separately exercise
+Pi guards. This harness does not prove a real-model installation conversation, OAuth/browser
+login, Obsidian GUI behavior, Secure Boot enrollment or physical hardware support.
+
+The image job is manual-only and requires a registered default-branch workflow before feature-ref dispatch. See docs/nixos.md for the bootstrap prerequisite. The raw harness kills the actual handoff helper after a durable copy, power-cycles the USB and resumes with changed source state; target-only edits must remain protected. It also asserts actual Pi pane startup, mutable account state and exclusion of the USB transfer journal. These are authored acceptance cases until the x86 runner records a passing run.

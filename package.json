@@ -38,7 +38,10 @@
     "tests",
     "tsconfig.json",
     "AGENTS.md",
-    "NOTICE.md"
+    "NOTICE.md",
+    "nix",
+    "flake.nix",
+    "flake.lock"
   ],
   "type": "module",
   "engines": {

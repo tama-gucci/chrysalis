@@ -46,3 +46,10 @@
 *.lock
 Thumbs.db
 .DS_Store
+
+!/flake.nix
+!/flake.lock
+!/nix/
+!/nix/**
+!/.github/
+!/.github/**

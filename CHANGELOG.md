@@ -1,5 +1,14 @@
 # Changelog
 
+## Optional NixOS integration prototype
+
+- Add locked NixOS/Home Manager modules, a persistent raw EFI profile and ordinary Nix seeds.
+- Reuse Cage, Ghostty, tmux, Pi, disko-install, Facter and nix-agent rather than a new installer engine.
+- Bind one native OS outcome to its exact configuration, host, backend and disk/recovery target.
+- Retain durable receipts, safe recovery, mutable account handoff and fixed machine-ledger projection.
+- Add real Pi policy regressions and a disposable x86 image/VM acceptance workflow.
+- Realign the personal dotfiles candidate as a consumer; image boot acceptance remains pending.
+
 ## Modular Pi compatibility (unpublished)
 
 - Let Pi own MCP/codemode and preserve user servers/unrelated package resources.
